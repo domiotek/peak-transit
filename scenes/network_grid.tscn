@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://kpgpxpqvp4er"]
+
+[ext_resource type="Script" uid="uid://n66r7l05m5cc" path="res://scripts/network_grid.gd" id="1_t83jy"]
+
+[node name="NetworkGrid" type="Node2D"]
+script = ExtResource("1_t83jy")
