@@ -14,4 +14,6 @@ public partial class ConfigManager : Node
     public bool DrawNodeLayers { get; set; } = false;
 
     public bool DrawLaneLayers { get; set; } = false;
+
+    public bool DrawLaneEndpoints { get; set; } = true;
 }

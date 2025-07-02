@@ -66,3 +66,36 @@ func get_segment_edge_points_at_node(segment: NetSegment, node_id: int,  sample_
 		"width": road_half_width * 2,
 		"is_at_start": is_at_start
 	}
+
+enum RoadSide {
+	Left, Right
+}
+
+
+func get_road_side_at_endpoint(segment: NetSegment, point: Vector2) -> RoadSide:
+	var curve = segment.main_layer_curve
+	if not curve or curve.get_baked_length() == 0:
+		return RoadSide.Right
+	
+	var start_point = curve.sample_baked(0.0)
+	var end_point = curve.sample_baked(curve.get_baked_length())
+	
+	var is_at_start = start_point.distance_to(point) < end_point.distance_to(point)
+	var closest_point = start_point if is_at_start else end_point
+	
+	var sample_distance = min(10.0, curve.get_baked_length() * 0.1)
+	var second_point: Vector2
+	
+	if is_at_start:
+		second_point = curve.sample_baked(sample_distance)
+	else:
+		second_point = curve.sample_baked(curve.get_baked_length() - sample_distance)
+	
+	var direction = second_point - closest_point
+	var to_point = point - closest_point
+	var cross_product = direction.cross(to_point)
+	
+	if cross_product > 0:
+		return RoadSide.Left
+	else:
+		return RoadSide.Right

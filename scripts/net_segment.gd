@@ -150,6 +150,9 @@ func _update_debug_layer() -> void:
 
 	if not curve_shape:
 		return
+
+	LineHelper.draw_solid_line(left_edge_curve, debug_layer, 2.0, Color.GREEN)
+	LineHelper.draw_solid_line(right_edge_curve, debug_layer, 2.0, Color.IVORY)
 	
 	var points = curve_shape.tessellate(5, 4.0)
 	for j in range(1, points.size()):

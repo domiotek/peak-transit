@@ -1,14 +1,5 @@
 extends Node2D
 class_name NetLane
-
-class DebugCircle extends Node2D:
-	var radius: float = 10.0
-	var color: Color = Color.RED
-	var circle_position: Vector2 = Vector2.ZERO
-	
-	func _draw():
-		draw_circle(circle_position, radius, color)
-
 @onready var trail: Path2D = $PathingTrail
 @onready var debug_layer: Node2D = $DebugLayer
 
@@ -31,28 +22,28 @@ func update_trail_shape(curve: Curve2D) -> void:
 	var new_curve = LineHelper.get_curve_with_offset(curve, offset)
 
 	for node in segment.nodes:
-		new_curve = _create_end_points_for_node(node, new_curve)
+		var point = _get_endpoint_for_node(node, new_curve)
+		var road_side = SegmentHelper.get_road_side_at_endpoint(segment, point)
+
+		if road_side == SegmentHelper.RoadSide.Right:
+			node.outgoing_endpoints.append(to_global(point))
+		else:
+			node.icoming_endpoints.append(to_global(point))
 
 	trail.curve = new_curve
 
 	_update_debug_layer()
 
-func _create_end_points_for_node(node: RoadNode, curve: Curve2D) -> Curve2D:
+func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
 
 	if polygon.size() > 0:
 		var points = LineHelper.find_curve_polygon_intersections(curve.get_baked_points(), polygon)
 
 		if points.size() > 0:
-			var circle = DebugCircle.new()
-			circle.z_index = 5
-			circle.radius = 6.0
-			circle.color = Color.DARK_KHAKI
-			circle.position = points[0]
-			
-			debug_layer.add_child(circle)
+			return points[0]
 
-	return curve
+	return Vector2.ZERO
 
 
 func _update_debug_layer() -> void:

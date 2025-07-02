@@ -22,6 +22,9 @@ func setup_network(grid: NetworkGrid):
 	for segment in segments.values():
 		segment.late_update_visuals()
 
+	for node in nodes.values():
+		node.late_update_visuals()
+
 
 func get_node_connected_segments(node_id: int) -> Array:
 	var connected_segments = []
