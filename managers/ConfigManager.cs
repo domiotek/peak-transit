@@ -16,4 +16,8 @@ public partial class ConfigManager : Node
     public bool DrawLaneLayers { get; set; } = false;
 
     public bool DrawLaneEndpoints { get; set; } = true;
+
+    public bool DrawLaneEndpointIds { get; set; } = false;
+
+    public bool PrintIntersectionSegmentsOrientations { get; set; } = false;
 }

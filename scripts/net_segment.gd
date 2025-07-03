@@ -14,6 +14,8 @@ var total_lanes: int = 0
 var is_asymetric: bool = false
 var max_lanes_relation_idx: int = -1
 
+var endpoints: Array[int] = []
+
 @onready var main_road_layer: Line2D = $MainLayer
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer

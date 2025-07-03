@@ -3,6 +3,8 @@ extends Node
 var nodes: Dictionary[int, RoadNode] = {}
 var segments: Dictionary[int, NetSegment] = {}
 
+var lane_endpoints: Dictionary[int, NetLaneEndpoint] = {}
+
 var uiGrid: NetworkGrid
 
 func register_node(node: RoadNode):
@@ -61,3 +63,46 @@ func _setupSegment(segment_info: NetSegmentInfo):
 			segment.add_connection(node_B, node_A, relation)
 
 	segment.update_visuals()
+
+func add_lane_endpoint(pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int) -> void:
+	var endpoint = NetLaneEndpoint.new()
+
+	var next_id = lane_endpoints.size()
+
+	endpoint.Id = next_id
+	endpoint.Position = pos
+	endpoint.SegmentId = segment.id
+	endpoint.NodeId = node.id
+	endpoint.LaneNumber = lane_number
+	endpoint.SetIsOutgoing(is_outgoing)
+
+	lane_endpoints[next_id] = endpoint
+
+	if is_outgoing:
+		node.outgoing_endpoints.append(next_id)
+	else:
+		node.incoming_endpoints.append(next_id)
+
+	segment.endpoints.append(next_id)
+
+
+func get_lane_endpoint(endpoint_id: int) -> NetLaneEndpoint:
+	if lane_endpoints.has(endpoint_id):
+		return lane_endpoints[endpoint_id]
+	else:
+		push_error("Lane endpoint with ID %d not found." % endpoint_id)
+		return null
+
+func get_node_endpoints(node_id: int) -> Array:
+	var node = nodes[node_id]
+	if not node:
+		push_error("Node with ID %d not found." % node_id)
+		return []
+
+	var endpoints = []
+	for endpoint_id in node.incoming_endpoints + node.outgoing_endpoints:
+		var endpoint = get_lane_endpoint(endpoint_id)
+		if endpoint:
+			endpoints.append(endpoint)
+
+	return endpoints

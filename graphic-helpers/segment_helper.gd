@@ -99,3 +99,95 @@ func get_road_side_at_endpoint(segment: NetSegment, point: Vector2) -> RoadSide:
 		return RoadSide.Left
 	else:
 		return RoadSide.Right
+
+
+func get_segment_directions_from_segment(node: RoadNode, ref_segment: NetSegment, other_segments: Array) -> Dictionary:
+	var directions = {
+		"left": null,
+		"right": null,
+		"forward": null,
+		"backward": ref_segment
+	}
+
+	var assigned_segments = []
+
+	var ref_curve = ref_segment.main_layer_curve
+	if not ref_curve:
+		return directions
+	
+	var node_id = node.id
+	
+	var ref_edge_data = get_segment_edge_points_at_node(ref_segment, node_id)
+	if ref_edge_data.is_empty():
+		return directions
+	
+	var ref_center = ref_edge_data["center"]
+	var ref_tangent = ref_edge_data["tangent"]
+	
+	var sample_distance = 20.0
+	var ref_sample_point: Vector2
+	
+	if ref_edge_data["is_at_start"]:
+		var sample_pos = min(sample_distance, ref_curve.get_baked_length())
+		ref_sample_point = ref_curve.sample_baked(sample_pos)
+	else:
+		var sample_pos = max(0.0, ref_curve.get_baked_length() - sample_distance)
+		ref_sample_point = ref_curve.sample_baked(sample_pos)
+	
+	var ref_line_vector = (ref_sample_point - ref_center).normalized()
+	
+	for segment in other_segments:
+		
+		var segment_has_node = false
+		for seg_node in segment.nodes:
+			if seg_node.id == node_id:
+				segment_has_node = true
+				break
+		
+		if not segment_has_node:
+			continue
+		
+		var other_edge_data = get_segment_edge_points_at_node(segment, node_id)
+		if other_edge_data.is_empty():
+			continue
+		
+		var other_tangent = other_edge_data["tangent"]
+		
+		var dot_product = ref_tangent.dot(other_tangent)
+		
+		if dot_product > 0.7:
+			directions["forward"] = segment
+			assigned_segments.append(segment)
+		elif dot_product < -0.7:
+			continue
+		else:
+			var other_sample_point: Vector2
+			var other_curve = segment.main_layer_curve
+			
+			if other_edge_data["is_at_start"]:
+				var sample_pos = min(sample_distance, other_curve.get_baked_length())
+				other_sample_point = other_curve.sample_baked(sample_pos)
+			else:
+				var sample_pos = max(0.0, other_curve.get_baked_length() - sample_distance)
+				other_sample_point = other_curve.sample_baked(sample_pos)
+			
+			var to_other_sample = other_sample_point - ref_center
+			var cross_product = ref_line_vector.cross(to_other_sample)
+			
+			if cross_product > 0:
+				directions["left"] = segment
+				assigned_segments.append(segment)
+			else:
+				directions["right"] = segment
+				assigned_segments.append(segment)
+
+
+	if directions['forward'] == null:
+		var unassigned_segment = other_segments.filter(func(s): return s not in assigned_segments)
+
+		if unassigned_segment.size() > 0:
+			directions['forward'] = unassigned_segment[0]
+			assigned_segments.append(unassigned_segment[0])
+
+	
+	return directions
