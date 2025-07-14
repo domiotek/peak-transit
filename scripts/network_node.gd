@@ -73,6 +73,9 @@ func update_visuals() -> void:
 func late_update_visuals() -> void:
 	_setup_connections()
 
+	if connected_segments.size() > 2:
+		_draw_stop_lines()
+
 	_update_debug_layer()
 
 func get_intersection_polygon() -> PackedVector2Array:
@@ -110,6 +113,16 @@ func _setup_connections() -> void:
 		connections_helper.setup_two_segment_connections(self)
 	else:
 		connections_helper.setup_mutli_segment_connections(self)
+
+func _draw_stop_lines() -> void:
+	for endpoint_id in incoming_endpoints:
+		var endpoint = NetworkManager.get_lane_endpoint(endpoint_id)
+		var lane = NetworkManager.get_segment(endpoint.SegmentId).lanes[endpoint.LaneId]
+		var perpendicular_line = LineHelper.create_perpendicular_line_at_point(lane.trail.curve, endpoint.Position, self, NetworkConstants.LANE_WIDTH)
+
+		if perpendicular_line:
+			LineHelper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+
 
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():

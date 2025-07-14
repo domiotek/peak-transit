@@ -165,3 +165,36 @@ func remove_duplicate_points(points: PackedVector2Array, tolerance: float = 0.01
 			filtered.append(point)
 	
 	return filtered
+
+func find_closer_curve_end(curve: Curve2D, point: Vector2) -> Vector2:
+	if not curve or curve.point_count == 0:
+		return Vector2.ZERO
+	
+	var start_point = curve.get_point_position(0)
+	var end_point = curve.get_point_position(curve.point_count - 1)
+
+	var start_distance = start_point.distance_to(point)
+	var end_distance = end_point.distance_to(point)
+
+	return start_point if start_distance < end_distance else end_point
+
+func create_perpendicular_line_at_point(curve: Curve2D, point: Vector2, ref: Node2D, line_length: float = 50.0) -> Curve2D:
+	if not curve or curve.point_count == 0:
+		return null
+
+	var closest_offset = curve.get_closest_offset(point)
+	
+	var transform = curve.sample_baked_with_rotation(closest_offset, true)
+	var tangent_vector = transform.x.normalized()
+	
+	var perpendicular = Vector2(-tangent_vector.y, tangent_vector.x).normalized()
+	
+	var half_length = line_length * 0.5
+	var line_start = point - perpendicular * half_length
+	var line_end = point + perpendicular * half_length
+	
+	var perpendicular_curve = Curve2D.new()
+	perpendicular_curve.add_point(ref.to_local(line_start))
+	perpendicular_curve.add_point(ref.to_local(line_end))
+	
+	return perpendicular_curve
