@@ -84,6 +84,33 @@ func get_intersection_polygon() -> PackedVector2Array:
 		global_points.append(to_global(point))
 	return global_points
 
+func add_connection_path(in_id: int, out_id: int, curve: Curve2D) -> void:
+	var path = Path2D.new()
+	path.curve = curve
+	path.z_index = 2
+	pathing_layer.add_child(path)
+	connection_paths[str(in_id) + "-" + str(out_id)] = path
+
+
+func get_connection_path(in_id: int, out_id: int) -> Path2D:
+	var key = str(in_id) + "-" + str(out_id)
+	if connection_paths.has(key):
+		return connection_paths[key]
+	else:
+		return null
+
+func _setup_connections() -> void:
+
+	if connected_segments.size() == 0:
+		return
+
+	if connected_segments.size() == 1:
+		connections_helper.setup_one_segment_connections(self)
+	elif connected_segments.size() == 2:
+		connections_helper.setup_two_segment_connections(self)
+	else:
+		connections_helper.setup_mutli_segment_connections(self)
+
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():
 		child.queue_free()
@@ -124,30 +151,3 @@ func _update_debug_layer() -> void:
 			for out_id in connections.get(in_id, []):
 				var path = get_connection_path(in_id, out_id)
 				LineHelper.draw_solid_line(path.curve,debug_layer, 1, Color.YELLOW)
-
-func _setup_connections() -> void:
-
-	if connected_segments.size() == 0:
-		return
-
-	if connected_segments.size() == 1:
-		connections_helper.setup_one_segment_connections(self)
-	elif connected_segments.size() == 2:
-		connections_helper.setup_two_segment_connections(self)
-	else:
-		connections_helper.setup_mutli_segment_connections(self)
-
-func add_connection_path(in_id: int, out_id: int, curve: Curve2D) -> void:
-	var path = Path2D.new()
-	path.curve = curve
-	path.z_index = 2
-	pathing_layer.add_child(path)
-	connection_paths[str(in_id) + "-" + str(out_id)] = path
-
-
-func get_connection_path(in_id: int, out_id: int) -> Path2D:
-	var key = str(in_id) + "-" + str(out_id)
-	if connection_paths.has(key):
-		return connection_paths[key]
-	else:
-		return null

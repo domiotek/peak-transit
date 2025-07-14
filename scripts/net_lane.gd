@@ -27,7 +27,7 @@ func update_trail_shape(curve: Curve2D) -> void:
 		var point_global = to_global(point)
 
 		var is_outgoing = road_side == SegmentHelper.RoadSide.Left;
-		NetworkManager.add_lane_endpoint(point_global, segment, node, is_outgoing, _calc_lane_number())
+		NetworkManager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, _calc_lane_number())
 
 	trail.curve = new_curve
 

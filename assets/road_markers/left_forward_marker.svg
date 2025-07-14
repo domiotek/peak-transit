@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" enable-background="new 0 0 336 235.2" version="1.1">
+ <g class="layer">
+  <title>Layer 1</title>
+  <g id="svg_2" transform="translate(7.63495 4.31171) matrix(0.165952 0 0 0.165952 -23.6203 -121.17)">
+   <path d="m235.01,764.51l-39.39,0l19.7,-34.11l19.7,34.11l-0.01,0z" display="inline" fill="rgb(255, 255, 255)" id="path-1" stroke-width="0.07"/>
+   <path d="m214.77,762.95l-0.27,98.34" display="inline" fill="none" id="path-2" stroke="rgb(255, 255, 255)" stroke-miterlimit="4" stroke-width="10"/>
+   <path d="m176.69,769.87l0,39.39l-34.11,-19.7l34.11,-19.7l0,0.01z" display="inline" fill="rgb(255, 255, 255)" id="path-3" stroke-width="0.07"/>
+   <path d="m214.77,868.65l0,-60.93c0,-9.84 -6.23,-17.98 -17.98,-17.98l-20.41,0" display="inline" fill="none" id="path-4" stroke="rgb(255, 255, 255)" stroke-linejoin="round" stroke-miterlimit="4" stroke-width="10" transform="matrix(1 0 0 1 0 0)"/>
+  </g>
+ </g>
+</svg>

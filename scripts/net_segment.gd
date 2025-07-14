@@ -116,6 +116,12 @@ func update_visuals() -> void:
 func late_update_visuals() -> void:
 	_update_lanes_pathing_shape()
 
+func get_lane(lane_id: int) -> NetLane:
+	if lane_id < 0 or lane_id >= lanes.size():
+		push_error("Invalid lane ID: " + str(lane_id))
+		return null
+	return lanes.filter(func(lane): return lane.id == lane_id)[0]
+
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes:
 		lane.update_trail_shape(curve_shape)

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" enable-background="new 0 0 336 235.2" version="1.1">
+ <g class="layer">
+  <title>Layer 1</title>
+  <g id="svg_3" transform="translate(2.28 3) translate(3.48662 2.65407) matrix(6.54961 0 0 6.54961 -86.3774 -115.765)">
+   <path d="m14.32,18.42l0.85,0l-0.43,-0.74l-0.43,0.74l0.01,0z" display="inline" fill="#fff" id="path-7" stroke-width="0.07"/>
+   <path d="m14.74,18.39l0.01,2.13" display="inline" fill="none" id="path-8" stroke="#fff" stroke-miterlimit="4" stroke-width="0.25"/>
+   <path d="m53.3,11.13l-19.3,0l9.64,16.72l9.66,-16.72z" display="inline" fill="rgb(255, 255, 255)" id="path-11" stroke-width="0.07" transform="matrix(0 -1 1 0 0.000004 -0.000002) matrix(0.0442983 0 0 0.0442983 -20.8837 15.0677)"/>
+   <path d="m14.74,20.68l0,-1.32c0,-0.21 0.14,-0.39 0.39,-0.39l0.44,0" display="inline" fill="none" id="path-12" stroke="rgb(255, 255, 255)" stroke-linejoin="round" stroke-miterlimit="4" stroke-width="0.25"/>
+   <path d="m53.28,-25.61l-19.3,0l9.65,-16.71l9.65,16.71z" display="inline" fill="rgb(255, 255, 255)" id="path-15" stroke-width="0.07" transform="matrix(0 -1 1 0 0.000007 -0.000004) matrix(0.0442983 0 0 0.0442983 -20.8837 15.0677)"/>
+   <path d="m14.75,20.69l0,-1.32c0,-0.21 -0.14,-0.39 -0.39,-0.39l-0.44,0" display="inline" fill="none" id="path-16" stroke="rgb(255, 255, 255)" stroke-linejoin="round" stroke-miterlimit="4" stroke-width="0.25"/>
+  </g>
+ </g>
+</svg>

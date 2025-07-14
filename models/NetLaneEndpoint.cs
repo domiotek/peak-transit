@@ -20,6 +20,7 @@ public partial class NetLaneEndpoint : Node
     public int NodeId { get; set; }
 
     public EndpointType Type { get; set; }
+    public int LaneId { get; set; } = -1;
 
     public int LaneNumber { get; set; } = -1;
 

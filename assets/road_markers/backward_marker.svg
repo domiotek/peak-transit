@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" enable-background="new 0 0 336 235.2" version="1.1">
+ <g class="layer" display="inline">
+  <title>Layer 1</title>
+  <g id="svg_1" transform="translate(-3.36 0.36) translate(4.16 -2.24) matrix(0.40957 0 0 0.40957 -40.6387 -11.3881)">
+   <g id="object-3" transform="matrix(1, 0, 0, 1, -152.88157653808594, -77.75382995605469)">
+    <path d="m288.5,152.5l-19.3,0l9.65,16.72l9.65,-16.72z" display="inline" fill="rgb(255, 255, 255)" id="path4530" stroke-width="0.07"/>
+    <path d="m301.87,171.08l0,-31.41c0,-18.02 -23.45,-16.9 -23.45,0l0,17.68" display="inline" fill="none" id="path4240" stroke="rgb(255, 255, 255)" stroke-miterlimit="4" stroke-width="7.28"/>
+   </g>
+  </g>
+ </g>
+</svg>

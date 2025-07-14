@@ -43,6 +43,8 @@ func setup_one_segment_connections(node: RoadNode) -> void:
 					curve.add_point(point)
 
 				node.add_connection_path(in_id, out_id, curve)
+				add_direction_marker(node, in_endpoint, "backward", 0)
+			
 		 
 		
 func setup_two_segment_connections(node: RoadNode) -> void:
@@ -144,3 +146,82 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 
 				var curve = LineHelper.calc_curve(node.to_local(in_endpoint.Position), node.to_local(out_endpoint.Position), strength, direction)
 				node.add_connection_path(in_id, out_id, curve)
+			var direction_marker_name = determine_direction_marker(ids_dict, new_connections[in_id])
+			add_direction_marker(node, in_endpoint, direction_marker_name)
+
+
+func add_direction_marker(node: RoadNode, in_endpoint: NetLaneEndpoint, asset_name: String, marker_offset: float=NetworkConstants.DIRECTION_MARKER_OFFSET) -> void:
+	var asset_path = "res://assets/road_markers/" + asset_name + "_marker.svg"
+	var marker_image = load(asset_path)
+
+	if not marker_image:
+		print("Failed to load asset: ", asset_path)
+
+	var marker_sprite = Sprite2D.new()
+	marker_sprite.texture = marker_image
+	marker_sprite.scale = Vector2(0.125, 0.125)
+	marker_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
+	
+	var target_segment = NetworkManager.get_segment(in_endpoint.SegmentId)
+
+	if not target_segment:
+		return
+
+	var lane = target_segment.get_lane(in_endpoint.LaneId)
+	if not lane:
+		return
+
+	var curve = lane.trail.curve
+	var curve_length = curve.get_baked_length()
+
+	var start_point = curve.sample_baked(0)
+	var end_point = curve.sample_baked(curve_length)
+	var endpoint_pos = in_endpoint.Position
+	
+	var distance_to_start = start_point.distance_to(endpoint_pos)
+	var distance_to_end = end_point.distance_to(endpoint_pos)
+	
+	var offset
+	var rotation_offset = 0.0
+	if distance_to_start < distance_to_end:
+		offset = marker_offset + distance_to_start
+		rotation_offset = PI
+	else:
+		offset = curve_length - marker_offset - distance_to_end
+
+	var point_on_curve = curve.sample_baked(offset)
+	var tangent = curve.sample_baked_with_rotation(offset).y
+	var position = point_on_curve + tangent.normalized()
+
+	marker_sprite.position = node.to_local(position)
+	var rotation = tangent.angle() + rotation_offset
+	marker_sprite.rotation = rotation
+	marker_sprite.z_index = 10
+	node.markings_layer.add_child(marker_sprite)
+
+
+func determine_direction_marker(directions_dict: Dictionary, lane_connections: Array) -> String:
+	var has_left = directions_dict["left"].filter(func (x): return lane_connections.has(x)).size() > 0
+	var has_forward = directions_dict["forward"].filter(func (x): return lane_connections.has(x)).size() > 0
+	var has_right = directions_dict["right"].filter(func (x): return lane_connections.has(x)).size() > 0
+
+	var direction_bits = (int(has_left) << 2) | (int(has_forward) << 1) | int(has_right)
+	
+	match direction_bits:
+		0b001:
+			return "right"
+		0b010:
+			return "forward"
+		0b011:
+			return "right_forward"
+		0b100:
+			return "left"
+		0b101:
+			return "left_right"
+		0b110:
+			return "left_forward"
+		0b111:
+			return "all_directions"
+		_:
+			return "backward"

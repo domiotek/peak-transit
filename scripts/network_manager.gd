@@ -64,7 +64,7 @@ func _setupSegment(segment_info: NetSegmentInfo):
 
 	segment.update_visuals()
 
-func add_lane_endpoint(pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int) -> void:
+func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int) -> void:
 	var endpoint = NetLaneEndpoint.new()
 
 	var next_id = lane_endpoints.size()
@@ -73,6 +73,7 @@ func add_lane_endpoint(pos: Vector2, segment: NetSegment, node: RoadNode, is_out
 	endpoint.Position = pos
 	endpoint.SegmentId = segment.id
 	endpoint.NodeId = node.id
+	endpoint.LaneId = lane_id
 	endpoint.LaneNumber = lane_number
 	endpoint.SetIsOutgoing(is_outgoing)
 
@@ -106,3 +107,10 @@ func get_node_endpoints(node_id: int) -> Array:
 			endpoints.append(endpoint)
 
 	return endpoints
+
+func get_segment(segment_id: int) -> NetSegment:
+	if segments.has(segment_id):
+		return segments[segment_id]
+	else:
+		push_error("Segment with ID %d not found." % segment_id)
+		return null
