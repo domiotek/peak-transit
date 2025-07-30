@@ -1,11 +1,14 @@
 extends Node
 
+const PathFinderModule = preload("res://managers/PathFinder.cs")
+
 var nodes: Dictionary[int, RoadNode] = {}
 var segments: Dictionary[int, NetSegment] = {}
 
 var lane_endpoints: Dictionary[int, NetLaneEndpoint] = {}
 
 var uiGrid: NetworkGrid
+var path_finder = PathFinder.new()
 
 func register_node(node: RoadNode):
 	nodes[node.id] = node
@@ -26,6 +29,8 @@ func setup_network(grid: NetworkGrid):
 
 	for node in nodes.values():
 		node.late_update_visuals()
+
+	path_finder.BuildGraph(nodes.values(), lane_endpoints)
 
 
 func get_node_connected_segments(node_id: int) -> Array:

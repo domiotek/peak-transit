@@ -1,0 +1,34 @@
+using System.Collections.Generic;
+using System.Linq;
+using Godot;
+
+namespace PTS.Models.Mappings;
+
+public partial class NetSegment : Node2D, IMapping<NetSegment>
+{
+    public int Id { get; set; }
+
+    public List<int> Nodes { get; set; } = [];
+
+    public List<int> Endpoints { get; set; } = [];
+
+    private NetSegment() { }
+
+    public static NetSegment Map(GodotObject segmentObject)
+    {
+        var newSegment = new NetSegment
+        {
+            Id = segmentObject.Get("id").AsInt32(),
+            Nodes =
+                segmentObject
+                    .Get("nodes")
+                    .AsGodotObjectArray<GodotObject>()
+                    .ToList()
+                    .Select(n => n.Get("id").AsInt32())
+                    .ToList() ?? [],
+            Endpoints = segmentObject.Get("endpoints").AsInt32Array().ToList() ?? [],
+        };
+
+        return newSegment;
+    }
+}

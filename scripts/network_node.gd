@@ -129,12 +129,7 @@ func _update_debug_layer() -> void:
 		child.queue_free()
 
 	if config_manager.DrawNetworkNodes:
-		var circle = circleHelper.DebugCircle.new()
-		circle.z_index = 1
-		circle.radius = 24.0
-		circle.color = Color.RED
-		
-		debug_layer.add_child(circle)
+		circleHelper.draw_debug_circle(Vector2.ZERO, Color.RED, debug_layer, {"size": 24.0, "text": str(id)})
 
 
 	if config_manager.DrawLaneEndpoints:
@@ -142,13 +137,8 @@ func _update_debug_layer() -> void:
 			var color = Color.DARK_KHAKI if incoming_endpoints.has(in_id) else Color.DARK_ORANGE
 
 			var endpoint = NetworkManager.get_lane_endpoint(in_id)
-			circleHelper._draw_debug_circle(to_local(endpoint.Position), color, debug_layer)
-
-			if config_manager.DrawLaneEndpointIds:
-				var label = Label.new()
-				label.text = str(endpoint.Id)
-				label.position = to_local(endpoint.Position)
-				debug_layer.add_child(label)
+			var circleText = str(endpoint.Id) if config_manager.DrawLaneEndpointIds else ""
+			circleHelper.draw_debug_circle(to_local(endpoint.Position), color, debug_layer, {"size": 6.0, "text": circleText})
 
 		for point in corner_points:
 			var circle = circleHelper.DebugCircle.new()
