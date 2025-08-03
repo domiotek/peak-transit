@@ -1,6 +1,9 @@
 class_name NodeLayerHelper
 
 
+var line_helper = GDInjector.inject("LineHelper") as LineHelper
+var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
+
 
 func find_intersection_corners(segments: Array) -> PackedVector2Array:
 
@@ -19,10 +22,10 @@ func find_intersection_corners(segments: Array) -> PackedVector2Array:
 
 			for edgeA in sement_a_edges:
 				for edgeB in segment_b_edges:
-					var points = LineHelper.find_curve_curve_intersections(edgeA.get_baked_points(), edgeB.get_baked_points())
+					var points = line_helper.find_curve_curve_intersections(edgeA.get_baked_points(), edgeB.get_baked_points())
 					intersection_points.append_array(points)
 
-	return  LineHelper.remove_duplicate_points(intersection_points)
+	return  line_helper.remove_duplicate_points(intersection_points)
 
 
 func create_simple_intersection(target_node: RoadNode, segments: Array, node_width: float, node_height: float) -> PackedVector2Array:
@@ -83,7 +86,7 @@ func create_precise_intersection_layer(target_node: RoadNode, segments: Array, c
 	var used_corners = []
 		
 	for segment in segments:
-		var edge_info = SegmentHelper.get_segment_edge_points_at_node(segment, target_node.id, 50.0)
+		var edge_info = segment_helper.get_segment_edge_points_at_node(segment, target_node.id, 50.0)
 		var left_edge_local = target_node.to_local(edge_info.left_edge)
 		var right_edge_local = target_node.to_local(edge_info.right_edge)
 		
@@ -151,7 +154,7 @@ func create_rectangle_underlayer(target_node: RoadNode, segments: Array, width: 
 	])
 
 func create_circle_underlayer(target_node: RoadNode, segment: NetSegment, radius: float) -> void:
-	var edge_info = SegmentHelper.get_segment_edge_points_at_node(segment, target_node.id)
+	var edge_info = segment_helper.get_segment_edge_points_at_node(segment, target_node.id)
 	var curve_center_local = target_node.to_local(edge_info.center)
 	
 	var points = []
@@ -174,8 +177,8 @@ func create_trapezoid_underlayer(target_node: RoadNode, segments: Array) -> void
 	var wider_segment = seg1 if seg1.total_lanes > seg2.total_lanes else seg2
 	var narrower_segment = seg1 if seg1.total_lanes < seg2.total_lanes else seg2
 	
-	var wider_edge_info = SegmentHelper.get_segment_edge_points_at_node(wider_segment, target_node.id)
-	var narrower_edge_info = SegmentHelper.get_segment_edge_points_at_node(narrower_segment, target_node.id, 50.0)
+	var wider_edge_info = segment_helper.get_segment_edge_points_at_node(wider_segment, target_node.id)
+	var narrower_edge_info = segment_helper.get_segment_edge_points_at_node(narrower_segment, target_node.id, 50.0)
 	
 	var wider_left_local = target_node.to_local(wider_edge_info.left_edge)
 	var wider_right_local = target_node.to_local(wider_edge_info.right_edge)

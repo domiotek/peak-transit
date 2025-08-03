@@ -8,7 +8,7 @@ using PTS.Models;
 namespace PTS.Managers;
 
 [GlobalClass]
-public partial class LaneCalculator : Node
+public partial class LaneCalculator : GodotObject
 {
     public Godot.Collections.Dictionary<int, Array<int>> CalculateLaneConnections(
         Array<NetLaneEndpoint> incomingEndpoints,

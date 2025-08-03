@@ -1,16 +1,14 @@
 extends Node2D
 class_name RoadNode
 
-const NodeLayerHelperScript = preload("res://graphic-helpers/node_layer_helper.gd")
-const DebugCircleScript = preload("res://graphic-helpers/debug_circle.gd")
-const LaneCalculatorScript = preload("res://helpers/LaneCalculator.cs")
-const ConnectionsHelperScript = preload("res://graphic-helpers/connections_helper.gd")
-
-var layerHelper: NodeLayerHelper = NodeLayerHelper.new()
-var circleHelper: DebugCircleHelper = DebugCircleHelper.new()
-var lane_calculator = LaneCalculator.new()
-var connections_helper = ConnectionsHelper.new()
-@onready var config_manager = get_node("/root/ConfigManager")
+@onready var layerHelper = GDInjector.inject("NodeLayerHelper") as NodeLayerHelper
+@onready var circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
+@onready var lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
+@onready var connections_helper = GDInjector.inject("ConnectionsHelper") as ConnectionsHelper
+@onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+@onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
+@onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
+@onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 
 @export var id: int
 var connections: Dictionary = {}
@@ -29,11 +27,9 @@ var connected_segments: Array = []
 @onready var boundary_layer: Polygon2D = $BoundaryLayer
 @onready var pathing_layer: Node2D = $PathingLayer
 
-func _ready() -> void:
-	add_child(connections_helper)
 
 func update_visuals() -> void:
-	connected_segments = NetworkManager.get_node_connected_segments(id)
+	connected_segments = network_manager.get_node_connected_segments(id)
 
 	var max_lanes = 0
 
@@ -55,7 +51,7 @@ func update_visuals() -> void:
 			corner_points = layerHelper.find_intersection_corners(connected_segments)
 
 			main_layer.polygon = layerHelper.create_precise_intersection_layer(self, connected_segments, corner_points)
-			var perpendicular_segment = SegmentHelper.find_perpendicular_segment_at_node(connected_segments, id)
+			var perpendicular_segment = segment_helper.find_perpendicular_segment_at_node(connected_segments, id)
 			var parallel_segments = connected_segments.filter(func(seg): return seg != perpendicular_segment)
 			layerHelper.create_trapezoid_underlayer(self, parallel_segments)
 		elif connected_segments.size() == 2 and connected_segments[0].total_lanes != connected_segments[1].total_lanes:
@@ -116,12 +112,12 @@ func _setup_connections() -> void:
 
 func _draw_stop_lines() -> void:
 	for endpoint_id in incoming_endpoints:
-		var endpoint = NetworkManager.get_lane_endpoint(endpoint_id)
-		var lane = NetworkManager.get_segment(endpoint.SegmentId).lanes[endpoint.LaneId]
-		var perpendicular_line = LineHelper.create_perpendicular_line_at_point(lane.trail.curve, endpoint.Position, self, NetworkConstants.LANE_WIDTH)
+		var endpoint = network_manager.get_lane_endpoint(endpoint_id)
+		var lane = network_manager.get_segment(endpoint.SegmentId).lanes[endpoint.LaneId]
+		var perpendicular_line = line_helper.create_perpendicular_line_at_point(lane.trail.curve, endpoint.Position, self, NetworkConstants.LANE_WIDTH)
 
 		if perpendicular_line:
-			LineHelper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+			line_helper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
 
 
 func _update_debug_layer() -> void:
@@ -129,19 +125,19 @@ func _update_debug_layer() -> void:
 		child.queue_free()
 
 	if config_manager.DrawNetworkNodes:
-		circleHelper.draw_debug_circle(Vector2.ZERO, Color.RED, debug_layer, {"size": 24.0, "text": str(id)})
+		circle_helper.draw_debug_circle(Vector2.ZERO, Color.RED, debug_layer, {"size": 24.0, "text": str(id)})
 
 
 	if config_manager.DrawLaneEndpoints:
 		for in_id in incoming_endpoints + outgoing_endpoints:
 			var color = Color.DARK_KHAKI if incoming_endpoints.has(in_id) else Color.DARK_ORANGE
 
-			var endpoint = NetworkManager.get_lane_endpoint(in_id)
+			var endpoint = network_manager.get_lane_endpoint(in_id)
 			var circleText = str(endpoint.Id) if config_manager.DrawLaneEndpointIds else ""
-			circleHelper.draw_debug_circle(to_local(endpoint.Position), color, debug_layer, {"size": 6.0, "text": circleText})
+			circle_helper.draw_debug_circle(to_local(endpoint.Position), color, debug_layer, {"size": 6.0, "text": circleText})
 
 		for point in corner_points:
-			var circle = circleHelper.DebugCircle.new()
+			var circle = circle_helper.DebugCircle.new()
 			circle.z_index = 5
 			circle.radius = 1.0
 			circle.color = Color.AQUA
@@ -153,4 +149,4 @@ func _update_debug_layer() -> void:
 		for in_id in incoming_endpoints:
 			for out_id in connections.get(in_id, []):
 				var path = get_connection_path(in_id, out_id)
-				LineHelper.draw_solid_line(path.curve,debug_layer, 1, Color.YELLOW)
+				line_helper.draw_solid_line(path.curve,debug_layer, 1, Color.YELLOW)

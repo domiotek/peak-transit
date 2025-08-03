@@ -12,6 +12,8 @@ public partial class NetSegment : Node2D, IMapping<NetSegment>
 
     public List<int> Endpoints { get; set; } = [];
 
+    public Dictionary<int, int> EndpointToEndpointMapping { get; set; } = [];
+
     private NetSegment() { }
 
     public static NetSegment Map(GodotObject segmentObject)
@@ -27,6 +29,10 @@ public partial class NetSegment : Node2D, IMapping<NetSegment>
                     .Select(n => n.Get("id").AsInt32())
                     .ToList() ?? [],
             Endpoints = segmentObject.Get("endpoints").AsInt32Array().ToList() ?? [],
+            EndpointToEndpointMapping = segmentObject
+                .Get("endpoints_mappings")
+                .AsGodotDictionary<int, int>()
+                .ToDictionary(),
         };
 
         return newSegment;

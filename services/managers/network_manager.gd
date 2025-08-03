@@ -1,6 +1,4 @@
-extends Node
-
-const PathFinderModule = preload("res://managers/PathFinder.cs")
+class_name NetworkManager
 
 var nodes: Dictionary[int, RoadNode] = {}
 var segments: Dictionary[int, NetSegment] = {}
@@ -8,14 +6,15 @@ var segments: Dictionary[int, NetSegment] = {}
 var lane_endpoints: Dictionary[int, NetLaneEndpoint] = {}
 
 var uiGrid: NetworkGrid
-var path_finder = PathFinder.new()
+
 
 func register_node(node: RoadNode):
 	nodes[node.id] = node
 	
 func setup_network(grid: NetworkGrid):
 	uiGrid = grid
-	var netdef = get_node("/root/NetworkDefinition")
+	var netdef = GDInjector.inject("NetworkDefinition") as NetworkDefinition
+	var path_finder = GDInjector.inject("PathFinder") as PathFinder
 
 	for segment in netdef.Segments:
 		_setupSegment(segment)
@@ -30,7 +29,29 @@ func setup_network(grid: NetworkGrid):
 	for node in nodes.values():
 		node.late_update_visuals()
 
-	path_finder.BuildGraph(nodes.values(), lane_endpoints)
+	path_finder.BuildGraph(nodes.values())
+
+	var callback = Callable(self, "retrieve_path")
+
+	# Calculate time difference for pathfinding
+	var start_time = Time.get_ticks_msec()
+	path_finder.FindPath(5, 7, callback)
+	var end_time = Time.get_ticks_msec()
+	var time_taken = end_time - start_time
+	print("Pathfinding took %d ms" % time_taken)
+
+func retrieve_path(path: Variant): 
+	if path.State == 1:
+		print("Path found from 5 to 7:")
+		
+		for step in path.Path:
+			var endpoint_id = ""
+
+			if "ViaEndpointId" in step:
+				endpoint_id = step.ViaEndpointId
+			print("Step: ", step.FromNodeId," -> ", step.ToNodeId, " Via:", endpoint_id)
+	else:
+		print("Path not found. State:", path.State)
 
 
 func get_node_connected_segments(node_id: int) -> Array:
@@ -52,7 +73,7 @@ func _setupSegment(segment_info: NetSegmentInfo):
 		push_error("Invalid segment setup: Start or target node not found.")
 		return null
 
-	var segment_scene = load("res://scenes/net_segment.tscn")
+	var segment_scene = load("res://game-objects/network/net-segment/net_segment.tscn")
 	var segment = segment_scene.instantiate()
 	
 	var new_segment_id = segments.size()
@@ -69,7 +90,7 @@ func _setupSegment(segment_info: NetSegmentInfo):
 
 	segment.update_visuals()
 
-func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int) -> void:
+func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int) -> int:
 	var endpoint = NetLaneEndpoint.new()
 
 	var next_id = lane_endpoints.size()
@@ -90,6 +111,8 @@ func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: Ro
 		node.incoming_endpoints.append(next_id)
 
 	segment.endpoints.append(next_id)
+
+	return next_id
 
 
 func get_lane_endpoint(endpoint_id: int) -> NetLaneEndpoint:

@@ -15,10 +15,13 @@ var is_asymetric: bool = false
 var max_lanes_relation_idx: int = -1
 
 var endpoints: Array[int] = []
+var endpoints_mappings: Dictionary[int, int] = {}
 
 @onready var main_road_layer: Line2D = $MainLayer
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
+
+var line_helper
 
 func _ready() -> void:		
 	var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
@@ -28,13 +31,14 @@ func _ready() -> void:
 	
 
 func setup(segment_id: int, start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
+	line_helper = GDInjector.inject("LineHelper") as LineHelper
 	id = segment_id
 	data = segment_info
 
 	nodes.append(start_node)
 	nodes.append(target_node)
 
-	curve_shape = LineHelper.calc_curve(
+	curve_shape = line_helper.calc_curve(
 		to_local(start_node.global_position), 
 		to_local(target_node.global_position), 
 		segment_info.CurveStrength, 
@@ -68,7 +72,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		else:
 			offset = (i + 1) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2
 			
-		var lane_scene = load("res://scenes/net_lane.tscn")
+		var lane_scene = load("res://game-objects/network/net-lane/net_lane.tscn")
 		var lane = lane_scene.instantiate()
 
 		lane.setup(lanes.size(), self, lane_info, offset)
@@ -101,10 +105,10 @@ func update_visuals() -> void:
 	if is_asymetric:
 		var offset_direction = -1 if relations[max_lanes_relation_idx].StartNode == nodes[1] else 1
 		var main_layer_offset =  NetworkConstants.LANE_WIDTH / 2 * offset_direction
-		main_layer_curve = LineHelper.get_curve_with_offset(curve_shape, main_layer_offset)
+		main_layer_curve = line_helper.get_curve_with_offset(curve_shape, main_layer_offset)
 
-	left_edge_curve = LineHelper.get_curve_with_offset(main_layer_curve, total_lanes * -NetworkConstants.LANE_WIDTH / 2)
-	right_edge_curve = LineHelper.get_curve_with_offset(main_layer_curve, total_lanes * NetworkConstants.LANE_WIDTH / 2)
+	left_edge_curve = line_helper.get_curve_with_offset(main_layer_curve, total_lanes * -NetworkConstants.LANE_WIDTH / 2)
+	right_edge_curve = line_helper.get_curve_with_offset(main_layer_curve, total_lanes * NetworkConstants.LANE_WIDTH / 2)
 
 	main_road_layer.points = main_layer_curve.get_baked_points()
 	main_road_layer.width = total_lanes * NetworkConstants.LANE_WIDTH
@@ -115,7 +119,7 @@ func update_visuals() -> void:
 
 func late_update_visuals() -> void:
 	_update_lanes_pathing_shape()
-
+		
 func get_lane(lane_id: int) -> NetLane:
 	if lane_id < 0 or lane_id >= lanes.size():
 		push_error("Invalid lane ID: " + str(lane_id))
@@ -125,6 +129,7 @@ func get_lane(lane_id: int) -> NetLane:
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes:
 		lane.update_trail_shape(curve_shape)
+		endpoints_mappings[lane.from_endpoint] = lane.to_endpoint
 
 func _update_markings_layer() -> void:
 	for child in markings_layer.get_children():
@@ -135,9 +140,9 @@ func _update_markings_layer() -> void:
 
 	if relations.size() == 2:
 		if total_lanes == 2:
-			LineHelper.draw_dash_line(curve_shape, markings_layer)
+			line_helper.draw_dash_line(curve_shape, markings_layer)
 		else:
-			LineHelper.draw_solid_line(curve_shape, markings_layer)
+			line_helper.draw_solid_line(curve_shape, markings_layer)
 
 	for relation in relations:
 		var starts_from_end = relation.StartNode == nodes[1]
@@ -145,23 +150,23 @@ func _update_markings_layer() -> void:
 
 		for i in range(relation.ConnectionInfo.Lanes.size() - 1):
 			var offset = (i + 1) * NetworkConstants.LANE_WIDTH * midline_side
-			var path = LineHelper.get_curve_with_offset(curve_shape, offset)
-			LineHelper.draw_dash_line(path, markings_layer)
+			var path = line_helper.get_curve_with_offset(curve_shape, offset)
+			line_helper.draw_dash_line(path, markings_layer)
 
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():
 		child.queue_free()
 	
-	var config_manager = get_node("/root/ConfigManager")
+	var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 	if not config_manager.DrawNetworkConnections:
 		return
 
 	if not curve_shape:
 		return
 
-	LineHelper.draw_solid_line(left_edge_curve, debug_layer, 2.0, Color.GREEN)
-	LineHelper.draw_solid_line(right_edge_curve, debug_layer, 2.0, Color.IVORY)
-	
+	line_helper.draw_solid_line(left_edge_curve, debug_layer, 2.0, Color.GREEN)
+	line_helper.draw_solid_line(right_edge_curve, debug_layer, 2.0, Color.IVORY)
+
 	var points = curve_shape.tessellate(5, 4.0)
 	for j in range(1, points.size()):
 		var line = Line2D.new()

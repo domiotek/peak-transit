@@ -1,5 +1,4 @@
-extends Node
-
+class_name LineHelper
 
 func calc_curve(start_pos: Vector2, target_pos: Vector2, strength: float, direction: int) -> Curve2D:
 	var line_vector = target_pos - start_pos

@@ -16,7 +16,7 @@ func _ready() -> void:
 
 	
 func _draw() -> void:
-	var config_manager = get_node("/root/ConfigManager")
+	var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 	if config_manager.DrawCameraBounds:
 		draw_rect(camera_bounds, Color.RED,false, 2, true)
 		draw_circle(camera.get_screen_center_position(), 10, Color.BLUE, true, -1, true)

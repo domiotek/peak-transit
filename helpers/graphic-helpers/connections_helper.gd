@@ -1,22 +1,28 @@
-extends Node
-
 class_name ConnectionsHelper
 
-const LaneCalculatorScript = preload("res://helpers/LaneCalculator.cs")
-var lane_calculator = LaneCalculator.new()
+var lane_calculator
+var line_helper
+var segment_helper
+var network_manager
+
+func inject_dependencies() -> void:
+	lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
+	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
+	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 
 func setup_one_segment_connections(node: RoadNode) -> void:
 	if node == null or  node.connected_segments.size() != 1:
 		return
 
 	var segment = node.connected_segments[0]
-	var edge_info = SegmentHelper.get_segment_edge_points_at_node(segment, node.id)
+	var edge_info = segment_helper.get_segment_edge_points_at_node(segment, node.id)
 
 	for in_id in node.incoming_endpoints:
-		var in_endpoint = NetworkManager.get_lane_endpoint(in_id)
+		var in_endpoint = network_manager.get_lane_endpoint(in_id)
 
 		for out_id in node.outgoing_endpoints:
-			var out_endpoint = NetworkManager.get_lane_endpoint(out_id)
+			var out_endpoint = network_manager.get_lane_endpoint(out_id)
 			if segment.endpoints.has(out_id):
 				if in_endpoint.LaneNumber != out_endpoint.LaneNumber:
 					continue
@@ -55,11 +61,11 @@ func setup_two_segment_connections(node: RoadNode) -> void:
 	var seg2 = node.connected_segments[1]
 
 	for in_id in node.incoming_endpoints:
-		var in_endpoint = NetworkManager.get_lane_endpoint(in_id)
+		var in_endpoint = network_manager.get_lane_endpoint(in_id)
 		var other_segment = seg2 if seg1.endpoints.has(in_id) else seg1
 
 		for out_id in node.outgoing_endpoints:
-			var out_endpoint = NetworkManager.get_lane_endpoint(out_id)
+			var out_endpoint = network_manager.get_lane_endpoint(out_id)
 			if other_segment.endpoints.has(out_id):
 				if abs(in_endpoint.LaneNumber - out_endpoint.LaneNumber) >1:
 					continue
@@ -72,7 +78,7 @@ func setup_two_segment_connections(node: RoadNode) -> void:
 				var direction = -1 if in_endpoint.LaneNumber < out_endpoint.LaneNumber else 1
 				var strength = 0.0 if in_endpoint.LaneNumber == out_endpoint.LaneNumber else 0.1
 
-				var curve = LineHelper.calc_curve(node.to_local(in_endpoint.Position), node.to_local(out_endpoint.Position), strength, direction)
+				var curve = line_helper.calc_curve(node.to_local(in_endpoint.Position), node.to_local(out_endpoint.Position), strength, direction)
 
 				node.add_connection_path(in_id, out_id, curve)
 
@@ -81,7 +87,7 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 	for segment in node.connected_segments:
 		var in_endpoints = segment.endpoints.filter(func (_id): return node.incoming_endpoints.has(_id))
 
-		var directions = SegmentHelper.get_segment_directions_from_segment(node, segment, node.connected_segments.filter(func (s): return s != segment))
+		var directions = segment_helper.get_segment_directions_from_segment(node, segment, node.connected_segments.filter(func (s): return s != segment))
 
 		var endpoints_dict = {
 			"forward": [],
@@ -104,17 +110,17 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 			var ids = directions[direction].endpoints.filter(func (_id): return node.outgoing_endpoints.has(_id))
 			ids_dict[direction] = ids
 			for _id in ids:
-				var endpoint = NetworkManager.get_lane_endpoint(_id)
+				var endpoint = network_manager.get_lane_endpoint(_id)
 				if endpoint:
 					endpoints_dict[direction].append(endpoint)
 
 		var in_endpoints_array = []
 		for endpoint_id in in_endpoints:
-			var endpoint = NetworkManager.get_lane_endpoint(endpoint_id)
+			var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 			if endpoint:
 				in_endpoints_array.append(endpoint)
 
-		var config_manager = get_node("/root/ConfigManager")
+		var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 
 		if config_manager.PrintIntersectionSegmentsOrientations:
 			print("Incoming Endpoints: ", in_endpoints)
@@ -128,10 +134,10 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 		node.connections.merge(new_connections)
 
 		for in_id in new_connections.keys():
-			var in_endpoint = NetworkManager.get_lane_endpoint(in_id)
+			var in_endpoint = network_manager.get_lane_endpoint(in_id)
 
 			for out_id in new_connections[in_id]:
-				var out_endpoint = NetworkManager.get_lane_endpoint(out_id)
+				var out_endpoint = network_manager.get_lane_endpoint(out_id)
 
 				var is_forward = endpoints_dict["forward"].has(out_endpoint)
 				var strength
@@ -144,7 +150,7 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 					direction = 1 if endpoints_dict['left'].has(out_endpoint) else -1
 					strength = 0.5
 
-				var curve = LineHelper.calc_curve(node.to_local(in_endpoint.Position), node.to_local(out_endpoint.Position), strength, direction)
+				var curve = line_helper.calc_curve(node.to_local(in_endpoint.Position), node.to_local(out_endpoint.Position), strength, direction)
 				node.add_connection_path(in_id, out_id, curve)
 			var direction_marker_name = determine_direction_marker(ids_dict, new_connections[in_id])
 			add_direction_marker(node, in_endpoint, direction_marker_name)
@@ -162,8 +168,8 @@ func add_direction_marker(node: RoadNode, in_endpoint: NetLaneEndpoint, asset_na
 	marker_sprite.scale = Vector2(0.125, 0.125)
 	marker_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
-	
-	var target_segment = NetworkManager.get_segment(in_endpoint.SegmentId)
+
+	var target_segment = network_manager.get_segment(in_endpoint.SegmentId)
 
 	if not target_segment:
 		return

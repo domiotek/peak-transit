@@ -1,15 +1,19 @@
 using System.Collections.Generic;
+using Godot;
 
 namespace PTS.Models;
 
-public class GraphNode
+public class GraphNode(Mappings.NetworkNode node)
 {
-    public int Id { get; set; }
+    public int Id { get; set; } = node.Id;
 
-    public Dictionary<int, NodesRelation> ConnectedNodes { get; } = [];
+    public Vector2 Position { get; set; } = node.Position;
 
-    public GraphNode(Mappings.NetworkNode node)
-    {
-        Id = node.Id;
-    }
+    public Dictionary<int, GraphRoute> ConnectedNodes { get; } = [];
+
+    public Dictionary<int, List<int>> EndpointConnections { get; } = node.EndpointConnections;
+
+    public List<NetLaneEndpoint> Endpoints { get; } = node.Endpoints;
+
+    public Dictionary<int, int> OutgoingToIncomingEndpointsMapping { get; } = [];
 }

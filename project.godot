@@ -17,12 +17,10 @@ config/icon="res://assets/icon.svg"
 
 [autoload]
 
-ConfigManager="*res://managers/ConfigManager.cs"
-NetworkManager="*res://scripts/network_manager.gd"
-NetworkDefinition="*res://constants/NetworkDefinition.cs"
+DIContainer="*res://dependency-provider/DIContainer.cs"
+GDInjector="*res://dependency-provider/gd_injector.gd"
+CSInjector="*res://dependency-provider/CSInjector.cs"
 NetworkConstants="*res://constants/network_constants.gd"
-LineHelper="*res://graphic-helpers/line_helper.gd"
-SegmentHelper="*res://graphic-helpers/segment_helper.gd"
 
 [dotnet]
 

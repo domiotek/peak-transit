@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,17 +20,36 @@ public partial class NetGraph
                 continue;
             }
 
-            var nodesRelation = new NodesRelation
+            var route = new GraphRoute
             {
-                AvailableEndpoints =
-                [
-                    .. networkNode.OutgoingEndpoints.Where(segment.Endpoints.Contains),
-                ],
+                Via = [.. networkNode.OutgoingEndpoints.Where(segment.Endpoints.Contains)],
             };
 
-            node.ConnectedNodes[otherNode.First()] = nodesRelation;
+            node.ConnectedNodes[otherNode.First()] = route;
+
+            foreach (var mapping in segment.EndpointToEndpointMapping)
+            {
+                if (!networkNode.OutgoingEndpoints.Contains(mapping.Key))
+                    continue;
+                node.OutgoingToIncomingEndpointsMapping[mapping.Key] = mapping.Value;
+            }
         }
 
         Nodes[networkNode.Id] = node;
+    }
+
+    public GraphNode GetNode(int nodeId)
+    {
+        return Nodes.TryGetValue(nodeId, out var node) ? node : null;
+    }
+
+    public bool ContainsNode(int nodeId)
+    {
+        return Nodes.ContainsKey(nodeId);
+    }
+
+    public IEnumerable<GraphNode> GetAllNodes()
+    {
+        return Nodes.Values;
     }
 }

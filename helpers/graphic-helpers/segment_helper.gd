@@ -1,4 +1,4 @@
-extends Node
+class_name SegmentHelper
 
 func find_perpendicular_segment_at_node(segments: Array, node_id: int) -> NetSegment:
 

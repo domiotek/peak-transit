@@ -8,6 +8,13 @@ var segment: NetSegment
 var data: NetLaneInfo
 var offset: float = 0.0
 
+var from_endpoint: int
+var to_endpoint: int
+
+@onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
+@onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
+@onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+
 
 func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float) -> void:
 	id = lane_id
@@ -19,15 +26,20 @@ func update_trail_shape(curve: Curve2D) -> void:
 	if curve == null:
 		return
 
-	var new_curve = LineHelper.get_curve_with_offset(curve, offset)
+	var new_curve = line_helper.get_curve_with_offset(curve, offset)
 
 	for node in segment.nodes:
 		var point = _get_endpoint_for_node(node, new_curve)
-		var road_side = SegmentHelper.get_road_side_at_endpoint(segment, point)
+		var road_side = segment_helper.get_road_side_at_endpoint(segment, point)
 		var point_global = to_global(point)
 
 		var is_outgoing = road_side == SegmentHelper.RoadSide.Left;
-		NetworkManager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, _calc_lane_number())
+		var endpoint_id = network_manager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, _calc_lane_number())
+
+		if is_outgoing:
+			from_endpoint = endpoint_id
+		else:
+			to_endpoint = endpoint_id
 
 	trail.curve = new_curve
 
@@ -37,7 +49,7 @@ func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
 
 	if polygon.size() > 0:
-		var points = LineHelper.find_curve_polygon_intersections(curve.get_baked_points(), polygon)
+		var points = line_helper.find_curve_polygon_intersections(curve.get_baked_points(), polygon)
 
 		if points.size() > 0:
 			return points[0]
@@ -46,12 +58,12 @@ func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 
 
 func _update_debug_layer() -> void:
-	var config_manager = get_node("/root/ConfigManager")
+	var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 
 	if !config_manager.DrawLaneLayers:
 		return
 
-	LineHelper.draw_solid_line(trail.curve, debug_layer, 2.0, Color.PURPLE)
+	line_helper.draw_solid_line(trail.curve, debug_layer, 2.0, Color.PURPLE)
 
 
 func _calc_lane_number() -> int:
