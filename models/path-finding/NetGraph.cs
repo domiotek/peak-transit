@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PTS.Models;
+namespace PTS.Models.PathFinding;
 
 public partial class NetGraph
 {

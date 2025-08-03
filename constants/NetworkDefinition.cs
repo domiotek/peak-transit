@@ -1,6 +1,6 @@
 using Godot;
 using Godot.Collections;
-using PTS.Models;
+using PTS.Models.Network;
 
 namespace PTS.Constants;
 
@@ -26,7 +26,11 @@ public partial class NetworkDefinition : Node
         {
             new NetSegmentInfo(0, 1, 0.2f, CurveDirection.CounterClockwise)
             {
-                Relations = [new(0) { Lanes = [new(), new()] }, new(1) { Lanes = [new(), new()] }],
+                Relations =
+                [
+                    new(0) { Lanes = [new(), new()] },
+                    new(1) { Lanes = [new() { Direction = LaneDirection.Forward }, new()] },
+                ],
             },
             new NetSegmentInfo(1, 2)
             {
@@ -44,7 +48,15 @@ public partial class NetworkDefinition : Node
             {
                 Relations =
                 [
-                    new(3) { Lanes = [new(), new(), new()] },
+                    new(3)
+                    {
+                        Lanes =
+                        [
+                            new() { Direction = LaneDirection.Left },
+                            new() { Direction = LaneDirection.ForwardLeft },
+                            new(),
+                        ],
+                    },
                     new(4) { Lanes = [new(), new()] },
                 ],
             },

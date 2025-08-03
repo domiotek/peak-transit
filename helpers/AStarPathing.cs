@@ -18,7 +18,7 @@ class AStarNode(int nodeId)
     public float FCost => GCost + HCost;
     public AStarNode Parent { get; set; } = null;
 
-    public Models.GraphNode GraphNode { get; set; } = null;
+    public Models.PathFinding.GraphNode GraphNode { get; set; } = null;
 
     public int? FromEndpointId { get; set; } = null;
     public int? ToEndpointId { get; set; } = null;
@@ -89,7 +89,7 @@ public class AStarPathing
     private static List<AStarNode> ExploreNeighborNodes(
         NetGraph graph,
         AStarNode currentNode,
-        Models.GraphNode endNode
+        Models.PathFinding.GraphNode endNode
     )
     {
         var result = new List<AStarNode>();
@@ -154,7 +154,10 @@ public class AStarPathing
         return path;
     }
 
-    private static float CalculateHeuristic(Models.GraphNode fromNode, Models.GraphNode toNode)
+    private static float CalculateHeuristic(
+        Models.PathFinding.GraphNode fromNode,
+        Models.PathFinding.GraphNode toNode
+    )
     {
         return fromNode.Position.DistanceTo(toNode.Position);
     }

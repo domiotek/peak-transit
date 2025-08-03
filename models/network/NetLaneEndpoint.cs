@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace PTS.Models;
+namespace PTS.Models.Network;
 
 public enum EndpointType
 {

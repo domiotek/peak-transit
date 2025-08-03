@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
-using PTS.Models;
+using PTS.Models.Mappings;
+using PTS.Models.Network;
 
 namespace PTS.Services.Adapters;
 
@@ -21,5 +22,10 @@ public class NetworkManagerAdapter(GodotObject managerGdObject)
                 .Call("get_node_endpoints", nodeId)
                 .AsGodotObjectArray<NetLaneEndpoint>(),
         ];
+    }
+
+    public NetSegment GetSegment(int segmentId)
+    {
+        return NetSegment.Map(_managerGdObject.Call("get_segment", segmentId).AsGodotObject());
     }
 }

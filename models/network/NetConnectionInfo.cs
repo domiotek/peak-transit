@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace PTS.Models;
+namespace PTS.Models.Network;
 
 [GlobalClass]
 public partial class NetConnectionInfo : Node

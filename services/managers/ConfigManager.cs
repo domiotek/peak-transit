@@ -25,5 +25,5 @@ public partial class ConfigManager : GodotObject
 
     public bool PrintIntersectionSegmentsOrientations { get; } = false;
 
-    public bool DrawLaneConnections { get; } = false;
+    public bool DrawLaneConnections { get; } = true;
 }

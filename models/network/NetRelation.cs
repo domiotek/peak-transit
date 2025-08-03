@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PTS.Models;
+namespace PTS.Models.Network;
 
 [GlobalClass]
 public partial class NetRelation : GodotObject
