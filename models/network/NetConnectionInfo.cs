@@ -4,7 +4,7 @@ using Godot.Collections;
 namespace PTS.Models.Network;
 
 [GlobalClass]
-public partial class NetConnectionInfo : Node
+public partial class NetConnectionInfo : GodotObject
 {
     public int StartNodeId { get; private set; }
 

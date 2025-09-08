@@ -8,6 +8,7 @@ var relations: Array[NetRelation] = []
 var lanes: Array[NetLane] = []
 var curve_shape: Curve2D
 var main_layer_curve: Curve2D
+var main_layer_offset: float = 0.0
 var left_edge_curve: Curve2D
 var right_edge_curve: Curve2D
 var total_lanes: int = 0
@@ -87,7 +88,6 @@ func update_visuals() -> void:
 	if not main_road_layer:
 		return
 
-	total_lanes = 0
 	var max_lanes = 0
 
 	for i in range(relations.size()):
@@ -98,13 +98,14 @@ func update_visuals() -> void:
 
 		total_lanes += connection.Lanes.size()
 
-	is_asymetric = total_lanes % 2 != 0
+	is_asymetric = max_lanes > total_lanes / float(relations.size())
 
 	main_layer_curve = curve_shape
 
 	if is_asymetric:
 		var offset_direction = -1 if relations[max_lanes_relation_idx].StartNode == nodes[1] else 1
-		var main_layer_offset =  NetworkConstants.LANE_WIDTH / 2 * offset_direction
+		var lane_diff = max_lanes - (total_lanes - max_lanes)
+		main_layer_offset =  NetworkConstants.LANE_WIDTH / 2 * lane_diff * offset_direction
 		main_layer_curve = line_helper.get_curve_with_offset(curve_shape, main_layer_offset)
 
 	left_edge_curve = line_helper.get_curve_with_offset(main_layer_curve, total_lanes * -NetworkConstants.LANE_WIDTH / 2)

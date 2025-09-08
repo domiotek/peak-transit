@@ -5,7 +5,7 @@ using PTS.Models.Network;
 namespace PTS.Constants;
 
 [GlobalClass]
-public partial class NetworkDefinition : Node
+public partial class NetworkDefinition : GodotObject
 {
     public Array<NetNode> Nodes { get; } =
         [
@@ -17,8 +17,11 @@ public partial class NetworkDefinition : Node
             new NetNode(5, new Vector2(400, -600)),
             new NetNode(6, new Vector2(1000, -600)),
             new NetNode(7, new Vector2(-600, -800)),
-            new NetNode(8, new Vector2(200, 800)),
+            new NetNode(8, new Vector2(300, 1000)),
             new NetNode(9, new Vector2(-600, 200)),
+            new NetNode(10, new Vector2(-600, 800)),
+            new NetNode(11, new Vector2(-1200, 200)),
+            new NetNode(12, new Vector2(800, 1500)),
         ];
 
     public Array<NetSegmentInfo> Segments { get; } =
@@ -29,7 +32,7 @@ public partial class NetworkDefinition : Node
                 Relations =
                 [
                     new(0) { Lanes = [new(), new()] },
-                    new(1) { Lanes = [new() { Direction = LaneDirection.Forward }, new()] },
+                    new(1) { Lanes = [new() { Direction = LaneDirection.Auto }, new()] },
                 ],
             },
             new NetSegmentInfo(1, 2)
@@ -83,6 +86,22 @@ public partial class NetworkDefinition : Node
             new NetSegmentInfo(0, 9, 0.1f, CurveDirection.Clockwise)
             {
                 Relations = [new(0) { Lanes = [new(), new()] }, new(9) { Lanes = [new(), new()] }],
+            },
+            new NetSegmentInfo(9, 10, 0.1f, CurveDirection.Clockwise)
+            {
+                Relations = [new(9) { Lanes = [new(), new(), new()] }, new(10) { Lanes = [new()] }],
+            },
+            new NetSegmentInfo(9, 11, 0.1f, CurveDirection.Clockwise)
+            {
+                Relations = [new(9) { Lanes = [new(), new()] }, new(11) { Lanes = [new(), new()] }],
+            },
+            new NetSegmentInfo(10, 8, 0.4f, CurveDirection.Clockwise)
+            {
+                Relations = [new(10) { Lanes = [new(), new(), new()] }, new(8) { Lanes = [new()] }],
+            },
+            new NetSegmentInfo(8, 12, 0.1f, CurveDirection.Clockwise)
+            {
+                Relations = [new(8) { Lanes = [new(), new()] }, new(12) { Lanes = [new(), new()] }],
             },
         };
 }

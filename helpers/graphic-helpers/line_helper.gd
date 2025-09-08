@@ -148,7 +148,24 @@ func find_curve_polygon_intersections(curve_points: PackedVector2Array, polygon:
 			if intersection != null:
 				intersections.append(intersection)
 	
-	return remove_duplicate_points(intersections, offset_tolerance)
+	var filtered_intersections = remove_duplicate_points(intersections, offset_tolerance)
+	
+	if filtered_intersections.size() <= 1:
+		return filtered_intersections
+	
+	var curve_center = calculate_curve_center(curve_points)
+	var closest_point = filtered_intersections[0]
+	var closest_distance = curve_center.distance_to(closest_point)
+	
+	for i in range(1, filtered_intersections.size()):
+		var distance = curve_center.distance_to(filtered_intersections[i])
+		if distance < closest_distance:
+			closest_distance = distance
+			closest_point = filtered_intersections[i]
+	
+	var result: PackedVector2Array = []
+	result.append(closest_point)
+	return result
 
 func remove_duplicate_points(points: PackedVector2Array, tolerance: float = 0.01) -> PackedVector2Array:
 	var filtered: PackedVector2Array = []
@@ -164,6 +181,16 @@ func remove_duplicate_points(points: PackedVector2Array, tolerance: float = 0.01
 			filtered.append(point)
 	
 	return filtered
+
+func calculate_curve_center(curve_points: PackedVector2Array) -> Vector2:
+	if curve_points.size() == 0:
+		return Vector2.ZERO
+	
+	var center = Vector2.ZERO
+	for point in curve_points:
+		center += point
+	
+	return center / curve_points.size()
 
 func find_closer_curve_end(curve: Curve2D, point: Vector2) -> Vector2:
 	if not curve or curve.point_count == 0:

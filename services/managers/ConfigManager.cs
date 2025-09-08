@@ -11,7 +11,7 @@ public partial class ConfigManager : GodotObject
 
     public bool DrawNetworkConnections { get; } = false;
 
-    public bool DrawNetworkNodes { get; } = true;
+    public bool DrawNetworkNodes { get; } = false;
 
     public bool DrawCameraBounds { get; } = false;
 
@@ -19,11 +19,11 @@ public partial class ConfigManager : GodotObject
 
     public bool DrawLaneLayers { get; } = false;
 
-    public bool DrawLaneEndpoints { get; } = true;
+    public bool DrawLaneEndpoints { get; } = false;
 
-    public bool DrawLaneEndpointIds { get; } = true;
+    public bool DrawLaneEndpointIds { get; } = false;
 
     public bool PrintIntersectionSegmentsOrientations { get; } = false;
 
-    public bool DrawLaneConnections { get; } = true;
+    public bool DrawLaneConnections { get; } = false;
 }

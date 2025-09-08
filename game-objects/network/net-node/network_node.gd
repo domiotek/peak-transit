@@ -51,9 +51,6 @@ func update_visuals() -> void:
 			corner_points = layerHelper.find_intersection_corners(connected_segments)
 
 			main_layer.polygon = layerHelper.create_precise_intersection_layer(self, connected_segments, corner_points)
-			var perpendicular_segment = segment_helper.find_perpendicular_segment_at_node(connected_segments, id)
-			var parallel_segments = connected_segments.filter(func(seg): return seg != perpendicular_segment)
-			layerHelper.create_trapezoid_underlayer(self, parallel_segments)
 		elif connected_segments.size() == 2 and connected_segments[0].total_lanes != connected_segments[1].total_lanes:
 			layerHelper.create_trapezoid_underlayer(self, connected_segments)
 		elif connected_segments.size() == 2:

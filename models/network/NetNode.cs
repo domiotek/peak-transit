@@ -3,7 +3,7 @@ using Godot;
 namespace PTS.Models.Network;
 
 [GlobalClass]
-public partial class NetNode : Node
+public partial class NetNode : GodotObject
 {
     public int Id { get; set; } = -1;
     public Vector2 Position { get; set; } = Vector2.Zero;

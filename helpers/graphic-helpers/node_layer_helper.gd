@@ -121,7 +121,7 @@ func create_precise_intersection_layer(target_node: RoadNode, segments: Array, c
 
 func create_rectangle_underlayer(target_node: RoadNode, segments: Array, width: float, height: float) -> void:
 	var half_width = width / 2.0
-	var half_height = height / 2.0
+	var half_height = height / 1.25
 
 	var tangent1: Vector2
 	var tangent2: Vector2
@@ -144,13 +144,14 @@ func create_rectangle_underlayer(target_node: RoadNode, segments: Array, width: 
 	var avg_tangent = (norm_tangent1 + norm_tangent2).normalized()
 	var angle = avg_tangent.angle()
 	target_node.under_layer.rotation = angle + PI/2
-	
-	
+
+	var pos_offset = segments[0].main_layer_offset
+
 	target_node.under_layer.polygon = PackedVector2Array([
-		Vector2(-half_width, -half_height),
-		Vector2(half_width, -half_height),
-		Vector2(half_width, half_height),
-		Vector2(-half_width, half_height)
+		Vector2(-half_width + pos_offset, -half_height),
+		Vector2(half_width + pos_offset, -half_height),
+		Vector2(half_width + pos_offset, half_height),
+		Vector2(-half_width + pos_offset, half_height)
 	])
 
 func create_circle_underlayer(target_node: RoadNode, segment: NetSegment, radius: float) -> void:

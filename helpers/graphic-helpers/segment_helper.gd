@@ -73,7 +73,7 @@ enum RoadSide {
 
 
 func get_road_side_at_endpoint(segment: NetSegment, point: Vector2) -> RoadSide:
-	var curve = segment.main_layer_curve
+	var curve = segment.curve_shape
 	if not curve or curve.get_baked_length() == 0:
 		return RoadSide.Right
 	
@@ -124,7 +124,7 @@ func get_segment_directions_from_segment(node: RoadNode, ref_segment: NetSegment
 	var ref_center = ref_edge_data["center"]
 	var ref_tangent = ref_edge_data["tangent"]
 	
-	var sample_distance = 20.0
+	var sample_distance = 60.0
 	var ref_sample_point: Vector2
 	
 	if ref_edge_data["is_at_start"]:

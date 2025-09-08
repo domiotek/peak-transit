@@ -129,6 +129,17 @@ public partial class LaneCalculator : GodotObject
         return [];
     }
 
+    private List<int> MapToNLaneEndpointFromCenter(
+        Array<NetLaneEndpoint> targetEndpoints,
+        int laneNumber
+    )
+    {
+        if (targetEndpoints.Count == 0)
+            return [];
+
+        return [.. targetEndpoints.Where(x => x.LaneNumber == laneNumber).Select(x => x.Id)];
+    }
+
     private List<int> CalculateLaneConnections(
         int laneIndex,
         int lanesCount,
@@ -141,19 +152,54 @@ public partial class LaneCalculator : GodotObject
     )
     {
         var connections = new List<int>();
+        var threeWayJunction =
+            leftEndpoints.Count * rightEndpoints.Count * forwardEndpoints.Count == 0;
+        var isEdgeLane = laneIndex == 0 || laneIndex == lanesCount - 1;
 
+        // Try to map to right lanes first
         if (laneIndex == lanesCount - 1 && rightEndpoints.Count != 0)
             connections.Add(rightEndpoints.MaxBy(x => x.LaneNumber).Id);
 
+        // Try to map to left lanes
         if (laneIndex == 0 && leftEndpoints.Count != 0)
             connections.Add(leftEndpoints.MinBy(x => x.LaneNumber).Id);
 
+        // Try to map to forward lanes if no connections yet or not enough incoming lanes
         if ((connections.Count == 0 || !hasSufficientIncomingLanes) && forwardEndpoints.Count != 0)
             connections.AddRange(
                 forwardEndpoints
                     .Where(x => Math.Abs(x.LaneNumber - laneEndpoint.LaneNumber) < 2)
                     .Select(x => x.Id)
             );
+
+        if (threeWayJunction && connections.Count < 2 && (lanesCount < 3 || !isEdgeLane))
+        {
+            var directions = new System.Collections.Generic.Dictionary<string, int>
+            {
+                { "left", leftEndpoints.Count },
+                { "right", rightEndpoints.Count },
+            };
+            var maxLanes = directions.Values.Max();
+            var bestDirections = directions
+                .Where(d => d.Value == maxLanes)
+                .Select(d => d.Key)
+                .ToList();
+
+            foreach (var direction in bestDirections)
+            {
+                connections.AddRange(
+                    direction switch
+                    {
+                        "left" => MapToNLaneEndpointFromCenter(leftEndpoints, 1),
+                        "right" => MapToNLaneEndpointFromCenter(
+                            rightEndpoints,
+                            rightEndpoints.Count - 2
+                        ),
+                        _ => [],
+                    }
+                );
+            }
+        }
 
         return connections;
     }

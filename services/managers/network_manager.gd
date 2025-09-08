@@ -35,15 +35,15 @@ func setup_network(grid: NetworkGrid):
 
 	# Calculate time difference for pathfinding
 	var start_time = Time.get_ticks_msec()
-	path_finder.FindPath(5, 7, callback)
+	path_finder.FindPath(5, 8, callback)
 	var end_time = Time.get_ticks_msec()
 	var time_taken = end_time - start_time
 	print("Pathfinding took %d ms" % time_taken)
 
 func retrieve_path(path: Variant): 
 	if path.State == 1:
-		print("Path found from 5 to 7:")
-		
+		print("Path found from 5 to 8:")
+
 		for step in path.Path:
 			var endpoint_id = ""
 
