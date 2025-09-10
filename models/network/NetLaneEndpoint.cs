@@ -20,6 +20,9 @@ public partial class NetLaneEndpoint : Node
     public int NodeId { get; set; }
 
     public EndpointType Type { get; set; }
+
+    public bool IsAtPathStart { get; set; } = false;
+
     public int LaneId { get; set; } = -1;
 
     public int LaneNumber { get; set; } = -1;
@@ -42,5 +45,10 @@ public partial class NetLaneEndpoint : Node
         {
             Connections.Add(otherEndpointId);
         }
+    }
+
+    public void SetIsAtPathStart(bool state)
+    {
+        IsAtPathStart = state;
     }
 }

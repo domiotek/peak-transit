@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://1twv1cec0hc6"]
+
+[ext_resource type="Script" uid="uid://c6ieeftrspyka" path="res://game-objects/vehicles/vehicle.gd" id="1_7qbvy"]
+
+[node name="Vehicle" type="Node2D"]
+script = ExtResource("1_7qbvy")
+
+[node name="Body" type="Polygon2D" parent="."]
+z_index = 5
+z_as_relative = false
+position = Vector2(56, -44)
+color = Color(1, 0.501961, 0.309804, 1)
+polygon = PackedVector2Array(-72, 36, -40, 36, -40, 52, -72, 52)
+uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)

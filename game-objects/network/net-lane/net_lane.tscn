@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dj5w2fj5756kr"]
 
-[ext_resource type="Script" uid="uid://d0lyllvgjckpi" path="res://scripts/net_lane.gd" id="1_1nvuj"]
+[ext_resource type="Script" uid="uid://d0lyllvgjckpi" path="res://game-objects/network/net-lane/net_lane.gd" id="1_1nvuj"]
 
 [sub_resource type="Curve2D" id="Curve2D_csds3"]
 

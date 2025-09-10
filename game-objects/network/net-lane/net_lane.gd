@@ -34,7 +34,8 @@ func update_trail_shape(curve: Curve2D) -> void:
 		var point_global = to_global(point)
 
 		var is_outgoing = road_side == SegmentHelper.RoadSide.Left;
-		var endpoint_id = network_manager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, _calc_lane_number())
+		var is_at_path_start = segment.nodes[0] == node
+		var endpoint_id = network_manager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, _calc_lane_number(), is_at_path_start)
 
 		if is_outgoing:
 			from_endpoint = endpoint_id
@@ -44,6 +45,12 @@ func update_trail_shape(curve: Curve2D) -> void:
 	trail.curve = new_curve
 
 	_update_debug_layer()
+
+func get_endpoint_by_id(endpoint_id: int) -> NetLaneEndpoint:
+	return network_manager.get_lane_endpoint(endpoint_id)
+
+func get_endpoint_by_type(is_outgoing: bool) -> NetLaneEndpoint:
+	return network_manager.get_lane_endpoint(from_endpoint if is_outgoing else to_endpoint)
 
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
