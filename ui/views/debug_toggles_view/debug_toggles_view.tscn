@@ -1,0 +1,79 @@
+[gd_scene load_steps=6 format=3 uid="uid://5m3t38n6i8mw"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_1opuf"]
+[ext_resource type="Script" uid="uid://b3qcttijsmp1q" path="res://ui/views/debug_toggles_view/debug_toggles_view.gd" id="2_2e7c7"]
+[ext_resource type="Script" uid="uid://x0dnqtql0416" path="res://addons/MaxSizeContainer/max_size_container.gd" id="3_4cmfb"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_1opuf"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_dtyy2"]
+font_size = 12
+
+[node name="DebugTogglesView" type="PanelContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(350, 50)
+offset_right = 350.0
+offset_bottom = 54.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = ExtResource("1_1opuf")
+script = ExtResource("2_2e7c7")
+
+[node name="MainWrapper" type="VBoxContainer" parent="."]
+material = SubResource("CanvasItemMaterial_1opuf")
+layout_mode = 2
+
+[node name="HeaderMargins" type="MarginContainer" parent="MainWrapper"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 10
+
+[node name="HeaderFlex" type="HBoxContainer" parent="MainWrapper/HeaderMargins"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Debug toggles"
+label_settings = SubResource("LabelSettings_dtyy2")
+
+[node name="CloseButton" type="Button" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "X"
+flat = true
+
+[node name="MaxSizeContainer" type="MarginContainer" parent="MainWrapper"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+script = ExtResource("3_4cmfb")
+limit = Vector2(-1, 305)
+metadata/_custom_type_script = "uid://x0dnqtql0416"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainWrapper/MaxSizeContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="MainWrapper/MaxSizeContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 20
+
+[node name="ItemList" type="BoxContainer" parent="MainWrapper/MaxSizeContainer/ScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical = true

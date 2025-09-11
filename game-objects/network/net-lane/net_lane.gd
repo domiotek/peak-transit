@@ -14,6 +14,10 @@ var to_endpoint: int
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+@onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+
+func _ready() -> void:
+	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
 
 func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float) -> void:
@@ -58,9 +62,10 @@ func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 
 
 func _update_debug_layer() -> void:
-	var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+	for child in debug_layer.get_children():
+		child.queue_free()
 
-	if !config_manager.DrawLaneLayers:
+	if !config_manager.DebugToggles.DrawLaneLayers:
 		return
 
 	line_helper.draw_solid_line(trail.curve, debug_layer, 2.0, Color.PURPLE)
@@ -68,5 +73,9 @@ func _update_debug_layer() -> void:
 
 func _calc_lane_number() -> int:
 	return abs(int(offset / NetworkConstants.LANE_WIDTH))
+
+
+func _on_debug_toggles_changed(_name, _state) -> void:
+	_update_debug_layer()
 
 	

@@ -9,6 +9,12 @@ var dragging = false
 var drag_start_pos = Vector2.ZERO
 var last_mouse_pos = Vector2.ZERO
 
+var ui_manager: UIManager
+
+func _ready() -> void:
+	ui_manager = GDInjector.inject("UIManager") as UIManager
+	
+
 func set_camera_props(new_bounds: Rect2, projection_offset: Vector2, zoom_bounds: Array[Vector2], speed: float):
 	bounds = new_bounds
 	var pos = position;
@@ -39,6 +45,13 @@ func _process(delta):
 
 func _input(event):
 	if event is InputEventMouseButton:
+		if event is InputEventMouseButton and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+			var mouse_pos = get_viewport().get_mouse_position()
+
+			if ui_manager.is_mouse_over_ui(mouse_pos):
+				return
+
+
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			zoom *= 1.1
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:

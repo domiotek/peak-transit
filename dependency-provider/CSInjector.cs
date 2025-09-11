@@ -5,7 +5,7 @@ using PTS.Constants;
 using PTS.Managers;
 using PTS.Services;
 using PTS.Services.Adapters;
-using PTS.Services.Managers;
+using PTS.Services.Managers.Config;
 
 namespace PTS.DependencyProvider;
 

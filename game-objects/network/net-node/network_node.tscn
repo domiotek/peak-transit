@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b8ivsnnw3c4bm"]
 
-[ext_resource type="Script" uid="uid://c3irqcoshr61a" path="res://scripts/network_node.gd" id="1_vxgek"]
+[ext_resource type="Script" uid="uid://c3irqcoshr61a" path="res://game-objects/network/net-node/network_node.gd" id="1_vxgek"]
 
 [node name="RoadNode" type="Node2D"]
 script = ExtResource("1_vxgek")

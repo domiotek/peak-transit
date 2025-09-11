@@ -27,6 +27,9 @@ var connected_segments: Array = []
 @onready var boundary_layer: Polygon2D = $BoundaryLayer
 @onready var pathing_layer: Node2D = $PathingLayer
 
+func _ready() -> void:
+	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+
 
 func update_visuals() -> void:
 	connected_segments = network_manager.get_node_connected_segments(id)
@@ -39,13 +42,6 @@ func update_visuals() -> void:
 
 	if connected_segments.size() > 0:
 		var node_width = max_lanes * NetworkConstants.LANE_WIDTH
-
-		if config_manager.DrawNodeLayers:
-			under_layer.color = Color.RED
-			under_layer.z_index = 1
-			under_layer.z_as_relative = false
-			main_layer.color = Color.GREEN
-			boundary_layer.color = Color.BLUE_VIOLET
 
 		if connected_segments.size() > 2:
 			corner_points = layerHelper.find_intersection_corners(connected_segments)
@@ -121,16 +117,30 @@ func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():
 		child.queue_free()
 
-	if config_manager.DrawNetworkNodes:
+	if config_manager.DebugToggles.DrawNetworkNodes:
 		circle_helper.draw_debug_circle(Vector2.ZERO, Color.RED, debug_layer, {"size": 24.0, "text": str(id)})
 
 
-	if config_manager.DrawLaneEndpoints:
+	if config_manager.DebugToggles.DrawNodeLayers:
+		under_layer.color = Color.RED
+		under_layer.z_index = 1
+		under_layer.z_as_relative = false
+		main_layer.color = Color.GREEN
+		boundary_layer.color = Color.BLUE_VIOLET
+	else:
+		under_layer.color = Color(0.2, 0.2, 0.2)
+		under_layer.z_index = 0
+		under_layer.z_as_relative = true
+		main_layer.color = Color(0.2, 0.2, 0.2)
+		boundary_layer.color = Color(0, 0, 0, 0)
+
+
+	if config_manager.DebugToggles.DrawLaneEndpoints:
 		for in_id in incoming_endpoints + outgoing_endpoints:
 			var color = Color.DARK_KHAKI if incoming_endpoints.has(in_id) else Color.DARK_ORANGE
 
 			var endpoint = network_manager.get_lane_endpoint(in_id)
-			var circleText = str(endpoint.Id) if config_manager.DrawLaneEndpointIds else ""
+			var circleText = str(endpoint.Id) if config_manager.DebugToggles.DrawLaneEndpointIds else ""
 			circle_helper.draw_debug_circle(to_local(endpoint.Position), color, debug_layer, {"size": 6.0, "text": circleText})
 
 		for point in corner_points:
@@ -142,8 +152,11 @@ func _update_debug_layer() -> void:
 			
 			debug_layer.add_child(circle)
 
-	if config_manager.DrawLaneConnections:
+	if config_manager.DebugToggles.DrawLaneConnections:
 		for in_id in incoming_endpoints:
 			for out_id in connections.get(in_id, []):
 				var path = get_connection_path(in_id, out_id)
 				line_helper.draw_solid_line(path.curve,debug_layer, 1, Color.YELLOW)
+
+func _on_debug_toggles_changed(_name, _state) -> void:
+	_update_debug_layer()
