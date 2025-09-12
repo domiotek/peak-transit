@@ -1,5 +1,8 @@
 class_name LineHelper
 
+var CurveTrimmerModule = load("res://helpers/graphic-helpers/curve_trimmer.gd") as Script
+
+
 func calc_curve(start_pos: Vector2, target_pos: Vector2, strength: float, direction: int) -> Curve2D:
 	var line_vector = target_pos - start_pos
 	var line_length = line_vector.length()
@@ -236,3 +239,8 @@ func reverse_curve(curve: Curve2D) -> Curve2D:
 		var point_out = curve.get_point_in(i)
 		reversed_curve.add_point(point_pos, point_in, point_out)
 	return reversed_curve
+
+
+func trim_curve(curve: Curve2D, start_pos: Vector2, end_pos: Vector2) -> Curve2D:
+	var curve_trimmer = CurveTrimmer.new()
+	return curve_trimmer.trim_curve(curve, start_pos, end_pos)

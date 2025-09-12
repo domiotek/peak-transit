@@ -13,7 +13,6 @@ var trip_step_index: int = 0
 var path_follower: PathFollow2D
 var trail_curve: Curve2D
 var trail_length: float
-var trail_end_offset: float
 var next_node: Dictionary = {}
 var passing_node: bool = false
 var trail_ready: bool = false
@@ -32,6 +31,7 @@ func _init() -> void:
 	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
 
 	path_follower = PathFollow2D.new()
+	path_follower.loop = false
 	add_child(path_follower)
 
 func init_trip(from: int, to: int) -> void:
@@ -66,7 +66,6 @@ func _retrieve_path(path: Variant):
 func _start_trip() -> void:
 	emit_signal("trip_started", id)
 	var start_step = trip_path[0]
-
 	_assign_to_step(start_step)
 
 
@@ -77,8 +76,7 @@ func _process(delta: float) -> void:
 	path_follower.progress_ratio +=  delta * speed / trail_length
 	self.global_transform = path_follower.global_transform
 
-
-	if path_follower.progress >= trail_end_offset or path_follower.progress_ratio >= 0.97:
+	if path_follower.progress_ratio >= 1.0:
 		_complete_current_step()
 
 
@@ -93,23 +91,10 @@ func _assign_to_step(step: Variant) -> void:
 	trail_length = trail_curve.get_baked_length()
 
 	path_follower.call_deferred("reparent", lane.trail, true)
-	
-	var start_pos = lane.trail.to_local(endpoint.Position)
-	var offset = trail_curve.get_closest_offset(start_pos)
-
-	var setup_data = {
-		"trail": lane.trail,
-		"offset": offset,
-		"start_pos": start_pos
-	}
-
-	path_follower.call_deferred("reparent", lane.trail, true)
-	call_deferred("_setup_after_reparent", setup_data)
+	call_deferred("_setup_after_reparent")
 
 
 	var finish_endpoint = lane.get_endpoint_by_type(!endpoint.IsOutgoing())
-	var finish_pos = lane.trail.to_local(finish_endpoint.Position)
-	trail_end_offset = trail_curve.get_closest_offset(finish_pos)
 
 	next_node = {
 		"node": network_manager.get_node(finish_endpoint.NodeId),
@@ -123,7 +108,6 @@ func _complete_current_step() -> void:
 	trail_ready = false
 	trail_curve = null
 	trail_length = 0.0
-	trail_end_offset = 0.0
 
 	if trip_step_index >= trip_path.size():
 		emit_signal("trip_completed", id)
@@ -148,10 +132,10 @@ func _pass_node() -> void:
 	path_follower.progress = 0.0
 	path_follower.call_deferred("reparent", new_path, true)
 
-	trail_end_offset = trail_length
 	trail_ready = true
 
-func _setup_after_reparent(setup_data: Dictionary) -> void:
-	path_follower.progress = setup_data.offset
+
+func _setup_after_reparent() -> void:
+	path_follower.progress = 0.0
 
 	trail_ready = true

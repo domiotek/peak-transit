@@ -31,6 +31,7 @@ func update_trail_shape(curve: Curve2D) -> void:
 		return
 
 	var new_curve = line_helper.get_curve_with_offset(curve, offset)
+	var points = {}
 
 	for node in segment.nodes:
 		var point = _get_endpoint_for_node(node, new_curve)
@@ -48,9 +49,12 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 		if is_outgoing:
 			from_endpoint = endpoint_id
+			points[0] = point_global
 		else:
 			to_endpoint = endpoint_id
+			points[1] = point_global
 
+	new_curve = line_helper.trim_curve(new_curve, points[0], points[1])
 	trail.curve = new_curve
 
 	_update_debug_layer()
