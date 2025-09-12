@@ -5,6 +5,7 @@ const LineHelperModule = preload("res://helpers/graphic-helpers/line_helper.gd")
 const SegmentHelperModule = preload("res://helpers/graphic-helpers/segment_helper.gd")
 const NodeLayerHelperModule = preload("res://helpers/graphic-helpers/node_layer_helper.gd")
 const NetworkManagerModule = preload("res://services/managers/network_manager.gd")
+const UIManagerModule = preload("res://services/managers/ui_manager.gd")
 
 var deferred_init_list = []
 
@@ -26,6 +27,7 @@ func _register_instances():
 	_register_singleton("NodeLayerHelper", NodeLayerHelper.new())
 	_register_singleton("DebugCircleHelper", DebugCircleHelper.new())
 	_register_singleton("NetworkManager", NetworkManager.new())
+	_register_singleton("UIManager", UIManager.new())
 
 
 func _register_singleton(dep_name: String, instance: Object):

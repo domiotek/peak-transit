@@ -1,6 +1,8 @@
 extends Node2D
 class_name NetSegment
 
+@onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+
 var id: int
 var data: NetSegmentInfo
 var nodes: Array[RoadNode] = []
@@ -29,6 +31,7 @@ func _ready() -> void:
 	img.fill(Color(0.2, 0.2, 0.2, 1.0))
 	
 	main_road_layer.texture = ImageTexture.create_from_image(img)
+	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 	
 
 func setup(segment_id: int, start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
@@ -157,9 +160,8 @@ func _update_markings_layer() -> void:
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():
 		child.queue_free()
-	
-	var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
-	if not config_manager.DrawNetworkConnections:
+
+	if not config_manager.DebugToggles.DrawNetworkConnections:
 		return
 
 	if not curve_shape:
@@ -205,3 +207,6 @@ func _update_debug_layer() -> void:
 		arrow_polygon.color = Color.RED
 		arrow_polygon.polygon = PackedVector2Array([arrow_pos, arrow_right, arrow_left])
 		debug_layer.add_child(arrow_polygon)
+
+func _on_debug_toggles_changed(_name, _state) -> void:
+	_update_debug_layer()
