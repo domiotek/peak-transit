@@ -8,6 +8,7 @@ const NetworkManagerModule = preload("res://services/managers/network_manager.gd
 const VehicleManagerModule = preload("res://services/managers/vehicle_manager.gd")
 const SimulationManagerModule = preload("res://services/managers/simulation_manager.gd")
 const PathingManagerModule = preload("res://services/managers/pathing_manager.gd")
+const UIManagerModule = preload("res://services/managers/ui_manager.gd")
 
 var deferred_init_list = []
 
@@ -32,6 +33,8 @@ func _register_instances():
 	_register_singleton("VehicleManager", VehicleManager.new())
 	_register_singleton("SimulationManager", SimulationManager.new())
 	_register_singleton("PathingManager", PathingManager.new())
+	_register_singleton("UIManager", UIManager.new())
+
 
 func _register_singleton(dep_name: String, instance: Object):
 	DIContainer.Register(dep_name, instance)

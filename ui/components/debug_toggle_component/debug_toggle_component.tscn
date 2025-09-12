@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://867gt45mxbw"]
+
+[ext_resource type="Script" uid="uid://3qbuoprsbi0x" path="res://ui/components/debug_toggle_component/debug_toggle_component.gd" id="1_fpued"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_dtyy2"]
+font_size = 12
+
+[sub_resource type="Theme" id="Theme_fpued"]
+
+[node name="DebugToggle" type="BoxContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+size_flags_vertical = 0
+script = ExtResource("1_fpued")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Test"
+label_settings = SubResource("LabelSettings_dtyy2")
+
+[node name="CheckButton" type="CheckButton" parent="."]
+layout_mode = 2
+theme = SubResource("Theme_fpued")

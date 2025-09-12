@@ -122,7 +122,7 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 
 		var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 
-		if config_manager.PrintIntersectionSegmentsOrientations:
+		if config_manager.DebugToggles.PrintIntersectionSegmentsOrientations:
 			print("Incoming Endpoints: ", in_endpoints)
 			print("Forward Endpoints: ", ids_dict["forward"])
 			print("Left Endpoints: ", ids_dict["left"])

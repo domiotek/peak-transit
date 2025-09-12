@@ -8,7 +8,7 @@ using PTS.DependencyProvider;
 using PTS.Helpers;
 using PTS.Models;
 using PTS.Models.PathFinding;
-using PTS.Services.Managers;
+using PTS.Services.Managers.Config;
 
 namespace PTS.Services;
 
