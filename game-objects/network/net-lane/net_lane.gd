@@ -65,6 +65,9 @@ func get_endpoint_by_id(endpoint_id: int) -> NetLaneEndpoint:
 func get_endpoint_by_type(is_outgoing: bool) -> NetLaneEndpoint:
 	return network_manager.get_lane_endpoint(from_endpoint if is_outgoing else to_endpoint)
 
+func get_curve() -> Curve2D:
+	return trail.curve
+
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
 

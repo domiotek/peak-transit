@@ -75,12 +75,7 @@ func setup_two_segment_connections(node: RoadNode) -> void:
 				connections_array.append(out_id)
 				node.connections[in_id] = connections_array
 
-				var direction = -1 if in_endpoint.LaneNumber < out_endpoint.LaneNumber else 1
-				var strength = 0.0 if in_endpoint.LaneNumber == out_endpoint.LaneNumber else 0.1
-
-				var curve = line_helper.calc_curve(node.to_local(in_endpoint.Position), node.to_local(out_endpoint.Position), strength, direction)
-
-				node.add_connection_path(in_id, out_id, curve)
+				create_connecting_path(in_id, out_id, node)
 
 func setup_mutli_segment_connections(node: RoadNode) -> void:
 
@@ -137,23 +132,27 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 			var in_endpoint = network_manager.get_lane_endpoint(in_id)
 
 			for out_id in new_connections[in_id]:
-				var out_endpoint = network_manager.get_lane_endpoint(out_id)
+				create_connecting_path(in_id, out_id, node)
 
-				var is_forward = endpoints_dict["forward"].has(out_endpoint)
-				var strength
-				var direction
-
-				if is_forward:
-					direction = -1 if in_endpoint.LaneNumber < out_endpoint.LaneNumber else 1
-					strength = 0.0 if in_endpoint.LaneNumber == out_endpoint.LaneNumber else 0.1
-				else:
-					direction = 1 if endpoints_dict['left'].has(out_endpoint) else -1
-					strength = 0.5
-
-				var curve = line_helper.calc_curve(node.to_local(in_endpoint.Position), node.to_local(out_endpoint.Position), strength, direction)
-				node.add_connection_path(in_id, out_id, curve)
 			var direction_marker_name = determine_direction_marker(ids_dict, new_connections[in_id])
 			add_direction_marker(node, in_endpoint, direction_marker_name)
+
+func create_connecting_path(in_id: int, out_id: int, node: RoadNode) -> void:
+	var in_endpoint = network_manager.get_lane_endpoint(in_id)
+	var out_endpoint = network_manager.get_lane_endpoint(out_id)
+
+	var in_segment = network_manager.get_segment(in_endpoint.SegmentId)
+	var out_segment = network_manager.get_segment(out_endpoint.SegmentId)
+
+	var in_curve = in_segment.get_lane(in_endpoint.LaneId).get_curve()
+	var out_curve = out_segment.get_lane(out_endpoint.LaneId).get_curve()
+
+	if not in_curve or not out_curve:
+		return
+
+	var curve = line_helper.get_connecting_curve(in_curve, out_curve)
+	curve = line_helper.convert_curve_global_to_local(curve, node)
+	node.add_connection_path(in_id, out_id, curve)
 
 
 func add_direction_marker(node: RoadNode, in_endpoint: NetLaneEndpoint, asset_name: String, marker_offset: float=NetworkConstants.DIRECTION_MARKER_OFFSET) -> void:

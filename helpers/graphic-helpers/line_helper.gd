@@ -244,3 +244,56 @@ func reverse_curve(curve: Curve2D) -> Curve2D:
 func trim_curve(curve: Curve2D, start_pos: Vector2, end_pos: Vector2) -> Curve2D:
 	var curve_trimmer = CurveTrimmer.new()
 	return curve_trimmer.trim_curve(curve, start_pos, end_pos)
+
+func get_connecting_curve(curve1: Curve2D, curve2: Curve2D) -> Curve2D:
+	var connecting_curve = Curve2D.new()
+
+	var end_pos_1 = curve1.get_point_position(curve1.get_point_count() - 1)
+	var out_handle_1 = curve1.get_point_out(curve1.get_point_count() - 1)
+
+	var start_pos_2 = curve2.get_point_position(0)
+	var in_handle_2 = curve2.get_point_in(0)
+
+	var distance = end_pos_1.distance_to(start_pos_2)
+
+	if distance < NetworkConstants.SHARP_LANE_CONNECTION_THRESHOLD:
+		var mid_point = (end_pos_1 + start_pos_2) * 0.5
+		var dir = (start_pos_2 - end_pos_1).normalized()
+		var normal = Vector2(dir.y, -dir.x)
+		var arc_height = distance * 0.3
+
+		var control1 = mid_point + normal * arc_height
+		var control2 = mid_point + normal * arc_height
+
+		connecting_curve.add_point(end_pos_1)
+		connecting_curve.set_point_out(0, control1 - end_pos_1)
+
+		connecting_curve.add_point(start_pos_2)
+		connecting_curve.set_point_in(1, control2 - start_pos_2)
+	else:
+		connecting_curve.add_point(end_pos_1)
+		connecting_curve.set_point_out(0, out_handle_1)
+		connecting_curve.add_point(start_pos_2)
+		connecting_curve.set_point_in(1, in_handle_2)
+
+
+	return connecting_curve
+
+
+func convert_curve_global_to_local(connecting_curve: Curve2D, target_node: Node2D) -> Curve2D:
+	var local_curve = Curve2D.new()
+
+	for i in range(connecting_curve.get_point_count()):
+		var global_point = connecting_curve.get_point_position(i)
+		var global_out_handle = connecting_curve.get_point_out(i)
+		var global_in_handle = connecting_curve.get_point_in(i)
+
+		var local_point = target_node.to_local(global_point)
+		var local_out_handle = target_node.to_local(global_point + global_out_handle) - local_point
+		var local_in_handle = target_node.to_local(global_point + global_in_handle) - local_point
+
+		local_curve.add_point(local_point)
+		local_curve.set_point_out(i, local_out_handle)
+		local_curve.set_point_in(i, local_in_handle)
+
+	return local_curve
