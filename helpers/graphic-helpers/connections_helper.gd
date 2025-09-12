@@ -203,7 +203,6 @@ func add_direction_marker(node: RoadNode, in_endpoint: NetLaneEndpoint, asset_na
 	marker_sprite.position = node.to_local(position)
 	var rotation = tangent.angle() + rotation_offset
 	marker_sprite.rotation = rotation
-	marker_sprite.z_index = 10
 	node.markings_layer.add_child(marker_sprite)
 
 
