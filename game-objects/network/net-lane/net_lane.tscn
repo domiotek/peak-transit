@@ -8,7 +8,6 @@
 script = ExtResource("1_1nvuj")
 
 [node name="PathingTrail" type="Path2D" parent="."]
-position = Vector2(2, 4)
 curve = SubResource("Curve2D_csds3")
 
 [node name="DebugLayer" type="Node2D" parent="."]
