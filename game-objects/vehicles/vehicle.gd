@@ -48,7 +48,6 @@ func init_trip(from: int, to: int) -> void:
 func _retrieve_path(path: Variant): 
 	if path.State == 1:
 		trip_path = path.Path
-		self.visible = true
 		print("Path found from %d to %d:" % [trip_points[0], trip_points[1]])
 
 		for step in path.Path:
@@ -58,7 +57,7 @@ func _retrieve_path(path: Variant):
 				endpoint_id = step.ViaEndpointId
 			print("Step: ", step.FromNodeId," -> ", step.ToNodeId, " Via:", endpoint_id)
 
-		_start_trip()
+		call_deferred("_start_trip")
 	else:
 		print("Path not found. Destroying vehicle. State:", path.State)
 		emit_signal("trip_abandoned", id)
@@ -86,6 +85,8 @@ func _process(delta: float) -> void:
 func _assign_to_step(step: Variant) -> void:
 	var endpoint_id = step.ViaEndpointId
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
+	self.position = endpoint.Position
+	self.visible = true
 
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 	trail_curve = lane.trail.curve
