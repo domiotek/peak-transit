@@ -52,7 +52,8 @@ func _generate_vehicle_id() -> int:
 	if freed_ids_pool.size() > 0:
 		return freed_ids_pool.pop_back()
 	else:
-		return next_fresh_id + 1
+		next_fresh_id += 1
+		return next_fresh_id - 1
 
 
 func _on_vehicle_cleanup(vehicle_id: int) -> void:
