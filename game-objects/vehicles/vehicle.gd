@@ -13,7 +13,6 @@ var trip_step_index: int = 0
 var path_follower: PathFollow2D
 var trail_curve: Curve2D
 var trail_length: float
-var trail_direction: int = 1 # 1 for going from start to end, -1 for reverse
 var trail_end_offset: float
 var next_node: Dictionary = {}
 var passing_node: bool = false
@@ -76,13 +75,11 @@ func _process(delta: float) -> void:
 	if trail_curve == null or not trail_ready:
 		return
 
-	path_follower.progress_ratio += trail_direction * delta * speed / trail_length
+	path_follower.progress_ratio +=  delta * speed / trail_length
 	self.global_transform = path_follower.global_transform
 
 
-	if path_follower.progress >= trail_end_offset and trail_direction == 1 or path_follower.progress_ratio >= 0.97:
-		_complete_current_step()
-	elif path_follower.progress <= trail_end_offset and trail_direction == -1:
+	if path_follower.progress >= trail_end_offset or path_follower.progress_ratio >= 0.97:
 		_complete_current_step()
 
 
@@ -93,7 +90,6 @@ func _assign_to_step(step: Variant) -> void:
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 	trail_curve = lane.trail.curve
 	trail_length = trail_curve.get_baked_length()
-	trail_direction = 1 if endpoint.IsAtPathStart else -1
 
 	path_follower.call_deferred("reparent", lane.trail, true)
 	
@@ -126,7 +122,6 @@ func _complete_current_step() -> void:
 	trail_ready = false
 	trail_curve = null
 	trail_length = 0.0
-	trail_direction = 1
 	trail_end_offset = 0.0
 
 	if trip_step_index >= trip_path.size():
@@ -149,7 +144,6 @@ func _pass_node() -> void:
 
 	trail_curve = new_path.curve
 	trail_length = trail_curve.get_baked_length()
-	trail_direction = 1
 	path_follower.progress = 0.0
 	path_follower.call_deferred("reparent", new_path, true)
 

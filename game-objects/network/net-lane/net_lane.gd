@@ -39,6 +39,11 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 		var is_outgoing = road_side == SegmentHelper.RoadSide.Left;
 		var is_at_path_start = segment.nodes[0] == node
+
+		if is_outgoing and not is_at_path_start:
+			new_curve = line_helper.reverse_curve(new_curve)
+			is_at_path_start = true
+
 		var endpoint_id = network_manager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, _calc_lane_number(), is_at_path_start)
 
 		if is_outgoing:

@@ -224,3 +224,15 @@ func create_perpendicular_line_at_point(curve: Curve2D, point: Vector2, ref: Nod
 	perpendicular_curve.add_point(ref.to_local(line_end))
 	
 	return perpendicular_curve
+
+func reverse_curve(curve: Curve2D) -> Curve2D:
+	if not curve:
+		return null
+
+	var reversed_curve = Curve2D.new()
+	for i in range(curve.point_count - 1, -1, -1):
+		var point_pos = curve.get_point_position(i)
+		var point_in = curve.get_point_out(i)
+		var point_out = curve.get_point_in(i)
+		reversed_curve.add_point(point_pos, point_in, point_out)
+	return reversed_curve
