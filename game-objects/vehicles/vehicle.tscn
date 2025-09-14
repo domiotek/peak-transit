@@ -70,11 +70,11 @@ text = "12"
 label_settings = SubResource("LabelSettings_hx1yw")
 horizontal_alignment = 1
 
-[node name="BackCollisionArea" type="Area2D" parent="."]
+[node name="CollisionArea" type="Area2D" parent="."]
 collision_layer = 2
 collision_mask = 2
 
-[node name="BackCollisionShape" type="CollisionShape2D" parent="BackCollisionArea"]
+[node name="CollisionShape" type="CollisionShape2D" parent="CollisionArea"]
 position = Vector2(-6, 0)
 shape = SubResource("RectangleShape2D_hx1yw")
 
@@ -118,9 +118,13 @@ hit_from_inside = true
 collide_with_areas = true
 collide_with_bodies = false
 
-[node name="InteractionArea" type="Area2D" parent="."]
-collision_mask = 0
+[node name="BodyArea" type="Area2D" parent="."]
+monitoring = false
+monitorable = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+[node name="BodyShape" type="CollisionShape2D" parent="BodyArea"]
 position = Vector2(0, -0.5)
 shape = SubResource("RectangleShape2D_ggas6")
+
+[node name="PathFollower" type="PathFollow2D" parent="."]
+loop = false

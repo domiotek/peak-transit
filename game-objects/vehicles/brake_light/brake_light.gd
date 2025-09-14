@@ -1,5 +1,7 @@
 extends Node2D
 
+class_name BrakeLight
+
 @export var inactive_color: Color = Color(0.2, 0, 0)
 @export var active_color: Color = Color(1, 0, 0)
 @export var radius: float = 1.0
