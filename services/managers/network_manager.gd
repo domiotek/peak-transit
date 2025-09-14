@@ -5,6 +5,8 @@ var segments: Dictionary[int, NetSegment] = {}
 
 var lane_endpoints: Dictionary[int, NetLaneEndpoint] = {}
 
+var end_nodes: Array = []
+
 var uiGrid: NetworkGrid
 
 
@@ -28,6 +30,8 @@ func setup_network(grid: NetworkGrid):
 
 	for node in nodes.values():
 		node.late_update_visuals()
+
+	end_nodes = nodes.values().filter(func(node): return node.connected_segments.size() == 1)
 
 	path_finder.BuildGraph(nodes.values())
 
@@ -128,3 +132,6 @@ func get_segment(segment_id: int) -> NetSegment:
 	else:
 		push_error("Segment with ID %d not found." % segment_id)
 		return null
+
+func get_end_nodes() -> Array:
+	return end_nodes

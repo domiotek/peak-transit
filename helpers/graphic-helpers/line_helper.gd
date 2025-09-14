@@ -297,3 +297,26 @@ func convert_curve_global_to_local(connecting_curve: Curve2D, target_node: Node2
 		local_curve.set_point_in(i, local_in_handle)
 
 	return local_curve
+
+func curves_intersect(curve1: Curve2D, curve2: Curve2D, resolution := 10.0) -> bool:
+	curve1.bake_interval = resolution
+	curve2.bake_interval = resolution
+	var points1 = curve1.get_baked_points()
+	var points2 = curve2.get_baked_points()
+
+	var segments_intersect = func(p1: Vector2, p2: Vector2, q1: Vector2, q2: Vector2) -> bool:
+		var d1 = (p2.x - p1.x) * (q1.y - p1.y) - (p2.y - p1.y) * (q1.x - p1.x)
+		var d2 = (p2.x - p1.x) * (q2.y - p1.y) - (p2.y - p1.y) * (q2.x - p1.x)
+		var d3 = (q2.x - q1.x) * (p1.y - q1.y) - (q2.y - q1.y) * (p1.x - q1.x)
+		var d4 = (q2.x - q1.x) * (p2.y - q1.y) - (q2.y - q1.y) * (p2.x - q1.x)
+		return (d1 * d2 < 0) and (d3 * d4 < 0)
+
+	for i in range(points1.size() - 1):
+		var a1 = points1[i]
+		var a2 = points1[i + 1]
+		for j in range(points2.size() - 1):
+			var b1 = points2[j]
+			var b2 = points2[j + 1]
+			if segments_intersect.call(a1, a2, b1, b2):
+				return true
+	return false
