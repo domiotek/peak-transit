@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://1twv1cec0hc6"]
+[gd_scene load_steps=7 format=3 uid="uid://1twv1cec0hc6"]
 
 [ext_resource type="Script" uid="uid://c6ieeftrspyka" path="res://game-objects/vehicles/vehicle.gd" id="1_7qbvy"]
 [ext_resource type="PackedScene" uid="uid://di4t4wp8wj3rd" path="res://game-objects/vehicles/brake_light/brake_light.tscn" id="2_hx1yw"]
@@ -12,6 +12,9 @@ size = Vector2(40, 22)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ggas6"]
 size = Vector2(32, 15)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_km6ay"]
+size = Vector2(10.5, 20)
 
 [node name="Vehicle" type="Node2D"]
 script = ExtResource("1_7qbvy")
@@ -71,7 +74,7 @@ label_settings = SubResource("LabelSettings_hx1yw")
 horizontal_alignment = 1
 
 [node name="CollisionArea" type="Area2D" parent="."]
-collision_layer = 2
+collision_layer = 6
 collision_mask = 2
 
 [node name="CollisionShape" type="CollisionShape2D" parent="CollisionArea"]
@@ -80,6 +83,8 @@ shape = SubResource("RectangleShape2D_hx1yw")
 
 [node name="CloseRayCaster" type="RayCast2D" parent="."]
 position = Vector2(16, 0)
+enabled = false
+exclude_parent = false
 target_position = Vector2(11, 0)
 collision_mask = 2
 hit_from_inside = true
@@ -88,6 +93,8 @@ collide_with_bodies = false
 
 [node name="MediumRayCaster" type="RayCast2D" parent="."]
 position = Vector2(16, 0)
+enabled = false
+exclude_parent = false
 target_position = Vector2(36, 0)
 collision_mask = 2
 hit_from_inside = true
@@ -96,6 +103,8 @@ collide_with_bodies = false
 
 [node name="LongRayCaster" type="RayCast2D" parent="."]
 position = Vector2(16, 0)
+enabled = false
+exclude_parent = false
 target_position = Vector2(71, 0)
 collision_mask = 2
 hit_from_inside = true
@@ -104,6 +113,8 @@ collide_with_bodies = false
 
 [node name="LeftRayCaster" type="RayCast2D" parent="."]
 position = Vector2(16, 0)
+enabled = false
+exclude_parent = false
 target_position = Vector2(45, -13)
 collision_mask = 2
 hit_from_inside = true
@@ -112,6 +123,8 @@ collide_with_bodies = false
 
 [node name="RightRayCaster" type="RayCast2D" parent="."]
 position = Vector2(16, 0)
+enabled = false
+exclude_parent = false
 target_position = Vector2(44, 15)
 collision_mask = 2
 hit_from_inside = true
@@ -125,6 +138,17 @@ monitorable = false
 [node name="BodyShape" type="CollisionShape2D" parent="BodyArea"]
 position = Vector2(0, -0.5)
 shape = SubResource("RectangleShape2D_ggas6")
+
+[node name="ForwardBlockadeObserver" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 4
+input_pickable = false
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ForwardBlockadeObserver"]
+position = Vector2(21.75, 0)
+shape = SubResource("RectangleShape2D_km6ay")
 
 [node name="PathFollower" type="PathFollow2D" parent="."]
 loop = false

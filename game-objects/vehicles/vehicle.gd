@@ -14,6 +14,7 @@ var navigator = Navigator.new()
 @onready var path_follower: PathFollow2D = $PathFollower
 @onready var body_area = $BodyArea
 @onready var collision_area = $CollisionArea
+@onready var forward_blockage_area = $ForwardBlockadeObserver
 
 
 signal trip_started(vehicle_id)
@@ -40,6 +41,8 @@ func _ready():
 			"right": $RightRayCaster
 		}
 	)
+	driver.set_blockade_observer(forward_blockage_area)
+
 	driver.connect("caster_state_changed", Callable(self, "_on_caster_state_changed"))
 
 	navigator.connect("trip_started", Callable(self, "_on_trip_started"))
@@ -56,6 +59,10 @@ func init_trip(from: int, to: int) -> void:
 
 func _process(delta: float) -> void:
 	if not navigator.can_advance():
+		return
+
+	if driver.state == Driver.VehicleState.BLOCKED:
+		driver.check_blockade_cleared()
 		return
 
 	var trail_length = navigator.get_current_step()["length"]

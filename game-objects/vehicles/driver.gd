@@ -7,7 +7,9 @@ var navigator_module = load("res://game-objects/vehicles/navigator.gd")
 enum VehicleState {
 	ACCELERATING,
 	BRAKING,
-	IDLE
+	CRUISING,
+	IDLE,
+	BLOCKED
 }
 
 var CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
@@ -29,6 +31,7 @@ var state: VehicleState = VehicleState.IDLE
 
 var brake_light_nodes: Array = []
 var casters: Dictionary = {}
+var blockade_observer: Area2D
 
 signal caster_state_changed(caster_id: String, is_colliding: bool)
 
@@ -49,6 +52,11 @@ func set_brake_lights(nodes: Array) -> void:
 func set_casters(used_casters: Dictionary) -> void:
 	casters = used_casters
 
+func set_blockade_observer(area: Area2D) -> void:
+	blockade_observer = area
+	
+	area.connect("area_exited", Callable(self, "_on_blockade_area_exited"))
+
 func get_target_speed() -> float:
 	return target_speed
 
@@ -64,7 +72,22 @@ func tick_speed(delta: float) -> float:
 	_check_for_obstacles()
 	_update_speed(delta)
 
+	if current_speed == 0 and target_speed == 0 and state == VehicleState.BRAKING:
+		_update_state(VehicleState.BLOCKED)
+	else:
+		_on_blockade_area_exited(null)
+
 	return current_speed
+
+func check_blockade_cleared() -> bool:
+	if blockade_observer.get_overlapping_areas().size() > 0:
+		return false
+
+	blockade_observer.monitoring = false
+	_set_casters_enabled(true)
+	state = VehicleState.IDLE
+
+	return true
 
 func _apply_slowdown_intersection() -> void:
 	
@@ -84,7 +107,7 @@ func _update_speed(delta: float) -> void:
 	var speed_difference = target_speed - current_speed
 
 	if abs(speed_difference) == 0:
-		_update_state(VehicleState.IDLE)
+		_update_state(VehicleState.CRUISING)
 		return
 	
 	if speed_difference > 0:
@@ -108,10 +131,13 @@ func _update_state(vehicle_state: VehicleState) -> void:
 			light.set_active(light_state)
 
 	match state:
-		VehicleState.ACCELERATING, VehicleState.IDLE:
+		VehicleState.ACCELERATING, VehicleState.CRUISING:
 			update_brake_lights.call(false)
 		VehicleState.BRAKING:
 			update_brake_lights.call(true)
+		VehicleState.BLOCKED:
+			_set_casters_enabled(false)
+			blockade_observer.monitoring = true
 
 
 func _check_for_obstacles() -> void:
@@ -178,3 +204,12 @@ func _apply_caster_colliding(caster_id: String, colliding_casters: Dictionary) -
 			current_brake_force = constants["EMERGENCY_BRAKING"]
 		_:
 			push_error("Unknown caster ID: %s" % caster_id)
+
+func _set_casters_enabled(enabled: bool) -> void:
+	for caster in casters.values():
+		caster.set_enabled(enabled)
+
+func _on_blockade_area_exited(_area: Area2D) -> void:
+	_set_casters_enabled(true)
+	blockade_observer.set_deferred("monitoring",false)
+	state = VehicleState.IDLE
