@@ -62,9 +62,9 @@ func _on_pathfinder_result(path: Variant) -> void:
 		emit_signal("trip_ended", false)
 
 func _start_trip() -> void:
-	emit_signal("trip_started")
 	var start_step = trip_path[0]
 	_assign_to_step(start_step)
+	emit_signal("trip_started")
 
 
 func _assign_to_step(step: Variant) -> void:

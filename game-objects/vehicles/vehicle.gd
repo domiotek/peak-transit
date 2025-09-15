@@ -80,6 +80,11 @@ func _process(delta: float) -> void:
 func _on_trip_started() -> void:
 	body_area.connect("input_event", Callable(self, "_on_input_event"))
 	collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
+	self.position = (navigator.get_current_step()["path"] as Curve2D).get_point_position(0)
+	self.visible = true
+	collision_area.monitoring = true
+	collision_area.monitorable = true
+	collision_area.get_child(0).set_deferred("disabled", false)
 	emit_signal("trip_started", id)
 
 func _on_trip_ended(completed: bool) -> void:
