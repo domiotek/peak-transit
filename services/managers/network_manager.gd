@@ -5,6 +5,8 @@ var segments: Dictionary[int, NetSegment] = {}
 
 var lane_endpoints: Dictionary[int, NetLaneEndpoint] = {}
 
+var end_nodes: Array = []
+
 var uiGrid: NetworkGrid
 
 
@@ -29,29 +31,9 @@ func setup_network(grid: NetworkGrid):
 	for node in nodes.values():
 		node.late_update_visuals()
 
+	end_nodes = nodes.values().filter(func(node): return node.connected_segments.size() == 1)
+
 	path_finder.BuildGraph(nodes.values())
-
-	var callback = Callable(self, "retrieve_path")
-
-	# Calculate time difference for pathfinding
-	var start_time = Time.get_ticks_msec()
-	path_finder.FindPath(5, 8, callback)
-	var end_time = Time.get_ticks_msec()
-	var time_taken = end_time - start_time
-	print("Pathfinding took %d ms" % time_taken)
-
-func retrieve_path(path: Variant): 
-	if path.State == 1:
-		print("Path found from 5 to 8:")
-
-		for step in path.Path:
-			var endpoint_id = ""
-
-			if "ViaEndpointId" in step:
-				endpoint_id = step.ViaEndpointId
-			print("Step: ", step.FromNodeId," -> ", step.ToNodeId, " Via:", endpoint_id)
-	else:
-		print("Path not found. State:", path.State)
 
 
 func get_node_connected_segments(node_id: int) -> Array:
@@ -90,7 +72,7 @@ func _setupSegment(segment_info: NetSegmentInfo):
 
 	segment.update_visuals()
 
-func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int) -> int:
+func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int, is_at_path_start: bool) -> int:
 	var endpoint = NetLaneEndpoint.new()
 
 	var next_id = lane_endpoints.size()
@@ -102,6 +84,7 @@ func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: Ro
 	endpoint.LaneId = lane_id
 	endpoint.LaneNumber = lane_number
 	endpoint.SetIsOutgoing(is_outgoing)
+	endpoint.SetIsAtPathStart(is_at_path_start)
 
 	lane_endpoints[next_id] = endpoint
 
@@ -136,9 +119,19 @@ func get_node_endpoints(node_id: int) -> Array:
 
 	return endpoints
 
+func get_node(node_id: int) -> RoadNode:
+	if nodes.has(node_id):
+		return nodes[node_id]
+	else:
+		push_error("Node with ID %d not found." % node_id)
+		return null
+
 func get_segment(segment_id: int) -> NetSegment:
 	if segments.has(segment_id):
 		return segments[segment_id]
 	else:
 		push_error("Segment with ID %d not found." % segment_id)
 		return null
+
+func get_end_nodes() -> Array:
+	return end_nodes

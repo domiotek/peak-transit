@@ -1,6 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://4sw2ac70svb1"]
+[gd_scene load_steps=3 format=3 uid="uid://4sw2ac70svb1"]
 
-[ext_resource type="Script" uid="uid://dst8hkiihppr5" path="res://scripts/map.gd" id="1_4xfga"]
+[ext_resource type="Script" uid="uid://dst8hkiihppr5" path="res://game-objects/map/map.gd" id="1_4xfga"]
+[ext_resource type="PackedScene" uid="uid://kpgpxpqvp4er" path="res://game-objects/network/net-grid/network_grid.tscn" id="2_emwqe"]
 
 [node name="Map" type="Node2D"]
 script = ExtResource("1_4xfga")
+
+[node name="Layers" type="Node" parent="."]
+
+[node name="RoadGrid" parent="Layers" instance=ExtResource("2_emwqe")]
+
+[node name="VehiclesLayer" type="Node2D" parent="Layers"]
