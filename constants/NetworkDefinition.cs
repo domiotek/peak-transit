@@ -9,7 +9,7 @@ public partial class NetworkDefinition : GodotObject
 {
     public Array<NetNode> Nodes { get; } =
         [
-            new NetNode(0, new Vector2(-114, 46)),
+            new NetNode(0, new Vector2(-114, 46)) { IntersectionType = IntersectionType.Default },
             new NetNode(1, new Vector2(126, 47)),
             new NetNode(2, new Vector2(238, 97)),
             new NetNode(3, new Vector2(428, 37)),

@@ -11,6 +11,10 @@ var offset: float = 0.0
 var from_endpoint: int
 var to_endpoint: int
 
+var direction: Enums.Direction = Enums.Direction.BACKWARD
+
+var assigned_vehicles: Array
+
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
@@ -67,6 +71,31 @@ func get_endpoint_by_type(is_outgoing: bool) -> NetLaneEndpoint:
 
 func get_curve() -> Curve2D:
 	return trail.curve
+
+func assign_vehicle(vehicle: Vehicle) -> void:
+	assigned_vehicles.append(vehicle)
+
+func remove_vehicle(vehicle: Vehicle) -> void:
+	assigned_vehicles.erase(vehicle)
+
+func get_remaining_space() -> float:
+	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1] if assigned_vehicles.size() > 0  else null
+
+	return last_vehicle.path_follower.progress if last_vehicle else trail.curve.get_baked_length()
+
+func get_first_vehicle() -> Vehicle:
+	return assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
+
+func get_last_vehicle() -> Vehicle:
+	if assigned_vehicles.size() == 0:
+		return null
+
+	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
+	if is_instance_valid(last_vehicle):
+		return last_vehicle
+	else:
+		assigned_vehicles.pop_back()
+		return get_last_vehicle()
 
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()

@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://dimhig21en0to"]
+
+[ext_resource type="Script" uid="uid://ppqm3djebhxw" path="res://game-objects/network/net-node/lane-stopper/lane_stopper.gd" id="1_n2je8"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xk40u"]
+size = Vector2(20, 30)
+
+[node name="LaneStopper" type="Area2D"]
+collision_layer = 7
+collision_mask = 6
+monitoring = false
+script = ExtResource("1_n2je8")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+position = Vector2(-10, 0)
+shape = SubResource("RectangleShape2D_xk40u")
+
+[node name="DebugLayer" type="Polygon2D" parent="."]
+position = Vector2(-10, 0)
+polygon = PackedVector2Array(-10, -15, 10, -15, 10, 15, -10, 15)

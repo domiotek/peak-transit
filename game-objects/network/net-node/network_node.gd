@@ -1,6 +1,8 @@
 extends Node2D
 class_name RoadNode
 
+var IntersectionManagerModule = load("res://services/managers/intersections/intersection_manager.gd")
+
 @onready var layerHelper = GDInjector.inject("NodeLayerHelper") as NodeLayerHelper
 @onready var circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
 @onready var lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
@@ -11,14 +13,19 @@ class_name RoadNode
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 
 @export var id: int
+var definition: NetNode
 var connections: Dictionary = {}
 var incoming_endpoints: Array = []
 var outgoing_endpoints: Array = []
+
 var connection_paths: Dictionary = {}
+var connection_directions: Dictionary = {}
+var crossing_vehicles: Dictionary = {}
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
 
+var intersection_manager: IntersectionManager
 
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
@@ -29,6 +36,13 @@ var connected_segments: Array = []
 
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+
+
+func _process(delta: float) -> void:
+	if not intersection_manager:
+		return
+
+	intersection_manager.process_tick(delta)
 
 
 func update_visuals() -> void:
@@ -65,6 +79,9 @@ func late_update_visuals() -> void:
 	if connected_segments.size() > 2:
 		_draw_stop_lines()
 
+	intersection_manager = IntersectionManager.new()
+	intersection_manager.setup_intersection(self)
+
 	_update_debug_layer()
 
 func get_intersection_polygon() -> PackedVector2Array:
@@ -76,12 +93,15 @@ func get_intersection_polygon() -> PackedVector2Array:
 		global_points.append(to_global(point))
 	return global_points
 
-func add_connection_path(in_id: int, out_id: int, curve: Curve2D) -> void:
+func add_connection_path(in_id: int, out_id: int, curve: Curve2D, direction: Enums.Direction) -> void:
 	var path = Path2D.new()
 	path.curve = curve
 	path.z_index = 2
 	pathing_layer.add_child(path)
-	connection_paths[str(in_id) + "-" + str(out_id)] = path
+	var key = str(in_id) + "-" + str(out_id)
+
+	connection_paths[key] = path
+	connection_directions[key] = direction
 
 
 func get_connection_path(in_id: int, out_id: int) -> Path2D:
@@ -90,6 +110,39 @@ func get_connection_path(in_id: int, out_id: int) -> Path2D:
 		return connection_paths[key]
 	else:
 		return null
+
+func get_connection_direction(in_id: int, out_id: int) -> Enums.Direction:
+	var key = str(in_id) + "-" + str(out_id)
+	if connection_directions.has(key):
+		return connection_directions[key]
+	else:
+		return Enums.Direction.BACKWARD
+
+func get_destination_endpoints(from_endpoint_id: int) -> Array:
+	return connections.get(from_endpoint_id, [])
+
+
+func register_crossing_vehicle(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
+	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+
+	if not crossing_vehicles.has(key):
+		crossing_vehicles[key] = []
+	
+	if vehicle_id not in crossing_vehicles[key]:
+		crossing_vehicles[key].append(vehicle_id)
+
+func mark_vehicle_left(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
+	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+
+	if crossing_vehicles.has(key):
+		crossing_vehicles[key].erase(vehicle_id)
+		if crossing_vehicles[key].size() == 0:
+			crossing_vehicles.erase(key)
+
+func get_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> Array:
+	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+
+	return crossing_vehicles.get(key, [])
 
 func _setup_connections() -> void:
 

@@ -29,6 +29,7 @@ signal trip_abandoned(vehicle_id)
 
 func _ready():
 	var ai = CarAI.new()
+	driver.set_owner(self)
 	driver.set_ai(ai)
 	driver.set_navigator(navigator)
 	driver.set_brake_lights([$Body/LeftBrakeLight, $Body/RightBrakeLight])
@@ -44,10 +45,11 @@ func _ready():
 	driver.set_blockade_observer(forward_blockage_area)
 
 	driver.connect("caster_state_changed", Callable(self, "_on_caster_state_changed"))
+	driver.connect("state_changed", Callable(self, "_on_driver_state_changed"))
 
 	navigator.connect("trip_started", Callable(self, "_on_trip_started"))
 	navigator.connect("trip_ended", Callable(self, "_on_trip_ended"))
-	navigator.setup(path_follower)
+	navigator.setup(self)
 
 func init_trip(from: int, to: int) -> void:
 	if from == to:
@@ -95,6 +97,7 @@ func _on_trip_ended(completed: bool) -> void:
 
 func _on_input_event(_viewport, event, _shape_idx) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		navigator.clean_up()
 		emit_signal("trip_abandoned", id)
 
 func _on_body_area_body_entered(_body) -> void:
@@ -112,3 +115,11 @@ func _on_caster_state_changed(caster_id: String, is_colliding: bool) -> void:
 			$Body/LeftRayIndicator.set_active(is_colliding)
 		"right":
 			$Body/RightRayIndicator.set_active(is_colliding)
+
+func _on_driver_state_changed(new_state: Driver.VehicleState) -> void:
+	var line = $Body/Line2D as Line2D
+	match new_state:
+		Driver.VehicleState.BLOCKED:
+			line.default_color = Color.RED
+		_:
+			line.default_color = Color.WHITE

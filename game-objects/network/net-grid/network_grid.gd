@@ -11,6 +11,7 @@ func _ready() -> void:
 		var road_node = road_node_scene.instantiate()
 		road_node.id = node.Id
 		road_node.position = node.Position
+		road_node.definition = node
 		add_child(road_node)
 		network_manager.register_node(road_node)
 

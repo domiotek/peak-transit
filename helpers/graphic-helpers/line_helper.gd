@@ -320,3 +320,10 @@ func curves_intersect(curve1: Curve2D, curve2: Curve2D, resolution := 10.0) -> b
 			if segments_intersect.call(a1, a2, b1, b2):
 				return true
 	return false
+
+func rotate_along_curve(curve: Curve2D, point: Vector2) -> float:
+	var closest_offset = curve.get_closest_offset(point)
+	var curve_transform = curve.sample_baked_with_rotation(closest_offset, true)
+	var rotation_angle = curve_transform.get_rotation()
+
+	return rotation_angle

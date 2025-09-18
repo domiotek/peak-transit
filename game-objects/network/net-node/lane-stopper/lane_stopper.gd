@@ -1,0 +1,30 @@
+extends Area2D
+
+class_name LaneStopper
+
+
+@onready var indicator = $DebugLayer
+@onready var shape = $Shape
+@onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+@onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+
+var endpoint: NetLaneEndpoint
+
+
+var active: bool = false
+
+
+func set_active(_active: bool) -> void:
+	active = _active
+	self.monitorable = _active
+	shape.set_deferred("disabled", not _active)
+	_toggle_debug_visuals()
+
+func is_active() -> bool:
+	return active
+
+func get_lane() -> NetLane:
+	return network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId)
+
+func _toggle_debug_visuals() -> void:
+	indicator.color = Color(1, 0, 0, 0.5) if active else Color(0, 1, 0, 0.5)
