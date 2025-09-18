@@ -132,7 +132,7 @@ func check_blockade_cleared() -> bool:
 					if not their_colliding_vehicle:
 						return false 	
 				
-					if their_colliding_vehicle == self.owner:
+					if their_colliding_vehicle == self.owner || colliders.has(self.owner.collision_area):
 						unblocked = true
 						no_caster_allowance_time = 5.0
 						break
