@@ -10,6 +10,7 @@ enum StepType {
 var path_follower: PathFollow2D
 var network_manager: NetworkManager
 var pathing_manager: PathingManager
+var line_helper: LineHelper
 
 var trip_points: Array[int] = []
 var trip_path: Array = []
@@ -17,6 +18,9 @@ var trip_step_index: int = 0
 
 var current_step: Dictionary
 var step_ready: bool = false
+
+var traveled_distance_till_current_step: float = 0.0
+var total_trip_distance: float = 0.0
 
 
 signal trip_started()
@@ -26,6 +30,7 @@ func setup(pf: PathFollow2D) -> void:
 	path_follower = pf
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
+	line_helper = GDInjector.inject("LineHelper") as LineHelper
 
 
 func setup_trip(from_endpoint_id: int, to_endpoint_id: int) -> void:
@@ -45,6 +50,8 @@ func can_advance() -> bool:
 func complete_current_step() -> void:
 	step_ready = false
 
+	traveled_distance_till_current_step += current_step["length"]
+
 	if trip_step_index + 1 >= trip_path.size():
 		emit_signal("trip_ended", true)
 	elif current_step["type"] == StepType.NODE:
@@ -53,13 +60,47 @@ func complete_current_step() -> void:
 	else:
 		_pass_node()
 
+func abandon_trip() -> void:
+	emit_signal("trip_ended", false)
+
+func get_total_progress() -> float:
+	if total_trip_distance == 0:
+		return 0.0
+
+	return (traveled_distance_till_current_step + current_step["progress"]) / total_trip_distance
+
+func get_trip_curves() -> Array:
+	var curves: Array = []
+
+	for step_idx in range(trip_path.size()):
+		var step = trip_path[step_idx]
+		var endpoint = network_manager.get_lane_endpoint(step.ViaEndpointId)
+		var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
+		var other_endpoint = lane.get_endpoint_by_type(false)
+		curves.append(lane.trail.curve)
+
+		if step.ToNodeId != trip_points[1]:
+			var node = network_manager.get_node(step.ToNodeId)
+			var next_step = trip_path[step_idx + 1]
+			var node_path = node.get_connection_path(other_endpoint.Id, next_step.ViaEndpointId)
+			curves.append(line_helper.convert_curve_local_to_global(node_path.curve, node))
+
+	return curves
+
 func _on_pathfinder_result(path: Variant) -> void:
 	if path.State == 1:
 		trip_path = path.Path
 
 		call_deferred("_start_trip")
+		call_deferred("_calc_trip_distance")
 	else:
 		emit_signal("trip_ended", false)
+
+func _calc_trip_distance() -> void:
+	var curves = get_trip_curves()
+
+	for curve in curves:
+		total_trip_distance += curve.get_baked_length()
 
 func _start_trip() -> void:
 	var start_step = trip_path[0]

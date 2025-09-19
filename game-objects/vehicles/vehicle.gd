@@ -21,7 +21,7 @@ signal trip_started(vehicle_id)
 signal trip_completed(vehicle_id)
 signal trip_abandoned(vehicle_id)
 
-
+@onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 @onready var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 @onready var pathing_manager: PathingManager = GDInjector.inject("PathingManager") as PathingManager
 @onready var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
@@ -56,6 +56,23 @@ func init_trip(from: int, to: int) -> void:
 
 	navigator.setup_trip(from, to)
 
+func get_popup_data() -> Dictionary:
+	var data = {
+		"speed": driver.get_current_speed(),
+		"target_speed": driver.get_target_speed(),
+		"state": Driver.VehicleState.keys()[driver.state],
+		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
+		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,
+		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")]
+	}
+
+	return data
+
+func get_total_progress() -> float:
+	return navigator.get_total_progress()
+
+func get_all_trip_curves() -> Array:
+	return navigator.get_trip_curves()
 
 func _process(delta: float) -> void:
 	if not navigator.can_advance():
@@ -95,7 +112,7 @@ func _on_trip_ended(completed: bool) -> void:
 
 func _on_input_event(_viewport, event, _shape_idx) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		emit_signal("trip_abandoned", id)
+		game_manager.set_selection(self, GameManager.SelectionType.VEHICLE)
 
 func _on_body_area_body_entered(_body) -> void:
 	driver.emergency_stop()

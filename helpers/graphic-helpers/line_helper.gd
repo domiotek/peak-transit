@@ -280,17 +280,36 @@ func get_connecting_curve(curve1: Curve2D, curve2: Curve2D) -> Curve2D:
 	return connecting_curve
 
 
-func convert_curve_global_to_local(connecting_curve: Curve2D, target_node: Node2D) -> Curve2D:
+func convert_curve_global_to_local(curve: Curve2D, target_node: Node2D) -> Curve2D:
 	var local_curve = Curve2D.new()
 
-	for i in range(connecting_curve.get_point_count()):
-		var global_point = connecting_curve.get_point_position(i)
-		var global_out_handle = connecting_curve.get_point_out(i)
-		var global_in_handle = connecting_curve.get_point_in(i)
+	for i in range(curve.get_point_count()):
+		var global_point = curve.get_point_position(i)
+		var global_out_handle = curve.get_point_out(i)
+		var global_in_handle = curve.get_point_in(i)
 
 		var local_point = target_node.to_local(global_point)
 		var local_out_handle = target_node.to_local(global_point + global_out_handle) - local_point
 		var local_in_handle = target_node.to_local(global_point + global_in_handle) - local_point
+
+		local_curve.add_point(local_point)
+		local_curve.set_point_out(i, local_out_handle)
+		local_curve.set_point_in(i, local_in_handle)
+
+	return local_curve
+
+
+func convert_curve_local_to_global(curve: Curve2D, source_node: Node2D) -> Curve2D:
+	var local_curve = Curve2D.new()
+
+	for i in range(curve.get_point_count()):
+		var global_point = curve.get_point_position(i)
+		var global_out_handle = curve.get_point_out(i)
+		var global_in_handle = curve.get_point_in(i)
+
+		var local_point = source_node.to_global(global_point)
+		var local_out_handle = source_node.to_global(global_point + global_out_handle) - local_point
+		var local_in_handle = source_node.to_global(global_point + global_in_handle) - local_point
 
 		local_curve.add_point(local_point)
 		local_curve.set_point_out(i, local_out_handle)

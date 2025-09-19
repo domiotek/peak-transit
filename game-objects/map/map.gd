@@ -1,5 +1,7 @@
 extends Node2D
 
+class_name Map
+
 var map_size: Vector2
 
 func _draw():

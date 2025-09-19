@@ -1,5 +1,13 @@
 class_name UIManager
 
+enum AnchorPoint {
+	TOP_LEFT,
+	TOP_RIGHT,
+	BOTTOM_LEFT,
+	BOTTOM_RIGHT,
+}
+
+
 var ui_views: Dictionary[String, Control] = {}
 
 var visible_views: Array[String] = []
@@ -65,6 +73,44 @@ func is_mouse_over_ui(mouse_position: Vector2) -> bool:
 			return true
 
 	return false
+
+func get_anchor_point_to_world_object(viewport: Viewport, object: Object) -> Vector2:
+	var vehicle_world_pos = object.global_position
+	var camera = viewport.get_camera_2d()
+
+	if not camera:
+		return Vector2.ZERO
+
+	var viewport_size = viewport.get_visible_rect().size
+	var camera_pos = camera.global_position
+	var camera_zoom = camera.zoom
+	
+	var relative_pos = (vehicle_world_pos - camera_pos) * camera_zoom
+	var screen_pos = viewport_size * 0.5 + relative_pos
+	return screen_pos
+
+func reanchor_to_world_object(control: Control, target_object: Node2D, anchor: AnchorPoint, clamp_to_screen: bool) -> void:
+	var viewport = control.get_viewport()
+	var position = get_anchor_point_to_world_object(viewport, target_object)
+
+	match anchor:
+		AnchorPoint.TOP_LEFT:
+			pass
+		AnchorPoint.TOP_RIGHT:
+			position.x -= control.size.x
+		AnchorPoint.BOTTOM_LEFT:
+			position.y -= control.size.y
+		AnchorPoint.BOTTOM_RIGHT:
+			position -= control.size
+		_:
+			push_error("Unknown anchor point: %s" % str(anchor))
+			return
+
+	if clamp_to_screen:
+		position.x = clamp(position.x, 0, viewport.size.x - control.size.x)
+		position.y = clamp(position.y, 0, viewport.size.y - control.size.y)
+
+	control.position = position
 
 func _render_view(view: Control) -> void:
 	if loaded_views.has(view.name):
