@@ -17,6 +17,7 @@ var item_scene = preload("res://ui/components/value_list_item/value_list_item.ts
 @onready var pin_button: Button = $MarginContainer/MainFlowContainer/HeaderBoxContainer/PinButton
 @onready var delete_button: Button = $MarginContainer/MainFlowContainer/ToolBoxPanel/DeleteButton
 @onready var show_route_button: Button = $MarginContainer/MainFlowContainer/ToolBoxPanel/ShowRouteButton
+@onready var debugger_button: Button = $MarginContainer/MainFlowContainer/ToolBoxPanel/DebuggerButton
 
 @onready var id_label: Label = $MarginContainer/MainFlowContainer/HeaderBoxContainer/IdLabel
 
@@ -34,6 +35,7 @@ func _ready() -> void:
 	close_button.pressed.connect(_on_close_button_pressed)
 	delete_button.pressed.connect(_on_delete_button_pressed)
 	show_route_button.pressed.connect(_on_show_route_button_pressed)
+	debugger_button.pressed.connect(_on_debugger_button_pressed)
 	pin_button.pressed.connect(_on_pin_button_toggled)
 
 func update() -> void:
@@ -89,6 +91,8 @@ func _on_show_route_button_pressed() -> void:
 		if draw_route:
 			game_manager.draw_vehicle_route(selected_vehicle)
 
+func _on_debugger_button_pressed() -> void:
+	game_manager.debug_selection = not game_manager.debug_selection
 
 func _on_pin_button_toggled() -> void:
 	_handle_pinned_button(not is_pinned)

@@ -77,6 +77,10 @@ func get_all_trip_curves() -> Array:
 	return navigator.get_trip_curves()
 
 func _process(delta: float) -> void:
+	if game_manager.is_debug_pick_enabled() && game_manager.try_hit_debug_pick(self):
+		print("Debug pick triggered for vehicle ID %d" % id)
+		breakpoint
+
 	if not navigator.can_advance():
 		return
 
@@ -94,7 +98,7 @@ func _process(delta: float) -> void:
 	if path_follower.progress_ratio >= 1.0:
 		navigator.complete_current_step()
 
-	$Body/Label.text = str(driver.get_target_speed())
+	$Body/Label.text = str(id)
 
 func _on_trip_started() -> void:
 	body_area.connect("input_event", Callable(self, "_on_input_event"))

@@ -17,6 +17,7 @@ var initial_map_pos = Vector2(150, 900)
 var selected_object: Object = null
 var selection_type: SelectionType = SelectionType.NONE
 var selection_popup_id: Variant = null
+var debug_selection: bool = false
 
 var ui_manager: UIManager
 var config_manager: ConfigManager
@@ -81,6 +82,19 @@ func get_selected_object() -> Object:
 
 func get_selection_type() -> SelectionType:
 	return selection_type
+
+func is_debug_pick_enabled() -> bool:
+	return debug_selection
+
+func try_hit_debug_pick(object: Object) -> bool:
+	if not debug_selection:
+		return false
+
+	if selection_type == SelectionType.VEHICLE and selected_object == (object as Vehicle):
+		debug_selection = false
+		return true
+
+	return false
 
 func draw_vehicle_route(vehicle: Vehicle) -> void:
 	if not vehicle:
