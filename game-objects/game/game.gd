@@ -12,6 +12,7 @@ func _ready() -> void:
 	game_manager = GDInjector.inject("GameManager") as GameManager
 	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 	ui_manager = GDInjector.inject("UIManager") as UIManager
+	circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
 
 	game_manager.initialize($Map, camera)
 
