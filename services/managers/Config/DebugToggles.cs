@@ -19,13 +19,13 @@ public partial class DebugToggles : GodotObject
 
     public bool DrawLaneLayers { get; private set; } = false;
 
-    public bool DrawLaneEndpoints { get; private set; } = true;
+    public bool DrawLaneEndpoints { get; private set; } = false;
 
-    public bool DrawLaneEndpointIds { get; private set; } = true;
+    public bool DrawLaneEndpointIds { get; private set; } = false;
 
     public bool PrintIntersectionSegmentsOrientations { get; private set; } = false;
 
-    public bool DrawLaneConnections { get; private set; } = true;
+    public bool DrawLaneConnections { get; private set; } = false;
 
     public void SetToggle(string toggleName, bool value)
     {

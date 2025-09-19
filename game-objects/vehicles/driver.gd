@@ -67,6 +67,9 @@ func set_blockade_observer(area: Area2D) -> void:
 func get_target_speed() -> float:
 	return target_speed
 
+func get_maximum_speed() -> float:
+	return constants["MAX_SPEED"]
+
 func get_state() -> VehicleState:
 	return state
 

@@ -24,6 +24,7 @@ var crossing_vehicles: Dictionary = {}
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
+var segment_priorities: Dictionary = {}
 
 var intersection_manager: IntersectionManager
 
@@ -47,6 +48,8 @@ func _process(delta: float) -> void:
 
 func update_visuals() -> void:
 	connected_segments = network_manager.get_node_connected_segments(id)
+
+	_fill_segment_priorities()
 
 	var max_lanes = 0
 
@@ -118,6 +121,10 @@ func get_connection_direction(in_id: int, out_id: int) -> Enums.Direction:
 	else:
 		return Enums.Direction.BACKWARD
 
+func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
+	var from_segment_id = network_manager.get_lane_endpoint(in_id).SegmentId
+	return segment_priorities.get(from_segment_id, Enums.IntersectionPriority.YIELD)
+
 func get_destination_endpoints(from_endpoint_id: int) -> Array:
 	return connections.get(from_endpoint_id, [])
 
@@ -163,8 +170,47 @@ func _draw_stop_lines() -> void:
 		var perpendicular_line = line_helper.create_perpendicular_line_at_point(lane.trail.curve, endpoint.Position, self, NetworkConstants.LANE_WIDTH)
 
 		if perpendicular_line:
-			line_helper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+			var priority = segment_priorities.get(endpoint.SegmentId, Enums.IntersectionPriority.YIELD)
 
+			match priority:
+				Enums.IntersectionPriority.PRIORITY:
+					continue
+				Enums.IntersectionPriority.STOP:
+					line_helper.draw_solid_line(perpendicular_line, markings_layer, 3.0, Color.GRAY)
+				Enums.IntersectionPriority.YIELD:
+					line_helper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+
+func _fill_segment_priorities() -> void:
+
+	var get_all_yield = func() -> Dictionary:
+		var dict: Dictionary = {}
+		for segment in connected_segments:
+			dict[segment.id] = Enums.IntersectionPriority.YIELD
+		return dict
+
+	var new_state = {}
+
+	var priority_count = 0
+
+	for segment in connected_segments:
+		var dest_node_id = segment.get_other_node_id(id)
+		var is_in_priority = definition.PrioritySegments.has(dest_node_id)
+		var is_in_stop = definition.StopSegments.has(dest_node_id)
+
+		if is_in_priority:
+			if priority_count >= 2 || is_in_stop:
+				push_error("Intersection node " + str(id) + " has more than two priority segments or a segment marked as both priority and stop. All non-priority segments will be set to yield.")
+				segment_priorities = get_all_yield.call()
+				return
+
+			new_state[segment.id] = Enums.IntersectionPriority.PRIORITY
+			priority_count += 1
+		elif is_in_stop:
+			new_state[segment.id] = Enums.IntersectionPriority.STOP
+		else:
+			new_state[segment.id] = Enums.IntersectionPriority.YIELD
+
+	segment_priorities = new_state
 
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():

@@ -21,3 +21,9 @@ enum PathConflictType {
 	LINE_CROSSING,
 	SAME_ENDPOINT,
 }
+
+enum IntersectionPriority {
+	YIELD,
+	STOP,
+	PRIORITY
+}

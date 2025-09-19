@@ -74,6 +74,7 @@ func _get_conflicting_paths(stopper: LaneStopper) -> Dictionary:
 	for my_dest_endpoint_id in connecting_curves[stopper.endpoint.Id]:
 		var my_curve = node.get_connection_path(stopper.endpoint.Id, my_dest_endpoint_id).curve
 		var my_direction = node.get_connection_direction(stopper.endpoint.Id, my_dest_endpoint_id)
+		var my_priority = node.get_connection_priority(stopper.endpoint.Id)
 
 		var conflicting: Array = []
 
@@ -84,6 +85,7 @@ func _get_conflicting_paths(stopper: LaneStopper) -> Dictionary:
 			for other_dest_endpoint_id in connecting_curves[other_stopper.endpoint.Id]:
 				var other_curve = node.get_connection_path(other_stopper.endpoint.Id, other_dest_endpoint_id).curve
 				var other_direction = node.get_connection_direction(other_stopper.endpoint.Id, other_dest_endpoint_id)
+				var other_priority = node.get_connection_priority(other_stopper.endpoint.Id)
 
 				if _filter_conflict(my_direction, other_direction):
 					var reason = Enums.PathConflictType.NONE
@@ -125,7 +127,7 @@ func _check_enough_space_in_lane_ahead(_stopper: LaneStopper, next_endpoint: int
 		is_another_vehicle_already_on_intersection = node.get_vehicles_crossing(_stopper.endpoint.Id, next_endpoint).size() > 0
 		
 
-	return is_another_vehicle_already_on_intersection || available_space < 50.0 && (vehicle_state == Driver.VehicleState.BRAKING || vehicle_state == Driver.VehicleState.BLOCKED)
+	return is_another_vehicle_already_on_intersection || (available_space < 25.0 && last_vehicle.driver.get_target_speed() != last_vehicle.driver.get_maximum_speed()) ||  available_space < 50.0 && (vehicle_state == Driver.VehicleState.BRAKING || vehicle_state == Driver.VehicleState.BLOCKED)
 
 
 func _check_conflicting_path(stopper: LaneStopper, next_endpoint: int) -> bool:

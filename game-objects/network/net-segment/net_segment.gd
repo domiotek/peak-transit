@@ -130,6 +130,15 @@ func get_lane(lane_id: int) -> NetLane:
 		return null
 	return lanes.filter(func(lane): return lane.id == lane_id)[0]
 
+func get_other_node_id(node_id: int) -> int:
+	if nodes[0].id == node_id:
+		return nodes[1].id
+	elif nodes[1].id == node_id:
+		return nodes[0].id
+	else:
+		push_error("Node ID not part of this segment.")
+		return -1
+
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes:
 		lane.update_trail_shape(curve_shape)
