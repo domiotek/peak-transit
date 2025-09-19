@@ -11,3 +11,7 @@ script = ExtResource("1_4xfga")
 [node name="RoadGrid" parent="Layers" instance=ExtResource("2_emwqe")]
 
 [node name="VehiclesLayer" type="Node2D" parent="Layers"]
+
+[node name="VehicleRouteLayer" type="Node2D" parent="Layers"]
+z_index = 27
+z_as_relative = false

@@ -64,6 +64,9 @@ func set_blockade_observer(area: Area2D) -> void:
 	
 	area.connect("area_exited", Callable(self, "_on_blockade_area_exited"))
 
+func get_current_speed() -> float:
+	return current_speed
+
 func get_target_speed() -> float:
 	return target_speed
 
