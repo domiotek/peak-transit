@@ -13,6 +13,10 @@ var endpoint: NetLaneEndpoint
 
 var active: bool = false
 
+func _ready() -> void:
+	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+	_on_debug_toggles_changed("", false)
+
 
 func set_active(_active: bool) -> void:
 	active = _active
@@ -28,3 +32,9 @@ func get_lane() -> NetLane:
 
 func _toggle_debug_visuals() -> void:
 	indicator.color = Color(1, 0, 0, 0.5) if active else Color(0, 1, 0, 0.5)
+
+func _on_debug_toggles_changed(_id: String, _state: bool) -> void:
+	if config_manager.DebugToggles.DrawIntersectionStoppers:
+		indicator.visible = true
+	else:
+		indicator.visible = false
