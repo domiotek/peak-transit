@@ -26,6 +26,8 @@ var target_speed: float = 0.0
 var current_brake_force: float = 0.0
 
 var no_caster_allowance_time: float = 0.0
+var just_enabled_casters: bool = false
+var casters_state: bool = false
 
 var constants: Dictionary = {}
 
@@ -122,7 +124,14 @@ func tick_speed(delta: float) -> float:
 
 func check_blockade_cleared() -> bool:
 	var colliders = get_blocking_objects()
+
+	if just_enabled_casters:
+		return false
+
 	var unblocked = false
+
+	if state != VehicleState.BLOCKED:
+		return true
 
 	if colliders.size() > 0:
 
@@ -285,10 +294,16 @@ func _apply_caster_colliding(caster_id: String, colliding_casters: Dictionary) -
 			push_error("Unknown caster ID: %s" % caster_id)
 
 func _set_casters_enabled(enabled: bool) -> void:
+	if enabled and not casters_state:
+		just_enabled_casters = true
+
+	casters_state = enabled
+
 	for caster in casters.values():
 		caster.set_enabled(enabled)
 
 func _on_blockade_area_exited(_area: Area2D) -> void:
 	_set_casters_enabled(true)
 	blockade_observer.set_deferred("monitoring",false)
-	state = VehicleState.IDLE
+	if state == VehicleState.BLOCKED:
+		state = VehicleState.IDLE

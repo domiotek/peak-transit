@@ -177,7 +177,7 @@ func _pass_node() -> void:
 
 	current_step = {
 		"type": StepType.NODE,
-		"path": new_path.curve,
+		"path": line_helper.convert_curve_local_to_global(new_path.curve, node),
 		"length": new_path.curve.get_baked_length(),
 		"progress": 0.0,
 		"node": node,

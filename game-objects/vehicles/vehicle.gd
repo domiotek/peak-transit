@@ -85,6 +85,10 @@ func _process(delta: float) -> void:
 		return
 
 	if driver.state == Driver.VehicleState.BLOCKED:
+		if driver.just_enabled_casters:
+			driver.just_enabled_casters = false
+			return
+
 		driver.check_blockade_cleared()
 		return
 
@@ -98,8 +102,6 @@ func _process(delta: float) -> void:
 	if path_follower.progress_ratio >= 1.0:
 		navigator.complete_current_step()
 
-	$Body/Label.text = str(id)
-
 func _on_trip_started() -> void:
 	body_area.connect("input_event", Callable(self, "_on_input_event"))
 	collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
@@ -109,6 +111,7 @@ func _on_trip_started() -> void:
 	collision_area.monitorable = true
 	collision_area.get_child(0).set_deferred("disabled", false)
 	emit_signal("trip_started", id)
+	$Body/Label.text = str(id)
 
 func _on_trip_ended(completed: bool) -> void:
 	if completed:
