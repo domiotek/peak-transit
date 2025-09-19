@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name DefaultIntersectionHandler
 
+var CLASS_NAME = "DefaultIntersection"
+
 var node: RoadNode
 var stoppers: Array = []
 

@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name NullIntersectionHandler
 
+var CLASS_NAME = "NullIntersection"
+
 var stoppers: Array = []
 
 

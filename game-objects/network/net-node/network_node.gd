@@ -11,6 +11,7 @@ var IntersectionManagerModule = load("res://services/managers/intersections/inte
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+@onready var game_manager = GDInjector.inject("GameManager") as GameManager
 
 @export var id: int
 var definition: NetNode
@@ -40,6 +41,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if game_manager.is_debug_pick_enabled() && game_manager.try_hit_debug_pick(self):
+		print("Debug pick triggered for node ID %d" % id)
+		breakpoint
+
 	if not intersection_manager:
 		return
 

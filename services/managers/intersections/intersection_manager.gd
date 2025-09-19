@@ -65,3 +65,8 @@ func _choose_intersection_handler() -> RefCounted:
 			Enums.IntersectionType.TrafficLights:
 				return TrafficLightsIntersectionHandler.new()
 		return TrafficLightsIntersectionHandler.new()
+
+func get_used_intersection_type() -> String:
+	if handler:
+		return handler.CLASS_NAME
+	return "None"

@@ -39,6 +39,7 @@ func _draw() -> void:
 func _process(_delta):
 	if Input.is_action_just_pressed("toggle_dev_tools"):
 		ui_manager.toggle_ui_view("DebugTogglesView")
+		ui_manager.toggle_ui_view("DebugIntersectionsView")
 
 func _on_debug_toggles_changed(_name, _state) -> void:
 	queue_redraw()
