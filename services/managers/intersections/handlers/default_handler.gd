@@ -42,7 +42,7 @@ func process_tick(_delta: float) -> void:
 		if approaching_vehicle:
 			var distance_left = approaching_vehicle.navigator.get_distance_left()
 
-			if distance_left >= CONFLICT_ZONE_OFFSET:
+			if distance_left >= CONFLICT_ZONE_OFFSET and approaching_vehicle.driver.state != Driver.VehicleState.BLOCKED:
 				continue
 
 			var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
