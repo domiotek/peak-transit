@@ -118,6 +118,7 @@ func _render_view(view: Control) -> void:
 	else:
 		loaded_views.append(view.name)
 		_call_on_view(view, "load")
+		_call_on_view(view, "update")
 
 func _call_on_view(view: Control, event: String) -> void:
 	match event:
