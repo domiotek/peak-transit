@@ -26,6 +26,9 @@ var line_helper: LineHelper
 
 var map: Map
 
+var game_speed: Enums.GameSpeed = Enums.GameSpeed.LOW
+signal game_speed_changed(new_speed: Enums.GameSpeed)
+
 func initialize(_map: Node2D, camera: Camera2D) -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	map = _map as Map
@@ -46,6 +49,26 @@ func initialize(_map: Node2D, camera: Camera2D) -> void:
 
 func get_camera_bounds() -> Rect2:
 	return camera_bounds
+
+func set_game_speed(speed: Enums.GameSpeed) -> void:
+	game_speed = speed
+
+	match game_speed:
+		Enums.GameSpeed.PAUSE:
+			Engine.time_scale = 0.0
+		Enums.GameSpeed.LOW:
+			Engine.time_scale = 1.0
+		Enums.GameSpeed.MEDIUM:
+			Engine.time_scale = 2.0
+		Enums.GameSpeed.HIGH:
+			Engine.time_scale = 4.0
+		Enums.GameSpeed.TURBO:
+			Engine.time_scale = 10.0
+
+	game_speed_changed.emit(game_speed)
+
+func get_game_speed() -> Enums.GameSpeed:
+	return game_speed
 
 func set_selection(object: Object, type: SelectionType) -> void:
 	selection_type = type
