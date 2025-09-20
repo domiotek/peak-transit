@@ -39,6 +39,30 @@ func _draw() -> void:
 func _process(_delta):
 	if Input.is_action_just_pressed("toggle_dev_tools"):
 		ui_manager.toggle_ui_view("DebugTogglesView")
+		return
+
+	if Input.is_action_just_pressed("game_speed_0"):
+		if game_manager.get_game_speed() != Enums.GameSpeed.PAUSE:
+			game_manager.set_game_speed(Enums.GameSpeed.PAUSE)
+		else:
+			game_manager.set_game_speed(Enums.GameSpeed.LOW)
+		return
+
+	if Input.is_action_just_pressed("game_speed_1"):
+		game_manager.set_game_speed(Enums.GameSpeed.LOW)
+		return
+
+	if Input.is_action_just_pressed("game_speed_2"):
+		game_manager.set_game_speed(Enums.GameSpeed.MEDIUM)
+		return
+
+	if Input.is_action_just_pressed("game_speed_3"):
+		game_manager.set_game_speed(Enums.GameSpeed.HIGH)
+		return
+
+	if Input.is_action_just_pressed("game_speed_4"):
+		game_manager.set_game_speed(Enums.GameSpeed.TURBO)
+		return
 
 func _on_debug_toggles_changed(_name, _state) -> void:
 	queue_redraw()

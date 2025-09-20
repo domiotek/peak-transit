@@ -1,0 +1,47 @@
+[gd_scene load_steps=8 format=3 uid="uid://vy0ji1ac0ru5"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_dp0gs"]
+[ext_resource type="Script" uid="uid://bnyq8w2jm8k1" path="res://ui/views/game_speed_view/game_speed_view.gd" id="2_enrho"]
+[ext_resource type="Texture2D" uid="uid://b6lhkscjxrnpv" path="res://assets/ui_icons/speed_control/pause.png" id="3_b1mdp"]
+[ext_resource type="Texture2D" uid="uid://j1ya3k44my56" path="res://assets/ui_icons/speed_control/low_speed.png" id="4_lrxkq"]
+[ext_resource type="Texture2D" uid="uid://b7pu8q0x5gd73" path="res://assets/ui_icons/speed_control/medium_speed.png" id="5_esa04"]
+[ext_resource type="Texture2D" uid="uid://clc4qplknks2j" path="res://assets/ui_icons/speed_control/high_speed.png" id="6_u2fra"]
+[ext_resource type="Texture2D" uid="uid://uybbnaw0p4gl" path="res://assets/ui_icons/speed_control/turbo.png" id="7_lrxkq"]
+
+[node name="GameSpeedView" type="PanelContainer"]
+clip_contents = true
+offset_right = 190.0
+offset_bottom = 32.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = ExtResource("1_dp0gs")
+script = ExtResource("2_enrho")
+
+[node name="BoxContainer" type="BoxContainer" parent="."]
+clip_contents = true
+layout_mode = 2
+alignment = 1
+
+[node name="PauseButton" type="Button" parent="BoxContainer"]
+layout_mode = 2
+icon = ExtResource("3_b1mdp")
+flat = true
+
+[node name="LowButton" type="Button" parent="BoxContainer"]
+layout_mode = 2
+icon = ExtResource("4_lrxkq")
+
+[node name="MediumButton" type="Button" parent="BoxContainer"]
+layout_mode = 2
+icon = ExtResource("5_esa04")
+flat = true
+
+[node name="HighButton" type="Button" parent="BoxContainer"]
+layout_mode = 2
+icon = ExtResource("6_u2fra")
+flat = true
+
+[node name="TurboButton" type="Button" parent="BoxContainer"]
+layout_mode = 2
+icon = ExtResource("7_lrxkq")
+flat = true
