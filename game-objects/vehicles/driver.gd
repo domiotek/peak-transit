@@ -133,6 +133,8 @@ func check_blockade_cleared() -> bool:
 	if state != VehicleState.BLOCKED:
 		return true
 
+	var current_step = navigator.get_current_step()
+
 	if colliders.size() > 0:
 
 		for collider in colliders:
@@ -145,12 +147,17 @@ func check_blockade_cleared() -> bool:
 					var their_colliding_vehicle = their_collider.get_parent() as Vehicle if their_collider else null
 
 					if not their_colliding_vehicle:
-						return false 	
+						continue
 				
 					if their_colliding_vehicle == self.owner || colliders.has(self.owner.collision_area):
 						unblocked = true
 						no_caster_allowance_time = 5.0
 						break
+
+			var lane_stopper = collider as LaneStopper
+			if lane_stopper && lane_stopper.is_active() && current_step["type"] == Navigator.StepType.NODE:
+				unblocked = true
+				
 			if unblocked:
 				break
 	else:
