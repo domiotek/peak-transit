@@ -122,12 +122,38 @@ func _create_phases(flows: Array) -> Array:
 
 		if left_direct_stoppers.size() > 0:
 			if forward_stoppers.size() > 0:
-				phases.append(_create_phase(_merge_stoppers(forward_stoppers, right_stoppers), [Enums.Direction.FORWARD, Enums.Direction.RIGHT], LONG_PHASE_DURATION))
-			if left_combined_stoppers.size() > 0:
-				phases.append(_create_phase(left_combined_stoppers, [Enums.Direction.LEFT], SHORT_PHASE_DURATION))
+				phases.append(
+					_create_phase(
+						_merge_stoppers(forward_stoppers, right_stoppers), 
+						[Enums.Direction.FORWARD, Enums.Direction.RIGHT], LONG_PHASE_DURATION
+					)
+				)
+
+				phases.append(
+					_create_phase(
+						left_combined_stoppers, 
+						[Enums.Direction.LEFT], 
+						SHORT_PHASE_DURATION
+					)
+				)
+			else:
+				var left_right_stoppers = _merge_stoppers(left_combined_stoppers, right_stoppers)
+				phases.append(
+					_create_phase(
+						left_right_stoppers, 
+						[Enums.Direction.LEFT, Enums.Direction.RIGHT], 
+						LONG_PHASE_DURATION
+					)
+				)
 
 		else:
-			phases.append(_create_phase(_merge_stoppers(forward_stoppers, left_combined_stoppers, right_stoppers), [Enums.Direction.FORWARD, Enums.Direction.LEFT, Enums.Direction.RIGHT], 40.0))
+			phases.append(
+				_create_phase(
+					_merge_stoppers(forward_stoppers, left_combined_stoppers, right_stoppers), 
+					[Enums.Direction.FORWARD, Enums.Direction.LEFT, Enums.Direction.RIGHT],
+					LONG_PHASE_DURATION
+				)
+			)
 
 	return phases
 
