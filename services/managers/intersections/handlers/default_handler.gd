@@ -11,6 +11,8 @@ var stoppers: Array = []
 var connecting_curves: Dictionary = {}
 var conflicting_paths: Dictionary = {}
 
+var halted_vehicles: Dictionary = {}
+
 
 var network_manager: NetworkManager
 var line_helper: LineHelper
@@ -36,27 +38,39 @@ func setup(_node: RoadNode, new_stoppers: Array) -> void:
 func process_tick(_delta: float) -> void:
 	
 	for stopper in stoppers:
-		var lane = stopper.get_lane()
-		var stopper_activated = false
-
-		var approaching_vehicle = lane.get_first_vehicle()
-
-		if approaching_vehicle:
-			var distance_left = approaching_vehicle.navigator.get_distance_left()
-
-			if distance_left >= CONFLICT_ZONE_OFFSET and approaching_vehicle.driver.state != Driver.VehicleState.BLOCKED:
-				continue
-
-			var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
-
-			if _check_enough_space_in_lane_ahead(stopper, next_endpoint):
-				stopper_activated = true
-
-			if not stopper_activated and _check_conflicting_path(stopper, next_endpoint):
-				stopper_activated = true
-
+		var stopper_activated = process_stopper(stopper)
 		stopper.set_active(stopper_activated)
 
+func process_stopper(stopper: LaneStopper) -> bool:
+	var lane = stopper.get_lane()
+	var approaching_vehicle = lane.get_first_vehicle()
+
+	if approaching_vehicle:
+		var distance_left = approaching_vehicle.navigator.get_distance_left()
+
+		if distance_left >= CONFLICT_ZONE_OFFSET and approaching_vehicle.driver.state != Driver.VehicleState.BLOCKED:
+			return false
+
+		var priority = node.get_connection_priority(stopper.endpoint.Id)
+
+		if priority == Enums.IntersectionPriority.STOP:
+			var last_halted_vehicle_id = halted_vehicles.get(stopper.endpoint.Id, null)
+
+			if approaching_vehicle.id == last_halted_vehicle_id || approaching_vehicle.driver.get_current_speed() == 0.0:
+				halted_vehicles[stopper.endpoint.Id] = approaching_vehicle.id
+				return false
+
+			return true
+
+		var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
+
+		if _check_enough_space_in_lane_ahead(stopper, next_endpoint):
+			return true
+
+		if _check_conflicting_path(stopper, next_endpoint):
+			return true
+
+	return false
 
 func _fill_curves() -> void:
 	for stopper in stoppers:
