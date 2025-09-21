@@ -97,6 +97,24 @@ func get_last_vehicle() -> Vehicle:
 		assigned_vehicles.pop_back()
 		return get_last_vehicle()
 
+func get_vehicle_count(only_waiting: bool = false) -> int:
+	if not only_waiting:
+		return assigned_vehicles.size()
+
+	return assigned_vehicles.filter(func(v): return v.driver.get_state() == Driver.VehicleState.BLOCKED).size()
+
+func count_vehicles_within_distance(node_id: int, distance: float) -> int:
+	var count = 0
+
+	var is_node_at_start = segment.nodes[0].id == node_id
+
+	for vehicle in assigned_vehicles:
+		var vehicle_distance = vehicle.path_follower.progress if is_node_at_start else trail.curve.get_baked_length() - vehicle.path_follower.progress
+		if vehicle_distance <= distance:
+			count += 1
+
+	return count
+
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
 

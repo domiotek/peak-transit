@@ -25,7 +25,9 @@ var crossing_vehicles: Dictionary = {}
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
+var segment_directions: Dictionary = {}
 var segment_priorities: Dictionary = {}
+var is_priority_based: bool = false
 
 var intersection_manager: IntersectionManager
 
@@ -156,6 +158,14 @@ func get_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> Array:
 
 	return crossing_vehicles.get(key, [])
 
+func get_vehicles_crossing_count() -> int:
+	var total = 0
+
+	for key in crossing_vehicles.keys():
+		total += crossing_vehicles[key].size()
+
+	return total
+
 func _setup_connections() -> void:
 
 	if connected_segments.size() == 0:
@@ -215,6 +225,12 @@ func _fill_segment_priorities() -> void:
 		else:
 			new_state[segment.id] = Enums.IntersectionPriority.YIELD
 
+	if priority_count != 2:
+		for priority in new_state.keys():
+			if new_state[priority] == Enums.IntersectionPriority.PRIORITY:
+				new_state[priority] = Enums.IntersectionPriority.YIELD
+
+	is_priority_based = priority_count == 2
 	segment_priorities = new_state
 
 func _update_debug_layer() -> void:

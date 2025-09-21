@@ -98,6 +98,8 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 			"right": []
 		}
 
+		node.segment_directions[segment.id] = directions
+
 		for direction in directions.keys():
 			if directions[direction] == null:
 				continue
@@ -241,6 +243,19 @@ func determine_lane_direction(directions_dict: Dictionary, lane_connections: Arr
 			return Enums.Direction.ALL_DIRECTIONS
 		_:
 			return Enums.Direction.BACKWARD
+
+func is_combined_direction(direction: Enums.Direction) -> bool:
+	return direction in [Enums.Direction.LEFT_FORWARD, Enums.Direction.RIGHT_FORWARD, Enums.Direction.LEFT_RIGHT, Enums.Direction.ALL_DIRECTIONS]
+
+func is_in_combined_direction(direction: Enums.Direction, basic_direction: Enums.Direction) -> bool:
+	if basic_direction == Enums.Direction.FORWARD:
+		return direction in [Enums.Direction.FORWARD, Enums.Direction.LEFT_FORWARD, Enums.Direction.RIGHT_FORWARD, Enums.Direction.ALL_DIRECTIONS]
+	elif basic_direction == Enums.Direction.LEFT:
+		return direction in [Enums.Direction.LEFT, Enums.Direction.LEFT_FORWARD, Enums.Direction.LEFT_RIGHT, Enums.Direction.ALL_DIRECTIONS]
+	elif basic_direction == Enums.Direction.RIGHT:
+		return direction in [Enums.Direction.RIGHT, Enums.Direction.RIGHT_FORWARD, Enums.Direction.LEFT_RIGHT, Enums.Direction.ALL_DIRECTIONS]
+		
+	return false
 
 func _map_direction_to_marker_name(direction: Enums.Direction) -> String:
 	match direction:

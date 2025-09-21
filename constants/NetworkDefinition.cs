@@ -15,6 +15,7 @@ public partial class NetworkDefinition : GodotObject
             new NetNode(3, new Vector2(428, 37)),
             new NetNode(4, new Vector2(765, -302))
             {
+                IntersectionType = IntersectionType.TrafficLights,
                 PrioritySegments = [6, 3],
                 StopSegments = [5],
             },

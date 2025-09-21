@@ -119,12 +119,12 @@ func _get_conflicting_paths(stopper: LaneStopper) -> Dictionary:
 
 
 func _filter_conflict(my_direction: Enums.Direction, other_direction: Enums.Direction, my_priority: Enums.IntersectionPriority, other_priority: Enums.IntersectionPriority) -> bool:
-	var have_advantage = my_priority == Enums.IntersectionPriority.PRIORITY and other_priority == Enums.IntersectionPriority.YIELD
+	var have_advantage = other_priority == Enums.IntersectionPriority.STOP or (my_priority == Enums.IntersectionPriority.PRIORITY and other_priority == Enums.IntersectionPriority.YIELD)
 
 	if have_advantage:
 		return false
 
-	var they_have_advantage = other_priority == Enums.IntersectionPriority.PRIORITY and my_priority == Enums.IntersectionPriority.YIELD
+	var they_have_advantage = my_priority == Enums.IntersectionPriority.STOP or (other_priority == Enums.IntersectionPriority.PRIORITY and my_priority == Enums.IntersectionPriority.YIELD)
 
 	if they_have_advantage:
 		return true
