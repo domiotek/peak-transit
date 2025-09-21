@@ -89,7 +89,7 @@ func _get_conflicting_paths(stopper: LaneStopper) -> Dictionary:
 				var other_direction = node.get_connection_direction(other_stopper.endpoint.Id, other_dest_endpoint_id)
 				var other_priority = node.get_connection_priority(other_stopper.endpoint.Id)
 
-				if _filter_conflict(my_direction, other_direction):
+				if _filter_conflict(my_direction, other_direction, my_priority, other_priority):
 					var reason = Enums.PathConflictType.NONE
 
 					if line_helper.curves_intersect(my_curve, other_curve, 10):
@@ -104,7 +104,17 @@ func _get_conflicting_paths(stopper: LaneStopper) -> Dictionary:
 	return conflicting_per_connection
 
 
-func _filter_conflict(my_direction: Enums.Direction, other_direction: Enums.Direction) -> bool:
+func _filter_conflict(my_direction: Enums.Direction, other_direction: Enums.Direction, my_priority: Enums.IntersectionPriority, other_priority: Enums.IntersectionPriority) -> bool:
+	var have_advantage = my_priority == Enums.IntersectionPriority.PRIORITY and other_priority == Enums.IntersectionPriority.YIELD
+
+	if have_advantage:
+		return false
+
+	var they_have_advantage = other_priority == Enums.IntersectionPriority.PRIORITY and my_priority == Enums.IntersectionPriority.YIELD
+
+	if they_have_advantage:
+		return true
+
 	match my_direction:
 		Enums.Direction.FORWARD, Enums.Direction.BACKWARD:
 			return false

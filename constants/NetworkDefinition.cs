@@ -22,7 +22,7 @@ public partial class NetworkDefinition : GodotObject
             new NetNode(6, new Vector2(1000, -600)),
             new NetNode(7, new Vector2(-600, -800)),
             new NetNode(8, new Vector2(300, 1000)),
-            new NetNode(9, new Vector2(-600, 200)),
+            new NetNode(9, new Vector2(-600, 200)) { PrioritySegments = [0, 10] },
             new NetNode(10, new Vector2(-600, 800)),
             new NetNode(11, new Vector2(-1200, 200)),
             new NetNode(12, new Vector2(800, 1500)),
