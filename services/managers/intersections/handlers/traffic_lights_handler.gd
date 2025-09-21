@@ -2,7 +2,7 @@ extends RefCounted
 
 class_name TrafficLightsIntersectionHandler
 
-var CLASS_NAME: String = "TrafficLightsIntersectionHandler"
+var CLASS_NAME: String = "TrafficLightsIntersection"
 
 var MIN_PHASE_DURATION_SCALER: float = 0.1
 var LONG_PHASE_DURATION: float = 60.0
