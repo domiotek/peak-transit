@@ -89,7 +89,7 @@ func _process(delta: float) -> void:
 			driver.just_enabled_casters = false
 			return
 
-		driver.check_blockade_cleared()
+		driver.check_blockade_cleared(delta)
 		return
 
 	var trail_length = navigator.get_current_step()["length"]
