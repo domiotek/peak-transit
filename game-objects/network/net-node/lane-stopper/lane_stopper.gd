@@ -9,7 +9,7 @@ class_name LaneStopper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 
 var endpoint: NetLaneEndpoint
-
+var traffic_light: TrafficLight = null
 
 var active: bool = false
 
@@ -23,6 +23,8 @@ func set_active(_active: bool) -> void:
 	self.monitorable = _active
 	shape.set_deferred("disabled", not _active)
 	_toggle_debug_visuals()
+	if traffic_light:
+		traffic_light.set_state(TrafficLight.LightState.RED if _active else TrafficLight.LightState.GREEN)
 
 func is_active() -> bool:
 	return active

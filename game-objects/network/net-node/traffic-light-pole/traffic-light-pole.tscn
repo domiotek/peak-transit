@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://d4m4ac7xweva3"]
+
+[ext_resource type="PackedScene" uid="uid://cx5r114fjgwq7" path="res://game-objects/light/light.tscn" id="1_agjhq"]
+[ext_resource type="Script" uid="uid://byc48xct8o143" path="res://game-objects/network/net-node/traffic-light-pole/traffic-light-pole.gd" id="1_ehtsv"]
+
+[node name="TrafficLightPole" type="Node2D"]
+script = ExtResource("1_ehtsv")
+
+[node name="Base" parent="." instance=ExtResource("1_agjhq")]
+inactive_color = Color(0.556953, 0.556953, 0.556953, 1)
+active_color = Color(0.556863, 0.556863, 0.556863, 1)
+radius = 1.5
+
+[node name="Pole" type="Polygon2D" parent="."]
+position = Vector2(-1.5, 0)
+color = Color(0.556863, 0.556863, 0.556863, 1)

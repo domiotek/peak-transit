@@ -37,6 +37,7 @@ var intersection_manager: IntersectionManager
 @onready var under_layer: Polygon2D = $UnderLayer
 @onready var boundary_layer: Polygon2D = $BoundaryLayer
 @onready var pathing_layer: Node2D = $PathingLayer
+@onready var top_layer: Node2D = $TopLayer
 
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)

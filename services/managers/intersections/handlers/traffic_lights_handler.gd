@@ -13,6 +13,7 @@ var FLOW_SCAN_DISTANCE: float = 50.0
 var segment_helper: SegmentHelper
 var connections_helper: ConnectionsHelper
 var intersection_helper: IntersectionHelper
+var line_helper: LineHelper
 
 var stoppers: Array = []
 
@@ -29,9 +30,11 @@ func setup(_node: RoadNode, _stoppers: Array) -> void:
 	segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 	connections_helper = GDInjector.inject("ConnectionsHelper") as ConnectionsHelper
 	intersection_helper = GDInjector.inject("IntersectionHelper") as IntersectionHelper
+	line_helper = GDInjector.inject("LineHelper") as LineHelper
 
 	var flows = _find_flows()
 	_create_phases(flows)
+	_create_traffic_light_visuals()
 
 func process_tick(_delta: float) -> void:
 	if phases.size() == 0:
@@ -214,3 +217,50 @@ func _measure_current_flow_ratio() -> float:
 	var vehicles_crossing = node.get_vehicles_crossing_count()
 
 	return (float(vehicles_crossing) + float(waiting_on_open_lanes)) / float(total_waiting) * 100 if total_waiting > 0 else 100.0
+
+func _create_traffic_light_visuals() -> void:
+
+	for segment in node.connected_segments:
+		var segment_stoppers = stoppers.filter(func(s): return s.get_lane().segment == segment)
+
+		var right_most_stopper = null
+		var left_most_stopper = null
+
+		for stopper in segment_stoppers:
+			var light_scene = load("res://game-objects/network/net-node/traffic-light/traffic-light.tscn")
+			var light_instance = light_scene.instantiate() as TrafficLight
+			light_instance.z_index = 1
+
+			light_instance.position = node.to_local(stopper.endpoint.Position)
+			light_instance.rotation_degrees = stopper.rotation_degrees + 90.0
+
+			if right_most_stopper == null or stopper.endpoint.LaneNumber > right_most_stopper.endpoint.LaneNumber:
+				right_most_stopper = stopper
+
+			if stopper.endpoint.LaneNumber == 0:
+				left_most_stopper = stopper
+
+			var pos_offset = Vector2(0, 0)
+			if segment_stoppers.size() == 1:
+				pos_offset = Vector2(NetworkConstants.LANE_WIDTH * 0.75, 0).rotated(deg_to_rad(light_instance.rotation_degrees))
+		
+			var offset_vector = Vector2(0, 10).rotated(deg_to_rad(light_instance.rotation_degrees))
+			light_instance.position += offset_vector + pos_offset
+
+			node.top_layer.add_child(light_instance)
+
+			stopper.traffic_light = light_instance
+
+		if segment_stoppers.size() > 1:
+			var light_pole_scene = load("res://game-objects/network/net-node/traffic-light-pole/traffic-light-pole.tscn")
+			var light_pole_instance = light_pole_scene.instantiate() as TrafficLightPole
+
+			light_pole_instance.position = node.to_local(right_most_stopper.endpoint.Position)
+			light_pole_instance.rotation_degrees = line_helper.rotate_along_curve(segment.curve_shape, right_most_stopper.endpoint.Position)
+
+			var right_offset = Vector2(-10, NetworkConstants.LANE_WIDTH * 0.75).rotated(deg_to_rad(right_most_stopper.rotation_degrees))
+			light_pole_instance.position += right_offset
+
+			light_pole_instance.setup(left_most_stopper.endpoint.Position + Vector2(-10, 0).rotated(deg_to_rad(left_most_stopper.rotation_degrees)))
+
+			node.top_layer.add_child(light_pole_instance)
