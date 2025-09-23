@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://4sw2ac70svb1"]
+[gd_scene load_steps=3 format=3 uid="uid://4sw2ac70svb1"]
 
 [ext_resource type="Script" uid="uid://dst8hkiihppr5" path="res://game-objects/map/map.gd" id="1_4xfga"]
 [ext_resource type="PackedScene" uid="uid://kpgpxpqvp4er" path="res://game-objects/network/net-grid/network_grid.tscn" id="2_emwqe"]
-[ext_resource type="PackedScene" uid="uid://dux8jo7hpy0rf" path="res://game-objects/network/net-node/traffic-light/traffic-light.tscn" id="3_3j3li"]
 
 [node name="Map" type="Node2D"]
 script = ExtResource("1_4xfga")
@@ -16,6 +15,3 @@ script = ExtResource("1_4xfga")
 [node name="VehicleRouteLayer" type="Node2D" parent="Layers"]
 z_index = 27
 z_as_relative = false
-
-[node name="Traffic-light" parent="." instance=ExtResource("3_3j3li")]
-position = Vector2(357, 258)

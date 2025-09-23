@@ -2,6 +2,21 @@ extends RefCounted
 
 class_name TrafficLightsIntersectionHandler
 
+var full_traffic_light = preload("res://game-objects/network/net-node/traffic-light/traffic-light.tscn")
+var arrow_traffic_light = preload("res://game-objects/network/net-node/arrow-traffic-light/arrow_traffic_light.tscn")
+var traffic_light_pole = preload("res://game-objects/network/net-node/traffic-light-pole/traffic-light-pole.tscn")
+
+enum TrafficLightConfiguration {
+	SINGLE,
+	SINGLE_WITH_LEFT,
+	SINGLE_WITH_RIGHT
+}
+
+enum TrafficLightPosition {
+	POLE,
+	ROAD_SIDE
+}
+
 var CLASS_NAME: String = "TrafficLightsIntersection"
 
 var MIN_PHASE_DURATION_SCALER: float = 0.1
@@ -50,17 +65,23 @@ func process_tick(_delta: float) -> void:
 	if phase_timer >= min_phase_duration:
 		flow_ratio = _measure_current_flow_ratio()
 
+	var first_cycle_after_change = false
+
 	if phase_timer >= active_phase.duration || flow_ratio < LOW_FLOW_THRESHOLD:
 		current_phase_index = (current_phase_index + 1) % phases.size()
 		phase_timer = 0.0
-		_set_stoppers_active(active_phase.stoppers, true)
+		_set_stoppers_active(active_phase.stoppers, true, active_phase["directions"])
 		active_phase = phases[current_phase_index]
+		first_cycle_after_change = true
 
 
 	for stopper in active_phase.stoppers:
 		var stopper_activated = process_stopper(stopper, active_phase)
-		stopper.set_active(stopper_activated)
-		
+
+		if first_cycle_after_change:
+			stopper.set_active_with_light(stopper_activated, active_phase["directions"])
+		else:
+			stopper.set_active(stopper_activated)
 
 func process_stopper(stopper: LaneStopper, active_phase: Dictionary) -> bool:
 	var lane = stopper.get_lane()
@@ -197,9 +218,9 @@ func _create_phase(_stoppers: Array, _directions: Array, duration: float) -> Dic
 	}
 	return phase
 
-func _set_stoppers_active(_stoppers: Array, _active: bool) -> void:
+func _set_stoppers_active(_stoppers: Array, _active: bool, _directions: Array) -> void:
 	for stopper in _stoppers:
-		stopper.set_active(_active)
+		stopper.set_active_with_light(_active, _directions)
 
 func _measure_current_flow_ratio() -> float:
 	var total_waiting = 0
@@ -227,40 +248,74 @@ func _create_traffic_light_visuals() -> void:
 		var left_most_stopper = null
 
 		for stopper in segment_stoppers:
-			var light_scene = load("res://game-objects/network/net-node/traffic-light/traffic-light.tscn")
-			var light_instance = light_scene.instantiate() as TrafficLight
-			light_instance.z_index = 1
-
-			light_instance.position = node.to_local(stopper.endpoint.Position)
-			light_instance.rotation_degrees = stopper.rotation_degrees + 90.0
-
-			if right_most_stopper == null or stopper.endpoint.LaneNumber > right_most_stopper.endpoint.LaneNumber:
-				right_most_stopper = stopper
+			var lane = stopper.get_lane()
+			var lanes_count = segment.get_relation_of_lane(lane.id).ConnectionInfo.Lanes.size();
 
 			if stopper.endpoint.LaneNumber == 0:
 				left_most_stopper = stopper
 
-			var pos_offset = Vector2(0, 0)
-			if segment_stoppers.size() == 1:
-				pos_offset = Vector2(NetworkConstants.LANE_WIDTH * 0.75, 0).rotated(deg_to_rad(light_instance.rotation_degrees))
-		
-			var offset_vector = Vector2(0, 10).rotated(deg_to_rad(light_instance.rotation_degrees))
-			light_instance.position += offset_vector + pos_offset
+			if stopper.endpoint.LaneNumber == lanes_count - 1:
+				right_most_stopper = stopper
 
-			node.top_layer.add_child(light_instance)
+			var position = TrafficLightPosition.ROAD_SIDE if segment_stoppers.size() == 1 else TrafficLightPosition.POLE
+			var configuration = TrafficLightConfiguration.SINGLE
 
-			stopper.traffic_light = light_instance
+			if lane.direction == Enums.Direction.LEFT_FORWARD:
+				configuration = TrafficLightConfiguration.SINGLE_WITH_LEFT
+			elif connections_helper.is_in_combined_direction(lane.direction, Enums.Direction.RIGHT) and lane.direction != Enums.Direction.RIGHT and right_most_stopper == stopper:
+				configuration = TrafficLightConfiguration.SINGLE_WITH_RIGHT
+
+			_create_traffic_light_assembly(stopper, configuration, position)
 
 		if segment_stoppers.size() > 1:
-			var light_pole_scene = load("res://game-objects/network/net-node/traffic-light-pole/traffic-light-pole.tscn")
-			var light_pole_instance = light_pole_scene.instantiate() as TrafficLightPole
+			_create_pole(segment.curve_shape, right_most_stopper, left_most_stopper)
 
-			light_pole_instance.position = node.to_local(right_most_stopper.endpoint.Position)
-			light_pole_instance.rotation_degrees = line_helper.rotate_along_curve(segment.curve_shape, right_most_stopper.endpoint.Position)
 
-			var right_offset = Vector2(-10, NetworkConstants.LANE_WIDTH * 0.75).rotated(deg_to_rad(right_most_stopper.rotation_degrees))
-			light_pole_instance.position += right_offset
+func _create_pole(road_curve: Curve2D, right_most_stopper: LaneStopper, left_most_stopper: LaneStopper) -> void:
+	var light_pole_instance = traffic_light_pole.instantiate() as TrafficLightPole
 
-			light_pole_instance.setup(left_most_stopper.endpoint.Position + Vector2(-10, 0).rotated(deg_to_rad(left_most_stopper.rotation_degrees)))
+	light_pole_instance.position = node.to_local(right_most_stopper.endpoint.Position)
+	light_pole_instance.rotation_degrees = line_helper.rotate_along_curve(road_curve, right_most_stopper.endpoint.Position)
 
-			node.top_layer.add_child(light_pole_instance)
+	var right_offset = Vector2(-10, NetworkConstants.LANE_WIDTH * 0.75).rotated(deg_to_rad(right_most_stopper.rotation_degrees))
+	light_pole_instance.position += right_offset
+
+	light_pole_instance.setup(left_most_stopper.endpoint.Position + Vector2(-10, 0).rotated(deg_to_rad(left_most_stopper.rotation_degrees)))
+
+	node.top_layer.add_child(light_pole_instance)
+
+func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: TrafficLightConfiguration, position_mode: TrafficLightPosition ) -> void:
+
+	var assembly = Node2D.new()
+	assembly.position = node.to_local(ref_stopper.endpoint.Position)
+	assembly.rotation_degrees = ref_stopper.rotation_degrees + 90.0
+	assembly.z_index = 1
+	node.top_layer.add_child(assembly)
+
+	var pos_offset = Vector2(0, 0)
+	if position_mode == TrafficLightPosition.ROAD_SIDE:
+		pos_offset = Vector2(NetworkConstants.LANE_WIDTH * 0.75, 0).rotated(deg_to_rad(assembly.rotation_degrees))
+
+	var offset_vector = Vector2(0, 10).rotated(deg_to_rad(assembly.rotation_degrees))
+	assembly.position += offset_vector + pos_offset
+
+	var light_instance = full_traffic_light.instantiate() as TrafficLight
+	assembly.add_child(light_instance)
+	ref_stopper.traffic_lights[Enums.Direction.ALL_DIRECTIONS] = light_instance
+
+
+	if configuration == TrafficLightConfiguration.SINGLE:
+		return
+
+	if configuration == TrafficLightConfiguration.SINGLE_WITH_LEFT:
+		var left_light = full_traffic_light.instantiate() as TrafficLight
+		left_light.set_mask("res://assets/ui_icons/traffic_light_arrow.png")
+		assembly.add_child(left_light)
+		left_light.position = Vector2(-10.5, 0)
+		ref_stopper.traffic_lights[Enums.Direction.LEFT] = left_light
+
+	elif configuration == TrafficLightConfiguration.SINGLE_WITH_RIGHT:
+		var arrow_instance = arrow_traffic_light.instantiate() as ArrowTrafficLight
+		assembly.add_child(arrow_instance)
+		arrow_instance.position = Vector2(8.5, 7)
+		ref_stopper.traffic_lights[Enums.Direction.RIGHT] = arrow_instance

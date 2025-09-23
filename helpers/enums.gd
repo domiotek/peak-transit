@@ -35,3 +35,9 @@ enum IntersectionPriority {
 	STOP,
 	PRIORITY
 }
+
+enum TrafficLightState {
+	RED,
+	GREEN,
+	INITIAL
+}

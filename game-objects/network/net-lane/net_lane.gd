@@ -7,6 +7,7 @@ var id: int
 var segment: NetSegment
 var data: NetLaneInfo
 var offset: float = 0.0
+var relation_id: int = -1
 
 var from_endpoint: int
 var to_endpoint: int
@@ -24,11 +25,12 @@ func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
 
-func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float) -> void:
+func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float, _relation_id: int) -> void:
 	id = lane_id
 	segment = parent_segment
 	data = lane_info
 	offset = lane_offset
+	relation_id = _relation_id
 
 func update_trail_shape(curve: Curve2D) -> void:
 	if curve == null:
