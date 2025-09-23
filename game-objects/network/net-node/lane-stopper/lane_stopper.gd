@@ -31,19 +31,21 @@ func set_active_with_light(_active: bool, directions: Array) -> void:
 	var right_signaler = traffic_lights.get(Enums.Direction.RIGHT, null)
 	var default_signaler = traffic_lights.get(Enums.Direction.ALL_DIRECTIONS, null)
 
+
 	var light = default_signaler
 	var other_lights = [left_signaler, right_signaler]
-	var has_multiple_directions = directions.size() > 1
 
-	if not has_multiple_directions:
-		if directions[0] == Enums.Direction.LEFT and left_signaler:
-			light = left_signaler
-			other_lights.erase(left_signaler)
-			other_lights.append(default_signaler)
-		elif directions[0] == Enums.Direction.RIGHT and right_signaler:
-			light = right_signaler
-			other_lights.erase(right_signaler)
-			other_lights.append(default_signaler)
+	var has_left = directions.has(Enums.Direction.LEFT)
+	var has_right = directions.has(Enums.Direction.RIGHT)
+
+	if has_left and left_signaler:
+		light = left_signaler
+		other_lights.erase(left_signaler)
+		other_lights.append(default_signaler)
+	elif has_right and right_signaler and directions.size() == 1:
+		light = right_signaler
+		other_lights.erase(right_signaler)
+		other_lights.append(default_signaler)
 
 	if light:
 		light.set_state(Enums.TrafficLightState.RED if _active else Enums.TrafficLightState.GREEN)

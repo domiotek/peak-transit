@@ -35,6 +35,7 @@ var stoppers: Array = []
 var phases: Array = []
 var current_phase_index: int = 0
 var phase_timer: float = 0.0
+var is_first_cycle = true
 
 var node: RoadNode
 
@@ -67,23 +68,28 @@ func process_tick(_delta: float) -> void:
 
 	var first_cycle_after_change = false
 
-	if phase_timer >= active_phase.duration || flow_ratio < LOW_FLOW_THRESHOLD:
+	if is_first_cycle || phase_timer >= active_phase.duration || flow_ratio < LOW_FLOW_THRESHOLD:
+		is_first_cycle = false
 		current_phase_index = (current_phase_index + 1) % phases.size()
 		phase_timer = 0.0
 		_set_stoppers_active(active_phase.stoppers, true, active_phase["directions"])
+		_set_stoppers_active(active_phase.exception_stoppers, true, [Enums.Direction.RIGHT])
 		active_phase = phases[current_phase_index]
 		first_cycle_after_change = true
 
+	var handle_stoppers = func(stoppers_set: Array, directions: Array) -> void:
+		for stopper in stoppers_set:
+			var stopper_activated = process_stopper(stopper, directions)
 
-	for stopper in active_phase.stoppers:
-		var stopper_activated = process_stopper(stopper, active_phase)
+			if first_cycle_after_change:
+				stopper.set_active_with_light(stopper_activated, directions)
+			else:
+				stopper.set_active(stopper_activated)
 
-		if first_cycle_after_change:
-			stopper.set_active_with_light(stopper_activated, active_phase["directions"])
-		else:
-			stopper.set_active(stopper_activated)
+	handle_stoppers.call(active_phase.stoppers, active_phase["directions"])
+	handle_stoppers.call(active_phase.exception_stoppers, [Enums.Direction.RIGHT])
 
-func process_stopper(stopper: LaneStopper, active_phase: Dictionary) -> bool:
+func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
 	var lane = stopper.get_lane()
 	var approaching_vehicle = lane.get_first_vehicle()
 
@@ -93,7 +99,7 @@ func process_stopper(stopper: LaneStopper, active_phase: Dictionary) -> bool:
 	var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
 	var direction = node.get_connection_direction(stopper.endpoint.Id, next_endpoint)
 
-	if direction not in active_phase.directions:
+	if direction not in directions:
 		return true
 
 	if intersection_helper.block_if_not_enough_space_in_lane_ahead(node, stopper, next_endpoint):
@@ -143,19 +149,22 @@ func _create_phases(flows: Array) -> Array:
 		var left_combined_stoppers = _get_stoppers_with_direction(Enums.Direction.LEFT, flow)
 		var left_direct_stoppers = _get_stoppers_with_direction(Enums.Direction.LEFT, flow, false)
 		var right_stoppers = _get_stoppers_with_direction(Enums.Direction.RIGHT, flow)
+		var right_most_stoppers_from_other = _get_right_most_stoppers_of_other_flow(flows.filter(func(f): return f != flow)[0])
 
 		if left_direct_stoppers.size() > 0:
 			if forward_stoppers.size() > 0:
 				phases.append(
 					_create_phase(
-						_merge_stoppers(forward_stoppers, right_stoppers), 
+						_merge_stoppers(forward_stoppers, right_stoppers),
+						right_most_stoppers_from_other,
 						[Enums.Direction.FORWARD, Enums.Direction.RIGHT], LONG_PHASE_DURATION
 					)
 				)
 
 				phases.append(
 					_create_phase(
-						left_combined_stoppers, 
+						left_combined_stoppers,
+						right_most_stoppers_from_other,
 						[Enums.Direction.LEFT], 
 						SHORT_PHASE_DURATION
 					)
@@ -164,7 +173,8 @@ func _create_phases(flows: Array) -> Array:
 				var left_right_stoppers = _merge_stoppers(left_combined_stoppers, right_stoppers)
 				phases.append(
 					_create_phase(
-						left_right_stoppers, 
+						left_right_stoppers,
+						right_most_stoppers_from_other,
 						[Enums.Direction.LEFT, Enums.Direction.RIGHT], 
 						LONG_PHASE_DURATION
 					)
@@ -173,13 +183,28 @@ func _create_phases(flows: Array) -> Array:
 		else:
 			phases.append(
 				_create_phase(
-					_merge_stoppers(forward_stoppers, left_combined_stoppers, right_stoppers), 
+					_merge_stoppers(forward_stoppers, left_combined_stoppers, right_stoppers),
+					right_most_stoppers_from_other,
 					[Enums.Direction.FORWARD, Enums.Direction.LEFT, Enums.Direction.RIGHT],
 					LONG_PHASE_DURATION
 				)
 			)
 
 	return phases
+
+func _get_right_most_stoppers_of_other_flow(other_flow: Array) -> Array:
+	var result = []
+
+	var right_stoppers = _get_stoppers_with_direction(Enums.Direction.RIGHT, other_flow)
+
+	for stopper in right_stoppers:
+		var lane = stopper.get_lane()
+		var lanes_count = lane.segment.get_relation_of_lane(lane.id).ConnectionInfo.Lanes.size()
+
+		if stopper.endpoint.LaneNumber == lanes_count - 1:
+			result.append(stopper)
+
+	return result
 
 
 func _get_stoppers_with_direction(target_direction: Enums.Direction, segments: Array, allow_combined: bool = true) -> Array:
@@ -210,9 +235,10 @@ func _merge_stoppers(stoppers_a: Array, stoppers_b: Array, stoppers_c: Array=[])
 			merged.append(stopper)
 	return merged
 
-func _create_phase(_stoppers: Array, _directions: Array, duration: float) -> Dictionary:
+func _create_phase(_stoppers: Array, _exception_stoppers: Array, _directions: Array, duration: float) -> Dictionary:
 	var phase = {
 		"stoppers": _stoppers,
+		"exception_stoppers": _exception_stoppers,
 		"directions": _directions,
 		"duration": duration
 	}
