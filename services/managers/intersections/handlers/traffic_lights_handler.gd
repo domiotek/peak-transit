@@ -36,6 +36,7 @@ var phases: Array = []
 var current_phase_index: int = 0
 var phase_timer: float = 0.0
 var is_first_cycle = true
+var segments_with_dedicated_left_turn: Array = []
 
 var node: RoadNode
 
@@ -180,6 +181,7 @@ func _create_phases(flows: Array) -> Array:
 					)
 				)
 
+			_update_segments_with_dedicated_left_turn(left_direct_stoppers)
 		else:
 			phases.append(
 				_create_phase(
@@ -205,6 +207,14 @@ func _get_right_most_stoppers_of_other_flow(other_flow: Array) -> Array:
 			result.append(stopper)
 
 	return result
+
+func _update_segments_with_dedicated_left_turn(_stoppers: Array) -> void:
+	for stopper in _stoppers:
+		var lane = stopper.get_lane()
+		var segment = lane.segment
+
+		if segment not in segments_with_dedicated_left_turn:
+			segments_with_dedicated_left_turn.append(segment)
 
 
 func _get_stoppers_with_direction(target_direction: Enums.Direction, segments: Array, allow_combined: bool = true) -> Array:
@@ -286,7 +296,7 @@ func _create_traffic_light_visuals() -> void:
 			var position = TrafficLightPosition.ROAD_SIDE if segment_stoppers.size() == 1 else TrafficLightPosition.POLE
 			var configuration = TrafficLightConfiguration.SINGLE
 
-			if lane.direction == Enums.Direction.LEFT_FORWARD:
+			if lane.direction == Enums.Direction.LEFT_FORWARD and segments_with_dedicated_left_turn.has(segment):
 				configuration = TrafficLightConfiguration.SINGLE_WITH_LEFT
 			elif connections_helper.is_in_combined_direction(lane.direction, Enums.Direction.RIGHT) and lane.direction != Enums.Direction.RIGHT and right_most_stopper == stopper:
 				configuration = TrafficLightConfiguration.SINGLE_WITH_RIGHT
