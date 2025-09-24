@@ -117,6 +117,9 @@ func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 
 	return count
 
+func get_max_allowed_speed() -> float:
+	return data.MaxSpeed if data.MaxSpeed > 0 else segment.data.MaxSpeed if segment.data.MaxSpeed > 0 else INF
+
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
 

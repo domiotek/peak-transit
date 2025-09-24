@@ -19,6 +19,8 @@ public partial class NetSegmentInfo : GodotObject
 
     public Array<NetConnectionInfo> Relations { get; set; } = [];
 
+    public float MaxSpeed { get; set; } = -1f;
+
     public NetSegmentInfo(
         int nodeA,
         int nodeB,

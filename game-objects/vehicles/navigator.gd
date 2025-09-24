@@ -148,6 +148,7 @@ func _assign_to_step(step: Variant) -> void:
 		"path": lane.trail.curve,
 		"length": trail_length,
 		"progress": 0.0,
+		"max_speed": lane.get_max_allowed_speed(),
 	}
 
 	var node = network_manager.get_node(finish_endpoint.NodeId)
