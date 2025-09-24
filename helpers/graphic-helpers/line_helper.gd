@@ -24,34 +24,62 @@ func calc_curve(start_pos: Vector2, target_pos: Vector2, strength: float, direct
 
 	return curve
 
-func get_curve_with_offset(curve: Curve2D,offset: float) -> Curve2D:
+func get_curve_with_offset(curve: Curve2D, offset: float) -> Curve2D:
 	if not curve or not offset:
 		return null
 	
 	var offset_curve = Curve2D.new()
+	var length = curve.get_baked_length()
 	
-	for i in range(curve.point_count):
-		var original_point = curve.get_point_position(i)
-		var original_in = curve.get_point_in(i)
-		var original_out = curve.get_point_out(i)
+	if length <= 0:
+		return null
+	
+	var sample_count = max(curve.point_count * 2, int(length / 10.0))
+	sample_count = clamp(sample_count, 10, 100)
+	
+	var offset_points = []
+	
+	for i in range(sample_count + 1):
+		var t = float(i) / float(sample_count)
+		var distance = t * length
 		
-		var perpendicular: Vector2
+		var pos = curve.sample_baked(distance)
 		
-		if i == 0:
-			var tangent = original_out.normalized()
-			perpendicular = Vector2(-tangent.y, tangent.x)
-		elif i == curve.point_count - 1:
-			var tangent = (-original_in).normalized()
-			perpendicular = Vector2(-tangent.y, tangent.x)
-		else:
-			var in_tangent = (-original_in).normalized()
-			var out_tangent = original_out.normalized()
-			var avg_tangent = (in_tangent + out_tangent).normalized()
-			perpendicular = Vector2(-avg_tangent.y, avg_tangent.x)
+		var epsilon = 1.0
+		var forward_pos = curve.sample_baked(min(distance + epsilon, length))
+		var backward_pos = curve.sample_baked(max(distance - epsilon, 0))
 		
-		var offset_point = original_point + perpendicular * offset
+		var tangent = (forward_pos - backward_pos).normalized()
+		var normal = Vector2(-tangent.y, tangent.x)
 		
-		offset_curve.add_point(offset_point, original_in, original_out)
+		var offset_pos = pos + normal * offset
+		offset_points.append(offset_pos)
+	
+	for i in range(offset_points.size()):
+		var point = offset_points[i]
+		var handle_in = Vector2.ZERO
+		var handle_out = Vector2.ZERO
+
+		if i > 0 and i < offset_points.size() - 1:
+			var prev_point = offset_points[i - 1]
+			var next_point = offset_points[i + 1]
+
+			var direction = (next_point - prev_point).normalized()
+			var distance_to_prev = (point - prev_point).length()
+			var distance_to_next = (next_point - point).length()
+			
+			handle_in = -direction * distance_to_prev * 0.3
+			handle_out = direction * distance_to_next * 0.3
+		elif i == 0 and offset_points.size() > 1:
+			var next_point = offset_points[i + 1]
+			var direction = (next_point - point).normalized()
+			handle_out = direction * (next_point - point).length() * 0.3
+		elif i == offset_points.size() - 1 and offset_points.size() > 1:
+			var prev_point = offset_points[i - 1]
+			var direction = (point - prev_point).normalized()
+			handle_in = -direction * (point - prev_point).length() * 0.3
+		
+		offset_curve.add_point(point, handle_in, handle_out)
 	
 	return offset_curve
 
@@ -249,27 +277,31 @@ func get_connecting_curve(curve1: Curve2D, curve2: Curve2D) -> Curve2D:
 	var connecting_curve = Curve2D.new()
 
 	var end_pos_1 = curve1.get_point_position(curve1.get_point_count() - 1)
-	var out_handle_1 = curve1.get_point_out(curve1.get_point_count() - 1)
-
 	var start_pos_2 = curve2.get_point_position(0)
-	var in_handle_2 = curve2.get_point_in(0)
-
 	var distance = end_pos_1.distance_to(start_pos_2)
 
+	var curve1_length = curve1.get_baked_length()
+	var curve2_length = curve2.get_baked_length()
+	
+	var sample_dist = min(5.0, curve1_length * 0.05)
+	var end_direction_1 = Vector2(1, 0)
+	if curve1_length > sample_dist:
+		var sample_pos = curve1.sample_baked(curve1_length - sample_dist)
+		end_direction_1 = (end_pos_1 - sample_pos).normalized()
+	
+	sample_dist = min(5.0, curve2_length * 0.05)
+	var start_direction_2 = Vector2(1, 0)
+	if curve2_length > sample_dist:
+		var sample_pos = curve2.sample_baked(sample_dist)
+		start_direction_2 = (sample_pos - start_pos_2).normalized()
+
 	if distance < NetworkConstants.SHARP_LANE_CONNECTION_THRESHOLD:
-		var mid_point = (end_pos_1 + start_pos_2) * 0.5
-		var dir = (start_pos_2 - end_pos_1).normalized()
-		var normal = Vector2(dir.y, -dir.x)
-		var arc_height = distance * 0.3
-
-		var control1 = mid_point + normal * arc_height
-		var control2 = mid_point + normal * arc_height
-
+		var handle_strength = distance * 0.2
+		
 		connecting_curve.add_point(end_pos_1)
-		connecting_curve.set_point_out(0, control1 - end_pos_1)
-
+		connecting_curve.set_point_out(0, end_direction_1 * handle_strength)
 		connecting_curve.add_point(start_pos_2)
-		connecting_curve.set_point_in(1, control2 - start_pos_2)
+		connecting_curve.set_point_in(1, -start_direction_2 * handle_strength)
 	else:
 		var base_factor = NetworkConstants.LANE_CONNECTION_BASE_CURVATURE_FACTOR
 		var max_factor = NetworkConstants.LANE_CONNECTION_MAX_CURVATURE_FACTOR
@@ -278,14 +310,14 @@ func get_connecting_curve(curve1: Curve2D, curve2: Curve2D) -> Curve2D:
 		var distance_ratio = min(distance / distance_threshold, 1.0)
 		var curvature_factor = base_factor + (max_factor - base_factor) * distance_ratio
 		
-		var enhanced_out_handle = out_handle_1 * curvature_factor
-		var enhanced_in_handle = in_handle_2 * curvature_factor
+		var handle_length = distance * curvature_factor * 0.15
+		var enhanced_out_handle = end_direction_1 * handle_length
+		var enhanced_in_handle = -start_direction_2 * handle_length
 		
 		connecting_curve.add_point(end_pos_1)
 		connecting_curve.set_point_out(0, enhanced_out_handle)
 		connecting_curve.add_point(start_pos_2)
 		connecting_curve.set_point_in(1, enhanced_in_handle)
-
 
 	return connecting_curve
 
