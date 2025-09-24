@@ -4,6 +4,10 @@ class_name DefaultIntersectionHandler
 
 var CLASS_NAME = "DefaultIntersection"
 
+const RIGHT_OF_WAY_SIGN = preload("res://assets/signs/right_of_way_sign.png")
+const GIVE_WAY_SIGN = preload("res://assets/signs/give_way_sign.png")
+const STOP_SIGN = preload("res://assets/signs/stop_sign.png")
+
 var node: RoadNode
 var stoppers: Array = []
 
@@ -34,6 +38,8 @@ func setup(_node: RoadNode, new_stoppers: Array) -> void:
 		conflicting_paths[stopper.endpoint.Id] = _get_conflicting_paths(stopper)
 
 	connecting_curves.clear()
+
+	_draw_priority_signs()
 
 func process_tick(_delta: float) -> void:
 	
@@ -178,3 +184,45 @@ func _check_conflicting_path(stopper: LaneStopper, next_endpoint: int) -> bool:
 			return true
 				
 	return false
+
+func _draw_priority_signs() -> void:
+
+	for segment in node.connected_segments:
+		var segment_stoppers = stoppers.filter(func(s): return s.get_lane().segment == segment)
+		var lane = segment_stoppers[0].get_lane() if segment_stoppers.size() > 0 else null
+
+		var lanes_count = segment.get_relation_of_lane(lane.id).ConnectionInfo.Lanes.size();
+		var right_most_lane_number = lanes_count - 1
+
+		var right_most_stopper: LaneStopper = segment_stoppers.filter(func(s): return s.endpoint.LaneNumber == right_most_lane_number)[0]
+
+		var box = _get_road_side_position_box(right_most_stopper)
+
+		var priority = node.get_connection_priority(right_most_stopper.endpoint.Id)
+
+		var sign_obj = Sprite2D.new()
+		sign_obj.scale = Vector2(0.2, 0.2)
+
+		match priority:
+			Enums.IntersectionPriority.PRIORITY:
+				sign_obj.texture = RIGHT_OF_WAY_SIGN
+			Enums.IntersectionPriority.YIELD:
+				sign_obj.texture = GIVE_WAY_SIGN
+			Enums.IntersectionPriority.STOP:
+				sign_obj.texture = STOP_SIGN
+			_:
+				continue
+
+		box.add_child(sign_obj)
+
+func _get_road_side_position_box(ref_stopper: LaneStopper) -> Node2D:
+	var box = Node2D.new()
+	box.position = node.to_local(ref_stopper.endpoint.Position)
+	box.rotation_degrees = ref_stopper.rotation_degrees + 90.0
+	box.z_index = 1
+	node.top_layer.add_child(box)
+
+	var offset = Vector2(NetworkConstants.LANE_WIDTH, 30).rotated(deg_to_rad(box.rotation_degrees))
+	box.position += offset
+
+	return box
