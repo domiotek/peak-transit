@@ -21,7 +21,7 @@ func block_if_not_enough_space_in_lane_ahead(node: RoadNode, stopper: LaneStoppe
 	var is_another_vehicle_already_on_intersection = false
 
 	if available_space < CONFLICT_ZONE_OFFSET * 2:
-		is_another_vehicle_already_on_intersection = node.get_vehicles_crossing(stopper.endpoint.Id, next_endpoint).size() > 0
+		is_another_vehicle_already_on_intersection = node.intersection_manager.get_vehicles_crossing(stopper.endpoint.Id, next_endpoint).size() > 0
 		
 
 	return is_another_vehicle_already_on_intersection || (available_space < 25.0 && last_vehicle.driver.get_target_speed() != last_vehicle.driver.get_maximum_speed()) ||  available_space < 50.0 && (vehicle_state == Driver.VehicleState.BRAKING || vehicle_state == Driver.VehicleState.BLOCKED)

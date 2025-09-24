@@ -21,7 +21,6 @@ var outgoing_endpoints: Array = []
 
 var connection_paths: Dictionary = {}
 var connection_directions: Dictionary = {}
-var crossing_vehicles: Dictionary = {}
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
@@ -135,37 +134,6 @@ func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
 
 func get_destination_endpoints(from_endpoint_id: int) -> Array:
 	return connections.get(from_endpoint_id, [])
-
-
-func register_crossing_vehicle(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
-
-	if not crossing_vehicles.has(key):
-		crossing_vehicles[key] = []
-	
-	if vehicle_id not in crossing_vehicles[key]:
-		crossing_vehicles[key].append(vehicle_id)
-
-func mark_vehicle_left(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
-
-	if crossing_vehicles.has(key):
-		crossing_vehicles[key].erase(vehicle_id)
-		if crossing_vehicles[key].size() == 0:
-			crossing_vehicles.erase(key)
-
-func get_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> Array:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
-
-	return crossing_vehicles.get(key, [])
-
-func get_vehicles_crossing_count() -> int:
-	var total = 0
-
-	for key in crossing_vehicles.keys():
-		total += crossing_vehicles[key].size()
-
-	return total
 
 func _setup_connections() -> void:
 

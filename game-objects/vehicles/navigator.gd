@@ -75,7 +75,7 @@ func clean_up() -> void:
 		lane.remove_vehicle(vehicle)
 	elif current_step["type"] == StepType.NODE:
 		var node = current_step["node"]
-		node.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
+		node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
 
 func abandon_trip() -> void:
 	clean_up()
@@ -132,7 +132,7 @@ func _assign_to_step(step: Variant) -> void:
 
 	if current_step and current_step["type"] == StepType.NODE:
 		var _node = current_step["node"]
-		_node.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
+		_node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
 
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 	lane.assign_vehicle(vehicle)
@@ -173,7 +173,7 @@ func _pass_node() -> void:
 
 	var node = current_step["next_node"].node
 	var new_path = node.get_connection_path(current_step["next_node"].from, current_step["next_node"].to)
-	node.register_crossing_vehicle(vehicle.id, current_step["next_node"].from, current_step["next_node"].to)
+	node.intersection_manager.register_crossing_vehicle(vehicle.id, current_step["next_node"].from, current_step["next_node"].to)
 
 	current_step = {
 		"type": StepType.NODE,

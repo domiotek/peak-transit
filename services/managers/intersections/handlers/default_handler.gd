@@ -150,7 +150,7 @@ func _check_enough_space_in_lane_ahead(_stopper: LaneStopper, next_endpoint: int
 	var is_another_vehicle_already_on_intersection = false
 
 	if available_space < CONFLICT_ZONE_OFFSET * 2:
-		is_another_vehicle_already_on_intersection = node.get_vehicles_crossing(_stopper.endpoint.Id, next_endpoint).size() > 0
+		is_another_vehicle_already_on_intersection = node.intersection_manager.get_vehicles_crossing(_stopper.endpoint.Id, next_endpoint).size() > 0
 		
 
 	return is_another_vehicle_already_on_intersection || (available_space < 25.0 && last_vehicle.driver.get_target_speed() != last_vehicle.driver.get_maximum_speed()) ||  available_space < 50.0 && (vehicle_state == Driver.VehicleState.BRAKING || vehicle_state == Driver.VehicleState.BLOCKED)
@@ -173,7 +173,7 @@ func _check_conflicting_path(stopper: LaneStopper, next_endpoint: int) -> bool:
 			if other_distance_left < CONFLICT_ZONE_OFFSET and (path.conflict_type == Enums.PathConflictType.LINE_CROSSING or is_driving_to_the_same_endpoint) and not other_stopper.is_active():
 				return true
 
-		var vehicle_already_in_intersection = node.get_vehicles_crossing(path.from, path.to).size() > 0
+		var vehicle_already_in_intersection = node.intersection_manager.get_vehicles_crossing(path.from, path.to).size() > 0
 		if vehicle_already_in_intersection:
 			return true
 				

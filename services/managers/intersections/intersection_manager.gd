@@ -13,6 +13,8 @@ var node: RoadNode
 
 var handler: RefCounted
 
+var crossing_vehicles: Dictionary = {}
+
 
 func setup_intersection(assigned_node: RoadNode) -> void:
 	if not assigned_node:
@@ -54,6 +56,41 @@ func process_tick(delta: float) -> void:
 	if handler:
 		handler.process_tick(delta)
 
+func register_crossing_vehicle(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
+	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+
+	if not crossing_vehicles.has(key):
+		crossing_vehicles[key] = []
+	
+	if vehicle_id not in crossing_vehicles[key]:
+		crossing_vehicles[key].append(vehicle_id)
+
+func mark_vehicle_left(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
+	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+
+	if crossing_vehicles.has(key):
+		crossing_vehicles[key].erase(vehicle_id)
+		if crossing_vehicles[key].size() == 0:
+			crossing_vehicles.erase(key)
+
+func get_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> Array:
+	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+
+	return crossing_vehicles.get(key, [])
+
+func get_vehicles_crossing_count() -> int:
+	var total = 0
+
+	for key in crossing_vehicles.keys():
+		total += crossing_vehicles[key].size()
+
+	return total
+
+func get_used_intersection_type() -> String:
+	if handler:
+		return handler.CLASS_NAME
+	return "None"
+
 
 func _choose_intersection_handler() -> RefCounted:
 	if node.connected_segments.size() <= 2:
@@ -65,8 +102,3 @@ func _choose_intersection_handler() -> RefCounted:
 			Enums.IntersectionType.TrafficLights:
 				return TrafficLightsIntersectionHandler.new()
 		return TrafficLightsIntersectionHandler.new()
-
-func get_used_intersection_type() -> String:
-	if handler:
-		return handler.CLASS_NAME
-	return "None"

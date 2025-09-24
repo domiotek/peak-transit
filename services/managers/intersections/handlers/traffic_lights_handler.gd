@@ -271,7 +271,7 @@ func _measure_current_flow_ratio() -> float:
 			waiting_on_open_lanes += vehicle_count
 
 
-	var vehicles_crossing = node.get_vehicles_crossing_count()
+	var vehicles_crossing = node.intersection_manager.get_vehicles_crossing_count()
 
 	return (float(vehicles_crossing) + float(waiting_on_open_lanes)) / float(total_waiting) * 100 if total_waiting > 0 else 100.0
 
