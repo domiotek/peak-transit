@@ -7,6 +7,7 @@ enum StepType {
 	NODE
 }
 
+var vehicle: Vehicle
 var path_follower: PathFollow2D
 var network_manager: NetworkManager
 var pathing_manager: PathingManager
@@ -26,8 +27,9 @@ var total_trip_distance: float = 0.0
 signal trip_started()
 signal trip_ended(completed: bool)
 
-func setup(pf: PathFollow2D) -> void:
-	path_follower = pf
+func setup(owner: Vehicle) -> void:
+	vehicle = owner
+	path_follower = vehicle.path_follower
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
@@ -43,6 +45,9 @@ func get_current_step() -> Dictionary:
 	current_step["progress"] = path_follower.progress
 
 	return current_step
+
+func get_distance_left() -> float:
+	return current_step["length"] - current_step["progress"]
 
 func can_advance() -> bool:
 	return step_ready
@@ -60,7 +65,20 @@ func complete_current_step() -> void:
 	else:
 		_pass_node()
 
+func clean_up() -> void:
+	if current_step and current_step["type"] == StepType.SEGMENT:
+		var step = trip_path[trip_step_index]
+		var endpoint_id = step.ViaEndpointId
+		var endpoint = network_manager.get_lane_endpoint(endpoint_id)
+
+		var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
+		lane.remove_vehicle(vehicle)
+	elif current_step["type"] == StepType.NODE:
+		var node = current_step["node"]
+		node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
+
 func abandon_trip() -> void:
+	clean_up()
 	emit_signal("trip_ended", false)
 
 func get_total_progress() -> float:
@@ -112,7 +130,12 @@ func _assign_to_step(step: Variant) -> void:
 	var endpoint_id = step.ViaEndpointId
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 
+	if current_step and current_step["type"] == StepType.NODE:
+		var _node = current_step["node"]
+		_node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
+
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
+	lane.assign_vehicle(vehicle)
 	var trail_length = lane.trail.curve.get_baked_length()
 
 	path_follower.reparent(lane.trail, true)
@@ -141,14 +164,25 @@ func _assign_to_step(step: Variant) -> void:
 	step_ready = true
 
 func _pass_node() -> void:
+	var step = trip_path[trip_step_index]
+	var endpoint_id = step.ViaEndpointId
+	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
+
+	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
+	lane.remove_vehicle(vehicle)
+
 	var node = current_step["next_node"].node
 	var new_path = node.get_connection_path(current_step["next_node"].from, current_step["next_node"].to)
+	node.intersection_manager.register_crossing_vehicle(vehicle.id, current_step["next_node"].from, current_step["next_node"].to)
 
 	current_step = {
 		"type": StepType.NODE,
-		"path": new_path.curve,
+		"path": line_helper.convert_curve_local_to_global(new_path.curve, node),
 		"length": new_path.curve.get_baked_length(),
 		"progress": 0.0,
+		"node": node,
+		"from_endpoint": current_step["next_node"].from,
+		"to_endpoint": current_step["next_node"].to,
 		"is_intersection": node.connected_segments.size() > 2,
 	}
 

@@ -1,6 +1,8 @@
 extends Node2D
 class_name RoadNode
 
+var IntersectionManagerModule = load("res://services/managers/intersections/intersection_manager.gd")
+
 @onready var layerHelper = GDInjector.inject("NodeLayerHelper") as NodeLayerHelper
 @onready var circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
 @onready var lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
@@ -9,16 +11,24 @@ class_name RoadNode
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+@onready var game_manager = GDInjector.inject("GameManager") as GameManager
 
 @export var id: int
+var definition: NetNode
 var connections: Dictionary = {}
 var incoming_endpoints: Array = []
 var outgoing_endpoints: Array = []
+
 var connection_paths: Dictionary = {}
+var connection_directions: Dictionary = {}
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
+var segment_directions: Dictionary = {}
+var segment_priorities: Dictionary = {}
+var is_priority_based: bool = false
 
+var intersection_manager: IntersectionManager
 
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
@@ -26,13 +36,27 @@ var connected_segments: Array = []
 @onready var under_layer: Polygon2D = $UnderLayer
 @onready var boundary_layer: Polygon2D = $BoundaryLayer
 @onready var pathing_layer: Node2D = $PathingLayer
+@onready var top_layer: Node2D = $TopLayer
 
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
 
+func _process(delta: float) -> void:
+	if game_manager.is_debug_pick_enabled() && game_manager.try_hit_debug_pick(self):
+		print("Debug pick triggered for node ID %d" % id)
+		breakpoint
+
+	if not intersection_manager:
+		return
+
+	intersection_manager.process_tick(delta)
+
+
 func update_visuals() -> void:
 	connected_segments = network_manager.get_node_connected_segments(id)
+
+	_fill_segment_priorities()
 
 	var max_lanes = 0
 
@@ -65,6 +89,9 @@ func late_update_visuals() -> void:
 	if connected_segments.size() > 2:
 		_draw_stop_lines()
 
+	intersection_manager = IntersectionManager.new()
+	intersection_manager.setup_intersection(self)
+
 	_update_debug_layer()
 
 func get_intersection_polygon() -> PackedVector2Array:
@@ -76,12 +103,15 @@ func get_intersection_polygon() -> PackedVector2Array:
 		global_points.append(to_global(point))
 	return global_points
 
-func add_connection_path(in_id: int, out_id: int, curve: Curve2D) -> void:
+func add_connection_path(in_id: int, out_id: int, curve: Curve2D, direction: Enums.Direction) -> void:
 	var path = Path2D.new()
 	path.curve = curve
 	path.z_index = 2
 	pathing_layer.add_child(path)
-	connection_paths[str(in_id) + "-" + str(out_id)] = path
+	var key = str(in_id) + "-" + str(out_id)
+
+	connection_paths[key] = path
+	connection_directions[key] = direction
 
 
 func get_connection_path(in_id: int, out_id: int) -> Path2D:
@@ -90,6 +120,20 @@ func get_connection_path(in_id: int, out_id: int) -> Path2D:
 		return connection_paths[key]
 	else:
 		return null
+
+func get_connection_direction(in_id: int, out_id: int) -> Enums.Direction:
+	var key = str(in_id) + "-" + str(out_id)
+	if connection_directions.has(key):
+		return connection_directions[key]
+	else:
+		return Enums.Direction.BACKWARD
+
+func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
+	var from_segment_id = network_manager.get_lane_endpoint(in_id).SegmentId
+	return segment_priorities.get(from_segment_id, Enums.IntersectionPriority.YIELD)
+
+func get_destination_endpoints(from_endpoint_id: int) -> Array:
+	return connections.get(from_endpoint_id, [])
 
 func _setup_connections() -> void:
 
@@ -110,8 +154,53 @@ func _draw_stop_lines() -> void:
 		var perpendicular_line = line_helper.create_perpendicular_line_at_point(lane.trail.curve, endpoint.Position, self, NetworkConstants.LANE_WIDTH)
 
 		if perpendicular_line:
-			line_helper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+			var priority = segment_priorities.get(endpoint.SegmentId, Enums.IntersectionPriority.YIELD)
 
+			match priority:
+				Enums.IntersectionPriority.PRIORITY:
+					continue
+				Enums.IntersectionPriority.STOP:
+					line_helper.draw_solid_line(perpendicular_line, markings_layer, 3.0, Color.GRAY)
+				Enums.IntersectionPriority.YIELD:
+					line_helper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+
+func _fill_segment_priorities() -> void:
+
+	var get_all_yield = func() -> Dictionary:
+		var dict: Dictionary = {}
+		for segment in connected_segments:
+			dict[segment.id] = Enums.IntersectionPriority.YIELD
+		return dict
+
+	var new_state = {}
+
+	var priority_count = 0
+
+	for segment in connected_segments:
+		var dest_node_id = segment.get_other_node_id(id)
+		var is_in_priority = definition.PrioritySegments.has(dest_node_id)
+		var is_in_stop = definition.StopSegments.has(dest_node_id)
+
+		if is_in_priority:
+			if priority_count >= 2 || is_in_stop:
+				push_error("Intersection node " + str(id) + " has more than two priority segments or a segment marked as both priority and stop. All non-priority segments will be set to yield.")
+				segment_priorities = get_all_yield.call()
+				return
+
+			new_state[segment.id] = Enums.IntersectionPriority.PRIORITY
+			priority_count += 1
+		elif is_in_stop:
+			new_state[segment.id] = Enums.IntersectionPriority.STOP
+		else:
+			new_state[segment.id] = Enums.IntersectionPriority.YIELD
+
+	if priority_count != 2:
+		for priority in new_state.keys():
+			if new_state[priority] == Enums.IntersectionPriority.PRIORITY:
+				new_state[priority] = Enums.IntersectionPriority.YIELD
+
+	is_priority_based = priority_count == 2
+	segment_priorities = new_state
 
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():

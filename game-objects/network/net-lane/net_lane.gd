@@ -7,9 +7,14 @@ var id: int
 var segment: NetSegment
 var data: NetLaneInfo
 var offset: float = 0.0
+var relation_id: int = -1
 
 var from_endpoint: int
 var to_endpoint: int
+
+var direction: Enums.Direction = Enums.Direction.BACKWARD
+
+var assigned_vehicles: Array
 
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
@@ -20,11 +25,12 @@ func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
 
-func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float) -> void:
+func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float, _relation_id: int) -> void:
 	id = lane_id
 	segment = parent_segment
 	data = lane_info
 	offset = lane_offset
+	relation_id = _relation_id
 
 func update_trail_shape(curve: Curve2D) -> void:
 	if curve == null:
@@ -67,6 +73,49 @@ func get_endpoint_by_type(is_outgoing: bool) -> NetLaneEndpoint:
 
 func get_curve() -> Curve2D:
 	return trail.curve
+
+func assign_vehicle(vehicle: Vehicle) -> void:
+	assigned_vehicles.append(vehicle)
+
+func remove_vehicle(vehicle: Vehicle) -> void:
+	assigned_vehicles.erase(vehicle)
+
+func get_remaining_space() -> float:
+	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1] if assigned_vehicles.size() > 0  else null
+
+	return last_vehicle.path_follower.progress if last_vehicle else trail.curve.get_baked_length()
+
+func get_first_vehicle() -> Vehicle:
+	return assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
+
+func get_last_vehicle() -> Vehicle:
+	if assigned_vehicles.size() == 0:
+		return null
+
+	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
+	if is_instance_valid(last_vehicle):
+		return last_vehicle
+	else:
+		assigned_vehicles.pop_back()
+		return get_last_vehicle()
+
+func get_vehicle_count(only_waiting: bool = false) -> int:
+	if not only_waiting:
+		return assigned_vehicles.size()
+
+	return assigned_vehicles.filter(func(v): return v.driver.get_state() == Driver.VehicleState.BLOCKED).size()
+
+func count_vehicles_within_distance(node_id: int, distance: float) -> int:
+	var count = 0
+
+	var is_node_at_start = segment.nodes[0].id == node_id
+
+	for vehicle in assigned_vehicles:
+		var vehicle_distance = vehicle.path_follower.progress if is_node_at_start else trail.curve.get_baked_length() - vehicle.path_follower.progress
+		if vehicle_distance <= distance:
+			count += 1
+
+	return count
 
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()

@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://di4t4wp8wj3rd"]
-
-[ext_resource type="Script" uid="uid://d37gdyhoivl50" path="res://game-objects/vehicles/brake_light/brake_light.gd" id="1_l4rq3"]
-
-[node name="BrakeLight" type="Node2D"]
-script = ExtResource("1_l4rq3")

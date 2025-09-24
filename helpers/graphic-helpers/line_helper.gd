@@ -271,10 +271,20 @@ func get_connecting_curve(curve1: Curve2D, curve2: Curve2D) -> Curve2D:
 		connecting_curve.add_point(start_pos_2)
 		connecting_curve.set_point_in(1, control2 - start_pos_2)
 	else:
+		var base_factor = NetworkConstants.LANE_CONNECTION_BASE_CURVATURE_FACTOR
+		var max_factor = NetworkConstants.LANE_CONNECTION_MAX_CURVATURE_FACTOR
+		var distance_threshold = NetworkConstants.LANE_CONNECTION_DISTANCE_THRESHOLD
+
+		var distance_ratio = min(distance / distance_threshold, 1.0)
+		var curvature_factor = base_factor + (max_factor - base_factor) * distance_ratio
+		
+		var enhanced_out_handle = out_handle_1 * curvature_factor
+		var enhanced_in_handle = in_handle_2 * curvature_factor
+		
 		connecting_curve.add_point(end_pos_1)
-		connecting_curve.set_point_out(0, out_handle_1)
+		connecting_curve.set_point_out(0, enhanced_out_handle)
 		connecting_curve.add_point(start_pos_2)
-		connecting_curve.set_point_in(1, in_handle_2)
+		connecting_curve.set_point_in(1, enhanced_in_handle)
 
 
 	return connecting_curve
@@ -339,3 +349,10 @@ func curves_intersect(curve1: Curve2D, curve2: Curve2D, resolution := 10.0) -> b
 			if segments_intersect.call(a1, a2, b1, b2):
 				return true
 	return false
+
+func rotate_along_curve(curve: Curve2D, point: Vector2) -> float:
+	var closest_offset = curve.get_closest_offset(point)
+	var curve_transform = curve.sample_baked_with_rotation(closest_offset, true)
+	var rotation_angle = curve_transform.get_rotation()
+
+	return rotation_angle

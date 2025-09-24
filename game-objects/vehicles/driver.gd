@@ -13,16 +13,22 @@ enum VehicleState {
 }
 
 var CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
+var MAX_BLOCK_TIME = 5.0
 
 var line_helper: LineHelper
 
 
 var ai = null
 var navigator = null
+var owner: Vehicle = null
 
 var current_speed: float = 0.0
 var target_speed: float = 0.0
 var current_brake_force: float = 0.0
+
+var no_caster_allowance_time: float = 0.0
+var just_enabled_casters: bool = false
+var casters_state: bool = false
 
 var constants: Dictionary = {}
 
@@ -32,8 +38,10 @@ var state: VehicleState = VehicleState.IDLE
 var brake_light_nodes: Array = []
 var casters: Dictionary = {}
 var blockade_observer: Area2D
+var time_blocked: float = 0.0
 
 signal caster_state_changed(caster_id: String, is_colliding: bool)
+signal state_changed(new_state: VehicleState)
 
 
 func set_ai(used_ai) -> void:
@@ -45,6 +53,9 @@ func set_ai(used_ai) -> void:
 
 func set_navigator(used_navigator) -> void:
 	navigator = used_navigator
+
+func set_owner(vehicle: Vehicle) -> void:
+	owner = vehicle
 
 func set_brake_lights(nodes: Array) -> void:
 	brake_light_nodes = nodes
@@ -63,6 +74,30 @@ func get_current_speed() -> float:
 func get_target_speed() -> float:
 	return target_speed
 
+func get_maximum_speed() -> float:
+	return constants["MAX_SPEED"]
+
+func get_state() -> VehicleState:
+	return state
+
+func get_blocking_objects() -> Array:
+	if not blockade_observer.monitoring:
+		return []
+
+	if blockade_observer.get_overlapping_areas().size() > 0:
+		return blockade_observer.get_overlapping_areas()
+
+	_set_casters_enabled(true)
+
+	var colliders = []
+	for caster in casters.values():
+		if caster.is_colliding():
+			var collider = caster.get_collider()
+			if collider:
+				colliders.append(collider)
+
+	return colliders
+
 func emergency_stop() -> void:
 	target_speed = 0.0
 	current_speed = current_speed * constants["EMERGENCY_STOP_SPEED_MODIFIER"]
@@ -72,25 +107,77 @@ func tick_speed(delta: float) -> float:
 	target_speed = constants["MAX_SPEED"]
 
 	_apply_slowdown_intersection()
-	_check_for_obstacles()
+	if no_caster_allowance_time > 0.0:
+		no_caster_allowance_time -= delta
+		if no_caster_allowance_time <= 0.0:
+			no_caster_allowance_time = 0.0
+			_set_casters_enabled(true)
+	else:
+		_check_for_obstacles()
+		
 	_update_speed(delta)
 
-	if current_speed == 0 and target_speed == 0 and state == VehicleState.BRAKING:
+	if current_speed == 0 and target_speed == 0:
 		_update_state(VehicleState.BLOCKED)
 	else:
 		_on_blockade_area_exited(null)
 
 	return current_speed
 
-func check_blockade_cleared() -> bool:
-	if blockade_observer.get_overlapping_areas().size() > 0:
+func check_blockade_cleared(delta: float) -> bool:
+	var colliders = get_blocking_objects()
+
+	if just_enabled_casters:
 		return false
 
-	blockade_observer.monitoring = false
-	_set_casters_enabled(true)
-	state = VehicleState.IDLE
+	var unblocked = false
 
-	return true
+	if state != VehicleState.BLOCKED:
+		return true
+
+	var current_step = navigator.get_current_step()
+
+	if current_step["type"] == Navigator.StepType.NODE and current_step["is_intersection"] and time_blocked >= MAX_BLOCK_TIME:
+		unblocked = true
+		no_caster_allowance_time = 1.0
+
+	if not unblocked and colliders.size() > 0:
+		for collider in colliders:
+			var other_vehicle = collider.get_parent() as Vehicle
+
+			if other_vehicle:
+				var their_colliders = other_vehicle.driver.get_blocking_objects()
+
+				for their_collider in their_colliders:
+					var their_colliding_vehicle = their_collider.get_parent() as Vehicle if their_collider else null
+
+					if not their_colliding_vehicle:
+						continue
+				
+					if their_colliding_vehicle == self.owner || colliders.has(self.owner.collision_area):
+						unblocked = true
+						no_caster_allowance_time = 1.0
+						break
+
+			var lane_stopper = collider as LaneStopper
+			if lane_stopper && lane_stopper.is_active() && current_step["type"] == Navigator.StepType.NODE:
+				unblocked = true
+
+			if unblocked:
+				break
+	else:
+		unblocked = true
+
+	if unblocked:
+		blockade_observer.monitoring = false
+		if no_caster_allowance_time == 0.0:
+			_set_casters_enabled(true)
+		state = VehicleState.IDLE
+		time_blocked = 0.0
+	else:
+		time_blocked += delta
+
+	return unblocked
 
 func _apply_slowdown_intersection() -> void:
 	
@@ -142,6 +229,8 @@ func _update_state(vehicle_state: VehicleState) -> void:
 			_set_casters_enabled(false)
 			blockade_observer.monitoring = true
 
+	state_changed.emit(state)
+
 
 func _check_for_obstacles() -> void:
 	var colliding_casters = _get_colliding_casters()
@@ -168,13 +257,20 @@ func _get_colliding_casters() -> Dictionary:
 func _check_caster_colliding(caster_id: String) -> bool:
 	var current_step = navigator.get_current_step()
 
+	var check_if_my_blockade = func (collider: LaneStopper) -> bool:
+		var my_endpoint_id = current_step["next_node"]["from"] if current_step["type"] == Navigator.StepType.SEGMENT else current_step["from_endpoint"]
+		return collider.endpoint.Id == my_endpoint_id
+
 	match caster_id:
-		"close":
-			return casters["close"].is_colliding()
-		"medium":
-			return casters["medium"].is_colliding()
-		"long":
-			return casters["long"].is_colliding()
+		"close", "medium", "long":
+			if casters[caster_id].is_colliding():
+				var laneStopper = casters[caster_id].get_collider() as LaneStopper
+				if laneStopper:
+					return check_if_my_blockade.call(laneStopper)
+
+				return true
+
+			return false
 		"left", "right":
 			if casters[caster_id].is_colliding() and current_step["type"] == Navigator.StepType.NODE and current_step["is_intersection"]:
 				var caster = casters[caster_id]
@@ -182,7 +278,11 @@ func _check_caster_colliding(caster_id: String) -> bool:
 				var collider = caster.get_collider()
 				if collider:
 					var other_vehicle = collider.get_parent() as Vehicle
-					if line_helper.curves_intersect(current_step["path"], other_vehicle.navigator.get_current_step()["path"], 10):
+					if other_vehicle and line_helper.curves_intersect(current_step["path"], other_vehicle.navigator.get_current_step()["path"], 10):
+						return true
+
+					var blockade = collider as LaneStopper
+					if blockade and check_if_my_blockade.call(blockade):
 						return true
 
 			return false
@@ -209,10 +309,16 @@ func _apply_caster_colliding(caster_id: String, colliding_casters: Dictionary) -
 			push_error("Unknown caster ID: %s" % caster_id)
 
 func _set_casters_enabled(enabled: bool) -> void:
+	if enabled and not casters_state:
+		just_enabled_casters = true
+
+	casters_state = enabled
+
 	for caster in casters.values():
 		caster.set_enabled(enabled)
 
 func _on_blockade_area_exited(_area: Area2D) -> void:
 	_set_casters_enabled(true)
 	blockade_observer.set_deferred("monitoring",false)
-	state = VehicleState.IDLE
+	if state == VehicleState.BLOCKED:
+		state = VehicleState.IDLE

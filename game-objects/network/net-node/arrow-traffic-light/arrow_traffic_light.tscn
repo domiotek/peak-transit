@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=3 uid="uid://cqglp3xkekaye"]
+
+[ext_resource type="Script" uid="uid://dp8qdi0metnqu" path="res://game-objects/network/net-node/arrow-traffic-light/arrow_traffic_light.gd" id="1_37otq"]
+[ext_resource type="PackedScene" uid="uid://cx5r114fjgwq7" path="res://game-objects/light/light.tscn" id="2_eiut4"]
+[ext_resource type="Texture2D" uid="uid://b511envii0van" path="res://assets/ui_icons/traffic_light_arrow.png" id="3_b7eup"]
+
+[node name="ArrowTrafficLight" type="Node2D"]
+script = ExtResource("1_37otq")
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.745098, 0.54902, 0, 1)
+polygon = PackedVector2Array(-2.95275, -2.94563, -2.78906, -3, 2.75, -3, 2.88237, -2.97688, 2.96831, -2.89094, 3, -2.73438, 3, 2.74219, 2.94137, 2.9335, 2.74219, 3, -2.71094, 3, -2.92325, 2.92456, -3, 2.72656, -3, -2.78906)
+uv = PackedVector2Array(2.31244, -2.51594, 2.31244, -2.50031, 2.31244, -2.53156, 2.31244, -2.53938)
+
+[node name="Background" parent="." instance=ExtResource("2_eiut4")]
+inactive_color = Color(0.054902, 0.196078, 0, 1)
+active_color = Color(0.141176, 0.784314, 0, 1)
+radius = 2.0
+
+[node name="ArrowShape" type="Sprite2D" parent="."]
+clip_children = 1
+scale = Vector2(0.145833, 0.145833)
+texture = ExtResource("3_b7eup")
+
+[node name="Light" parent="ArrowShape" instance=ExtResource("2_eiut4")]
+scale = Vector2(6.85714, 6.85714)
+inactive_color = Color(0.054902, 0.196078, 0, 1)
+active_color = Color(0.141176, 0.784314, 0, 1)
+radius = 2.0

@@ -4,7 +4,8 @@ class_name GameManager
 
 enum SelectionType {
 	NONE,
-	VEHICLE
+	VEHICLE,
+	NODE
 }
 
 var camera_bounds: Rect2
@@ -17,6 +18,7 @@ var initial_map_pos = Vector2(150, 900)
 var selected_object: Object = null
 var selection_type: SelectionType = SelectionType.NONE
 var selection_popup_id: Variant = null
+var debug_selection: bool = false
 
 var ui_manager: UIManager
 var config_manager: ConfigManager
@@ -82,6 +84,8 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selected_object = null
 		SelectionType.VEHICLE:
 			selection_popup_id = "VehiclePopupView"
+		SelectionType.NODE:
+			pass
 		_:
 			push_error("Unknown selection type: %s" % str(type))
 			selection_type = SelectionType.NONE
@@ -104,6 +108,23 @@ func get_selected_object() -> Object:
 
 func get_selection_type() -> SelectionType:
 	return selection_type
+
+func is_debug_pick_enabled() -> bool:
+	return debug_selection
+
+func try_hit_debug_pick(object: Object) -> bool:
+	if not debug_selection:
+		return false
+
+	if selection_type == SelectionType.VEHICLE and selected_object == (object as Vehicle):
+		debug_selection = false
+		return true
+
+	if selection_type == SelectionType.NODE and selected_object == (object as RoadNode):
+		debug_selection = false
+		return true
+
+	return false
 
 func draw_vehicle_route(vehicle: Vehicle) -> void:
 	if not vehicle:

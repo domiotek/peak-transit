@@ -79,7 +79,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		var lane_scene = load("res://game-objects/network/net-lane/net_lane.tscn")
 		var lane = lane_scene.instantiate()
 
-		lane.setup(lanes.size(), self, lane_info, offset)
+		lane.setup(lanes.size(), self, lane_info, offset, relations.size() - 1)
 		add_child(lane)
 		lanes.append(lane)
 
@@ -129,6 +129,25 @@ func get_lane(lane_id: int) -> NetLane:
 		push_error("Invalid lane ID: " + str(lane_id))
 		return null
 	return lanes.filter(func(lane): return lane.id == lane_id)[0]
+
+func get_other_node_id(node_id: int) -> int:
+	if nodes[0].id == node_id:
+		return nodes[1].id
+	elif nodes[1].id == node_id:
+		return nodes[0].id
+	else:
+		push_error("Node ID not part of this segment.")
+		return -1
+
+func get_relation_of_lane(lane_id: int) -> NetRelation:
+	var lane = get_lane(lane_id)
+
+	var relation_id = lane.relation_id
+	if relation_id < 0 or relation_id >= relations.size():
+		push_error("Invalid relation ID for lane: " + str(lane_id))
+		return null
+
+	return relations[relation_id]
 
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes:

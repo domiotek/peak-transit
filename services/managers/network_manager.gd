@@ -35,6 +35,8 @@ func setup_network(grid: NetworkGrid):
 
 	path_finder.BuildGraph(nodes.values())
 
+func get_nodes() -> Array:
+	return nodes.values()
 
 func get_node_connected_segments(node_id: int) -> Array:
 	var connected_segments = []

@@ -10,6 +10,7 @@ const GameManagerModule = preload("res://services/managers/game_manager.gd")
 const SimulationManagerModule = preload("res://services/managers/simulation_manager.gd")
 const PathingManagerModule = preload("res://services/managers/pathing_manager.gd")
 const UIManagerModule = preload("res://services/managers/ui_manager.gd")
+const IntersectionHelperModule = preload("res://helpers/graphic-helpers/intersection_helper.gd")
 
 var deferred_init_list = []
 
@@ -36,7 +37,7 @@ func _register_instances():
 	_register_singleton("SimulationManager", SimulationManager.new())
 	_register_singleton("PathingManager", PathingManager.new())
 	_register_singleton("UIManager", UIManager.new())
-
+	_register_singleton("IntersectionHelper", IntersectionHelper.new())
 
 func _register_singleton(dep_name: String, instance: Object):
 	DIContainer.Register(dep_name, instance)

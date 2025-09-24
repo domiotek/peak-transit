@@ -29,6 +29,7 @@ signal trip_abandoned(vehicle_id)
 
 func _ready():
 	var ai = CarAI.new()
+	driver.set_owner(self)
 	driver.set_ai(ai)
 	driver.set_navigator(navigator)
 	driver.set_brake_lights([$Body/LeftBrakeLight, $Body/RightBrakeLight])
@@ -44,10 +45,11 @@ func _ready():
 	driver.set_blockade_observer(forward_blockage_area)
 
 	driver.connect("caster_state_changed", Callable(self, "_on_caster_state_changed"))
+	driver.connect("state_changed", Callable(self, "_on_driver_state_changed"))
 
 	navigator.connect("trip_started", Callable(self, "_on_trip_started"))
 	navigator.connect("trip_ended", Callable(self, "_on_trip_ended"))
-	navigator.setup(path_follower)
+	navigator.setup(self)
 
 func init_trip(from: int, to: int) -> void:
 	if from == to:
@@ -75,11 +77,19 @@ func get_all_trip_curves() -> Array:
 	return navigator.get_trip_curves()
 
 func _process(delta: float) -> void:
+	if game_manager.is_debug_pick_enabled() && game_manager.try_hit_debug_pick(self):
+		print("Debug pick triggered for vehicle ID %d" % id)
+		breakpoint
+
 	if not navigator.can_advance():
 		return
 
 	if driver.state == Driver.VehicleState.BLOCKED:
-		driver.check_blockade_cleared()
+		if driver.just_enabled_casters:
+			driver.just_enabled_casters = false
+			return
+
+		driver.check_blockade_cleared(delta)
 		return
 
 	var trail_length = navigator.get_current_step()["length"]
@@ -92,8 +102,6 @@ func _process(delta: float) -> void:
 	if path_follower.progress_ratio >= 1.0:
 		navigator.complete_current_step()
 
-	$Body/Label.text = str(driver.get_target_speed())
-
 func _on_trip_started() -> void:
 	body_area.connect("input_event", Callable(self, "_on_input_event"))
 	collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
@@ -103,6 +111,7 @@ func _on_trip_started() -> void:
 	collision_area.monitorable = true
 	collision_area.get_child(0).set_deferred("disabled", false)
 	emit_signal("trip_started", id)
+	$Body/Label.text = str(id)
 
 func _on_trip_ended(completed: bool) -> void:
 	if completed:
@@ -129,3 +138,11 @@ func _on_caster_state_changed(caster_id: String, is_colliding: bool) -> void:
 			$Body/LeftRayIndicator.set_active(is_colliding)
 		"right":
 			$Body/RightRayIndicator.set_active(is_colliding)
+
+func _on_driver_state_changed(new_state: Driver.VehicleState) -> void:
+	var line = $Body/Line2D as Line2D
+	match new_state:
+		Driver.VehicleState.BLOCKED:
+			line.default_color = Color.RED
+		_:
+			line.default_color = Color.WHITE

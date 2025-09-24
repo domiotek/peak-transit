@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://ckwofdbo83fsn"]
+
+[ext_resource type="Script" uid="uid://csh4yskqc2j8g" path="res://ui/components/intersection_list_item/intersection_list_item.gd" id="1_spbxv"]
+[ext_resource type="Texture2D" uid="uid://b2ucwghxcyr4r" path="res://assets/ui_icons/debugger.png" id="2_spbxv"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_owr6n"]
+font_size = 14
+
+[sub_resource type="LabelSettings" id="LabelSettings_3yttf"]
+font_size = 9
+font_color = Color(0.752941, 0.752941, 0.752941, 1)
+
+[node name="IntersectionListItem" type="BoxContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 17.0
+grow_horizontal = 2
+script = ExtResource("1_spbxv")
+
+[node name="BoxContainer" type="BoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = -1
+vertical = true
+
+[node name="MainLabel" type="Label" parent="BoxContainer"]
+layout_mode = 2
+text = "Test:"
+label_settings = SubResource("LabelSettings_owr6n")
+
+[node name="SupportLabel" type="Label" parent="BoxContainer"]
+layout_mode = 2
+text = "Default"
+label_settings = SubResource("LabelSettings_3yttf")
+
+[node name="DebugButton" type="Button" parent="."]
+layout_mode = 2
+icon = ExtResource("2_spbxv")
