@@ -46,11 +46,13 @@ text = "#1"
 
 [node name="PinButton" type="Button" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("3_2i1xd")
 flat = true
 
 [node name="CloseButton" type="Button" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("2_21yla")
 flat = true
 
@@ -79,15 +81,18 @@ layout_mode = 2
 
 [node name="DeleteButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("3_kk4e6")
 flat = true
 
 [node name="ShowRouteButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("4_qwaqe")
 flat = true
 
 [node name="DebuggerButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("7_2i1xd")
 flat = true

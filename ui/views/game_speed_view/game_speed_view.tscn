@@ -24,24 +24,29 @@ alignment = 1
 
 [node name="PauseButton" type="Button" parent="BoxContainer"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("3_b1mdp")
 flat = true
 
 [node name="LowButton" type="Button" parent="BoxContainer"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("4_lrxkq")
 
 [node name="MediumButton" type="Button" parent="BoxContainer"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("5_esa04")
 flat = true
 
 [node name="HighButton" type="Button" parent="BoxContainer"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("6_u2fra")
 flat = true
 
 [node name="TurboButton" type="Button" parent="BoxContainer"]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("7_lrxkq")
 flat = true
