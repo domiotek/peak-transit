@@ -1,5 +1,8 @@
 extends Node2D
 class_name NetLane
+
+var speed_limit_sign_scene = preload("res://game-objects/network/speed-limit-sign/speed_limit_sign.tscn")
+
 @onready var trail: Path2D = $PathingTrail
 @onready var debug_layer: Node2D = $DebugLayer
 
@@ -136,10 +139,20 @@ func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():
 		child.queue_free()
 
-	if !config_manager.DebugToggles.DrawLaneLayers:
-		return
+	if config_manager.DebugToggles.DrawLaneLayers:
+		line_helper.draw_solid_line(trail.curve, debug_layer, 2.0, Color.PURPLE)
 
-	line_helper.draw_solid_line(trail.curve, debug_layer, 2.0, Color.PURPLE)
+	if config_manager.DebugToggles.DrawLaneSpeedLimits:
+		var speed_limit = get_max_allowed_speed()
+		var mid_point = trail.curve.sample_baked(trail.curve.get_baked_length() / 2)
+
+		var sign_instance = speed_limit_sign_scene.instantiate() as SpeedLimitSign
+		sign_instance.position = to_local(mid_point)
+		if speed_limit == INF:
+			sign_instance.set_no_speed_limit()
+		else:
+			sign_instance.set_speed_limit(int(speed_limit))
+		debug_layer.add_child(sign_instance)
 
 
 func _calc_lane_number() -> int:
