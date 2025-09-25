@@ -42,10 +42,9 @@ public partial class NetworkDefinition : GodotObject
             {
                 Relations =
                 [
-                    new(0) { Lanes = [new() { MaxSpeed = 170 }, new()] },
+                    new(0) { Lanes = [new(), new()] },
                     new(1) { Lanes = [new() { Direction = LaneDirection.Auto }, new()] },
                 ],
-                MaxSpeed = 30f,
             },
             new NetSegmentInfo(1, 2)
             {
@@ -68,8 +67,8 @@ public partial class NetworkDefinition : GodotObject
                         Lanes =
                         [
                             new() { Direction = LaneDirection.Left },
-                            new() { Direction = LaneDirection.ForwardLeft },
-                            new(),
+                            new() { Direction = LaneDirection.ForwardLeft, MaxSpeed = 80f },
+                            new() { MaxSpeed = 150f },
                         ],
                     },
                     new(4) { Lanes = [new(), new()] },
