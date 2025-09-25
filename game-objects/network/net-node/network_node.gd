@@ -229,7 +229,7 @@ func _update_debug_layer() -> void:
 			var color = Color.DARK_KHAKI if incoming_endpoints.has(in_id) else Color.DARK_ORANGE
 
 			var endpoint = network_manager.get_lane_endpoint(in_id)
-			var circleText = str(endpoint.Id) if config_manager.DebugToggles.DrawLaneEndpointIds else ""
+			var circleText = str(endpoint.Id)
 			circle_helper.draw_debug_circle(to_local(endpoint.Position), color, debug_layer, {"size": 6.0, "text": circleText})
 
 		for point in corner_points:

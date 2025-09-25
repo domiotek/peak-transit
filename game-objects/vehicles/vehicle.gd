@@ -62,6 +62,7 @@ func get_popup_data() -> Dictionary:
 	var data = {
 		"speed": driver.get_current_speed(),
 		"target_speed": driver.get_target_speed(),
+		"max_speed": driver.get_max_allowed_speed(),
 		"state": Driver.VehicleState.keys()[driver.state],
 		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
 		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,

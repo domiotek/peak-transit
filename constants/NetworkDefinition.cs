@@ -67,8 +67,8 @@ public partial class NetworkDefinition : GodotObject
                         Lanes =
                         [
                             new() { Direction = LaneDirection.Left },
-                            new() { Direction = LaneDirection.ForwardLeft },
-                            new(),
+                            new() { Direction = LaneDirection.ForwardLeft, MaxSpeed = 80f },
+                            new() { MaxSpeed = 150f },
                         ],
                     },
                     new(4) { Lanes = [new(), new()] },

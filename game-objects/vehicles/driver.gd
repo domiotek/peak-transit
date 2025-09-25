@@ -77,6 +77,13 @@ func get_target_speed() -> float:
 func get_maximum_speed() -> float:
 	return constants["MAX_SPEED"]
 
+func get_max_allowed_speed() -> float:
+	var current_step = navigator.get_current_step()
+	if current_step and current_step.has("max_speed") and current_step["max_speed"] != INF:
+		return current_step["max_speed"]
+
+	return constants["MAX_SPEED"]
+
 func get_state() -> VehicleState:
 	return state
 
@@ -104,7 +111,7 @@ func emergency_stop() -> void:
 	current_brake_force = constants["EMERGENCY_BRAKING"]
 
 func tick_speed(delta: float) -> float:
-	target_speed = constants["MAX_SPEED"]
+	target_speed = get_max_allowed_speed()
 
 	_apply_slowdown_intersection()
 	if no_caster_allowance_time > 0.0:

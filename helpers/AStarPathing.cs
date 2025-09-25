@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Godot;
 using PTS.DependencyProvider;
-using PTS.Models;
+using PTS.Models.Mappings;
+using PTS.Models.Network;
 using PTS.Models.PathFinding;
 using PTS.Services.Adapters;
 
@@ -35,6 +35,17 @@ public class AStarPathing
         "NetworkManager"
     );
 
+    private static readonly Dictionary<int, NetSegment> _segmentCache = new();
+
+    public static void ClearCache()
+    {
+        foreach (var segment in _segmentCache.Values)
+        {
+            segment?.QueueFree();
+        }
+        _segmentCache.Clear();
+    }
+
     public static List<PathStep> FindPathAStar(NetGraph graph, int startNodeId, int endNodeId)
     {
         if (!graph.ContainsNode(startNodeId) || !graph.ContainsNode(endNodeId))
@@ -46,11 +57,15 @@ public class AStarPathing
         {
             return [];
         }
+
         var startGraphNode = graph.GetNode(startNodeId);
         var endGraphNode = graph.GetNode(endNodeId);
 
-        var explorationSet = new List<AStarNode>();
-        var allNodes = new Dictionary<int, AStarNode>();
+        var explorationSet = new PriorityQueue<AStarNode, float>();
+        var bestCostToState = new Dictionary<string, double>();
+        var visitedNodes = new HashSet<int>();
+        var bestSolutionNodes = new HashSet<int>();
+        AStarNode bestSolution = null;
 
         var startNode = new AStarNode(startNodeId)
         {
@@ -59,17 +74,50 @@ public class AStarPathing
             HCost = CalculateHeuristic(startGraphNode, endGraphNode),
         };
 
-        allNodes[startNodeId] = startNode;
-        explorationSet.Add(startNode);
+        explorationSet.Enqueue(startNode, startNode.FCost);
 
         while (explorationSet.Count > 0)
         {
-            var currentNode = explorationSet.OrderBy(n => n.FCost).ThenBy(n => n.HCost).First();
-            explorationSet.Remove(currentNode);
+            var currentNode = explorationSet.Dequeue();
+            string currentStateKey = $"{currentNode.NodeId}_{currentNode.FromEndpointId}";
+            if (
+                currentNode.GCost
+                > bestCostToState.GetValueOrDefault(currentStateKey, double.MaxValue)
+            )
+            {
+                continue;
+            }
+
+            bestCostToState[currentStateKey] = currentNode.GCost;
 
             if (currentNode.NodeId == endNodeId)
             {
-                return ReconstructPath(currentNode);
+                if (bestSolution == null || currentNode.GCost < bestSolution.GCost)
+                {
+                    bestSolution = currentNode;
+                    bestSolutionNodes = GetNodesInPath(bestSolution);
+                }
+                continue;
+            }
+
+            if (
+                bestSolution != null
+                && visitedNodes.Contains(currentNode.NodeId)
+                && !bestSolutionNodes.Contains(currentNode.NodeId)
+            )
+            {
+                continue;
+            }
+
+            visitedNodes.Add(currentNode.NodeId);
+
+            if (
+                bestSolution != null
+                && !bestSolutionNodes.Contains(currentNode.NodeId)
+                && currentNode.FCost >= bestSolution.GCost
+            )
+            {
+                continue;
             }
 
             var graphNode = graph.GetNode(currentNode.NodeId);
@@ -78,7 +126,15 @@ public class AStarPathing
 
             var neighborNodes = ExploreNeighborNodes(graph, currentNode, endGraphNode);
 
-            explorationSet.AddRange(neighborNodes);
+            foreach (var neighbor in neighborNodes)
+            {
+                explorationSet.Enqueue(neighbor, neighbor.FCost);
+            }
+        }
+
+        if (bestSolution != null)
+        {
+            return ReconstructPath(bestSolution);
         }
 
         throw new InvalidOperationException(
@@ -89,7 +145,7 @@ public class AStarPathing
     private static List<AStarNode> ExploreNeighborNodes(
         NetGraph graph,
         AStarNode currentNode,
-        Models.PathFinding.GraphNode endNode
+        GraphNode endNode
     )
     {
         var result = new List<AStarNode>();
@@ -117,15 +173,17 @@ public class AStarPathing
 
                 float tentativeGCost = currentNode.GCost + CalculateCurrentCost(currentNode);
 
+                var fromEndpoint = currentNode.GraphNode.OutgoingToIncomingEndpointsMapping[
+                    viaPoint
+                ];
+
                 var explorationNode = new AStarNode(neighborId)
                 {
                     Parent = currentNode.Clone(),
                     GraphNode = neighborGraphNode,
                     GCost = tentativeGCost,
-                    HCost = CalculateHeuristic(neighborGraphNode, endNode),
-                    FromEndpointId = currentNode.GraphNode.OutgoingToIncomingEndpointsMapping[
-                        viaPoint
-                    ],
+                    HCost = CalculateHeuristic(neighborGraphNode, endNode, fromEndpoint),
+                    FromEndpointId = fromEndpoint,
                 };
 
                 result.Add(explorationNode);
@@ -154,12 +212,34 @@ public class AStarPathing
         return path;
     }
 
+    private static HashSet<int> GetNodesInPath(AStarNode solution)
+    {
+        var nodesInPath = new HashSet<int>();
+        var current = solution;
+        while (current != null)
+        {
+            nodesInPath.Add(current.NodeId);
+            current = current.Parent;
+        }
+        return nodesInPath;
+    }
+
     private static float CalculateHeuristic(
-        Models.PathFinding.GraphNode fromNode,
-        Models.PathFinding.GraphNode toNode
+        GraphNode fromNode,
+        GraphNode toNode,
+        int? viaEndpointId = null
     )
     {
-        return fromNode.Position.DistanceTo(toNode.Position);
+        var endpoint = fromNode.Endpoints.Find(e => e.Id == viaEndpointId);
+
+        if (endpoint != null)
+        {
+            return endpoint.Position.DistanceTo(toNode.Position);
+        }
+        else
+        {
+            return fromNode.Position.DistanceTo(toNode.Position);
+        }
     }
 
     private static float CalculateCurrentCost(AStarNode node)
@@ -168,19 +248,51 @@ public class AStarPathing
 
         if (node.FromEndpointId != null && node.ToEndpointId != null)
         {
-            cost += ApplyLaneSwitchingCost((int)node.FromEndpointId, (int)node.ToEndpointId);
+            var fromEndpoint = NetworkManager.GetLaneEndpoint((int)node.FromEndpointId);
+            var toEndpoint = NetworkManager.GetLaneEndpoint((int)node.ToEndpointId);
+
+            var switchingCost = ApplyLaneSwitchingCost(fromEndpoint, toEndpoint);
+            var speedBonus = ApplySpeedLimitBonus(toEndpoint);
+
+            cost += switchingCost;
+            cost += speedBonus;
         }
 
         return cost;
     }
 
-    private static float ApplyLaneSwitchingCost(int fromEndpointId, int toEndpointId)
+    private static float ApplyLaneSwitchingCost(
+        NetLaneEndpoint fromEndpoint,
+        NetLaneEndpoint toEndpoint
+    )
     {
-        var fromEndpoint = NetworkManager.GetLaneEndpoint(fromEndpointId);
-        var toEndpoint = NetworkManager.GetLaneEndpoint(toEndpointId);
-
         var laneDifference = Math.Abs(fromEndpoint.LaneNumber - toEndpoint.LaneNumber);
 
         return laneDifference * 0.5f;
+    }
+
+    private static float ApplySpeedLimitBonus(NetLaneEndpoint fromEndpoint)
+    {
+        if (!_segmentCache.TryGetValue(fromEndpoint.SegmentId, out var targetSegment))
+        {
+            targetSegment = NetworkManager.GetSegment(fromEndpoint.SegmentId);
+            _segmentCache[fromEndpoint.SegmentId] = targetSegment;
+        }
+
+        var targetLane = targetSegment.Lanes.FirstOrDefault(lane => lane.Id == fromEndpoint.LaneId);
+
+        var speedLimit = targetLane.GetMaxAllowedSpeed();
+
+        const float maxExpectedSpeed = 150f;
+        const float defaultMaxSpeed = 120f;
+        const float penaltyMultiplier = 2.0f;
+
+        if (float.IsInfinity(speedLimit) || speedLimit > maxExpectedSpeed)
+        {
+            speedLimit = defaultMaxSpeed;
+        }
+
+        var penalty = (1.0f - (speedLimit / maxExpectedSpeed)) * penaltyMultiplier;
+        return penalty;
     }
 }
