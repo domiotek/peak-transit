@@ -21,10 +21,6 @@ public partial class DebugToggles : GodotObject
 
     public bool DrawLaneEndpoints { get; private set; } = false;
 
-    public bool DrawLaneEndpointIds { get; private set; } = false;
-
-    public bool PrintIntersectionSegmentsOrientations { get; private set; } = false;
-
     public bool DrawLaneConnections { get; private set; } = false;
 
     public bool DrawIntersectionStoppers { get; private set; } = false;

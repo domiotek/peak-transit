@@ -117,15 +117,6 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 			if endpoint:
 				in_endpoints_array.append(endpoint)
 
-		var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
-
-		if config_manager.DebugToggles.PrintIntersectionSegmentsOrientations:
-			print("Incoming Endpoints: ", in_endpoints)
-			print("Forward Endpoints: ", ids_dict["forward"])
-			print("Left Endpoints: ", ids_dict["left"])
-			print("Right Endpoints: ", ids_dict["right"])
-		
-
 		var new_connections = lane_calculator.CalculateLaneConnections(in_endpoints_array, endpoints_dict["left"], endpoints_dict["forward"], endpoints_dict["right"])
 
 		node.connections.merge(new_connections)
