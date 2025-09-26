@@ -3,8 +3,12 @@ class_name NetLane
 
 var speed_limit_sign_scene = preload("res://game-objects/network/speed-limit-sign/speed_limit_sign.tscn")
 
+var LANE_USAGE_EMA_ALPHA: float = 0.1
+
 @onready var trail: Path2D = $PathingTrail
 @onready var debug_layer: Node2D = $DebugLayer
+@onready var usage_indicator: Line2D = $UsageIndicator
+@onready var usage_timer: Timer = $UsageTimer
 
 var id: int
 var segment: NetSegment
@@ -19,6 +23,8 @@ var direction: Enums.Direction = Enums.Direction.BACKWARD
 
 var assigned_vehicles: Array
 
+var lane_usage_ema: float = 0.0
+
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
@@ -26,6 +32,10 @@ var assigned_vehicles: Array
 
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+	usage_timer.timeout.connect(_update_lane_usage)
+	usage_timer.start()
+
+	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
 
 
 func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float, _relation_id: int) -> void:
@@ -65,6 +75,7 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 	new_curve = line_helper.trim_curve(new_curve, points[0], points[1])
 	trail.curve = new_curve
+	usage_indicator.points = new_curve.tessellate()
 
 	_update_debug_layer()
 
@@ -108,6 +119,26 @@ func get_vehicle_count(only_waiting: bool = false) -> int:
 
 	return assigned_vehicles.filter(func(v): return v.driver.get_state() == Driver.VehicleState.BLOCKED).size()
 
+func get_vehicles_stats() -> Dictionary:
+	var stats = {
+		"total": 0,
+		"waiting": 0,
+		"moving": 0
+	}
+
+	for vehicle in assigned_vehicles:
+		if not is_instance_valid(vehicle):
+			continue
+
+		if vehicle.driver.get_state() == Driver.VehicleState.BLOCKED:
+			stats["waiting"] += 1
+		else:
+			stats["moving"] += 1
+
+	stats["total"] += stats["waiting"] + stats["moving"]
+
+	return stats
+
 func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 	var count = 0
 
@@ -122,6 +153,26 @@ func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 
 func get_max_allowed_speed() -> float:
 	return data.MaxSpeed if data.MaxSpeed > 0 else segment.data.MaxSpeed if segment.data.MaxSpeed > 0 else INF
+
+func get_lane_usage() -> float:
+	return lane_usage_ema
+
+func _update_lane_usage() -> void:
+	var stats = get_vehicles_stats()
+
+	var usage_ratio = stats["waiting"] / max(stats["total"], 1)
+
+	lane_usage_ema = (LANE_USAGE_EMA_ALPHA * usage_ratio) + ((1.0 - LANE_USAGE_EMA_ALPHA) * lane_usage_ema)
+
+	usage_indicator.default_color = _get_color_for_usage(lane_usage_ema)
+
+func _get_color_for_usage(usage: float) -> Color:
+	usage = clamp(usage, 0.0, 1.0)
+	
+	var low_usage = Color(0.9, 0.9, 0.9, 0.3)
+	var full_usage = Color(1.0, 0.0, 0.0, 0.6)
+
+	return low_usage.lerp(full_usage, usage)
 
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
@@ -162,4 +213,4 @@ func _calc_lane_number() -> int:
 func _on_debug_toggles_changed(_name, _state) -> void:
 	_update_debug_layer()
 
-	
+	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
