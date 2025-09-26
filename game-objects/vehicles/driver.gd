@@ -87,9 +87,6 @@ func get_max_allowed_speed() -> float:
 func get_state() -> VehicleState:
 	return state
 
-func set_idle() -> void:
-	_update_state(VehicleState.IDLE)
-
 func get_blocking_objects() -> Array:
 	if not blockade_observer.monitoring:
 		return []
@@ -183,6 +180,9 @@ func check_blockade_cleared(delta: float) -> bool:
 		if no_caster_allowance_time == 0.0:
 			_set_casters_enabled(true)
 		state = VehicleState.IDLE
+
+		_try_to_reroute(time_blocked)
+
 		time_blocked = 0.0
 	else:
 		time_blocked += delta
@@ -332,3 +332,11 @@ func _on_blockade_area_exited(_area: Area2D) -> void:
 	blockade_observer.set_deferred("monitoring",false)
 	if state == VehicleState.BLOCKED:
 		state = VehicleState.IDLE
+
+func _try_to_reroute(time_spent_blocked: float) -> void:
+	var current_step = navigator.get_current_step()
+	if time_spent_blocked < constants.REROUTE_THRESHOLD or current_step["type"] == Navigator.StepType.NODE:
+		return
+
+	if randf() < constants.REROUTE_CHANCE:
+		navigator.reroute()
