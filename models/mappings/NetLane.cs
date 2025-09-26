@@ -17,9 +17,9 @@ public partial class NetLane : Node2D, IMapping<NetLane>
         return _sourceObject.Call("get_max_allowed_speed").As<float>();
     }
 
-    public Dictionary GetLaneUsage()
+    public float GetLaneUsage()
     {
-        return _sourceObject.Call("get_vehicles_stats").As<Dictionary>();
+        return _sourceObject.Call("get_lane_usage").As<float>();
     }
 
     public static NetLane Map(GodotObject gdObject)

@@ -17,8 +17,9 @@ class AStarNode(int nodeId)
     public float HCost { get; set; } = 0;
     public float FCost => GCost + HCost;
     public AStarNode Parent { get; set; } = null;
+    public int Depth { get; set; } = 0;
 
-    public Models.PathFinding.GraphNode GraphNode { get; set; } = null;
+    public GraphNode GraphNode { get; set; } = null;
 
     public int? FromEndpointId { get; set; } = null;
     public int? ToEndpointId { get; set; } = null;
@@ -184,6 +185,7 @@ public class AStarPathing
                     GCost = tentativeGCost,
                     HCost = CalculateHeuristic(neighborGraphNode, endNode, fromEndpoint),
                     FromEndpointId = fromEndpoint,
+                    Depth = currentNode.Depth + 1,
                 };
 
                 result.Add(explorationNode);
@@ -251,14 +253,29 @@ public class AStarPathing
             var fromEndpoint = NetworkManager.GetLaneEndpoint((int)node.FromEndpointId);
             var toEndpoint = NetworkManager.GetLaneEndpoint((int)node.ToEndpointId);
 
+            var segment = GetSegment(fromEndpoint.SegmentId);
+            var lane = segment.Lanes.FirstOrDefault(l => l.Id == fromEndpoint.LaneId);
+
             var switchingCost = ApplyLaneSwitchingCost(fromEndpoint, toEndpoint);
-            var speedBonus = ApplySpeedLimitBonus(toEndpoint);
+            var speedBonus = ApplySpeedLimitBonus(lane);
+            var usageCost = ApplyLaneUsageCost(lane, node.Depth);
 
             cost += switchingCost;
             cost += speedBonus;
+            cost += usageCost;
         }
 
         return cost;
+    }
+
+    private static NetSegment GetSegment(int segmentId)
+    {
+        if (!_segmentCache.TryGetValue(segmentId, out var targetSegment))
+        {
+            targetSegment = NetworkManager.GetSegment(segmentId);
+            _segmentCache[segmentId] = targetSegment;
+        }
+        return targetSegment;
     }
 
     private static float ApplyLaneSwitchingCost(
@@ -271,17 +288,9 @@ public class AStarPathing
         return laneDifference * 0.5f;
     }
 
-    private static float ApplySpeedLimitBonus(NetLaneEndpoint fromEndpoint)
+    private static float ApplySpeedLimitBonus(NetLane lane)
     {
-        if (!_segmentCache.TryGetValue(fromEndpoint.SegmentId, out var targetSegment))
-        {
-            targetSegment = NetworkManager.GetSegment(fromEndpoint.SegmentId);
-            _segmentCache[fromEndpoint.SegmentId] = targetSegment;
-        }
-
-        var targetLane = targetSegment.Lanes.FirstOrDefault(lane => lane.Id == fromEndpoint.LaneId);
-
-        var speedLimit = targetLane.GetMaxAllowedSpeed();
+        var speedLimit = lane.GetMaxAllowedSpeed();
 
         const float maxExpectedSpeed = 150f;
         const float defaultMaxSpeed = 120f;
@@ -294,5 +303,27 @@ public class AStarPathing
 
         var penalty = (1.0f - (speedLimit / maxExpectedSpeed)) * penaltyMultiplier;
         return penalty;
+    }
+
+    private static float ApplyLaneUsageCost(NetLane lane, int depth)
+    {
+        var usage = lane.GetLaneUsage();
+
+        const float maxUsage = 1.0f;
+        const float usagePenaltyMultiplier = 4.0f;
+        const float depthPenaltyMultiplier = 0.1f;
+        const float usageDepthDecayFactor = 0.1f;
+
+        if (usage < 0 || usage > maxUsage)
+        {
+            usage = 0;
+        }
+
+        var depthReduction = Math.Min(depth * usageDepthDecayFactor, 0.8f);
+        var adjustedUsagePenalty = usage * usagePenaltyMultiplier * (1.0f - depthReduction);
+
+        var depthPenalty = depth * depthPenaltyMultiplier;
+
+        return adjustedUsagePenalty + depthPenalty;
     }
 }
