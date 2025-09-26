@@ -147,12 +147,13 @@ func _find_flows_by_geometry() -> Array:
 func _create_phases(flows: Array) -> Array:
 	for flow in flows:
 		var forward_stoppers = _get_stoppers_with_direction(Enums.Direction.FORWARD, flow)
+		var all_dir_stoppers = _get_stoppers_with_direction(Enums.Direction.ALL_DIRECTIONS, flow)
 		var left_combined_stoppers = _get_stoppers_with_direction(Enums.Direction.LEFT, flow)
 		var left_direct_stoppers = _get_stoppers_with_direction(Enums.Direction.LEFT, flow, false)
 		var right_stoppers = _get_stoppers_with_direction(Enums.Direction.RIGHT, flow)
 		var right_most_stoppers_from_other = _get_right_most_stoppers_of_other_flow(flows.filter(func(f): return f != flow)[0])
 
-		if left_direct_stoppers.size() > 0:
+		if all_dir_stoppers.size() == 0:
 			if forward_stoppers.size() > 0:
 				phases.append(
 					_create_phase(
@@ -296,7 +297,7 @@ func _create_traffic_light_visuals() -> void:
 			var position = TrafficLightPosition.ROAD_SIDE if segment_stoppers.size() == 1 else TrafficLightPosition.POLE
 			var configuration = TrafficLightConfiguration.SINGLE
 
-			if lane.direction == Enums.Direction.LEFT_FORWARD and segments_with_dedicated_left_turn.has(segment):
+			if lane.direction == Enums.Direction.LEFT_FORWARD:
 				configuration = TrafficLightConfiguration.SINGLE_WITH_LEFT
 			elif connections_helper.is_in_combined_direction(lane.direction, Enums.Direction.RIGHT) and lane.direction != Enums.Direction.RIGHT and right_most_stopper == stopper:
 				configuration = TrafficLightConfiguration.SINGLE_WITH_RIGHT
@@ -344,8 +345,9 @@ func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: Tra
 		return
 
 	if configuration == TrafficLightConfiguration.SINGLE_WITH_LEFT:
+		light_instance.show_mask(TrafficLight.MaskOrientation.TOP)
 		var left_light = full_traffic_light.instantiate() as TrafficLight
-		left_light.set_mask("res://assets/ui_icons/traffic_light_arrow.png")
+		left_light.show_mask(TrafficLight.MaskOrientation.LEFT)
 		assembly.add_child(left_light)
 		left_light.position = Vector2(-10.5, 0)
 		ref_stopper.traffic_lights[Enums.Direction.LEFT] = left_light
