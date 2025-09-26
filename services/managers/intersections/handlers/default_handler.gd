@@ -68,7 +68,15 @@ func process_stopper(stopper: LaneStopper) -> bool:
 
 			return true
 
+		var current_step = approaching_vehicle.navigator.get_current_step()
+
+		if current_step["type"] == Navigator.StepType.NODE:
+			return false
+
 		var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
+
+		if not next_endpoint:
+			return false
 
 		if _check_enough_space_in_lane_ahead(stopper, next_endpoint):
 			return true
@@ -163,7 +171,12 @@ func _check_enough_space_in_lane_ahead(_stopper: LaneStopper, next_endpoint: int
 
 
 func _check_conflicting_path(stopper: LaneStopper, next_endpoint: int) -> bool:
-	var _conflicting_paths = conflicting_paths.get(stopper.endpoint.Id, {})[next_endpoint]
+	var stopper_conflicting_paths = conflicting_paths.get(stopper.endpoint.Id, {})
+
+	if not stopper_conflicting_paths.has(next_endpoint):
+		return false
+
+	var _conflicting_paths = stopper_conflicting_paths[next_endpoint]
 
 	for path in _conflicting_paths:
 		var other_stopper = stoppers.filter(func (s): return s.endpoint.Id == path.from)[0]

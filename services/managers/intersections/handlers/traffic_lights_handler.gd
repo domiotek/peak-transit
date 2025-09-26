@@ -97,7 +97,16 @@ func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
 	if not approaching_vehicle:
 		return false
 
+	var vehicle_current_step = approaching_vehicle.navigator.get_current_step()
+
+	if vehicle_current_step["type"] == Navigator.StepType.NODE:
+		return false
+
 	var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
+
+	if not next_endpoint:
+		return false
+
 	var direction = node.get_connection_direction(stopper.endpoint.Id, next_endpoint)
 
 	if direction not in directions:

@@ -11,6 +11,8 @@ var vehicles: Dictionary[int, Vehicle] = {}
 var freed_ids_pool: Array[int] = []
 var next_fresh_id: int = 0
 
+signal vehicle_destroyed(vehicle_id: int)
+
 func set_vehicles_layer(layer: Node2D) -> void:
 	vehicles_layer = layer
 
@@ -45,14 +47,15 @@ func remove_vehicle(vehicle_id: int) -> void:
 
 	var vehicle = vehicles[vehicle_id]
 
+	emit_signal("vehicle_destroyed", vehicle_id)
+
 	var selection = game_manager.get_selection()
 
 	if selection.type == GameManager.SelectionType.VEHICLE and selection.object == vehicle:
 		game_manager.clear_selection()
 
-	vehicle.queue_free()
-
 	vehicles.erase(vehicle_id)
+	vehicle.queue_free()
 	freed_ids_pool.append(vehicle_id)
 
 func vehicles_count() -> int:

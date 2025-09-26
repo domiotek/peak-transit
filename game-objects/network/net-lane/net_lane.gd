@@ -29,6 +29,7 @@ var lane_usage_ema: float = 0.0
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 @onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+@onready var vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
@@ -36,6 +37,8 @@ func _ready() -> void:
 	usage_timer.start()
 
 	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
+
+	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
 
 
 func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float, _relation_id: int) -> void:
@@ -97,9 +100,19 @@ func remove_vehicle(vehicle: Vehicle) -> void:
 func get_remaining_space() -> float:
 	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1] if assigned_vehicles.size() > 0  else null
 
+	if last_vehicle and not is_instance_valid(last_vehicle):
+		assigned_vehicles.pop_back()
+		return get_remaining_space()
+
 	return last_vehicle.path_follower.progress if last_vehicle else trail.curve.get_baked_length()
 
 func get_first_vehicle() -> Vehicle:
+	var first_vehicle = assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
+
+	if first_vehicle and not is_instance_valid(first_vehicle):
+		assigned_vehicles.pop_front()
+		return get_first_vehicle()
+
 	return assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
 
 func get_last_vehicle() -> Vehicle:
@@ -145,6 +158,9 @@ func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 	var is_node_at_start = segment.nodes[0].id == node_id
 
 	for vehicle in assigned_vehicles:
+		if not is_instance_valid(vehicle):
+			continue
+
 		var vehicle_distance = vehicle.path_follower.progress if is_node_at_start else trail.curve.get_baked_length() - vehicle.path_follower.progress
 		if vehicle_distance <= distance:
 			count += 1
@@ -214,3 +230,9 @@ func _on_debug_toggles_changed(_name, _state) -> void:
 	_update_debug_layer()
 
 	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
+
+func _on_vehicle_destroyed(vehicle_id: int) -> void:
+	for vehicle in assigned_vehicles:
+		if not is_instance_valid(vehicle) or vehicle.id == vehicle_id:
+			assigned_vehicles.erase(vehicle)
+			break
