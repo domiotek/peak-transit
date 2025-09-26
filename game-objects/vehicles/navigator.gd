@@ -181,8 +181,8 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 	lane.assign_vehicle(vehicle)
 	var trail_length = lane.trail.curve.get_baked_length()
 
-	path_follower.reparent(lane.trail, true)
 	if not leave_progress:
+		path_follower.reparent(lane.trail, true)
 		path_follower.progress = 0.0
 
 	var finish_endpoint = lane.get_endpoint_by_type(!endpoint.IsOutgoing())
