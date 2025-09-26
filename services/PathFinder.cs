@@ -49,9 +49,13 @@ public partial class PathFinder : GodotObject
         }
     }
 
-    public void FindPath(int fromNodeId, int toNodeId, Callable onResult)
+    public void FindPath(int fromNodeId, int toNodeId, Callable onResult, int forceEndpoint = -1)
     {
-        var request = new PathingRequest(fromNodeId, toNodeId);
+        var request = new PathingRequest(
+            fromNodeId,
+            toNodeId,
+            forceEndpoint == -1 ? null : forceEndpoint
+        );
 
         _queue.Enqueue(new WorkItem(request, onResult));
         _signal.Set();
@@ -90,7 +94,12 @@ public partial class PathFinder : GodotObject
         {
             var path = new Array<PathStep>();
             path.AddRange(
-                AStarPathing.FindPathAStar(Graph, request.StartNodeId, request.EndNodeId)
+                AStarPathing.FindPathAStar(
+                    Graph,
+                    request.StartNodeId,
+                    request.EndNodeId,
+                    request.ForcedStartEndpointId
+                )
             );
 
             return request.CompleteRequest(PathingState.Completed, path);

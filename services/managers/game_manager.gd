@@ -19,6 +19,7 @@ var selected_object: Object = null
 var selection_type: SelectionType = SelectionType.NONE
 var selection_popup_id: Variant = null
 var debug_selection: bool = false
+var vehicle_with_path_drawn: Vehicle = null
 
 var ui_manager: UIManager
 var config_manager: ConfigManager
@@ -137,6 +138,10 @@ func draw_vehicle_route(vehicle: Vehicle) -> void:
 
 	var route = vehicle.get_all_trip_curves()
 
+	vehicle_with_path_drawn = vehicle
+
+	vehicle.navigator.trip_rerouted.connect(Callable(self, "redraw_route"))
+
 	for curve in route:
 		var curve2d = curve as Curve2D
 	
@@ -164,6 +169,11 @@ func draw_vehicle_route(vehicle: Vehicle) -> void:
 		route_layer.add_child(line2d)
 
 func clear_drawn_route() -> void:
+	if not vehicle_with_path_drawn:
+		return
+
+	if vehicle_with_path_drawn.navigator.is_connected("trip_rerouted", Callable(self, "redraw_route")):
+		vehicle_with_path_drawn.navigator.trip_rerouted.disconnect(Callable(self, "redraw_route"))
 
 	var route_layer = map.get_drawing_layer("VehicleRouteLayer") as Node2D
 	if not route_layer:
@@ -171,3 +181,11 @@ func clear_drawn_route() -> void:
 
 	for curve in route_layer.get_children():
 		curve.queue_free()
+
+
+func redraw_route() -> void:
+	if not vehicle_with_path_drawn:
+		return
+
+	call_deferred("clear_drawn_route")
+	call_deferred("draw_vehicle_route", vehicle_with_path_drawn)

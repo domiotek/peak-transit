@@ -87,6 +87,9 @@ func get_max_allowed_speed() -> float:
 func get_state() -> VehicleState:
 	return state
 
+func set_idle() -> void:
+	_update_state(VehicleState.IDLE)
+
 func get_blocking_objects() -> Array:
 	if not blockade_observer.monitoring:
 		return []

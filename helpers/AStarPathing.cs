@@ -47,7 +47,12 @@ public class AStarPathing
         _segmentCache.Clear();
     }
 
-    public static List<PathStep> FindPathAStar(NetGraph graph, int startNodeId, int endNodeId)
+    public static List<PathStep> FindPathAStar(
+        NetGraph graph,
+        int startNodeId,
+        int endNodeId,
+        int? forcedStartEndpointId
+    )
     {
         if (!graph.ContainsNode(startNodeId) || !graph.ContainsNode(endNodeId))
         {
@@ -61,6 +66,16 @@ public class AStarPathing
 
         var startGraphNode = graph.GetNode(startNodeId);
         var endGraphNode = graph.GetNode(endNodeId);
+
+        if (
+            forcedStartEndpointId != null
+            && !startGraphNode.OutgoingToIncomingEndpointsMapping.ContainsKey(
+                (int)forcedStartEndpointId
+            )
+        )
+        {
+            throw new ArgumentException("Forced start endpoint not found in start graph node");
+        }
 
         var explorationSet = new PriorityQueue<AStarNode, float>();
         var bestCostToState = new Dictionary<string, double>();
@@ -125,7 +140,14 @@ public class AStarPathing
             if (graphNode == null)
                 continue;
 
-            var neighborNodes = ExploreNeighborNodes(graph, currentNode, endGraphNode);
+            var neighborNodes = ExploreNeighborNodes(
+                graph,
+                currentNode,
+                endGraphNode,
+                forcedStartEndpointId
+            );
+
+            forcedStartEndpointId = null;
 
             foreach (var neighbor in neighborNodes)
             {
@@ -146,7 +168,8 @@ public class AStarPathing
     private static List<AStarNode> ExploreNeighborNodes(
         NetGraph graph,
         AStarNode currentNode,
-        GraphNode endNode
+        GraphNode endNode,
+        int? forcedEndpoint
     )
     {
         var result = new List<AStarNode>();
@@ -164,6 +187,7 @@ public class AStarPathing
 
             var filteredViaPoints = route
                 .Via.Where(via => availableEndpoints == null || availableEndpoints.Contains(via))
+                .Where(via => forcedEndpoint == null || via == forcedEndpoint)
                 .ToList();
 
             foreach (var viaPoint in filteredViaPoints)

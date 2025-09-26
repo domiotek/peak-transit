@@ -83,6 +83,7 @@ func _process(delta: float) -> void:
 		breakpoint
 
 	if not navigator.can_advance():
+		driver.set_idle()
 		return
 
 	if driver.state == Driver.VehicleState.BLOCKED:

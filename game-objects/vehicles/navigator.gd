@@ -26,6 +26,7 @@ var total_trip_distance: float = 0.0
 
 signal trip_started()
 signal trip_ended(completed: bool)
+signal trip_rerouted()
 
 func setup(owner: Vehicle) -> void:
 	vehicle = owner
@@ -81,6 +82,15 @@ func abandon_trip() -> void:
 	clean_up()
 	emit_signal("trip_ended", false)
 
+func reroute(to_endpoint_id: int = -1) -> void:
+	if current_step["type"] == StepType.NODE:
+		return
+	step_ready = false
+
+	var new_trip = [current_step["prev_node"], trip_points[1] if to_endpoint_id == -1 else to_endpoint_id]
+
+	pathing_manager.find_path(new_trip[0], new_trip[1], Callable(self, "_on_pathfinder_result"), current_step["from_endpoint"])
+
 func get_total_progress() -> float:
 	if total_trip_distance == 0:
 		return 0.0
@@ -106,6 +116,10 @@ func get_trip_curves() -> Array:
 	return curves
 
 func _on_pathfinder_result(path: Variant) -> void:
+	if trip_path.size() > 0:
+		_handle_reroute(path)
+		return
+
 	if path.State == 1:
 		trip_path = path.Path
 
@@ -113,6 +127,35 @@ func _on_pathfinder_result(path: Variant) -> void:
 		call_deferred("_calc_trip_distance")
 	else:
 		emit_signal("trip_ended", false)
+
+func _handle_reroute(path: Variant) -> void:
+	if path.State != 1:
+		step_ready = true
+		return	# Failed to find a new path, continue current trip
+
+	var existing_path = trip_path.slice(0, trip_step_index + 1)
+	var remaining_existing_path = trip_path.slice(trip_step_index + 1, trip_path.size())
+	var new_path = path.Path.slice(1, path.Path.size())
+
+	var updated_path = existing_path + new_path
+
+	var is_different = false
+
+	for step_idx in range(new_path.size()):
+		var new_step = new_path[step_idx]
+		var existing_step = remaining_existing_path[step_idx]
+		if new_step.ToNodeId != existing_step.ToNodeId or new_step.ViaEndpointId != existing_step.ViaEndpointId:
+			is_different = true
+			break
+
+	if not is_different:
+		step_ready = true
+		return	# New path is the same as the remaining existing path, continue current trip
+
+	trip_path = updated_path
+	_assign_to_step(trip_path[trip_step_index], true)
+	emit_signal("trip_rerouted")
+
 
 func _calc_trip_distance() -> void:
 	var curves = get_trip_curves()
@@ -126,7 +169,7 @@ func _start_trip() -> void:
 	emit_signal("trip_started")
 
 
-func _assign_to_step(step: Variant) -> void:
+func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 	var endpoint_id = step.ViaEndpointId
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 
@@ -139,7 +182,8 @@ func _assign_to_step(step: Variant) -> void:
 	var trail_length = lane.trail.curve.get_baked_length()
 
 	path_follower.reparent(lane.trail, true)
-	path_follower.progress = 0.0
+	if not leave_progress:
+		path_follower.progress = 0.0
 
 	var finish_endpoint = lane.get_endpoint_by_type(!endpoint.IsOutgoing())
 
@@ -149,6 +193,9 @@ func _assign_to_step(step: Variant) -> void:
 		"length": trail_length,
 		"progress": 0.0,
 		"max_speed": lane.get_max_allowed_speed(),
+		"prev_node": endpoint.NodeId,
+		"from_endpoint": endpoint.Id,
+		"to_endpoint": finish_endpoint.Id,
 	}
 
 	var node = network_manager.get_node(finish_endpoint.NodeId)

@@ -10,10 +10,13 @@ public partial class PathingRequest : GodotObject
     public int StartNodeId { get; set; }
     public int EndNodeId { get; set; }
 
-    public PathingRequest(int startNodeId, int endNodeId)
+    public int? ForcedStartEndpointId { get; set; } = -1;
+
+    public PathingRequest(int startNodeId, int endNodeId, int? forcedStartEndpointId = null)
     {
         StartNodeId = startNodeId;
         EndNodeId = endNodeId;
+        ForcedStartEndpointId = forcedStartEndpointId;
     }
 
     public PathingResponse CompleteRequest(PathingState state, Array<PathStep> resultPath)
