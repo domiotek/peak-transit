@@ -1,5 +1,7 @@
 class_name NetworkManager
 
+var NET_SEGMENT = preload("res://game-objects/network/net-segment/net_segment.tscn")
+
 var nodes: Dictionary[int, RoadNode] = {}
 var segments: Dictionary[int, NetSegment] = {}
 
@@ -57,9 +59,8 @@ func _setupSegment(segment_info: NetSegmentInfo):
 		push_error("Invalid segment setup: Start or target node not found.")
 		return null
 
-	var segment_scene = load("res://game-objects/network/net-segment/net_segment.tscn")
-	var segment = segment_scene.instantiate()
-	
+	var segment = NET_SEGMENT.instantiate()
+
 	var new_segment_id = segments.size()
 	segment.setup(new_segment_id, node_A, node_B, segment_info)
 	segments[new_segment_id] = segment

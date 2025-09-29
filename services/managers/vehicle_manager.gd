@@ -1,6 +1,7 @@
 extends RefCounted
-
 class_name VehicleManager
+
+var VEHICLE = preload("res://game-objects/vehicles/vehicle.tscn")
 
 var game_manager: GameManager
 
@@ -20,8 +21,7 @@ func set_vehicles_layer(layer: Node2D) -> void:
 
 
 func create_vehicle() -> Vehicle:
-	var vehicle_scene = load("res://game-objects/vehicles/vehicle.tscn")
-	var vehicle = vehicle_scene.instantiate()
+	var vehicle = VEHICLE.instantiate()
 
 	vehicle.id = _generate_vehicle_id()
 

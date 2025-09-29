@@ -1,5 +1,6 @@
 extends Control
 
+var DEBUG_TOGGLE_COMPONENT = preload("res://ui/components/debug_toggle_component/debug_toggle_component.tscn")
 
 var ui_manager: UIManager
 var config_manager: ConfigManager
@@ -21,8 +22,7 @@ func init() -> void:
 	var debug_toggles = config_manager.DebugToggles.ToDictionary()
 
 	for toggle_name in debug_toggles.keys():
-		var scene = load("res://ui/components/debug_toggle_component/debug_toggle_component.tscn")
-		var instance = scene.instantiate()
+		var instance = DEBUG_TOGGLE_COMPONENT.instantiate()
 
 		instance.setup(toggle_name, debug_toggles[toggle_name])
 

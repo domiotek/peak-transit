@@ -2,9 +2,7 @@ extends RefCounted
 
 class_name IntersectionManager
 
-var NullIntersectionHandlerModule = load("res://services/managers/intersections/handlers/null_handler.gd")
-var TrafficLightsIntersectionHandlerModule = load("res://services/managers/intersections/handlers/traffic_lights_handler.gd")
-
+var LANE_STOPPER = preload("res://game-objects/network/net-node/lane-stopper/lane_stopper.tscn")
 
 var network_manager: NetworkManager
 var line_helper: LineHelper
@@ -37,8 +35,7 @@ func setup_intersection(assigned_node: RoadNode) -> void:
 
 		var curve = network_manager.get_segment(endpoint.SegmentId).lanes[endpoint.LaneId].trail.curve
 
-		var scene = load("res://game-objects/network/net-node/lane-stopper/lane_stopper.tscn")
-		var stopper = scene.instantiate() as LaneStopper
+		var stopper = LANE_STOPPER.instantiate() as LaneStopper
 
 		stopper.endpoint = endpoint
 		stopper.position = node.to_local(endpoint.Position)

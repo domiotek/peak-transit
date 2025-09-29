@@ -2,8 +2,6 @@ extends RefCounted
 
 class_name Driver
 
-var navigator_module = load("res://game-objects/vehicles/navigator.gd")
-
 enum VehicleState {
 	ACCELERATING,
 	BRAKING,

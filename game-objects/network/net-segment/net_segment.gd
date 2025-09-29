@@ -1,6 +1,8 @@
 extends Node2D
 class_name NetSegment
 
+var NET_LANE = preload("res://game-objects/network/net-lane/net_lane.tscn")
+
 @onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 
 var id: int
@@ -75,10 +77,8 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 			offset = (i + 1) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2
 		else:
 			offset = (i + 1) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2
-			
-		var lane_scene = load("res://game-objects/network/net-lane/net_lane.tscn")
-		var lane = lane_scene.instantiate()
 
+		var lane = NET_LANE.instantiate()
 		lane.setup(lanes.size(), self, lane_info, offset, relations.size() - 1)
 		add_child(lane)
 		lanes.append(lane)

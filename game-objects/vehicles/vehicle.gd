@@ -2,10 +2,6 @@ extends Node2D
 
 class_name Vehicle
 
-var navigator_module = load("res://game-objects/vehicles/navigator.gd")
-var driver_module = load("res://game-objects/vehicles/driver.gd")
-var ai_module = load("res://game-objects/vehicles/AI/car_ai.gd")
-
 var id: int
 
 var driver = Driver.new()

@@ -1,8 +1,6 @@
 extends Node2D
 class_name RoadNode
 
-var IntersectionManagerModule = load("res://services/managers/intersections/intersection_manager.gd")
-
 @onready var layerHelper = GDInjector.inject("NodeLayerHelper") as NodeLayerHelper
 @onready var circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
 @onready var lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
