@@ -94,6 +94,28 @@ The game includes comprehensive debugging tools:
 
 Access debug tools by pressing the `F12` key during gameplay.
 
+## 📷 Screenshots
+
+Some in-progress sneak-peaks.
+
+### Debug Interface
+
+The comprehensive debugging system provides real-time insights into simulation state:
+
+![Debug Options](readme-images/debug_options.png)
+
+### Network Visualization
+
+Interactive intersection and network topology visualization:
+
+![Intersection View](readme-images/intersection.png)
+
+### Vehicle Management
+
+Detailed vehicle information and control interface:
+
+![Vehicle Popup](readme-images/vehicle_popup.png)
+
 ## 🚧 Development Status
 
 This project is actively under development as part of academic research. Current focus areas:
