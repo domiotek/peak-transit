@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace PTS.Models;
+namespace PT.Models;
 
 public class GraphRoute
 {

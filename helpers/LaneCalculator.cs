@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Godot.Collections;
-using PTS.DependencyProvider;
-using PTS.Models.Network;
-using PTS.Services.Adapters;
+using PT.DependencyProvider;
+using PT.Models.Network;
+using PT.Services.Adapters;
 
-namespace PTS.Managers;
+namespace PT.Managers;
 
 [GlobalClass]
 public partial class LaneCalculator : GodotObject

@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PTS.Models.PathFinding;
+namespace PT.Models.PathFinding;
 
 public partial class PathStep : GodotObject
 {

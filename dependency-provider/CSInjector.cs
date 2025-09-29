@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using PTS.Constants;
-using PTS.Managers;
-using PTS.Services;
-using PTS.Services.Adapters;
-using PTS.Services.Managers.Config;
+using PT.Constants;
+using PT.Managers;
+using PT.Services;
+using PT.Services.Adapters;
+using PT.Services.Managers.Config;
 
-namespace PTS.DependencyProvider;
+namespace PT.DependencyProvider;
 
 public partial class CSInjector : Node
 {

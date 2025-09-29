@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Godot;
-using PTS.Models.Mappings;
-using PTS.Models.Network;
+using PT.Models.Mappings;
+using PT.Models.Network;
 
-namespace PTS.Services.Adapters;
+namespace PT.Services.Adapters;
 
 public class NetworkManagerAdapter(GodotObject managerGdObject)
 {

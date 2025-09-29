@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace PTS.DependencyProvider;
+namespace PT.DependencyProvider;
 
 public partial class DIContainer : Node
 {

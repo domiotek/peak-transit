@@ -1,4 +1,4 @@
-namespace PTS.Models.Network;
+namespace PT.Models.Network;
 
 public enum LaneDirection
 {

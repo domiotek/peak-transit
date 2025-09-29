@@ -1,6 +1,6 @@
 using Godot.Collections;
 
-namespace PTS.Models.PathFinding;
+namespace PT.Models.PathFinding;
 
 public partial class PathingResponse : PathingRequest
 {

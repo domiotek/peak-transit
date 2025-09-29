@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "public-transport-simulator", "public-transport-simulator.csproj", "{8B1FF529-6C27-4789-BBB3-5BF932DBC996}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "peak-transit", "peak-transit.csproj", "{8B1FF529-6C27-4789-BBB3-5BF932DBC996}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

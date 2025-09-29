@@ -1,7 +1,7 @@
 using System.Reflection;
 using Godot;
 
-namespace PTS.Services.Managers.Config;
+namespace PT.Services.Managers.Config;
 
 [GlobalClass]
 public partial class DebugToggles : GodotObject

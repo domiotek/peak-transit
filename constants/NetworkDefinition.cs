@@ -1,8 +1,8 @@
 using Godot;
 using Godot.Collections;
-using PTS.Models.Network;
+using PT.Models.Network;
 
-namespace PTS.Constants;
+namespace PT.Constants;
 
 [GlobalClass]
 public partial class NetworkDefinition : GodotObject

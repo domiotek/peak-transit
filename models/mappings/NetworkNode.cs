@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Godot.Collections;
-using PTS.DependencyProvider;
-using PTS.Models.Network;
-using PTS.Services.Adapters;
+using PT.DependencyProvider;
+using PT.Models.Network;
+using PT.Services.Adapters;
 
-namespace PTS.Models.Mappings;
+namespace PT.Models.Mappings;
 
 public partial class NetworkNode : Node2D, IMapping<NetworkNode>
 {

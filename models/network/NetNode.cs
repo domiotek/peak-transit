@@ -2,7 +2,7 @@ using System;
 using Godot;
 using Godot.Collections;
 
-namespace PTS.Models.Network;
+namespace PT.Models.Network;
 
 public enum IntersectionType
 {

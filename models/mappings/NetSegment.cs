@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
-namespace PTS.Models.Mappings;
+namespace PT.Models.Mappings;
 
 public partial class NetSegment : Node2D, IMapping<NetSegment>
 {

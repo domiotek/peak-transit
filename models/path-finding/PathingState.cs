@@ -1,4 +1,4 @@
-namespace PTS.Models.PathFinding;
+namespace PT.Models.PathFinding;
 
 public enum PathingState
 {

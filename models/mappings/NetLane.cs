@@ -1,8 +1,8 @@
 using Godot;
 using Godot.Collections;
-using PTS.Models.Network;
+using PT.Models.Network;
 
-namespace PTS.Models.Mappings;
+namespace PT.Models.Mappings;
 
 public partial class NetLane : Node2D, IMapping<NetLane>
 {

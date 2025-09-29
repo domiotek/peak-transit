@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Godot;
-using PTS.Models.Network;
+using PT.Models.Network;
 
-namespace PTS.Models.PathFinding;
+namespace PT.Models.PathFinding;
 
 public class GraphNode(Mappings.NetworkNode node)
 {

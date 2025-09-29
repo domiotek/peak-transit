@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PTS.Models.Network;
+namespace PT.Models.Network;
 
 [GlobalClass]
 public partial class NetLaneInfo : GodotObject

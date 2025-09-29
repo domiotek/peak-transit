@@ -1,6 +1,6 @@
 using Godot;
 
-namespace PTS.Models.Mappings;
+namespace PT.Models.Mappings;
 
 public interface IMapping<T>
 {

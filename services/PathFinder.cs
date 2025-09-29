@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Threading;
 using Godot;
 using Godot.Collections;
-using PTS.DependencyProvider;
-using PTS.Helpers;
-using PTS.Models;
-using PTS.Models.PathFinding;
-using PTS.Services.Managers.Config;
+using PT.DependencyProvider;
+using PT.Helpers;
+using PT.Models;
+using PT.Models.PathFinding;
+using PT.Services.Managers.Config;
 
-namespace PTS.Services;
+namespace PT.Services;
 
 record WorkItem(PathingRequest Request, Callable OnResult);
 

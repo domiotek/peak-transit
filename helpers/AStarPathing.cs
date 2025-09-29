@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PTS.DependencyProvider;
-using PTS.Models.Mappings;
-using PTS.Models.Network;
-using PTS.Models.PathFinding;
-using PTS.Services.Adapters;
+using PT.DependencyProvider;
+using PT.Models.Mappings;
+using PT.Models.Network;
+using PT.Models.PathFinding;
+using PT.Services.Adapters;
 
-namespace PTS.Helpers;
+namespace PT.Helpers;
 
 class AStarNode(int nodeId)
 {
