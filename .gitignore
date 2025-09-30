@@ -3,3 +3,4 @@
 /android/
 .env
 .vscode/settings.json
+readme-images/*.import
