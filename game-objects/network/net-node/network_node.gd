@@ -133,6 +133,13 @@ func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
 func get_destination_endpoints(from_endpoint_id: int) -> Array:
 	return connections.get(from_endpoint_id, [])
 
+func get_source_endpoints(to_endpoint_id: int) -> Array:
+	var sources: Array = []
+	for source_id in connections.keys():
+		if connections[source_id].has(to_endpoint_id):
+			sources.append(source_id)
+	return sources
+
 func _setup_connections() -> void:
 
 	if connected_segments.size() == 0:
