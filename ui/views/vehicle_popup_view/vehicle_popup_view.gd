@@ -98,7 +98,7 @@ func _on_debugger_button_pressed() -> void:
 
 func _on_reroute_button_pressed() -> void:
 	if selected_vehicle:
-		selected_vehicle.navigator.reroute()
+		selected_vehicle.navigator.reroute(true)
 
 func _on_pin_button_toggled() -> void:
 	_handle_pinned_button(not is_pinned)

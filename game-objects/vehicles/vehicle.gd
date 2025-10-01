@@ -78,7 +78,7 @@ func _process(delta: float) -> void:
 		print("Debug pick triggered for vehicle ID %d" % id)
 		breakpoint
 
-	if not navigator.can_advance():
+	if not navigator.can_advance(delta):
 		return
 
 	if driver.state == Driver.VehicleState.BLOCKED:

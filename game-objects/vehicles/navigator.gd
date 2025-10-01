@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name Navigator
 
+var REROUTE_COOLDOWN = 5.0
+
 enum StepType {
 	SEGMENT,
 	NODE
@@ -22,6 +24,8 @@ var step_ready: bool = false
 
 var traveled_distance_till_current_step: float = 0.0
 var total_trip_distance: float = 0.0
+
+var reroute_cooldown: float = 0.0
 
 
 signal trip_started()
@@ -50,7 +54,10 @@ func get_current_step() -> Dictionary:
 func get_distance_left() -> float:
 	return current_step["length"] - current_step["progress"]
 
-func can_advance() -> bool:
+func can_advance(delta: float) -> bool:
+	if reroute_cooldown > 0.0:
+		reroute_cooldown = max(reroute_cooldown - delta, 0.0)
+
 	return step_ready
 
 func complete_current_step() -> void:
@@ -82,9 +89,15 @@ func abandon_trip() -> void:
 	clean_up()
 	emit_signal("trip_ended", false)
 
-func reroute(to_endpoint_id: int = -1) -> void:
+func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
 	if current_step["type"] == StepType.NODE:
 		return
+
+	if not force and reroute_cooldown > 0.0:
+		return
+
+	reroute_cooldown = REROUTE_COOLDOWN
+
 	step_ready = false
 
 	var new_trip = [current_step["prev_node"], trip_points[1] if to_endpoint_id == -1 else to_endpoint_id]
