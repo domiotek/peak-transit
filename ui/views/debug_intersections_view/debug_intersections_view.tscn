@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://ebb720gj6a3y"]
+[gd_scene load_steps=7 format=3 uid="uid://ebb720gj6a3y"]
 
 [ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_2ogfs"]
 [ext_resource type="Script" uid="uid://dpxjxqdcaolyq" path="res://ui/views/debug_intersections_view/debug_intersections_view.gd" id="2_nmikr"]
+[ext_resource type="Texture2D" uid="uid://ddqijih7rynj2" path="res://assets/ui_icons/chevron_left.png" id="3_7ko4k"]
 [ext_resource type="Texture2D" uid="uid://colv4c8bi5jc0" path="res://assets/ui_icons/close.png" id="3_vpi5a"]
+[ext_resource type="PackedScene" uid="uid://ce5xr4mlxo4u3" path="res://ui/views/debug_intersections_view/traffic-lights-view/traffic-lights-view.tscn" id="4_vpi5a"]
+[ext_resource type="PackedScene" uid="uid://ctcbombakiofv" path="res://ui/views/debug_intersections_view/default-view/default_view.tscn" id="6_8g3u3"]
 
 [node name="DebugIntersectionsView" type="PanelContainer"]
 anchors_preset = 15
@@ -29,6 +32,12 @@ vertical = true
 [node name="HeaderContainer" type="BoxContainer" parent="MarginContainer/BoxContainer"]
 layout_mode = 2
 
+[node name="GoBackButton" type="Button" parent="MarginContainer/BoxContainer/HeaderContainer"]
+visible = false
+layout_mode = 2
+icon = ExtResource("3_7ko4k")
+flat = true
+
 [node name="HeaderTitle" type="Label" parent="MarginContainer/BoxContainer/HeaderContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -49,3 +58,18 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 4
 vertical = true
+
+[node name="ListContent" type="BoxContainer" parent="MarginContainer/BoxContainer/ScrollContainer/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="TrafficLightsView" parent="MarginContainer/BoxContainer/ScrollContainer/Content" instance=ExtResource("4_vpi5a")]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DefaultView" parent="MarginContainer/BoxContainer/ScrollContainer/Content" instance=ExtResource("6_8g3u3")]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3

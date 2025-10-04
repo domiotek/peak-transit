@@ -1,0 +1,94 @@
+[gd_scene load_steps=6 format=3 uid="uid://ce5xr4mlxo4u3"]
+
+[ext_resource type="Script" uid="uid://ljy3qo5m5ge4" path="res://ui/views/debug_intersections_view/traffic-lights-view/traffic_lights_view.gd" id="2_1l241"]
+[ext_resource type="Texture2D" uid="uid://b2ucwghxcyr4r" path="res://assets/ui_icons/debugger.png" id="2_gnuo7"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_1l241"]
+font_size = 12
+
+[sub_resource type="LabelSettings" id="LabelSettings_gnuo7"]
+font_size = 12
+
+[sub_resource type="LabelSettings" id="LabelSettings_x7m4g"]
+font_size = 9
+
+[node name="TrafficLightsView" type="MarginContainer"]
+offset_right = 250.0
+offset_bottom = 400.0
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+script = ExtResource("2_1l241")
+
+[node name="BoxContainer" type="BoxContainer" parent="."]
+layout_mode = 2
+vertical = true
+
+[node name="HeaderContainer" type="BoxContainer" parent="BoxContainer"]
+layout_mode = 2
+
+[node name="HeaderTitle" type="Label" parent="BoxContainer/HeaderContainer"]
+layout_mode = 2
+text = "Traffic lights"
+label_settings = SubResource("LabelSettings_1l241")
+
+[node name="IdLabel" type="Label" parent="BoxContainer/HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "#1"
+label_settings = SubResource("LabelSettings_gnuo7")
+
+[node name="DebugButton" type="Button" parent="BoxContainer/HeaderContainer"]
+layout_mode = 2
+icon = ExtResource("2_gnuo7")
+flat = true
+
+[node name="ScrollContainer" type="ScrollContainer" parent="BoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="BoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 3
+
+[node name="Content" type="BoxContainer" parent="BoxContainer/ScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+vertical = true
+
+[node name="PhasesList" type="BoxContainer" parent="BoxContainer/ScrollContainer/MarginContainer/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="Label" type="Label" parent="BoxContainer/ScrollContainer/MarginContainer/Content/PhasesList"]
+layout_mode = 2
+text = "Phases"
+label_settings = SubResource("LabelSettings_x7m4g")
+
+[node name="BoxContainer" type="BoxContainer" parent="BoxContainer/ScrollContainer/MarginContainer/Content/PhasesList"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="StoppersList" type="BoxContainer" parent="BoxContainer/ScrollContainer/MarginContainer/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="Label" type="Label" parent="BoxContainer/ScrollContainer/MarginContainer/Content/StoppersList"]
+layout_mode = 2
+text = "Stoppers"
+label_settings = SubResource("LabelSettings_x7m4g")
+
+[node name="BoxContainer" type="BoxContainer" parent="BoxContainer/ScrollContainer/MarginContainer/Content/StoppersList"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true

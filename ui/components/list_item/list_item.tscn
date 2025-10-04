@@ -1,7 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://ckwofdbo83fsn"]
+[gd_scene load_steps=4 format=3 uid="uid://igt0cl0wc7uu"]
 
-[ext_resource type="Script" uid="uid://csh4yskqc2j8g" path="res://ui/components/intersection_list_item/intersection_list_item.gd" id="1_spbxv"]
-[ext_resource type="Texture2D" uid="uid://b2ucwghxcyr4r" path="res://assets/ui_icons/debugger.png" id="2_spbxv"]
+[ext_resource type="Script" uid="uid://ecx11ojqb0g3" path="res://ui/components/list_item/list_item.gd" id="1_smy63"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_owr6n"]
 font_size = 14
@@ -10,12 +9,12 @@ font_size = 14
 font_size = 9
 font_color = Color(0.752941, 0.752941, 0.752941, 1)
 
-[node name="IntersectionListItem" type="BoxContainer"]
+[node name="ListItem" type="BoxContainer"]
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 17.0
 grow_horizontal = 2
-script = ExtResource("1_spbxv")
+script = ExtResource("1_smy63")
 
 [node name="BoxContainer" type="BoxContainer" parent="."]
 layout_mode = 2
@@ -33,6 +32,6 @@ layout_mode = 2
 text = "Default"
 label_settings = SubResource("LabelSettings_3yttf")
 
-[node name="DebugButton" type="Button" parent="."]
+[node name="Button" type="Button" parent="."]
+visible = false
 layout_mode = 2
-icon = ExtResource("2_spbxv")
