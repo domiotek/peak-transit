@@ -5,7 +5,8 @@ class_name GameManager
 enum SelectionType {
 	NONE,
 	VEHICLE,
-	NODE
+	NODE,
+	STOPPER
 }
 
 var camera_bounds: Rect2
@@ -85,7 +86,7 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selected_object = null
 		SelectionType.VEHICLE:
 			selection_popup_id = "VehiclePopupView"
-		SelectionType.NODE:
+		SelectionType.NODE, SelectionType.STOPPER:
 			pass
 		_:
 			push_error("Unknown selection type: %s" % str(type))
@@ -122,6 +123,10 @@ func try_hit_debug_pick(object: Object) -> bool:
 		return true
 
 	if selection_type == SelectionType.NODE and selected_object == (object as RoadNode):
+		debug_selection = false
+		return true
+
+	if selection_type == SelectionType.STOPPER and selected_object == (object as LaneStopper):
 		debug_selection = false
 		return true
 

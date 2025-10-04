@@ -88,6 +88,16 @@ func get_used_intersection_type() -> String:
 		return handler.CLASS_NAME
 	return "None"
 
+func get_stoppers_list() -> Array:
+	if handler:
+		return handler.stoppers
+	return []
+
+func get_custom_data() -> Dictionary:
+	if handler and handler.has_method("get_custom_data"):
+		return handler.get_custom_data()
+	return {}
+
 
 func _choose_intersection_handler() -> RefCounted:
 	if node.connected_segments.size() <= 2:

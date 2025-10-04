@@ -25,6 +25,7 @@ var SHORT_PHASE_DURATION: float = 60.0
 var LOW_FLOW_THRESHOLD: int = 10
 var FLOW_SCAN_DISTANCE: float = 50.0
 
+var game_manager: GameManager
 var segment_helper: SegmentHelper
 var connections_helper: ConnectionsHelper
 var intersection_helper: IntersectionHelper
@@ -37,6 +38,7 @@ var current_phase_index: int = 0
 var phase_timer: float = 0.0
 var is_first_cycle = true
 var segments_with_dedicated_left_turn: Array = []
+var current_flow_ratio: float = 100.0
 
 var node: RoadNode
 
@@ -44,6 +46,7 @@ func setup(_node: RoadNode, _stoppers: Array) -> void:
 	node = _node
 	stoppers = _stoppers
 
+	game_manager = GDInjector.inject("GameManager") as GameManager
 	segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 	connections_helper = GDInjector.inject("ConnectionsHelper") as ConnectionsHelper
 	intersection_helper = GDInjector.inject("IntersectionHelper") as IntersectionHelper
@@ -66,6 +69,9 @@ func process_tick(_delta: float) -> void:
 
 	if phase_timer >= min_phase_duration:
 		flow_ratio = _measure_current_flow_ratio()
+		current_flow_ratio = flow_ratio
+	else: 
+		current_flow_ratio = -1.0
 
 	var first_cycle_after_change = false
 
@@ -91,6 +97,9 @@ func process_tick(_delta: float) -> void:
 	handle_stoppers.call(active_phase.exception_stoppers, [Enums.Direction.RIGHT])
 
 func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
+	if game_manager.try_hit_debug_pick(stopper):
+		breakpoint
+
 	var lane = stopper.get_lane()
 	var approaching_vehicle = lane.get_first_vehicle()
 
@@ -116,6 +125,34 @@ func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
 		return true
 
 	return false
+
+func get_custom_data() -> Dictionary:
+	var data = {
+		"phases": [],
+		"current_phase_index": current_phase_index,
+		"phase_timer": phase_timer,
+		"segments_with_dedicated_left_turn": segments_with_dedicated_left_turn,
+		"current_flow_ratio": current_flow_ratio
+	}
+
+	for phase in phases:
+		var phase_data = {
+			"stoppers": [],
+			"exception_stoppers": [],
+			"directions": phase.directions,
+			"duration": phase.duration,
+			"min_duration": phase.duration * MIN_PHASE_DURATION_SCALER
+		}
+
+		for stopper in phase.stoppers:
+			phase_data.stoppers.append(stopper.endpoint.Id)
+
+		for ex_stopper in phase.exception_stoppers:
+			phase_data.exception_stoppers.append(ex_stopper.endpoint.Id)
+
+		data.phases.append(phase_data)
+
+	return data
 
 
 func _find_flows() -> Array:
