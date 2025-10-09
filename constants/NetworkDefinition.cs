@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+using PT.Models.Buildings;
 using PT.Models.Network;
 
 namespace PT.Constants;
@@ -76,7 +77,11 @@ public partial class NetworkDefinition : GodotObject
             },
             new NetSegmentInfo(4, 5, 0.1f, CurveDirection.Clockwise)
             {
-                Relations = [new(4) { Lanes = [new()] }, new(5) { Lanes = [new()] }],
+                Relations =
+                [
+                    new(4) { Lanes = [new()] },
+                    new(5) { Lanes = [new()], Buildings = [new(BuildingType.Residential, 150.0f)] },
+                ],
             },
             new NetSegmentInfo(4, 6, 0.1f, CurveDirection.Clockwise)
             {
@@ -104,7 +109,15 @@ public partial class NetworkDefinition : GodotObject
             },
             new NetSegmentInfo(9, 11, 0.1f, CurveDirection.Clockwise)
             {
-                Relations = [new(9) { Lanes = [new(), new()] }, new(11) { Lanes = [new(), new()] }],
+                Relations =
+                [
+                    new(9)
+                    {
+                        Lanes = [new(), new()],
+                        Buildings = [new(BuildingType.Industrial, 150.0f)],
+                    },
+                    new(11) { Lanes = [new(), new()] },
+                ],
             },
             new NetSegmentInfo(10, 8, 0.4f, CurveDirection.Clockwise)
             {

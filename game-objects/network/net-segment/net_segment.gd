@@ -2,6 +2,7 @@ extends Node2D
 class_name NetSegment
 
 var NET_LANE = preload("res://game-objects/network/net-lane/net_lane.tscn")
+var BUILDING = preload("res://game-objects/buildings/base-building/base-building.tscn")
 
 @onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 
@@ -26,7 +27,7 @@ var endpoints_mappings: Dictionary[int, int] = {}
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
 
-var line_helper
+var line_helper: LineHelper
 
 func _ready() -> void:		
 	var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
@@ -82,6 +83,30 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		lane.setup(lanes.size(), self, lane_info, offset, relations.size() - 1)
 		add_child(lane)
 		lanes.append(lane)
+
+	for i in range(relation.ConnectionInfo.Buildings.size()):
+		var building_info = relation.ConnectionInfo.Buildings[i]
+		var curve_offset = building_info.OffsetPosition
+		var horizontal_offset;
+
+		if starts_from_end:
+			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2) - NetworkConstants.BUILDING_ROAD_OFFSET
+			curve_offset = curve_shape.get_baked_length() - curve_offset
+		else:
+			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + NetworkConstants.BUILDING_ROAD_OFFSET
+
+		var building = BUILDING.instantiate() as BaseBuilding
+		var point = line_helper.get_point_along_curve(curve_shape, curve_offset, horizontal_offset)
+
+		building.position = point
+		building.rotation = line_helper.rotate_along_curve(curve_shape, point)
+
+		if not starts_from_end:
+			building.rotation += PI
+
+		add_child(building)
+
+		
 
 
 func update_visuals() -> void:

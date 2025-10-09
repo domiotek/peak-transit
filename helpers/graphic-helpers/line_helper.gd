@@ -385,3 +385,20 @@ func rotate_along_curve(curve: Curve2D, point: Vector2) -> float:
 	var rotation_angle = curve_transform.get_rotation()
 
 	return rotation_angle
+
+func get_point_along_curve(curve: Curve2D, distance: float, x_offset: float = 0.0) -> Vector2:
+	if not curve or curve.point_count == 0:
+		return Vector2.ZERO
+	
+	var length = curve.get_baked_length()
+	var clamped_distance = clamp(distance, 0.0, length)
+	var base_point = curve.sample_baked(clamped_distance)
+	
+	if x_offset == 0:
+		return base_point
+		
+	var curve_transform = curve.sample_baked_with_rotation(clamped_distance, true)
+	var tangent = curve_transform.x.normalized()
+	var normal = Vector2(-tangent.y, tangent.x)
+	
+	return base_point + normal * x_offset

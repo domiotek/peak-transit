@@ -109,7 +109,7 @@ func get_remaining_space() -> float:
 func get_first_vehicle() -> Vehicle:
 	var first_vehicle = assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
 
-	if first_vehicle and not is_instance_valid(first_vehicle):
+	if assigned_vehicles.size() > 0 and not is_instance_valid(first_vehicle):
 		assigned_vehicles.pop_front()
 		return get_first_vehicle()
 

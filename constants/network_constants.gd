@@ -15,3 +15,5 @@ var SHARP_LANE_CONNECTION_THRESHOLD = 30 # distance in pixels between lane endpo
 var LANE_CONNECTION_BASE_CURVATURE_FACTOR = 1.0
 var LANE_CONNECTION_MAX_CURVATURE_FACTOR = 2.5
 var LANE_CONNECTION_DISTANCE_THRESHOLD = 200.0 # distance in pixels at which max curvature
+
+var BUILDING_ROAD_OFFSET = 30.0
