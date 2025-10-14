@@ -191,3 +191,21 @@ func get_segment_directions_from_segment(node: RoadNode, ref_segment: NetSegment
 
 	
 	return directions
+
+
+func get_edge_lanes(segment: NetSegment) -> Dictionary:
+	if segment.lanes.size() == 0:
+		return {}
+
+	var result = {}
+
+	for lane in segment.lanes:
+		var relation_idx = lane.relation_id
+		if not result.has(relation_idx):
+			result[relation_idx] = lane
+		else:
+			var existing_lane = result[relation_idx]
+			if lane.lane_number > existing_lane.lane_number:
+				result[relation_idx] = lane
+
+	return result

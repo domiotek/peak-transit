@@ -20,6 +20,8 @@ var total_lanes: int = 0
 var is_asymetric: bool = false
 var max_lanes_relation_idx: int = -1
 
+var buildings: Array[BaseBuilding] = []
+
 var endpoints: Array[int] = []
 var endpoints_mappings: Dictionary[int, int] = {}
 
@@ -62,6 +64,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		return
 
 	var relation = NetRelation.new()
+	var relation_id = relations.size()
 
 	relation.StartNode = start_node
 	relation.EndNode = target_node
@@ -96,6 +99,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + NetworkConstants.BUILDING_ROAD_OFFSET
 
 		var building = BUILDING.instantiate() as BaseBuilding
+		building.setup(relation_id, self, building_info)
 		var point = line_helper.get_point_along_curve(curve_shape, curve_offset, horizontal_offset)
 
 		building.position = point
@@ -104,6 +108,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		if not starts_from_end:
 			building.rotation += PI
 
+		buildings.append(building)
 		add_child(building)
 
 		
@@ -143,11 +148,11 @@ func update_visuals() -> void:
 	main_road_layer.width = total_lanes * NetworkConstants.LANE_WIDTH
 
 	_update_markings_layer()
-
 	_update_debug_layer()
 
 func late_update_visuals() -> void:
 	_update_lanes_pathing_shape()
+	_update_buildings()
 		
 func get_lane(lane_id: int) -> NetLane:
 	if lane_id < 0 or lane_id >= lanes.size():
@@ -173,6 +178,12 @@ func get_relation_of_lane(lane_id: int) -> NetRelation:
 		return null
 
 	return relations[relation_id]
+
+func get_other_relation_idx(relation_idx: int) -> int:
+	if relation_idx < 0 or relation_idx >= relations.size():
+		push_error("Invalid relation index: " + str(relation_idx))
+		return -1
+	return 1 - relation_idx
 
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes:
@@ -200,6 +211,10 @@ func _update_markings_layer() -> void:
 			var offset = (i + 1) * NetworkConstants.LANE_WIDTH * midline_side
 			var path = line_helper.get_curve_with_offset(curve_shape, offset)
 			line_helper.draw_dash_line(path, markings_layer)
+
+func _update_buildings() -> void:
+	for building in buildings:
+		building.setup_connections()
 
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():

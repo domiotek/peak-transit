@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://baf4uogxpw50c"]
+[gd_scene load_steps=2 format=3 uid="uid://baf4uogxpw50c"]
 
 [ext_resource type="Script" uid="uid://co78ohswu8ipg" path="res://game-objects/buildings/base-building/base-building.gd" id="1_6vko0"]
-[ext_resource type="PackedScene" uid="uid://cx5r114fjgwq7" path="res://game-objects/light/light.tscn" id="3_ymvrx"]
 
 [node name="BaseBuilding" type="Node2D"]
 script = ExtResource("1_6vko0")
@@ -10,7 +9,4 @@ script = ExtResource("1_6vko0")
 color = Color(0.924435, 0.393531, 0.462238, 1)
 polygon = PackedVector2Array(-15, -18, 15, -18, 15, 4, -15, 4)
 
-[node name="Endpoint" parent="." instance=ExtResource("3_ymvrx")]
-position = Vector2(0, 11)
-inactive_color = Color(0.163699, 0.392195, 0.980943, 1)
-radius = 4.0
+[node name="DebugLayer" type="Node2D" parent="."]
