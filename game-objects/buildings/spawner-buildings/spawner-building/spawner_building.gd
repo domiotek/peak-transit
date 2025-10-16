@@ -22,8 +22,11 @@ func setup(relation_id: int, _segment: NetSegment, _building_info: BuildingInfo)
 
 	vehicles_pool = _get_starting_vehicles_pool()
 
-func mark_vehicle_left() -> void:
+func notify_vehicle_left() -> void:
 	vehicle_leaving = null
+
+func notify_vehicle_entered() -> void:
+	vehicles_pool += 1
 
 
 func _process(_delta: float) -> void:

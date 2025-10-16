@@ -96,15 +96,15 @@ func complete_current_step() -> void:
 		if current_step.has("building_to_enter"):
 			_enter_building()
 		else:
+			if current_step["target_building"].has_method("notify_vehicle_entered"):
+				current_step["target_building"].notify_vehicle_entered()
+			
 			emit_signal("trip_ended", true)
 	elif current_step["type"] == StepType.NODE:
 		trip_step_index += 1
 		_assign_to_step(trip_path[trip_step_index])
 	elif current_step["type"] == StepType.BUILDING:
-		if trip_step_index == 0:
-			_leave_building()
-		else:
-			emit_signal("trip_ended", true)
+		_leave_building()
 	else:
 		_pass_node()
 
@@ -322,9 +322,9 @@ func _leave_building() -> void:
 	var building_step = current_step
 	var lane = building_step["target_lane"]
 
-	if building_step["target_building"].has_method("mark_vehicle_left"):
-		building_step["target_building"].mark_vehicle_left()
-		
+	if building_step["target_building"].has_method("notify_vehicle_left"):
+		building_step["target_building"].notify_vehicle_left()
+
 	lane.assign_vehicle(vehicle)
 
 	path_follower.reparent(lane.trail, true)
