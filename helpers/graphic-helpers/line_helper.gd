@@ -402,3 +402,18 @@ func get_point_along_curve(curve: Curve2D, distance: float, x_offset: float = 0.
 	var normal = Vector2(-tangent.y, tangent.x)
 	
 	return base_point + normal * x_offset
+
+func get_distance_from_point(curve: Curve2D, point: Vector2) -> float:
+	if not curve or curve.point_count == 0:
+		return 0.0
+
+	var point_on_curve = curve.get_closest_point(point)
+	var closest_offset = curve.get_closest_offset(point_on_curve)
+	return closest_offset
+
+func rotate_perpendicular_to_curve(curve: Curve2D, point: Vector2) -> float:
+	var closest_offset = curve.get_closest_offset(point)
+	var curve_transform = curve.sample_baked_with_rotation(closest_offset, true)
+	var rotation_angle = curve_transform.get_rotation() + PI / 2.0
+ 
+	return rotation_angle
