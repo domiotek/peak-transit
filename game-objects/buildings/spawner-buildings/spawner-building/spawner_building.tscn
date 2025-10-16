@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://dd6wy8eoadc8v"]
+
+[ext_resource type="PackedScene" uid="uid://baf4uogxpw50c" path="res://game-objects/buildings/base-building/base-building.tscn" id="1_x8twb"]
+[ext_resource type="Script" uid="uid://cnrokorglrjcm" path="res://game-objects/buildings/spawner-buildings/spawner-building/spawner_building.gd" id="2_ksjhd"]
+
+[node name="SpawnerBuilding" instance=ExtResource("1_x8twb")]
+script = ExtResource("2_ksjhd")
+
+[node name="Shape" type="Polygon2D" parent="." index="1"]
+color = Color(0.924435, 0.393531, 0.462238, 1)
+polygon = PackedVector2Array(-15, -18, 15, -18, 15, 4, -15, 4)

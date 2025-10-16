@@ -20,7 +20,7 @@ var total_lanes: int = 0
 var is_asymetric: bool = false
 var max_lanes_relation_idx: int = -1
 
-var buildings: Array[BaseBuilding] = []
+var buildings: Array[int] = []
 
 var endpoints: Array[int] = []
 var endpoints_mappings: Dictionary[int, int] = {}
@@ -30,6 +30,7 @@ var endpoints_mappings: Dictionary[int, int] = {}
 @onready var markings_layer: Node2D = $MarkingsLayer
 
 var line_helper: LineHelper
+var buildings_manager: BuildingsManager
 
 func _ready() -> void:		
 	var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
@@ -41,6 +42,7 @@ func _ready() -> void:
 
 func setup(segment_id: int, start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
 	id = segment_id
 	data = segment_info
 
@@ -98,7 +100,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		else:
 			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + NetworkConstants.BUILDING_ROAD_OFFSET
 
-		var building = BUILDING.instantiate() as BaseBuilding
+		var building = buildings_manager.create_spawner_building(building_info)
 		building.setup(relation_id, self, building_info)
 		var point = line_helper.get_point_along_curve(curve_shape, curve_offset, horizontal_offset)
 
@@ -108,7 +110,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		if not starts_from_end:
 			building.rotation += PI
 
-		buildings.append(building)
+		buildings.append(building.id)
 		add_child(building)
 
 		
@@ -152,7 +154,6 @@ func update_visuals() -> void:
 
 func late_update_visuals() -> void:
 	_update_lanes_pathing_shape()
-	_update_buildings()
 		
 func get_lane(lane_id: int) -> NetLane:
 	if lane_id < 0 or lane_id >= lanes.size():
@@ -211,10 +212,6 @@ func _update_markings_layer() -> void:
 			var offset = (i + 1) * NetworkConstants.LANE_WIDTH * midline_side
 			var path = line_helper.get_curve_with_offset(curve_shape, offset)
 			line_helper.draw_dash_line(path, markings_layer)
-
-func _update_buildings() -> void:
-	for building in buildings:
-		building.setup_connections()
 
 func _update_debug_layer() -> void:
 	for child in debug_layer.get_children():

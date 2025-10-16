@@ -19,6 +19,7 @@ func setup_network(grid: NetworkGrid):
 	uiGrid = grid
 	var netdef = GDInjector.inject("NetworkDefinition") as NetworkDefinition
 	var path_finder = GDInjector.inject("PathFinder") as PathFinder
+	var buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
 
 	for segment in netdef.Segments:
 		_setupSegment(segment)
@@ -34,6 +35,9 @@ func setup_network(grid: NetworkGrid):
 		node.late_update_visuals()
 
 	end_nodes = nodes.values().filter(func(node): return node.connected_segments.size() == 1)
+
+	for building in buildings_manager.get_buildings():
+		building.setup_connections()
 
 	path_finder.BuildGraph(nodes.values())
 

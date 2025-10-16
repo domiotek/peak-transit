@@ -1,5 +1,11 @@
 class_name SegmentHelper
 
+
+var network_manager: NetworkManager
+
+func inject_dependencies() -> void:
+	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+
 func find_perpendicular_segment_at_node(segments: Array, node_id: int) -> NetSegment:
 
 	for segment in segments:
@@ -209,3 +215,10 @@ func get_edge_lanes(segment: NetSegment) -> Dictionary:
 				result[relation_idx] = lane
 
 	return result
+
+func get_other_endpoint_in_lane(endpoint_id: int) -> NetLaneEndpoint:
+	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
+	var segment = network_manager.get_segment(endpoint.SegmentId)
+	var lane = segment.get_lane(endpoint.LaneId)
+
+	return lane.get_endpoint_by_type(!endpoint.IsOutgoing())
