@@ -2,9 +2,11 @@ class_name SegmentHelper
 
 
 var network_manager: NetworkManager
+var line_helper: LineHelper
 
 func inject_dependencies() -> void:
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	line_helper = GDInjector.inject("LineHelper") as LineHelper
 
 func find_perpendicular_segment_at_node(segments: Array, node_id: int) -> NetSegment:
 
@@ -222,3 +224,9 @@ func get_other_endpoint_in_lane(endpoint_id: int) -> NetLaneEndpoint:
 	var lane = segment.get_lane(endpoint.LaneId)
 
 	return lane.get_endpoint_by_type(!endpoint.IsOutgoing())
+
+func trim_curve_to_building_connection(curve: Curve2D, building_point: Vector2, trim_from_start: bool) -> Curve2D:
+	var new_start = building_point if trim_from_start else curve.get_point_position(0)
+	var new_end = building_point if not trim_from_start else curve.get_point_position(curve.point_count - 1)
+
+	return line_helper.trim_curve(curve, new_start, new_end)

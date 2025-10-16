@@ -149,10 +149,13 @@ func get_total_progress() -> float:
 func get_trip_curves() -> Array:
 	var curves: Array = []
 
+	var first_building_connection: Dictionary
+	var last_building_connection: Dictionary
+
 	if trip_buildings.size() > 0:
 		var first_building = trip_buildings[0]
-		var first_connection = first_building.get_out_connection(first_step_forced_endpoint)
-		curves.append(first_connection["path"].curve)
+		first_building_connection = first_building.get_out_connection(first_step_forced_endpoint)
+		curves.append(line_helper.convert_curve_local_to_global(first_building_connection["path"].curve, first_building))
 
 	for step_idx in range(trip_path.size()):
 		var step = trip_path[step_idx]
@@ -169,8 +172,11 @@ func get_trip_curves() -> Array:
 
 	if trip_buildings.size() > 1:
 		var last_building = trip_buildings[1]
-		var last_connection = last_building.get_in_connection(last_step_forced_endpoint)
-		curves.append(last_connection["path"].curve)
+		last_building_connection = last_building.get_in_connection(last_step_forced_endpoint)
+		curves.append(line_helper.convert_curve_local_to_global(last_building_connection["path"].curve, last_building))
+
+		curves[1] = segment_helper.trim_curve_to_building_connection(curves[1], first_building_connection["lane_point"], true)
+		curves[curves.size() - 2] = segment_helper.trim_curve_to_building_connection(curves[curves.size() - 2], last_building_connection["lane_point"], false)
 
 	return curves
 
