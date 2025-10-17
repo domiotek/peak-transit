@@ -266,7 +266,13 @@ func _check_caster_colliding(caster_id: String) -> bool:
 	var current_step = navigator.get_current_step()
 
 	var check_if_my_blockade = func (collider: LaneStopper) -> bool:
-		var my_endpoint_id = current_step["next_node"]["from"] if current_step["type"] == Navigator.StepType.SEGMENT else current_step["from_endpoint"]
+		var my_endpoint_id: int
+		match current_step["type"]:
+			Navigator.StepType.SEGMENT:
+				my_endpoint_id = current_step["next_node"]["from"]
+			Navigator.StepType.NODE:
+				my_endpoint_id = current_step["from_endpoint"]
+
 		return collider.endpoint.Id == my_endpoint_id
 
 	match caster_id:
