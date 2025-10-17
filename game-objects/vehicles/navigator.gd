@@ -325,12 +325,12 @@ func _leave_building() -> void:
 	if building_step["target_building"].has_method("notify_vehicle_left"):
 		building_step["target_building"].notify_vehicle_left()
 
-	lane.assign_vehicle(vehicle)
-
 	path_follower.reparent(lane.trail, true)
 	path_follower.progress = line_helper.get_distance_from_point(lane.trail.curve, building_step["lane_point"])
 	
 	current_step = _create_segment_step(lane)
+
+	lane.assign_vehicle(vehicle)
 
 	step_ready = true
 
@@ -340,6 +340,9 @@ func _enter_building() -> void:
 	var step = trip_path[trip_step_index]
 	var endpoint_id = step.ViaEndpointId
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
+
+	if building_data["building"].has_method("notify_vehicle_entering"):
+		building_data["building"].notify_vehicle_entering(vehicle)
 
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 	lane.remove_vehicle(vehicle)

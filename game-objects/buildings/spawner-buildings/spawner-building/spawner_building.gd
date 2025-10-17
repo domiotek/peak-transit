@@ -5,6 +5,7 @@ class_name SpawnerBuilding
 var vehicles_pool: int = 0
 
 var vehicle_leaving: Vehicle = null
+var vehicle_entering: Vehicle = null
 
 
 @onready var building_shape: Polygon2D = $Shape
@@ -25,8 +26,12 @@ func setup(relation_id: int, _segment: NetSegment, _building_info: BuildingInfo)
 func notify_vehicle_left() -> void:
 	vehicle_leaving = null
 
+func notify_vehicle_entering(vehicle: Vehicle) -> void:
+	vehicle_entering = vehicle
+
 func notify_vehicle_entered() -> void:
 	vehicles_pool += 1
+	vehicle_entering = null
 
 
 func _process(_delta: float) -> void:
@@ -40,7 +45,7 @@ func _try_spawn_vehicle() -> void:
 	if vehicles_pool <= 0:
 		return
 
-	if vehicle_leaving:
+	if vehicle_leaving or vehicle_entering:
 		return
 
 	var target_building_type = buildings_manager.get_random_building_type(self.type)
@@ -48,6 +53,10 @@ func _try_spawn_vehicle() -> void:
 
 	if not target_building:
 		return
+
+	if target_building.segment == self.segment:
+		return
+
 
 	var vehicle = vehicle_manager.create_vehicle()
 
