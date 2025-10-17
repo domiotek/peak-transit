@@ -8,4 +8,4 @@ script = ExtResource("2_ksjhd")
 
 [node name="Shape" type="Polygon2D" parent="." index="1"]
 color = Color(0.924435, 0.393531, 0.462238, 1)
-polygon = PackedVector2Array(-15, -18, 15, -18, 15, 4, -15, 4)
+polygon = PackedVector2Array(-25, -30, 26, -30, 26, 4, -25, 4)

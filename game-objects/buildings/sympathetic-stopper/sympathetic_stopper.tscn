@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1fxrjvufw5y6"]
+
+[ext_resource type="Script" uid="uid://caq8fvhpnhwwy" path="res://game-objects/buildings/sympathetic-stopper/sympathetic_stopper.gd" id="1_q7vxc"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chjae"]
+size = Vector2(6, 14)
+
+[node name="SympatheticStopper" type="Area2D"]
+collision_layer = 6
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("1_q7vxc")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_chjae")
+disabled = true
+
+[node name="DebugShape" type="Polygon2D" parent="."]
+position = Vector2(0, -12)
+color = Color(0.493545, 0.493546, 0.493546, 1)
+polygon = PackedVector2Array(-3, 5, 3, 5, 3, 19, -0.648384, 19, -3, 19)

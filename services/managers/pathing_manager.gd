@@ -110,8 +110,6 @@ func _get_cached_result(cache_key: String):
 		return null
 
 func _on_pathfinding_result(request_id: int, combination_id: int, path_result) -> void:
-	print("Received pathfinding result for request ID %d, combination ID %d, path size %d, cost %f" % [request_id, combination_id, path_result.Path.size(), path_result.TotalCost])
-
 	if not active_requests.has(request_id):
 		return
 	
@@ -172,7 +170,5 @@ func _select_best_path(results: Array, callback: Callable) -> void:
 		best_result = {
 			"State": 2,
 		}
-
-	print("Best path selected with cost %f and size %d, combination ID %d" % [best_cost, best_result.Path.size() if best_result.Path else 0, best_result_index])
-	
+		
 	callback.call(best_result)

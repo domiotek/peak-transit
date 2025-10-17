@@ -3,6 +3,9 @@ extends Node2D
 class_name BaseBuilding
 
 var DOT_SCENE = preload("res://game-objects/light/light.tscn")
+var COLLISION_ZONE = preload("res://game-objects/buildings/collision-zone/collision_zone.tscn")
+var STOPPER = preload("res://game-objects/buildings/building-stopper/building_stopper.tscn")
+var SYMPATHETIC_STOPPER = preload("res://game-objects/buildings/sympathetic-stopper/sympathetic_stopper.tscn")
 
 enum BuildingType {
 	RESIDENTIAL,
@@ -21,6 +24,15 @@ var connections: Dictionary = {
 	"out": {}
 }
 
+var collision_zones: Dictionary = {}
+var out_connection_zones_mapping: Dictionary = {}
+var out_stoppers: Dictionary = {}
+var sympathetic_stopper: SympatheticStopper = null
+
+
+var vehicle_leaving: Vehicle = null
+var vehicles_entering: Array[Vehicle] = []
+
 @onready var debug_layer: Node2D = $DebugLayer
 
 @onready var segment_helper: SegmentHelper = GDInjector.inject("SegmentHelper") as SegmentHelper
@@ -30,6 +42,9 @@ var connections: Dictionary = {
 
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+
+func _process(_delta: float) -> void:
+	_check_stoppers()
 
 func setup(relation_id: int, _segment: NetSegment, _building_info: BuildingInfo) -> void:
 	target_relation_idx = relation_id
@@ -68,6 +83,24 @@ func setup_connections() -> void:
 
 			_create_single_connection(opposite_relation_lane, endpoint, is_out_direction, false)
 
+	for connection in connections["in"].values():
+		_create_collision_zone(connection)
+
+	for connection in connections["out"].values():
+		_create_out_stopper(connection)
+		var zones = []
+		var is_on_other_relation = target_relation_idx != connection["lane"].relation_id
+
+		var same_lane_source_endpoint = segment_helper.get_other_endpoint_in_lane(connection["next_endpoint"])
+		zones.append(collision_zones.get(same_lane_source_endpoint.Id, null))
+
+		if is_on_other_relation:
+			var other_lane = edge_lanes[target_relation_idx]
+			var endpoint = other_lane.get_endpoint_by_type(true)
+			zones.append(collision_zones.get(endpoint.Id, null))
+			_create_sympathetic_stopper(get_in_connection(endpoint.Id))
+
+		out_connection_zones_mapping[connection["next_endpoint"]] = zones
 
 	_update_debug_visuals()
 
@@ -88,6 +121,46 @@ func get_in_connection(endpoint_id: int) -> Dictionary:
 
 func get_out_connection(endpoint_id: int) -> Dictionary:
 	return connections["out"].get(endpoint_id, null)
+
+func _check_stoppers() -> void:
+	for endpoint_id in out_stoppers.keys():
+		var stopper = out_stoppers[endpoint_id]
+
+		if vehicle_leaving == null:
+			stopper.set_active(false)
+			continue
+
+		var zones = out_connection_zones_mapping.get(endpoint_id, [])
+		var activated = false
+		for zone in zones:
+			if zone and zone.has_vehicles_inside(vehicle_leaving):
+				stopper.set_active(true)
+				activated = true
+				break
+
+		if not activated:
+			stopper.set_active(false)
+
+	if not sympathetic_stopper:
+		return
+
+	if vehicles_entering.size() == 0:
+		sympathetic_stopper.set_active(false)
+		return
+
+	for vehicle in vehicles_entering:
+		var current_step = vehicle.navigator.get_current_step()
+		var is_on_other_relation = current_step["connection"]["lane"].relation_id != target_relation_idx
+
+		if not is_on_other_relation:
+			continue
+
+		if vehicle.driver.get_time_blocked() > 5.0:
+			print(vehicle.driver.get_time_blocked())
+			sympathetic_stopper.set_active(true)
+			return
+
+		
 
 
 func _create_single_connection(lane: NetLane, endpoint: Vector2, is_out_direction: bool, is_same_relation: bool) -> void:
@@ -129,6 +202,36 @@ func _create_connection(lane: NetLane, building_endpoint: Vector2, is_forward: b
 		"from_endpoint": lane.from_endpoint if not is_forward else -1,
 		"next_endpoint": lane.to_endpoint if is_forward else -1
 	}
+
+func _create_collision_zone(connection: Dictionary) -> void:
+	var collision_zone = COLLISION_ZONE.instantiate() as CollisionZone
+
+	var is_on_other_relation = target_relation_idx != connection["lane"].relation_id
+
+	var final_position = connection["lane_point"]
+	if not is_on_other_relation:
+		var lane_curve = connection["lane"].get_curve()
+		var distance_on_curve = lane_curve.get_closest_offset(connection["lane_point"])
+		var new_point_on_curve = lane_curve.sample_baked(distance_on_curve + 5)
+		final_position = new_point_on_curve
+	
+	collision_zone.position = to_local(final_position)
+	collision_zone.rotation_degrees = 180.0 if is_on_other_relation else 0.0
+	collision_zone.set_size_scale(2.0 if is_on_other_relation else 1.0)
+	add_child(collision_zone)
+	collision_zones[connection["from_endpoint"]] = collision_zone
+
+func _create_out_stopper(connection: Dictionary) -> void:
+	var stopper = STOPPER.instantiate() as BuildingStopper
+
+	stopper.position = to_local(connection["from"])
+	add_child(stopper)
+	out_stoppers[connection["next_endpoint"]] = stopper
+
+func _create_sympathetic_stopper(connection: Dictionary) -> void:
+	sympathetic_stopper = SYMPATHETIC_STOPPER.instantiate() as SympatheticStopper
+	sympathetic_stopper.position = to_local(connection["lane_point"])
+	add_child(sympathetic_stopper)
 
 func _update_debug_visuals() -> void:
 	for child in debug_layer.get_children():

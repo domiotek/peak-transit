@@ -97,7 +97,7 @@ func complete_current_step() -> void:
 			_enter_building()
 		else:
 			if current_step["target_building"].has_method("notify_vehicle_entered"):
-				current_step["target_building"].notify_vehicle_entered()
+				current_step["target_building"].notify_vehicle_entered(vehicle)
 			
 			emit_signal("trip_ended", true)
 	elif current_step["type"] == StepType.NODE:
@@ -308,7 +308,9 @@ func _create_building_step(building: BaseBuilding, connection: Dictionary) -> Di
 		"connection": connection,
 		"target_lane": connection["lane"],
 		"lane_point": connection["lane_point"],
-		"next_node": null
+		"next_node": null,
+		"is_entering": connection["relation"] == "in",
+		"is_leaving": connection["relation"] == "out"
 	}
 
 func _assign_to_building_step(step: Dictionary) -> void:

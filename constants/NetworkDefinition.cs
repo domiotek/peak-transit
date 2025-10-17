@@ -79,8 +79,20 @@ public partial class NetworkDefinition : GodotObject
             {
                 Relations =
                 [
-                    new(4) { Lanes = [new()] },
-                    new(5) { Lanes = [new()], Buildings = [new(BuildingType.Residential, 150.0f)] },
+                    new(4) { Lanes = [new()], Buildings = [new(BuildingType.Commercial, 150.0f)] },
+                    new(5)
+                    {
+                        Lanes = [new()],
+                        Buildings =
+                        [
+                            new(BuildingType.Residential, 30.0f),
+                            new(BuildingType.Residential, 90.0f),
+                            new(BuildingType.Residential, 150.0f),
+                            new(BuildingType.Residential, 210.0f),
+                            new(BuildingType.Residential, 270.0f),
+                            new(BuildingType.Residential, 330.0f),
+                        ],
+                    },
                 ],
             },
             new NetSegmentInfo(4, 6, 0.1f, CurveDirection.Clockwise)
@@ -93,7 +105,15 @@ public partial class NetworkDefinition : GodotObject
             },
             new NetSegmentInfo(0, 7, 0.1f, CurveDirection.Clockwise)
             {
-                Relations = [new(0) { Lanes = [new(), new()] }, new(7) { Lanes = [new(), new()] }],
+                Relations =
+                [
+                    new(0) { Lanes = [new(), new()] },
+                    new(7)
+                    {
+                        Lanes = [new(), new()],
+                        Buildings = [new(BuildingType.Residential, 100.0f)],
+                    },
+                ],
             },
             new NetSegmentInfo(0, 8, 0.1f, CurveDirection.Clockwise)
             {
@@ -114,7 +134,11 @@ public partial class NetworkDefinition : GodotObject
                     new(9)
                     {
                         Lanes = [new(), new()],
-                        Buildings = [new(BuildingType.Industrial, 150.0f)],
+                        Buildings =
+                        [
+                            new(BuildingType.Industrial, 150.0f),
+                            new(BuildingType.Industrial, 200.0f),
+                        ],
                     },
                     new(11) { Lanes = [new(), new()] },
                 ],

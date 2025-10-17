@@ -62,7 +62,8 @@ func get_popup_data() -> Dictionary:
 		"state": Driver.VehicleState.keys()[driver.state],
 		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
 		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,
-		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")]
+		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")],
+		"time_blocked": driver.get_time_blocked(),
 	}
 
 	return data

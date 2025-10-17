@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxfqwngmivl5p"]
+
+[ext_resource type="Script" uid="uid://dif4wggirv4tq" path="res://game-objects/buildings/building-stopper/building_stopper.gd" id="1_yr03p"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_chjae"]
+size = Vector2(15, 19)
+
+[node name="BuildingStopper" type="Area2D"]
+collision_layer = 6
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("1_yr03p")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="."]
+position = Vector2(-0.5, 9.5)
+shape = SubResource("RectangleShape2D_chjae")
+disabled = true
+
+[node name="DebugShape" type="Polygon2D" parent="."]
+color = Color(0.493545, 0.493546, 0.493546, 1)
+polygon = PackedVector2Array(-8, 0, 7, 0, 7, 19, -0.648384, 19, -8, 19)

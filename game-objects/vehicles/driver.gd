@@ -108,10 +108,19 @@ func emergency_stop() -> void:
 	current_speed = current_speed * constants["EMERGENCY_STOP_SPEED_MODIFIER"]
 	current_brake_force = constants["EMERGENCY_BRAKING"]
 
+func grant_no_caster_allowance(time_seconds: float) -> void:
+	no_caster_allowance_time = time_seconds
+	_set_casters_enabled(false)
+
+func get_time_blocked() -> float:
+	return time_blocked
+
 func tick_speed(delta: float) -> float:
 	target_speed = get_max_allowed_speed()
 
 	_apply_slowdown_intersection()
+	_apply_slowdown_building()
+	
 	if no_caster_allowance_time > 0.0:
 		no_caster_allowance_time -= delta
 		if no_caster_allowance_time <= 0.0:
@@ -200,6 +209,16 @@ func _apply_slowdown_intersection() -> void:
 	if approaching_intersection and distance_to_node < constants["INTERSECTION_SLOWDOWN_THRESHOLD"]:
 		target_speed = constants["INTERSECTION_SLOWDOWN"]
 
+func _apply_slowdown_building() -> void:
+	var current_step = navigator.get_current_step()
+
+	if not current_step or current_step.type != Navigator.StepType.BUILDING:
+		return
+
+	if current_step["is_entering"]:
+		target_speed = constants["BUILDING_ENTRY_SPEED"]
+		
+
 
 func _update_speed(delta: float) -> void:
 	var speed_difference = target_speed - current_speed
@@ -282,6 +301,17 @@ func _check_caster_colliding(caster_id: String) -> bool:
 				if laneStopper:
 					return check_if_my_blockade.call(laneStopper)
 
+				var other_vehicle = casters[caster_id].get_collider().get_parent() as Vehicle
+				if other_vehicle:
+					var other_vehicle_current_step = other_vehicle.navigator.get_current_step()
+
+					if current_step["type"] == Navigator.StepType.BUILDING and other_vehicle_current_step["type"] == Navigator.StepType.BUILDING:
+						var vehicle_building = other_vehicle_current_step["target_building"]
+						var my_building = current_step["target_building"]
+						if my_building == vehicle_building:
+							if vehicle_building.vehicle_leaving == other_vehicle:
+								return false
+
 				return true
 
 			return false
@@ -336,6 +366,7 @@ func _on_blockade_area_exited(_area: Area2D) -> void:
 	blockade_observer.set_deferred("monitoring",false)
 	if state == VehicleState.BLOCKED:
 		state = VehicleState.IDLE
+		time_blocked = 0.0
 
 func _try_to_reroute(time_spent_blocked: float) -> void:
 	var current_step = navigator.get_current_step()

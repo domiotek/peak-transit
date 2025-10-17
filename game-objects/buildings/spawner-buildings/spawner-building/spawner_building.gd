@@ -4,10 +4,6 @@ class_name SpawnerBuilding
 
 var vehicles_pool: int = 0
 
-var vehicle_leaving: Vehicle = null
-var vehicle_entering: Vehicle = null
-
-
 @onready var building_shape: Polygon2D = $Shape
 
 @onready var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
@@ -27,14 +23,16 @@ func notify_vehicle_left() -> void:
 	vehicle_leaving = null
 
 func notify_vehicle_entering(vehicle: Vehicle) -> void:
-	vehicle_entering = vehicle
+	vehicles_entering.append(vehicle)
 
-func notify_vehicle_entered() -> void:
+func notify_vehicle_entered(vehicle: Vehicle) -> void:
 	vehicles_pool += 1
-	vehicle_entering = null
+	vehicles_entering.erase(vehicle)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	super._process(delta)
+
 	if not simulation_manager.is_simulation_running():
 		return
 
@@ -45,7 +43,7 @@ func _try_spawn_vehicle() -> void:
 	if vehicles_pool <= 0:
 		return
 
-	if vehicle_leaving or vehicle_entering:
+	if vehicle_leaving or vehicles_entering.size() > 0:
 		return
 
 	var target_building_type = buildings_manager.get_random_building_type(self.type)
@@ -78,6 +76,6 @@ func _get_shape_color() -> Color:
 
 func _get_connection_endpoints()-> Dictionary:
 	return {
-		"in": to_global(Vector2(5, 0)),
-		"out": to_global(Vector2(-5, 0))
+		"in": to_global(Vector2(10, -5)),
+		"out": to_global(Vector2(-10, -5))
 	}
