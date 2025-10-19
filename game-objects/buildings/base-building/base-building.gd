@@ -173,7 +173,6 @@ func _check_stoppers() -> void:
 			continue
 
 		if vehicle.driver.get_time_blocked() > 5.0:
-			print(vehicle.driver.get_time_blocked())
 			sympathetic_stopper.set_active(true)
 			return
 
