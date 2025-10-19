@@ -6,7 +6,8 @@ enum SelectionType {
 	NONE,
 	VEHICLE,
 	NODE,
-	STOPPER
+	STOPPER,
+	SPAWNER_BUILDING
 }
 
 var camera_bounds: Rect2
@@ -86,6 +87,8 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selected_object = null
 		SelectionType.VEHICLE:
 			selection_popup_id = "VehiclePopupView"
+		SelectionType.SPAWNER_BUILDING:
+			selection_popup_id = "SpawnerBuildingPopupView"
 		SelectionType.NODE, SelectionType.STOPPER:
 			pass
 		_:
@@ -127,6 +130,10 @@ func try_hit_debug_pick(object: Object) -> bool:
 		return true
 
 	if selection_type == SelectionType.STOPPER and selected_object == (object as LaneStopper):
+		debug_selection = false
+		return true
+
+	if selection_type == SelectionType.SPAWNER_BUILDING and selected_object == (object as SpawnerBuilding):
 		debug_selection = false
 		return true
 

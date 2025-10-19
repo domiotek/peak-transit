@@ -29,6 +29,8 @@ var out_connection_zones_mapping: Dictionary = {}
 var out_stoppers: Dictionary = {}
 var sympathetic_stopper: SympatheticStopper = null
 
+var debug_visuals_enabled: bool = false
+
 
 var vehicle_leaving: Vehicle = null
 var vehicles_entering: Array[Vehicle] = []
@@ -121,6 +123,21 @@ func get_in_connection(endpoint_id: int) -> Dictionary:
 
 func get_out_connection(endpoint_id: int) -> Dictionary:
 	return connections["out"].get(endpoint_id, null)
+
+func toggle_debug_visuals() -> void:
+	debug_visuals_enabled = not debug_visuals_enabled
+
+	for stopper in out_stoppers.values():
+		stopper.set_debug_visuals_enabled(debug_visuals_enabled)
+
+	for zone in collision_zones.values():
+		zone.set_debug_visuals_enabled(debug_visuals_enabled)
+
+	if sympathetic_stopper:
+		sympathetic_stopper.set_debug_visuals_enabled(debug_visuals_enabled)
+
+func are_debug_visuals_enabled() -> bool:
+	return debug_visuals_enabled
 
 func _check_stoppers() -> void:
 	for endpoint_id in out_stoppers.keys():
