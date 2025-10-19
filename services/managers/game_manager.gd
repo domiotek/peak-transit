@@ -165,7 +165,7 @@ func draw_vehicle_route(vehicle: Vehicle) -> void:
 		
 		var curve_length = curve2d.get_baked_length()
 		if curve_length > 0:
-			var sample_distance = 10.0
+			var sample_distance = 5.0
 			var num_samples = int(curve_length / sample_distance) + 1
 			
 			for i in range(num_samples):

@@ -21,6 +21,33 @@ func calc_curve(start_pos: Vector2, target_pos: Vector2, strength: float, direct
 
 	return curve
 
+func calc_curve_asymmetric(start_pos: Vector2, target_pos: Vector2, start_strength: float, end_strength: float, direction: int, bulge_factor: float = 0.0) -> Curve2D:
+	var line_vector = target_pos - start_pos
+	var line_length = line_vector.length()
+	
+	var perpendicular = Vector2(-line_vector.y, line_vector.x).normalized()
+	var forward = line_vector.normalized()
+	
+	var start_handle_length = line_length * start_strength
+	var end_handle_length = line_length * end_strength
+	
+	var start_forward_blend = bulge_factor if bulge_factor > 0 else (start_strength * 0.5)
+	var end_forward_blend = bulge_factor if bulge_factor > 0 else (end_strength * 0.5)
+	
+	var start_control = start_pos + perpendicular * start_handle_length * direction + forward * (start_handle_length * start_forward_blend)
+	var end_control = target_pos + perpendicular * end_handle_length * direction - forward * (end_handle_length * end_forward_blend)
+	
+	var curve = Curve2D.new()
+	
+	curve.add_point(start_pos)
+	var out_handle = start_control - start_pos
+	curve.set_point_out(0, out_handle)
+	
+	var in_handle = end_control - target_pos
+	curve.add_point(target_pos, in_handle, Vector2.ZERO)
+
+	return curve
+
 func get_curve_with_offset(curve: Curve2D, offset: float) -> Curve2D:
 	if not curve or not offset:
 		return null

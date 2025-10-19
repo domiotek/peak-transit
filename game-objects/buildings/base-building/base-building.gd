@@ -195,14 +195,18 @@ func _create_connection(lane: NetLane, building_endpoint: Vector2, is_forward: b
 	var connection_point = lane_curve.sample_baked(distance_along_lane + connection_distance)
 
 	var direction_multiplier = 1 if !is_forward else -1
-	if not is_same_relation:
-		direction_multiplier *= -1
 
 	var connecting_curve: Curve2D
-	if is_forward:
-		connecting_curve = line_helper.calc_curve(to_local(building_endpoint), to_local(connection_point), NetworkConstants.BUILDING_CONNECTION_CURVATURE, direction_multiplier)
+	if not is_same_relation:
+		if is_forward:
+			connecting_curve = line_helper.calc_curve_asymmetric(to_local(building_endpoint), to_local(connection_point), 0, NetworkConstants.BUILDING_CONNECTION_CURVATURE, -1 * direction_multiplier)
+		else:
+			connecting_curve = line_helper.calc_curve_asymmetric(to_local(connection_point), to_local(building_endpoint), NetworkConstants.BUILDING_CONNECTION_CURVATURE, 0, direction_multiplier)
 	else:
-		connecting_curve = line_helper.calc_curve(to_local(connection_point), to_local(building_endpoint), NetworkConstants.BUILDING_CONNECTION_CURVATURE, -1 * direction_multiplier)
+		if is_forward:
+			connecting_curve = line_helper.calc_curve(to_local(building_endpoint), to_local(connection_point), NetworkConstants.BUILDING_CONNECTION_CURVATURE, direction_multiplier)
+		else:
+			connecting_curve = line_helper.calc_curve(to_local(connection_point), to_local(building_endpoint), NetworkConstants.BUILDING_CONNECTION_CURVATURE, -1 * direction_multiplier)
 
 	var path = Path2D.new()
 	path.curve = connecting_curve
