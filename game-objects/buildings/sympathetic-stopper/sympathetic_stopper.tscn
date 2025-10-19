@@ -17,6 +17,7 @@ shape = SubResource("RectangleShape2D_chjae")
 disabled = true
 
 [node name="DebugShape" type="Polygon2D" parent="."]
+visible = false
 position = Vector2(0, -12)
 color = Color(0.493545, 0.493546, 0.493546, 1)
 polygon = PackedVector2Array(-3, 5, 3, 5, 3, 19, -0.648384, 19, -3, 19)

@@ -18,5 +18,8 @@ func set_active(_active: bool) -> void:
 	shape.set_deferred("disabled", not _active)
 	_toggle_debug_visuals()
 
+func set_debug_visuals_enabled(enabled: bool) -> void:
+	indicator.visible = enabled
+
 func _toggle_debug_visuals() -> void:
 	indicator.color = Color(1, 0, 0, 0.5) if active else Color(0, 1, 0, 0.5)

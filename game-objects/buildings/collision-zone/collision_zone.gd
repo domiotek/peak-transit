@@ -28,6 +28,9 @@ func has_vehicles_inside(other_than: Vehicle) -> bool:
 
 	return false
 
+func set_debug_visuals_enabled(enabled: bool) -> void:
+	debug_shape.visible = enabled
+
 
 func _process(_delta: float) -> void:
 	var overlapping_bodies = get_overlapping_areas()
