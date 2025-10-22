@@ -1,5 +1,13 @@
 class_name SegmentHelper
 
+
+var network_manager: NetworkManager
+var line_helper: LineHelper
+
+func inject_dependencies() -> void:
+	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	line_helper = GDInjector.inject("LineHelper") as LineHelper
+
 func find_perpendicular_segment_at_node(segments: Array, node_id: int) -> NetSegment:
 
 	for segment in segments:
@@ -191,3 +199,34 @@ func get_segment_directions_from_segment(node: RoadNode, ref_segment: NetSegment
 
 	
 	return directions
+
+
+func get_edge_lanes(segment: NetSegment) -> Dictionary:
+	if segment.lanes.size() == 0:
+		return {}
+
+	var result = {}
+
+	for lane in segment.lanes:
+		var relation_idx = lane.relation_id
+		if not result.has(relation_idx):
+			result[relation_idx] = lane
+		else:
+			var existing_lane = result[relation_idx]
+			if lane.lane_number > existing_lane.lane_number:
+				result[relation_idx] = lane
+
+	return result
+
+func get_other_endpoint_in_lane(endpoint_id: int) -> NetLaneEndpoint:
+	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
+	var segment = network_manager.get_segment(endpoint.SegmentId)
+	var lane = segment.get_lane(endpoint.LaneId)
+
+	return lane.get_endpoint_by_type(!endpoint.IsOutgoing())
+
+func trim_curve_to_building_connection(curve: Curve2D, building_point: Vector2, trim_from_start: bool) -> Curve2D:
+	var new_start = building_point if trim_from_start else curve.get_point_position(0)
+	var new_end = building_point if not trim_from_start else curve.get_point_position(curve.point_count - 1)
+
+	return line_helper.trim_curve(curve, new_start, new_end)

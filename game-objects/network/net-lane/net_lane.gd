@@ -15,6 +15,7 @@ var segment: NetSegment
 var data: NetLaneInfo
 var offset: float = 0.0
 var relation_id: int = -1
+var lane_number: int = 0
 
 var from_endpoint: int
 var to_endpoint: int
@@ -67,7 +68,9 @@ func update_trail_shape(curve: Curve2D) -> void:
 			new_curve = line_helper.reverse_curve(new_curve)
 			is_at_path_start = true
 
-		var endpoint_id = network_manager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, _calc_lane_number(), is_at_path_start)
+		lane_number = _calc_lane_number()
+
+		var endpoint_id = network_manager.add_lane_endpoint(id, point_global, segment, node, is_outgoing, lane_number, is_at_path_start)
 
 		if is_outgoing:
 			from_endpoint = endpoint_id
@@ -109,7 +112,7 @@ func get_remaining_space() -> float:
 func get_first_vehicle() -> Vehicle:
 	var first_vehicle = assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
 
-	if first_vehicle and not is_instance_valid(first_vehicle):
+	if assigned_vehicles.size() > 0 and not is_instance_valid(first_vehicle):
 		assigned_vehicles.pop_front()
 		return get_first_vehicle()
 

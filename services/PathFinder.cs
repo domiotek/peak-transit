@@ -6,13 +6,12 @@ using Godot;
 using Godot.Collections;
 using PT.DependencyProvider;
 using PT.Helpers;
-using PT.Models;
 using PT.Models.PathFinding;
 using PT.Services.Managers.Config;
 
 namespace PT.Services;
 
-record WorkItem(PathingRequest Request, Callable OnResult);
+record WorkItem(PathingRequest Request, Callable OnResult, long RequestId, int CombinationId = 0);
 
 [GlobalClass]
 public partial class PathFinder : GodotObject
@@ -49,15 +48,19 @@ public partial class PathFinder : GodotObject
         }
     }
 
-    public void FindPath(int fromNodeId, int toNodeId, Callable onResult, int forceEndpoint = -1)
+    public void FindPath(
+        int fromNodeId,
+        int toNodeId,
+        long requestId,
+        Callable onResult,
+        int forceFromEndpoint = -1,
+        int forceToEndpoint = -1,
+        int combinationId = 0
+    )
     {
-        var request = new PathingRequest(
-            fromNodeId,
-            toNodeId,
-            forceEndpoint == -1 ? null : forceEndpoint
-        );
+        var request = new PathingRequest(fromNodeId, toNodeId, forceFromEndpoint, forceToEndpoint);
 
-        _queue.Enqueue(new WorkItem(request, onResult));
+        _queue.Enqueue(new WorkItem(request, onResult, requestId, combinationId));
         _signal.Set();
     }
 
@@ -72,7 +75,11 @@ public partial class PathFinder : GodotObject
                 try
                 {
                     var response = ProcessPathingRequest(request.Request);
-                    request.OnResult.Call(response);
+                    request.OnResult.CallDeferred(
+                        request.RequestId,
+                        request.CombinationId,
+                        response
+                    );
                 }
                 catch (Exception ex)
                 {
@@ -81,7 +88,7 @@ public partial class PathFinder : GodotObject
                         PathingState.Failed,
                         []
                     );
-                    request.OnResult.Call(response);
+                    request.OnResult.Call(request.RequestId, request.CombinationId, response);
                     GD.PrintErr($"Error processing pathing request: {ex.Message}");
                 }
             }
@@ -93,21 +100,22 @@ public partial class PathFinder : GodotObject
         try
         {
             var path = new Array<PathStep>();
-            path.AddRange(
-                AStarPathing.FindPathAStar(
-                    Graph,
-                    request.StartNodeId,
-                    request.EndNodeId,
-                    request.ForcedStartEndpointId
-                )
+            var (foundPath, totalCost) = AStarPathing.FindPathAStar(
+                Graph,
+                request.StartNodeId,
+                request.EndNodeId,
+                request.ForcedStartEndpointId,
+                request.ForcedEndEndpointId
             );
 
-            return request.CompleteRequest(PathingState.Completed, path);
+            path.AddRange(foundPath);
+
+            return request.CompleteRequest(PathingState.Completed, path, totalCost);
         }
         catch (Exception ex)
         {
             GD.PrintErr($"A* pathfinding failed: {ex.Message}");
-            return request.CompleteRequest(PathingState.Failed, []);
+            return request.CompleteRequest(PathingState.Failed, [], 0.0f);
         }
     }
 }

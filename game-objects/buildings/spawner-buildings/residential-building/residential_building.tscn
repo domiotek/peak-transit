@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://bdunb4adhjjfy"]
+
+[ext_resource type="PackedScene" uid="uid://dd6wy8eoadc8v" path="res://game-objects/buildings/spawner-buildings/spawner-building/spawner_building.tscn" id="1_fip4f"]
+[ext_resource type="Script" uid="uid://dx4mewe70wr6p" path="res://game-objects/buildings/spawner-buildings/residential-building/residential_building.gd" id="2_jdb4c"]
+
+[node name="ResidentialBuilding" instance=ExtResource("1_fip4f")]
+script = ExtResource("2_jdb4c")

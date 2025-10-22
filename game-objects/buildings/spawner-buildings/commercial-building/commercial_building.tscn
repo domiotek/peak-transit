@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://bvqgybtkqaqvy"]
+
+[ext_resource type="PackedScene" uid="uid://dd6wy8eoadc8v" path="res://game-objects/buildings/spawner-buildings/spawner-building/spawner_building.tscn" id="1_a8m32"]
+[ext_resource type="Script" uid="uid://bsfdwi0m33eqk" path="res://game-objects/buildings/spawner-buildings/commercial-building/commercial_building.gd" id="2_ia67d"]
+
+[node name="CommercialBuilding" instance=ExtResource("1_a8m32")]
+script = ExtResource("2_ia67d")

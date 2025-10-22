@@ -6,7 +6,8 @@ enum SelectionType {
 	NONE,
 	VEHICLE,
 	NODE,
-	STOPPER
+	STOPPER,
+	SPAWNER_BUILDING
 }
 
 var camera_bounds: Rect2
@@ -86,6 +87,8 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selected_object = null
 		SelectionType.VEHICLE:
 			selection_popup_id = "VehiclePopupView"
+		SelectionType.SPAWNER_BUILDING:
+			selection_popup_id = "SpawnerBuildingPopupView"
 		SelectionType.NODE, SelectionType.STOPPER:
 			pass
 		_:
@@ -130,6 +133,10 @@ func try_hit_debug_pick(object: Object) -> bool:
 		debug_selection = false
 		return true
 
+	if selection_type == SelectionType.SPAWNER_BUILDING and selected_object == (object as SpawnerBuilding):
+		debug_selection = false
+		return true
+
 	return false
 
 func draw_vehicle_route(vehicle: Vehicle) -> void:
@@ -158,7 +165,7 @@ func draw_vehicle_route(vehicle: Vehicle) -> void:
 		
 		var curve_length = curve2d.get_baked_length()
 		if curve_length > 0:
-			var sample_distance = 10.0
+			var sample_distance = 5.0
 			var num_samples = int(curve_length / sample_distance) + 1
 			
 			for i in range(num_samples):

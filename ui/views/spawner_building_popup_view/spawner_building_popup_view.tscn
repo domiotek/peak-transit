@@ -1,0 +1,94 @@
+[gd_scene load_steps=8 format=3 uid="uid://d4e2qlngqhdac"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_t7dsu"]
+[ext_resource type="Script" uid="uid://72o66t400s28" path="res://ui/views/spawner_building_popup_view/spawner_building_popup_view.gd" id="2_5mnhb"]
+[ext_resource type="Texture2D" uid="uid://ch7h2yiicuahf" path="res://assets/ui_icons/keep_off.png" id="3_7ndyp"]
+[ext_resource type="Texture2D" uid="uid://colv4c8bi5jc0" path="res://assets/ui_icons/close.png" id="4_wfymr"]
+[ext_resource type="Texture2D" uid="uid://c8tlwd3socdr0" path="res://assets/ui_icons/visibility.png" id="5_6q35d"]
+[ext_resource type="Texture2D" uid="uid://b2ucwghxcyr4r" path="res://assets/ui_icons/debugger.png" id="7_5ej46"]
+[ext_resource type="Texture2D" uid="uid://8hn80lnj30o4" path="res://assets/ui_icons/spawn_car.png" id="7_m3u2b"]
+
+[node name="SpawnerBuildingPopupView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 1.0
+offset_right = -752.0
+offset_bottom = -407.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_t7dsu")
+script = ExtResource("2_5mnhb")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="MainFlowContainer" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="HeaderBoxContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeaderTitle" type="Label" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+text = "Building"
+
+[node name="IdLabel" type="Label" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "#1"
+
+[node name="PinButton" type="Button" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("3_7ndyp")
+flat = true
+
+[node name="CloseButton" type="Button" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("4_wfymr")
+flat = true
+
+[node name="MainContentContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="PropertiesContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="ToolBoxPanel" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+
+[node name="ToggleDebugButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("5_6q35d")
+flat = true
+
+[node name="DebuggerButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("7_5ej46")
+flat = true
+
+[node name="SpawnCarButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("7_m3u2b")
+flat = true

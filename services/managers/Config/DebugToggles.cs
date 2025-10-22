@@ -29,6 +29,8 @@ public partial class DebugToggles : GodotObject
 
     public bool DrawLaneUsage { get; private set; } = false;
 
+    public bool DrawBuildingConnections { get; private set; } = false;
+
     public void SetToggle(string toggleName, bool value)
     {
         var property = GetType()

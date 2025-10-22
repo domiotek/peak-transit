@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using PT.DependencyProvider;
@@ -36,7 +37,7 @@ public class AStarPathing
         "NetworkManager"
     );
 
-    private static readonly Dictionary<int, NetSegment> _segmentCache = new();
+    private static readonly ConcurrentDictionary<int, NetSegment> _segmentCache = new();
 
     public static void ClearCache()
     {
@@ -47,11 +48,12 @@ public class AStarPathing
         _segmentCache.Clear();
     }
 
-    public static List<PathStep> FindPathAStar(
+    public static (List<PathStep> path, float totalCost) FindPathAStar(
         NetGraph graph,
         int startNodeId,
         int endNodeId,
-        int? forcedStartEndpointId
+        int? forcedStartEndpointId,
+        int? forcedEndEndpointId
     )
     {
         if (!graph.ContainsNode(startNodeId) || !graph.ContainsNode(endNodeId))
@@ -61,7 +63,7 @@ public class AStarPathing
 
         if (startNodeId == endNodeId)
         {
-            return [];
+            return (new List<PathStep>(), 0.0f);
         }
 
         var startGraphNode = graph.GetNode(startNodeId);
@@ -108,12 +110,21 @@ public class AStarPathing
 
             if (currentNode.NodeId == endNodeId)
             {
-                if (bestSolution == null || currentNode.GCost < bestSolution.GCost)
+                if (
+                    forcedEndEndpointId == null
+                    || currentNode.FromEndpointId == forcedEndEndpointId
+                )
                 {
-                    bestSolution = currentNode;
-                    bestSolutionNodes = GetNodesInPath(bestSolution);
+                    if (bestSolution == null || currentNode.GCost < bestSolution.GCost)
+                    {
+                        bestSolution = currentNode;
+                        bestSolutionNodes = GetNodesInPath(bestSolution);
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
-                continue;
             }
 
             if (
@@ -157,7 +168,7 @@ public class AStarPathing
 
         if (bestSolution != null)
         {
-            return ReconstructPath(bestSolution);
+            return (ReconstructPath(bestSolution), bestSolution.GCost);
         }
 
         throw new InvalidOperationException(

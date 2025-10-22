@@ -47,12 +47,12 @@ func _ready():
 	navigator.connect("trip_ended", Callable(self, "_on_trip_ended"))
 	navigator.setup(self)
 
-func init_trip(from: int, to: int) -> void:
-	if from == to:
-		push_error("Invalid trip: Start and end nodes are the same for vehicle ID %d" % id)
+func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
+	if from_building == to_building:
+		push_error("Invalid trip: Start and end buildings are the same for vehicle ID %d" % id)
 		return
 
-	navigator.setup_trip(from, to)
+	navigator.setup_trip_between_buildings(from_building, to_building)
 
 func get_popup_data() -> Dictionary:
 	var data = {
@@ -62,7 +62,8 @@ func get_popup_data() -> Dictionary:
 		"state": Driver.VehicleState.keys()[driver.state],
 		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
 		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,
-		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")]
+		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")],
+		"time_blocked": driver.get_time_blocked(),
 	}
 
 	return data
@@ -96,14 +97,23 @@ func _process(delta: float) -> void:
 	path_follower.progress_ratio += delta * current_speed / trail_length
 	self.global_transform = path_follower.global_transform
 
-	if path_follower.progress_ratio >= 1.0:
+	if path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
 		navigator.complete_current_step()
 
 func _on_trip_started() -> void:
 	body_area.connect("input_event", Callable(self, "_on_input_event"))
 	collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
-	self.position = (navigator.get_current_step()["path"] as Curve2D).get_point_position(0)
-	self.visible = true
+	
+	var starts_at_building = navigator.current_step["type"] == Navigator.StepType.BUILDING
+
+	if starts_at_building:
+		var building_pos = navigator.current_step["connection"]["from"]
+		self.position = building_pos
+		var lane = navigator.current_step["connection"]["lane"] as NetLane
+		self.rotation = line_helper.rotate_perpendicular_to_curve(lane.get_curve(), building_pos)
+	else:
+		self.position = (navigator.get_current_step()["path"] as Curve2D).get_point_position(0)
+	set_deferred("visible", true)
 	collision_area.monitoring = true
 	collision_area.monitorable = true
 	collision_area.get_child(0).set_deferred("disabled", false)
@@ -143,3 +153,11 @@ func _on_driver_state_changed(new_state: Driver.VehicleState) -> void:
 			line.default_color = Color.RED
 		_:
 			line.default_color = Color.WHITE
+
+func _check_for_building_entry() -> bool:
+	if not navigator.current_step.has("building_to_enter"):
+		return false
+
+	var trigger_distance = navigator.current_step["building_to_enter"]["trigger_distance"]
+
+	return path_follower.progress >= trigger_distance

@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://c887dwgwjx85k"]
+
+[ext_resource type="Script" uid="uid://cjo8ju536huks" path="res://game-objects/buildings/collision-zone/collision_zone.gd" id="1_rmhr1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_svkmx"]
+size = Vector2(22, 20)
+
+[node name="CollisionZone" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("1_rmhr1")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="."]
+position = Vector2(-11, 0)
+shape = SubResource("RectangleShape2D_svkmx")
+
+[node name="DebugShape" type="Polygon2D" parent="."]
+visible = false
+position = Vector2(-15, 0)
+color = Color(1, 0.377991, 0.31005, 1)
+polygon = PackedVector2Array(-7, -10, 15, -10, 15, 10, -7, 10)

@@ -2,6 +2,7 @@ extends Node2D
 class_name NetSegment
 
 var NET_LANE = preload("res://game-objects/network/net-lane/net_lane.tscn")
+var BUILDING = preload("res://game-objects/buildings/base-building/base-building.tscn")
 
 @onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 
@@ -19,6 +20,8 @@ var total_lanes: int = 0
 var is_asymetric: bool = false
 var max_lanes_relation_idx: int = -1
 
+var buildings: Array[int] = []
+
 var endpoints: Array[int] = []
 var endpoints_mappings: Dictionary[int, int] = {}
 
@@ -26,7 +29,8 @@ var endpoints_mappings: Dictionary[int, int] = {}
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
 
-var line_helper
+var line_helper: LineHelper
+var buildings_manager: BuildingsManager
 
 func _ready() -> void:		
 	var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
@@ -38,6 +42,7 @@ func _ready() -> void:
 
 func setup(segment_id: int, start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
 	id = segment_id
 	data = segment_info
 
@@ -61,6 +66,7 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		return
 
 	var relation = NetRelation.new()
+	var relation_id = relations.size()
 
 	relation.StartNode = start_node
 	relation.EndNode = target_node
@@ -82,6 +88,32 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		lane.setup(lanes.size(), self, lane_info, offset, relations.size() - 1)
 		add_child(lane)
 		lanes.append(lane)
+
+	for i in range(relation.ConnectionInfo.Buildings.size()):
+		var building_info = relation.ConnectionInfo.Buildings[i]
+		var curve_offset = building_info.OffsetPosition
+		var horizontal_offset;
+
+		if starts_from_end:
+			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2) - NetworkConstants.BUILDING_ROAD_OFFSET
+			curve_offset = curve_shape.get_baked_length() - curve_offset
+		else:
+			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + NetworkConstants.BUILDING_ROAD_OFFSET
+
+		var building = buildings_manager.create_spawner_building(building_info)
+		building.setup(relation_id, self, building_info)
+		var point = line_helper.get_point_along_curve(curve_shape, curve_offset, horizontal_offset)
+
+		building.position = point
+		building.rotation = line_helper.rotate_along_curve(curve_shape, point)
+
+		if not starts_from_end:
+			building.rotation += PI
+
+		buildings.append(building.id)
+		add_child(building)
+
+		
 
 
 func update_visuals() -> void:
@@ -118,7 +150,6 @@ func update_visuals() -> void:
 	main_road_layer.width = total_lanes * NetworkConstants.LANE_WIDTH
 
 	_update_markings_layer()
-
 	_update_debug_layer()
 
 func late_update_visuals() -> void:
@@ -148,6 +179,12 @@ func get_relation_of_lane(lane_id: int) -> NetRelation:
 		return null
 
 	return relations[relation_id]
+
+func get_other_relation_idx(relation_idx: int) -> int:
+	if relation_idx < 0 or relation_idx >= relations.size():
+		push_error("Invalid relation index: " + str(relation_idx))
+		return -1
+	return 1 - relation_idx
 
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes:
