@@ -1,7 +1,11 @@
 extends RefCounted
 class_name VehicleManager
 
-var VEHICLE = preload("res://game-objects/vehicles/vehicle.tscn")
+var CAR = preload("res://game-objects/vehicles/car/car.tscn")
+
+enum VEHICLE_TYPE {
+	CAR
+}
 
 var game_manager: GameManager
 
@@ -20,8 +24,16 @@ func set_vehicles_layer(layer: Node2D) -> void:
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
 
-func create_vehicle() -> Vehicle:
-	var vehicle = VEHICLE.instantiate()
+func create_vehicle(vehicle_type: VEHICLE_TYPE) -> Vehicle:
+
+	var vehicle: Vehicle
+
+	match vehicle_type:
+		VEHICLE_TYPE.CAR:
+			vehicle = CAR.instantiate()
+		_:
+			push_error("Unknown vehicle type: %d" % vehicle_type)
+			return null
 
 	vehicle.id = _generate_vehicle_id()
 

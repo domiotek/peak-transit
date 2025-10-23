@@ -119,6 +119,11 @@ func clean_up() -> void:
 	elif current_step["type"] == StepType.NODE:
 		var node = current_step["node"]
 		node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
+	elif current_step["type"] == StepType.BUILDING:
+		if current_step["is_leaving"]:
+			current_step["target_building"].notify_vehicle_left()
+		else:
+			current_step["target_building"].notify_vehicle_entered(vehicle)
 
 func abandon_trip() -> void:
 	clean_up()
