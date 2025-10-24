@@ -320,7 +320,7 @@ func get_connecting_curve(curve1: Curve2D, curve2: Curve2D) -> Curve2D:
 		start_direction_2 = (sample_pos - start_pos_2).normalized()
 
 	if distance < NetworkConstants.SHARP_LANE_CONNECTION_THRESHOLD:
-		var handle_strength = distance * 0.2
+		var handle_strength = distance * 0.6
 		
 		connecting_curve.add_point(end_pos_1)
 		connecting_curve.set_point_out(0, end_direction_1 * handle_strength)
