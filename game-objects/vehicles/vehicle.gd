@@ -70,7 +70,7 @@ func get_popup_data() -> Dictionary:
 		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
 		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,
 		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")],
-		"time_blocked": driver.get_time_blocked(),
+		"time_blocked": int(driver.get_time_blocked())
 	}
 
 	return data
