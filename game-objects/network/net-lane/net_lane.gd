@@ -158,7 +158,7 @@ func get_vehicles_stats() -> Dictionary:
 func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 	var count = 0
 
-	var is_node_at_start = segment.nodes[0].id == node_id
+	var is_node_at_start = get_endpoint_by_id(from_endpoint).NodeId == node_id
 
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle):

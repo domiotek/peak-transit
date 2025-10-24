@@ -23,7 +23,7 @@ var MIN_PHASE_DURATION_SCALER: float = 0.1
 var LONG_PHASE_DURATION: float = 90.0
 var SHORT_PHASE_DURATION: float = 60.0
 var LOW_FLOW_THRESHOLD: int = 10
-var FLOW_SCAN_DISTANCE: float = 50.0
+var FLOW_SCAN_DISTANCE: float = 250.0
 
 var game_manager: GameManager
 var segment_helper: SegmentHelper
