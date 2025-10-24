@@ -380,7 +380,7 @@ func _apply_caster_colliding(caster_id: String, colliding_casters: Dictionary) -
 	match caster_id:
 		"close":
 			target_speed = 0.0
-			current_brake_force = constants["MEDIUM_BRAKING"]
+			current_brake_force = constants["CLOSE_BRAKING"] if current_speed < constants["CLOSE_BRAKING_LOW_SPEED_THRESHOLD"] else constants["EMERGENCY_BRAKING"]
 		"medium":
 			target_speed = max(constants["MEDIUM_CASTER_MIN_SPEED"], target_speed * constants["MEDIUM_CASTER_SPEED_MODIFIER"])
 			current_brake_force = constants["MEDIUM_BRAKING"]
