@@ -14,6 +14,7 @@ var CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
 var MAX_BLOCK_TIME = 5.0
 
 var line_helper: LineHelper
+var vehicle_manager: VehicleManager
 
 
 var ai = null
@@ -48,6 +49,7 @@ func set_ai(used_ai) -> void:
 	current_brake_force = constants["DEFAULT_BRAKING"]
 
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 
 func set_navigator(used_navigator) -> void:
 	navigator = used_navigator
@@ -159,7 +161,7 @@ func check_blockade_cleared(delta: float) -> bool:
 
 	if not unblocked and colliders.size() > 0:
 		for collider in colliders:
-			var other_vehicle = collider.get_parent() as Vehicle
+			var other_vehicle = vehicle_manager.get_vehicle_from_area(collider)
 
 			if other_vehicle:
 				if is_entering_building and _check_if_is_leaving_target_building(other_vehicle):
@@ -170,7 +172,7 @@ func check_blockade_cleared(delta: float) -> bool:
 				var their_colliders = other_vehicle.driver.get_blocking_objects()
 
 				for their_collider in their_colliders:
-					var their_colliding_vehicle = their_collider.get_parent() as Vehicle if their_collider else null
+					var their_colliding_vehicle = vehicle_manager.get_vehicle_from_area(their_collider)
 
 					if not their_colliding_vehicle:
 						continue
@@ -331,7 +333,7 @@ func _check_caster_colliding(caster_id: String) -> bool:
 				if laneStopper:
 					return check_if_my_blockade.call(laneStopper)
 
-				var other_vehicle = casters[caster_id].get_collider().get_parent() as Vehicle
+				var other_vehicle = vehicle_manager.get_vehicle_from_area(casters[caster_id].get_collider())
 				if other_vehicle:
 					var other_vehicle_current_step = other_vehicle.navigator.get_current_step()
 						
@@ -361,7 +363,7 @@ func _check_caster_colliding(caster_id: String) -> bool:
 
 				var collider = caster.get_collider()
 				if collider:
-					var other_vehicle = collider.get_parent() as Vehicle
+					var other_vehicle = vehicle_manager.get_vehicle_from_area(collider)
 					if other_vehicle and line_helper.curves_intersect(current_step["path"], other_vehicle.navigator.get_current_step()["path"], 10):
 						return true
 
@@ -378,7 +380,7 @@ func _apply_caster_colliding(caster_id: String, colliding_casters: Dictionary) -
 	match caster_id:
 		"close":
 			target_speed = 0.0
-			current_brake_force = constants["EMERGENCY_BRAKING"]
+			current_brake_force = constants["MEDIUM_BRAKING"]
 		"medium":
 			target_speed = max(constants["MEDIUM_CASTER_MIN_SPEED"], target_speed * constants["MEDIUM_CASTER_SPEED_MODIFIER"])
 			current_brake_force = constants["MEDIUM_BRAKING"]

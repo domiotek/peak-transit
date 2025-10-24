@@ -81,6 +81,18 @@ func remove_vehicle(vehicle_id: int) -> void:
 func vehicles_count() -> int:
 	return vehicles.size()
 
+func get_vehicle_from_area(area: Area2D) -> Vehicle:
+	if not area:
+		return null
+
+	var first_parent = area.get_parent()
+
+	if first_parent is Vehicle:
+		return first_parent as Vehicle
+	elif first_parent.get_parent() is Vehicle:
+		return first_parent.get_parent() as Vehicle
+	return null
+
 func _generate_vehicle_id() -> int:
 	if freed_ids_pool.size() > 0:
 		return freed_ids_pool.pop_back()
