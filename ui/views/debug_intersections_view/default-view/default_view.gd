@@ -54,7 +54,7 @@ func _process(_delta: float) -> void:
 		var stopper = child.get_data().get("stopper", null)
 		child.update_support_text("Is blocking: %s" % stopper.is_active())
 
-func _on_debug_button_pressed(_data: Dictionary) -> void:
+func _on_debug_button_pressed() -> void:
 	if not is_bound or not node:
 		return
 	game_manager.set_selection(node, GameManager.SelectionType.NODE)

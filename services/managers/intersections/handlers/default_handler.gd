@@ -17,7 +17,7 @@ var conflicting_paths: Dictionary = {}
 
 var halted_vehicles: Dictionary = {}
 
-
+var game_manager: GameManager
 var network_manager: NetworkManager
 var line_helper: LineHelper
 
@@ -31,6 +31,7 @@ func setup(_node: RoadNode, new_stoppers: Array) -> void:
 
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	game_manager = GDInjector.inject("GameManager") as GameManager
 
 	_fill_curves()
 	for stopper in new_stoppers:
@@ -48,6 +49,10 @@ func process_tick(_delta: float) -> void:
 		stopper.set_active(stopper_activated)
 
 func process_stopper(stopper: LaneStopper) -> bool:
+	if game_manager.try_hit_debug_pick(stopper):
+		print("Debug pick triggered for stopper at endpoint ID %d" % stopper.endpoint.Id)
+		breakpoint
+
 	var lane = stopper.get_lane()
 	var approaching_vehicle = lane.get_first_vehicle()
 
