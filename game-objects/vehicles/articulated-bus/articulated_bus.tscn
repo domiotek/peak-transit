@@ -213,5 +213,5 @@ position = Vector2(-3, 0)
 shape = SubResource("RectangleShape2D_xwv6l")
 
 [node name="PathFollower" type="PathFollow2D" parent="Trailer" index="3"]
-position = Vector2(-41, 0)
+position = Vector2(-45, 0)
 loop = false

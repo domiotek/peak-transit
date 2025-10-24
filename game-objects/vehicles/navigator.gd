@@ -380,6 +380,8 @@ func _create_segment_step(lane: NetLane) -> Dictionary:
 
 	var step = {
 		"type": StepType.SEGMENT,
+		"segment_id": lane.segment.id,
+		"lane_id": lane.id,
 		"path": lane.trail.curve,
 		"length": lane.trail.curve.get_baked_length(),
 		"progress": 0.0,

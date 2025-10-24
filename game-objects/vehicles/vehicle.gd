@@ -131,9 +131,20 @@ func _process(delta: float) -> void:
 		var trailer_path = (path_follower.get_parent() as Path2D).curve
 
 		path_follower.progress_ratio += delta * current_speed / trailer_path.get_baked_length()
-		var trailer_rotation = path_follower.global_rotation
+		var trailer_direction = path_follower.global_rotation
+	
+		var vehicle_direction = self.global_rotation
+		var desired_trailer_rotation = trailer_direction - vehicle_direction
+		
+		while desired_trailer_rotation > PI:
+			desired_trailer_rotation -= 2 * PI
+		while desired_trailer_rotation < -PI:
+			desired_trailer_rotation += 2 * PI
 
-		target_body.global_rotation = trailer_rotation
+		var max_articulation = deg_to_rad(90.0)
+		var articulation_angle = clamp(desired_trailer_rotation, -max_articulation, max_articulation)
+
+		target_body.rotation = articulation_angle
 
 	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
 		navigator.complete_current_step()

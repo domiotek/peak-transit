@@ -130,6 +130,19 @@ func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
 	var from_segment_id = network_manager.get_lane_endpoint(in_id).SegmentId
 	return segment_priorities.get(from_segment_id, Enums.IntersectionPriority.YIELD)
 
+func get_connection_details(in_id: int, out_id: int) -> Dictionary:
+	var source_endpoint = network_manager.get_lane_endpoint(in_id)
+	var dest_endpoint = network_manager.get_lane_endpoint(out_id)
+
+	return {
+		"source": source_endpoint,
+		"source_segment": network_manager.get_segment(source_endpoint.SegmentId),
+		"source_lane": network_manager.get_segment(source_endpoint.SegmentId).get_lane(source_endpoint.LaneId),
+		"destination": dest_endpoint,
+		"destination_segment": network_manager.get_segment(dest_endpoint.SegmentId),
+		"destination_lane": network_manager.get_segment(dest_endpoint.SegmentId).get_lane(dest_endpoint.LaneId)
+	}
+
 func get_destination_endpoints(from_endpoint_id: int) -> Array:
 	return connections.get(from_endpoint_id, [])
 
