@@ -168,7 +168,7 @@ func check_blockade_cleared(delta: float) -> bool:
 					if not their_colliding_vehicle:
 						continue
 				
-					if their_colliding_vehicle == self.owner || colliders.has(self.owner.collision_area):
+					if their_colliding_vehicle == self.owner:
 						unblocked = true
 						no_caster_allowance_time = 1.0
 						break
@@ -283,6 +283,9 @@ func _get_colliding_casters() -> Dictionary:
 
 func _check_caster_colliding(caster_id: String) -> bool:
 	var current_step = navigator.get_current_step()
+	
+	if casters[caster_id].get_collider() == null:
+		return false
 
 	var check_if_my_blockade = func (collider: LaneStopper) -> bool:
 		var my_endpoint_id: int
@@ -297,6 +300,7 @@ func _check_caster_colliding(caster_id: String) -> bool:
 	match caster_id:
 		"close", "medium", "long":
 			if casters[caster_id].is_colliding():
+				
 				var laneStopper = casters[caster_id].get_collider() as LaneStopper
 				if laneStopper:
 					return check_if_my_blockade.call(laneStopper)

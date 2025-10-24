@@ -107,7 +107,7 @@ func get_remaining_space() -> float:
 		assigned_vehicles.pop_back()
 		return get_remaining_space()
 
-	return last_vehicle.path_follower.progress if last_vehicle else trail.curve.get_baked_length()
+	return last_vehicle.main_path_follower.progress if last_vehicle else trail.curve.get_baked_length()
 
 func get_first_vehicle() -> Vehicle:
 	var first_vehicle = assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
@@ -164,7 +164,7 @@ func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 		if not is_instance_valid(vehicle):
 			continue
 
-		var vehicle_distance = vehicle.path_follower.progress if is_node_at_start else trail.curve.get_baked_length() - vehicle.path_follower.progress
+		var vehicle_distance = vehicle.main_path_follower.progress if is_node_at_start else trail.curve.get_baked_length() - vehicle.main_path_follower.progress
 		if vehicle_distance <= distance:
 			count += 1
 

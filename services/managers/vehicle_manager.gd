@@ -2,9 +2,13 @@ extends RefCounted
 class_name VehicleManager
 
 var CAR = preload("res://game-objects/vehicles/car/car.tscn")
+var BUS = preload("res://game-objects/vehicles/bus/bus.tscn")
+var ARTICULATED_BUS = preload("res://game-objects/vehicles/articulated-bus/articulated_bus.tscn")
 
 enum VEHICLE_TYPE {
-	CAR
+	CAR,
+	BUS,
+	ARTICULATED_BUS
 }
 
 var game_manager: GameManager
@@ -31,6 +35,10 @@ func create_vehicle(vehicle_type: VEHICLE_TYPE) -> Vehicle:
 	match vehicle_type:
 		VEHICLE_TYPE.CAR:
 			vehicle = CAR.instantiate()
+		VEHICLE_TYPE.BUS:
+			vehicle = BUS.instantiate()
+		VEHICLE_TYPE.ARTICULATED_BUS:
+			vehicle = ARTICULATED_BUS.instantiate()
 		_:
 			push_error("Unknown vehicle type: %d" % vehicle_type)
 			return null

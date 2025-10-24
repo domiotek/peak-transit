@@ -18,6 +18,8 @@ signal trip_abandoned(vehicle_id)
 
 var config: Dictionary
 
+var main_path_follower: PathFollow2D
+
 
 func _ready():
 	driver.set_owner(self)
@@ -28,6 +30,8 @@ func _ready():
 		push_error("Vehicle ID %d has no config assigned!" % id)
 		return
 	config = vehicle_config
+
+	main_path_follower = config["path_followers"][0]["follower"]
 	
 	driver.set_ai(config["ai"])
 	driver.set_navigator(navigator)
@@ -50,6 +54,13 @@ func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 
 	navigator.setup_trip_between_buildings(from_building, to_building)
 
+func init_simple_trip(from_node_id: int, to_node_id: int) -> void:
+	if from_node_id == to_node_id:
+		push_error("Invalid trip: Start and end nodes are the same for vehicle ID %d" % id)
+		return
+
+	navigator.setup_trip(from_node_id, to_node_id)
+
 func get_popup_data() -> Dictionary:
 	var data = {
 		"speed": driver.get_current_speed(),
@@ -69,6 +80,10 @@ func get_total_progress() -> float:
 
 func get_all_trip_curves() -> Array:
 	return navigator.get_trip_curves()
+
+func assign_to_path(path: Path2D, progress: float) -> void:
+	main_path_follower.reparent(path, true)
+	main_path_follower.progress = progress
 
 func _process(delta: float) -> void:
 	if game_manager.is_debug_pick_enabled() && game_manager.try_hit_debug_pick(self):
@@ -90,11 +105,37 @@ func _process(delta: float) -> void:
 
 	var current_speed = driver.tick_speed(delta)
 
-	for path_follower in config["path_followers"]:
-		path_follower.progress_ratio += delta * current_speed / trail_length
-		self.global_transform = path_follower.global_transform
+	main_path_follower.progress_ratio += delta * current_speed / trail_length
+	self.global_transform = main_path_follower.global_transform
+	
+	for path_follower_def in config["path_followers"]:
+		var path_follower = path_follower_def["follower"]
+		if path_follower == main_path_follower:
+			continue
 
-	if config["path_followers"][0].progress_ratio >= 1.0 or _check_for_building_entry():
+		var target_body = path_follower_def["body"]
+
+		var is_initialized = path_follower.get_parent() != target_body
+
+		if not is_initialized and main_path_follower.progress < path_follower_def["offset"]:
+			continue
+		
+		if not is_initialized or path_follower.progress_ratio == 1.0:
+			var next_path = navigator.get_next_path(path_follower.get_parent() as Path2D)
+			if not next_path:
+				next_path = main_path_follower.get_parent() as Path2D
+				
+			path_follower.reparent(next_path, true)
+			path_follower.progress = 0
+
+		var trailer_path = (path_follower.get_parent() as Path2D).curve
+
+		path_follower.progress_ratio += delta * current_speed / trailer_path.get_baked_length()
+		var trailer_rotation = path_follower.global_rotation
+
+		target_body.global_rotation = trailer_rotation
+
+	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
 		navigator.complete_current_step()
 
 func _on_trip_started() -> void:
@@ -134,6 +175,9 @@ func _on_input_event(_viewport, event, _shape_idx) -> void:
 		game_manager.set_selection(self, GameManager.SelectionType.VEHICLE)
 
 func _on_body_area_body_entered(_body) -> void:
+	if config["collision_areas"].has(_body):
+		return
+
 	driver.emergency_stop()
 
 func _on_caster_state_changed(caster_id: String, is_colliding: bool) -> void:
@@ -163,7 +207,7 @@ func _check_for_building_entry() -> bool:
 
 	var trigger_distance = navigator.current_step["building_to_enter"]["trigger_distance"]
 
-	return config["path_followers"][0].progress >= trigger_distance
+	return main_path_follower.progress >= trigger_distance
 
 
 func _get_vehicle_config() -> Variant:
