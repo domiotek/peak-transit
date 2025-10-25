@@ -178,14 +178,14 @@ func _check_entering_vehicles(delta: float) -> void:
 		if not is_on_other_relation:
 			continue
 
-		if vehicle.driver.get_time_blocked() > 5.0:
+		if vehicle.driver.get_time_blocked() > BuildingConstants.BUILDING_SOFT_ENTRY_BLOCKADE_TIME:
 			sympathetic_stopper.set_active(true)
 
 			var collision_zone = out_connection_zones_mapping.get(target_relation_dest_endpoint_id, null)[0]
 			if not collision_zone.has_vehicles_inside(vehicle):
 				sympathy_without_benefit_timer += delta
 
-			if sympathy_without_benefit_timer > 10.0 or vehicle.driver.get_time_blocked() > 50.0:
+			if sympathy_without_benefit_timer > BuildingConstants.BUILDING_SYMPATHY_WITHOUT_BENEFIT_TIMEOUT or vehicle.driver.get_time_blocked() > BuildingConstants.BUILDING_MAX_ENTERING_VEHICLE_BLOCKADE_TIME:
 				vehicle.driver.grant_no_caster_allowance(2.0)
 
 			return
@@ -201,7 +201,7 @@ func _check_leaving_vehicle() -> void:
 
 	var path_progress_percent = current_step["progress"] / current_step["length"] * 100.0
 
-	if path_progress_percent > 10.0 and vehicle_leaving.driver.get_time_blocked() > 20.0:
+	if path_progress_percent > BuildingConstants.BUILDING_VEHICLE_LEFT_PREMISE_PROGRESS_THRESHOLD and vehicle_leaving.driver.get_time_blocked() > BuildingConstants.BUILDING_MAX_LEAVING_VEHICLE_BLOCKADE_TIME:
 		vehicle_leaving.navigator.abandon_trip()
 
 
@@ -220,7 +220,7 @@ func _create_connection(lane: NetLane, building_endpoint: Vector2, is_forward: b
 	var lane_curve = lane.get_curve()
 	var point_on_lane = lane_curve.get_closest_point(building_endpoint)
 	var distance_along_lane = lane_curve.get_closest_offset(point_on_lane)
-	var connection_distance = NetworkConstants.BUILDING_CONNECTION_OFFSET if is_forward else -NetworkConstants.BUILDING_CONNECTION_OFFSET
+	var connection_distance = BuildingConstants.BUILDING_CONNECTION_OFFSET if is_forward else -BuildingConstants.BUILDING_CONNECTION_OFFSET
 	var connection_point = lane_curve.sample_baked(distance_along_lane + connection_distance)
 
 	var direction_multiplier = 1 if !is_forward else -1
@@ -228,14 +228,14 @@ func _create_connection(lane: NetLane, building_endpoint: Vector2, is_forward: b
 	var connecting_curve: Curve2D
 	if not is_same_relation:
 		if is_forward:
-			connecting_curve = line_helper.calc_curve_asymmetric(to_local(building_endpoint), to_local(connection_point), 0, NetworkConstants.BUILDING_CONNECTION_CURVATURE, -1 * direction_multiplier)
+			connecting_curve = line_helper.calc_curve_asymmetric(to_local(building_endpoint), to_local(connection_point), 0, BuildingConstants.BUILDING_CONNECTION_CURVATURE, -1 * direction_multiplier)
 		else:
-			connecting_curve = line_helper.calc_curve_asymmetric(to_local(connection_point), to_local(building_endpoint), NetworkConstants.BUILDING_CONNECTION_CURVATURE, 0, direction_multiplier)
+			connecting_curve = line_helper.calc_curve_asymmetric(to_local(connection_point), to_local(building_endpoint), BuildingConstants.BUILDING_CONNECTION_CURVATURE, 0, direction_multiplier)
 	else:
 		if is_forward:
-			connecting_curve = line_helper.calc_curve(to_local(building_endpoint), to_local(connection_point), NetworkConstants.BUILDING_CONNECTION_CURVATURE, direction_multiplier)
+			connecting_curve = line_helper.calc_curve(to_local(building_endpoint), to_local(connection_point), BuildingConstants.BUILDING_CONNECTION_CURVATURE, direction_multiplier)
 		else:
-			connecting_curve = line_helper.calc_curve(to_local(connection_point), to_local(building_endpoint), NetworkConstants.BUILDING_CONNECTION_CURVATURE, -1 * direction_multiplier)
+			connecting_curve = line_helper.calc_curve(to_local(connection_point), to_local(building_endpoint), BuildingConstants.BUILDING_CONNECTION_CURVATURE, -1 * direction_multiplier)
 
 	var path = Path2D.new()
 	path.curve = connecting_curve

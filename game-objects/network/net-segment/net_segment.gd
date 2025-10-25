@@ -95,10 +95,10 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		var horizontal_offset;
 
 		if starts_from_end:
-			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2) - NetworkConstants.BUILDING_ROAD_OFFSET
+			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2) - BuildingConstants.BUILDING_ROAD_OFFSET
 			curve_offset = curve_shape.get_baked_length() - curve_offset
 		else:
-			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + NetworkConstants.BUILDING_ROAD_OFFSET
+			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + BuildingConstants.BUILDING_ROAD_OFFSET
 
 		var building = buildings_manager.create_spawner_building(building_info)
 		building.setup(relation_id, self, building_info)
