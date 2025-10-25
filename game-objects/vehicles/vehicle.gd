@@ -85,6 +85,12 @@ func assign_to_path(path: Path2D, progress: float) -> void:
 	main_path_follower.reparent(path, true)
 	main_path_follower.progress = progress
 
+func _physics_process(_delta: float) -> void:
+	if driver.just_enabled_casters:
+		driver.just_enabled_casters = false
+		return
+
+
 func _process(delta: float) -> void:
 	if game_manager.is_debug_pick_enabled() && game_manager.try_hit_debug_pick(self):
 		print("Debug pick triggered for vehicle ID %d" % id)
@@ -95,7 +101,6 @@ func _process(delta: float) -> void:
 
 	if driver.state == Driver.VehicleState.BLOCKED:
 		if driver.just_enabled_casters:
-			driver.just_enabled_casters = false
 			return
 
 		driver.check_blockade_cleared(delta)

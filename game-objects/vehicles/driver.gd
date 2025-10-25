@@ -11,6 +11,7 @@ enum VehicleState {
 }
 
 var CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
+var BLOCKING_CASTERS = ["close", "left", "right"]
 var MAX_BLOCK_TIME = 5.0
 
 var line_helper: LineHelper
@@ -97,7 +98,11 @@ func get_blocking_objects() -> Array:
 	_set_casters_enabled(true)
 
 	var colliders = []
-	for caster in casters.values():
+	for caster_id in casters.keys():
+		if caster_id not in BLOCKING_CASTERS:
+			continue
+
+		var caster = casters[caster_id]
 		if caster.is_colliding():
 			var collider = caster.get_collider()
 			if collider:
@@ -113,6 +118,7 @@ func emergency_stop() -> void:
 func grant_no_caster_allowance(time_seconds: float) -> void:
 	no_caster_allowance_time = time_seconds
 	_set_casters_enabled(false)
+	_on_blockade_area_exited(null)
 
 func get_time_blocked() -> float:
 	return time_blocked
@@ -158,6 +164,7 @@ func check_blockade_cleared(delta: float) -> bool:
 		no_caster_allowance_time = 1.0
 
 	var is_entering_building = current_step["type"] == Navigator.StepType.BUILDING and current_step["is_entering"]
+	var is_leaving_building = current_step["type"] == Navigator.StepType.BUILDING and current_step["is_leaving"]
 
 	if not unblocked and colliders.size() > 0:
 		for collider in colliders:
@@ -187,7 +194,7 @@ func check_blockade_cleared(delta: float) -> bool:
 				unblocked = true
 
 			var building_stopper = collider as BuildingStopper
-			if building_stopper && is_entering_building:
+			if building_stopper && not is_leaving_building:
 				unblocked = true
 
 			if unblocked:
