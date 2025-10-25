@@ -8,6 +8,7 @@ var CONFLICT_ZONE_OFFSET = 50.0
 var SPACE_AHEAD_REQUIRED = 50.0
 
 var network_manager: NetworkManager
+var game_manager: GameManager
 
 var stoppers: Array = []
 var node: RoadNode
@@ -15,6 +16,7 @@ var node: RoadNode
 
 func setup(_node: RoadNode, new_stoppers: Array) -> void:
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	game_manager = GDInjector.inject("GameManager") as GameManager
 	stoppers = new_stoppers
 	node = _node
 
@@ -27,6 +29,10 @@ func process_tick(_delta: float) -> void:
 		stopper.set_active(stopper_activated)
 
 func process_stopper(stopper: LaneStopper) -> bool:
+	if game_manager.try_hit_debug_pick(stopper):
+		print("Debug pick triggered for stopper at endpoint ID %d" % stopper.endpoint.Id)
+		breakpoint
+
 	var lane = stopper.get_lane()
 	var approaching_vehicle = lane.get_first_vehicle()
 

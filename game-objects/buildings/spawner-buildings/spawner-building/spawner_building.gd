@@ -47,7 +47,7 @@ func spawn_vehicle() -> void:
 		return
 
 
-	var vehicle = vehicle_manager.create_vehicle()
+	var vehicle = vehicle_manager.create_vehicle(VehicleManager.VEHICLE_TYPE.CAR)
 
 	vehicle.trip_abandoned.connect(Callable(self, "_vehicle_routing_failed"))
 
@@ -64,12 +64,10 @@ func get_popup_data() -> Dictionary:
 		"has_vehicle_entering": vehicles_entering.size() > 0
 	}
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if game_manager.try_hit_debug_pick(self):
 		print("Debug pick triggered for spawner building ID %d" % id)
 		breakpoint
-
-	super._process(delta)
 
 	if not simulation_manager.is_simulation_running():
 		return

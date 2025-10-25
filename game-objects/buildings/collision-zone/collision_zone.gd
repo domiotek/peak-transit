@@ -6,6 +6,8 @@ class_name CollisionZone
 @onready var collision_shape: CollisionShape2D = $CollisionShape
 @onready var debug_shape: Polygon2D = $DebugShape
 
+@onready var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
+
 
 func set_size_scale(scale_factor: float) -> void:
 	self.scale = Vector2(scale_factor, 1.0)
@@ -15,7 +17,7 @@ func has_vehicles_inside(other_than: Vehicle) -> bool:
 
 	for body in overlapping_bodies:
 		if body.get_parent() != other_than:
-			var vehicle = body.get_parent() as Vehicle
+			var vehicle = vehicle_manager.get_vehicle_from_area(body)
 
 			if not vehicle:
 				continue

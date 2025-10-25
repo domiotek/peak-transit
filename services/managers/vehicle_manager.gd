@@ -1,7 +1,15 @@
 extends RefCounted
 class_name VehicleManager
 
-var VEHICLE = preload("res://game-objects/vehicles/vehicle.tscn")
+var CAR = preload("res://game-objects/vehicles/car/car.tscn")
+var BUS = preload("res://game-objects/vehicles/bus/bus.tscn")
+var ARTICULATED_BUS = preload("res://game-objects/vehicles/articulated-bus/articulated_bus.tscn")
+
+enum VEHICLE_TYPE {
+	CAR,
+	BUS,
+	ARTICULATED_BUS
+}
 
 var game_manager: GameManager
 
@@ -20,8 +28,20 @@ func set_vehicles_layer(layer: Node2D) -> void:
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
 
-func create_vehicle() -> Vehicle:
-	var vehicle = VEHICLE.instantiate()
+func create_vehicle(vehicle_type: VEHICLE_TYPE) -> Vehicle:
+
+	var vehicle: Vehicle
+
+	match vehicle_type:
+		VEHICLE_TYPE.CAR:
+			vehicle = CAR.instantiate()
+		VEHICLE_TYPE.BUS:
+			vehicle = BUS.instantiate()
+		VEHICLE_TYPE.ARTICULATED_BUS:
+			vehicle = ARTICULATED_BUS.instantiate()
+		_:
+			push_error("Unknown vehicle type: %d" % vehicle_type)
+			return null
 
 	vehicle.id = _generate_vehicle_id()
 
@@ -60,6 +80,18 @@ func remove_vehicle(vehicle_id: int) -> void:
 
 func vehicles_count() -> int:
 	return vehicles.size()
+
+func get_vehicle_from_area(area: Area2D) -> Vehicle:
+	if not area:
+		return null
+
+	var first_parent = area.get_parent()
+
+	if first_parent is Vehicle:
+		return first_parent as Vehicle
+	elif first_parent.get_parent() is Vehicle:
+		return first_parent.get_parent() as Vehicle
+	return null
 
 func _generate_vehicle_id() -> int:
 	if freed_ids_pool.size() > 0:

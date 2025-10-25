@@ -75,7 +75,7 @@ func _process(_delta: float) -> void:
 			main_text += " (Active - %ds; Flow: %.2f)" % [custom_data.get("phase_timer", 0), custom_data.get("current_flow_ratio", 0)]
 		child.update_main_text(main_text)
 
-func _on_debug_button_pressed(_data: Dictionary) -> void:
+func _on_debug_button_pressed() -> void:
 	if not is_bound or not node:
 		return
 	game_manager.set_selection(node, GameManager.SelectionType.NODE)

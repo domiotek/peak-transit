@@ -104,8 +104,8 @@ public partial class PathFinder : GodotObject
                 Graph,
                 request.StartNodeId,
                 request.EndNodeId,
-                request.ForcedStartEndpointId,
-                request.ForcedEndEndpointId
+                request.ForcedStartEndpointId != -1 ? request.ForcedStartEndpointId : null,
+                request.ForcedEndEndpointId != -1 ? request.ForcedEndEndpointId : null
             );
 
             path.AddRange(foundPath);
