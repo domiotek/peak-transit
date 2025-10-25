@@ -272,9 +272,8 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 		_node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
 
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
-	lane.assign_vehicle(vehicle)
-
 	if not leave_progress:
+		lane.assign_vehicle(vehicle)
 		used_paths.append(lane.trail)
 		vehicle.assign_to_path(lane.trail, 0.0)
 

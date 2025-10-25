@@ -95,9 +95,22 @@ func get_curve() -> Curve2D:
 	return trail.curve
 
 func assign_vehicle(vehicle: Vehicle) -> void:
+	if vehicle in assigned_vehicles:
+		push_warning("Trying to assign vehicle ID %d to lane ID %d, but it is already assigned to this lane." % [vehicle.id, id])
+		breakpoint
+		return
+
 	assigned_vehicles.append(vehicle)
 
 func remove_vehicle(vehicle: Vehicle) -> void:
+	if vehicle == null:
+		push_warning("Trying to remove a null vehicle from lane ID %d." % id)
+		return
+
+	if vehicle not in assigned_vehicles:
+		push_warning("Trying to remove vehicle ID %d from lane ID %d, but it is not assigned to this lane." % [vehicle.id, id])
+		return
+
 	assigned_vehicles.erase(vehicle)
 
 func get_remaining_space() -> float:
