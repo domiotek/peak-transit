@@ -65,8 +65,10 @@ func set_game_speed(speed: Enums.GameSpeed) -> void:
 			Engine.time_scale = 2.0
 		Enums.GameSpeed.HIGH:
 			Engine.time_scale = 4.0
+			Engine.physics_ticks_per_second = 80
 		Enums.GameSpeed.TURBO:
 			Engine.time_scale = 10.0
+			Engine.physics_ticks_per_second = 120
 
 	game_speed_changed.emit(game_speed)
 
