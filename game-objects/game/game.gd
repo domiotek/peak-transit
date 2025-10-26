@@ -82,6 +82,13 @@ func _process(_delta):
 	if not game_manager.is_initialized():
 		return
 
+	if Input.is_action_just_pressed("toggle_game_menu"):
+		game_manager.toggle_game_menu()
+		return
+	
+	if game_manager.is_game_menu_visible():
+		return
+
 	if Input.is_action_just_pressed("toggle_dev_tools"):
 		ui_manager.toggle_ui_view("DebugTogglesView")
 		ui_manager.toggle_ui_view("DebugIntersectionsView")

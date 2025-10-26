@@ -26,6 +26,8 @@ var game_controller: GameController
 
 var game_speed: Enums.GameSpeed = Enums.GameSpeed.LOW
 var initialized: bool = false
+var game_menu_visible: bool = false
+
 signal game_speed_changed(new_speed: Enums.GameSpeed)
 signal world_loading_progress(action: String, progress: float)
 
@@ -56,6 +58,31 @@ func initialize_game() -> void:
 
 	await game_controller.initialize_game(world_definition)
 	simulation_manager.start_simulation()
+
+func dispose_game() -> void:
+	if not initialized:
+		return
+
+	initialized = false
+
+func show_game_menu() -> void:
+	ui_manager.show_ui_view("GameMenuView")
+	game_menu_visible = true
+	set_game_speed(Enums.GameSpeed.PAUSE)
+
+func hide_game_menu() -> void:
+	ui_manager.hide_ui_view("GameMenuView")
+	game_menu_visible = false
+
+func toggle_game_menu() -> void:
+	if game_menu_visible:
+		hide_game_menu()
+	else:
+		show_game_menu()
+
+func is_game_menu_visible() -> bool:
+	return game_menu_visible
+
 
 func push_loading_progress(action: String, progress: float) -> void:
 	world_loading_progress.emit(action, progress)

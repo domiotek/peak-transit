@@ -10,10 +10,11 @@ var drag_start_pos = Vector2.ZERO
 var last_mouse_pos = Vector2.ZERO
 
 var ui_manager: UIManager
+var game_manager: GameManager
 
 func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
-	
+	game_manager = GDInjector.inject("GameManager") as GameManager
 
 func set_camera_props(new_bounds: Rect2, projection_offset: Vector2, zoom_bounds: Array[Vector2], speed: float):
 	bounds = new_bounds
@@ -44,6 +45,9 @@ func _process(delta):
 	_update_camera_position(new_pos)
 
 func _input(event):
+	if game_manager.is_game_menu_visible():
+		return
+
 	if event is InputEventMouseButton:
 		if event is InputEventMouseButton and (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 			var mouse_pos = get_viewport().get_mouse_position()
