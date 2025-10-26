@@ -12,8 +12,9 @@ func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
-	ui_manager.register_ui_view("WorldLoadingProgressView", self)
 	visible = false
+	ui_manager.register_ui_view("WorldLoadingProgressView", self)
+
 	game_manager.world_loading_progress.connect(update_progress)
 
 

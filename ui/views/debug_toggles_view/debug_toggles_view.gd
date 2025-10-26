@@ -11,9 +11,9 @@ var config_manager: ConfigManager
 func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
-
-	ui_manager.register_ui_view("DebugTogglesView", self)
+	
 	visible = false
+	ui_manager.register_ui_view("DebugTogglesView", self)
 
 	$MainWrapper/HeaderMargins/HeaderFlex/CloseButton.pressed.connect(_on_close_button_pressed)
 

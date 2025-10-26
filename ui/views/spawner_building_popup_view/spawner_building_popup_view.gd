@@ -27,8 +27,8 @@ func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
-	ui_manager.register_ui_view("SpawnerBuildingPopupView", self)
 	visible = false
+	ui_manager.register_ui_view("SpawnerBuildingPopupView", self)
 
 	close_button.pressed.connect(_on_close_button_pressed)
 	toggle_debug_button.pressed.connect(_on_toggle_debug_button_pressed)

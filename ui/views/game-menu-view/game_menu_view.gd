@@ -13,8 +13,8 @@ func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
-	ui_manager.register_ui_view("GameMenuView", self)
 	visible = false
+	ui_manager.register_ui_view("GameMenuView", self)
 
 	resume_button.pressed.connect(_on_resume_button_pressed)
 	main_menu_button.pressed.connect(_on_main_menu_button_pressed)

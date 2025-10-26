@@ -30,8 +30,8 @@ func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
-	ui_manager.register_ui_view("VehiclePopupView", self)
 	visible = false
+	ui_manager.register_ui_view("VehiclePopupView", self)
 
 	close_button.pressed.connect(_on_close_button_pressed)
 	delete_button.pressed.connect(_on_delete_button_pressed)
