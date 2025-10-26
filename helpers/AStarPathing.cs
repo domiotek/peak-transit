@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using PT.DependencyProvider;
 using PT.Models.Mappings;
 using PT.Models.Network;
@@ -53,9 +54,12 @@ public class AStarPathing
         int startNodeId,
         int endNodeId,
         int? forcedStartEndpointId,
-        int? forcedEndEndpointId
+        int? forcedEndEndpointId,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (!graph.ContainsNode(startNodeId) || !graph.ContainsNode(endNodeId))
         {
             throw new ArgumentException("Start or end node not found in graph");
@@ -96,6 +100,8 @@ public class AStarPathing
 
         while (explorationSet.Count > 0)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var currentNode = explorationSet.Dequeue();
             string currentStateKey = $"{currentNode.NodeId}_{currentNode.FromEndpointId}";
             if (

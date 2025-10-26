@@ -85,6 +85,15 @@ func find_path_with_multiple_options(combinations: Array, callback: Callable, ti
 			i
 		)
 
+func cancel_all_requests() -> void:
+	active_requests.clear()
+
+func clear_state() -> void:
+	active_requests.clear()
+	path_cache.clear()
+	request_counter = 0
+	path_finder.ClearGraph()
+
 func _get_request_id() -> int:
 	request_counter += 1
 	return (Time.get_ticks_msec() * 10000) + request_counter

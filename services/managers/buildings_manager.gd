@@ -82,6 +82,8 @@ func get_random_building_type(other_than: BaseBuilding.BuildingType) -> BaseBuil
 	var random_index = randi() % types.size()
 	return types[random_index]
 
+func clear_state() -> void:
+	buildings.clear()
 
 func _get_next_id() -> int:
 	var max_id = -1

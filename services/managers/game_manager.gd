@@ -20,11 +20,15 @@ var ui_manager: UIManager
 var config_manager: ConfigManager
 var line_helper: LineHelper
 var simulation_manager: SimulationManager
+var vehicle_manager: VehicleManager
+var network_manager: NetworkManager
+var buildings_manager: BuildingsManager
+var pathing_manager: PathingManager
 
 var game_controller: GameController
 
 
-var game_speed: Enums.GameSpeed = Enums.GameSpeed.LOW
+var game_speed: Enums.GameSpeed = Enums.GameSpeed.PAUSE
 var initialized: bool = false
 var game_menu_visible: bool = false
 
@@ -36,10 +40,15 @@ func setup(_game_controller: GameController) -> void:
 
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager
-	var vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
+	vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
+	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
 
 	vehicle_manager.set_vehicles_layer(game_controller.get_map().get_drawing_layer("VehiclesLayer"))
+
+	simulation_manager.setup(game_controller)
 
 func is_initialized() -> bool:
 	return initialized
@@ -53,6 +62,7 @@ func initialize_game() -> void:
 
 	initialized = true
 	ui_manager.hide_main_menu()
+	set_game_speed(Enums.GameSpeed.PAUSE)
 
 	var world_definition = WorldDefinition.new()
 
@@ -64,6 +74,18 @@ func dispose_game() -> void:
 		return
 
 	initialized = false
+	simulation_manager.stop_simulation()
+
+	ui_manager.hide_all_ui_views()
+
+	var map = game_controller.get_map()
+	map.clear_drawing_layer("VehiclesLayer")
+	map.clear_drawing_layer("VehicleRouteLayer")
+	map.clear_drawing_layer("RoadGrid")
+
+	hide_game_menu()
+	clear_state()
+	ui_manager.show_main_menu()
 
 func show_game_menu() -> void:
 	ui_manager.show_ui_view("GameMenuView")
@@ -237,3 +259,16 @@ func redraw_route() -> void:
 
 	call_deferred("clear_drawn_route")
 	call_deferred("draw_vehicle_route", vehicle_with_path_drawn)
+
+func clear_state() -> void:
+	selected_object = null
+	selection_type = SelectionType.NONE
+	selection_popup_id = null
+	debug_selection = false
+	vehicle_with_path_drawn = null
+
+	simulation_manager.vehicles_count = 0
+	pathing_manager.clear_state()
+	vehicle_manager.clear_state()
+	network_manager.clear_state()
+	buildings_manager.clear_state()

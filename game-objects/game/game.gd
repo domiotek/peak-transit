@@ -17,8 +17,6 @@ var game_manager: GameManager
 var circle_helper: DebugCircleHelper
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_DISABLED
-
 	game_manager = GDInjector.inject("GameManager") as GameManager
 	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 	ui_manager = GDInjector.inject("UIManager") as UIManager
@@ -42,7 +40,6 @@ func initialize_game(world: WorldDefinition) -> void:
 
 	await load_network_grid(world.NetworkDefinition)
 
-	process_mode = Node.PROCESS_MODE_INHERIT
 	ui_manager.hide_ui_view("WorldLoadingProgressView")
 	ui_manager.show_ui_view("GameSpeedView")
 

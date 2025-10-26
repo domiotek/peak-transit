@@ -97,5 +97,11 @@ func get_segment(segment_id: int) -> NetSegment:
 func get_end_nodes() -> Array:
 	if end_nodes == null:
 		end_nodes = nodes.values().filter(func(node): return node.connected_segments.size() == 1)
-		
+
 	return end_nodes
+
+func clear_state() -> void:
+	nodes.clear()
+	segments.clear()
+	lane_endpoints.clear()
+	end_nodes = null

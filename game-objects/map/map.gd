@@ -23,3 +23,11 @@ func get_drawing_layer(layer_name: String) -> Node2D:
 		return null
 
 	return layer
+
+func clear_drawing_layer(layer_name: String) -> void:
+	var layer = get_drawing_layer(layer_name)
+	if layer == null:
+		return
+
+	for child in layer.get_children():
+		child.queue_free()

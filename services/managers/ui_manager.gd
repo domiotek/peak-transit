@@ -80,6 +80,9 @@ func toggle_ui_view(name: String):
 	else:
 		push_error("UI View with name '%s' not found." % name)
 
+func hide_all_ui_views() -> void:
+	for ui_view_id in visible_views.duplicate():
+		hide_ui_view(ui_view_id)
 
 func is_mouse_over_ui(mouse_position: Vector2) -> bool:
 	for ui_view_id in visible_views:
