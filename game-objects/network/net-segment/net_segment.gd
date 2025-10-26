@@ -40,10 +40,9 @@ func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 	
 
-func setup(segment_id: int, start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
+func setup(start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
 	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
-	id = segment_id
 	data = segment_info
 
 	nodes.append(start_node)

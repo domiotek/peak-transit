@@ -19,8 +19,6 @@ public partial class CSInjector : Node
         DIContainer.Register("LaneCalculator", new LaneCalculator());
         DIContainer.Register("PathFinder", new PathFinder());
 
-        DIContainer.Register("NetworkDefinition", new NetworkDefinition());
-
         RegisterAdapter("NetworkManager", typeof(NetworkManagerAdapter));
 
         DIContainer.FinalizeContainer();

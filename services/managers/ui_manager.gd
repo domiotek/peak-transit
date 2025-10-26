@@ -7,12 +7,29 @@ enum AnchorPoint {
 	BOTTOM_RIGHT,
 }
 
-
 var ui_views: Dictionary[String, Control] = {}
 
 var visible_views: Array[String] = []
 var loaded_views: Array[String] = []
 
+var main_menu: Control
+var game_viewport: GameController
+
+func initialize(_main_menu: Control, _game_viewport: GameController) -> void:
+	main_menu = _main_menu
+	game_viewport = _game_viewport
+
+
+func show_main_menu() -> void:
+	main_menu.visible = true
+	game_viewport.visible = false
+
+	for view in visible_views:
+		hide_ui_view(view)
+
+func hide_main_menu() -> void:
+	main_menu.visible = false
+	game_viewport.visible = true
 
 func register_ui_view(name: String, node: Control):
 	if ui_views.has(name):
