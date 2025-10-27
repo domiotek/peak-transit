@@ -2,7 +2,7 @@ using Godot;
 
 namespace PT.Models.PathFinding;
 
-public partial class PathStep : GodotObject
+public partial class PathStep : RefCounted
 {
     public int FromNodeId { get; }
 

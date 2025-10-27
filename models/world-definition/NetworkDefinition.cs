@@ -6,7 +6,7 @@ using PT.Models.Network;
 namespace PT.Constants;
 
 [GlobalClass]
-public partial class NetworkDefinition : GodotObject
+public partial class NetworkDefinition : RefCounted
 {
     public Array<NetNode> Nodes { get; } =
         [

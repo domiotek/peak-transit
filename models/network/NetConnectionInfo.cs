@@ -5,7 +5,7 @@ using PT.Models.Buildings;
 namespace PT.Models.Network;
 
 [GlobalClass]
-public partial class NetConnectionInfo : GodotObject
+public partial class NetConnectionInfo : RefCounted
 {
     public int StartNodeId { get; private set; }
 

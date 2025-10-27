@@ -4,7 +4,7 @@ using Godot.Collections;
 
 namespace PT.Models.PathFinding;
 
-public partial class PathingRequest : GodotObject
+public partial class PathingRequest : RefCounted
 {
     public Guid RequestId { get; } = Guid.NewGuid();
     public int StartNodeId { get; set; }

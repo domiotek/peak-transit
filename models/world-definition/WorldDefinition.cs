@@ -3,7 +3,7 @@ using Godot;
 namespace PT.Constants;
 
 [GlobalClass]
-public partial class WorldDefinition : GodotObject
+public partial class WorldDefinition : RefCounted
 {
     public Vector2 MapSize { get; } = new Vector2(5000, 5000);
 

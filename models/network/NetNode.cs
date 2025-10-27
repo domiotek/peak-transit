@@ -11,7 +11,7 @@ public enum IntersectionType
 }
 
 [GlobalClass]
-public partial class NetNode : GodotObject
+public partial class NetNode : RefCounted
 {
     public int Id { get; set; } = -1;
     public Vector2 Position { get; set; } = Vector2.Zero;

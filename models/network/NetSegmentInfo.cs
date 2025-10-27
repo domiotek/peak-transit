@@ -10,7 +10,7 @@ public enum CurveDirection
 }
 
 [GlobalClass]
-public partial class NetSegmentInfo : GodotObject
+public partial class NetSegmentInfo : RefCounted
 {
     public Array<int> Nodes { get; } = [];
 

@@ -10,7 +10,7 @@ using PT.Services.Adapters;
 namespace PT.Managers;
 
 [GlobalClass]
-public partial class LaneCalculator : GodotObject
+public partial class LaneCalculator : RefCounted
 {
     public Godot.Collections.Dictionary<int, Array<int>> CalculateLaneConnections(
         Array<NetLaneEndpoint> incomingEndpoints,

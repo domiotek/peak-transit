@@ -3,7 +3,7 @@ using Godot;
 namespace PT.Models.Buildings;
 
 [GlobalClass]
-public partial class BuildingInfo : GodotObject
+public partial class BuildingInfo : RefCounted
 {
     public BuildingType Type { get; set; }
 

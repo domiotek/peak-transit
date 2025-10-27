@@ -14,7 +14,7 @@ namespace PT.Services;
 record WorkItem(PathingRequest Request, Callable OnResult, long RequestId, int CombinationId = 0);
 
 [GlobalClass]
-public partial class PathFinder : GodotObject
+public partial class PathFinder : RefCounted
 {
     private NetGraph Graph { get; set; } = new NetGraph();
 
