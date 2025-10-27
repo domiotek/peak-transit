@@ -10,7 +10,7 @@ public enum EndpointType
 }
 
 [GlobalClass]
-public partial class NetLaneEndpoint : Node
+public partial class NetLaneEndpoint : RefCounted
 {
     public int Id { get; set; } = -1;
     public Vector2 Position { get; set; }

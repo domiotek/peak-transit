@@ -1,10 +1,9 @@
 using Godot;
-using Godot.Collections;
 using PT.Models.Network;
 
 namespace PT.Models.Mappings;
 
-public partial class NetLane : Node2D, IMapping<NetLane>
+public partial class NetLane : RefCounted, IMapping<NetLane>
 {
     private GodotObject _sourceObject;
 

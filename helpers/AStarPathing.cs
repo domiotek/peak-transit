@@ -42,10 +42,6 @@ public class AStarPathing
 
     public static void ClearCache()
     {
-        foreach (var segment in _segmentCache.Values)
-        {
-            segment?.QueueFree();
-        }
         _segmentCache.Clear();
     }
 

@@ -8,11 +8,11 @@ using PT.Services.Adapters;
 
 namespace PT.Models.Mappings;
 
-public partial class NetworkNode : Node2D, IMapping<NetworkNode>
+public partial class NetworkNode : RefCounted, IMapping<NetworkNode>
 {
     public int Id { get; set; }
 
-    public new Vector2 Position { get; set; }
+    public Vector2 Position { get; set; }
 
     public List<int> IncomingEndpoints { get; set; }
 
