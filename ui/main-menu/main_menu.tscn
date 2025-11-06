@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://bwpts6ndy6nvr"]
+[gd_scene load_steps=4 format=3 uid="uid://bwpts6ndy6nvr"]
 
 [ext_resource type="Script" uid="uid://bbskk47ler7g8" path="res://ui/main-menu/main_menu.gd" id="1_umu7m"]
+[ext_resource type="PackedScene" uid="uid://cfl84n8mdwt5t" path="res://ui/views/select-world-view/select_world_view.tscn" id="2_e8l02"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_rc4um"]
 font_size = 78
@@ -43,14 +44,24 @@ size_flags_horizontal = 0
 theme_override_constants/separation = 20
 vertical = true
 
-[node name="StartButton" type="Button" parent="MarginContainer/BoxContainer/BoxContainer"]
+[node name="QuickStartButton" type="Button" parent="MarginContainer/BoxContainer/BoxContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "Start"
+text = "Quick Start"
+
+[node name="LoadWorldButton" type="Button" parent="MarginContainer/BoxContainer/BoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Select World"
 
 [node name="ExitButton" type="Button" parent="MarginContainer/BoxContainer/BoxContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Exit"
+
+[node name="SelectWorldView" parent="." instance=ExtResource("2_e8l02")]
+visible = false
+layout_mode = 1

@@ -39,11 +39,6 @@ func _ready() -> void:
 	main_road_layer.texture = ImageTexture.create_from_image(img)
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
-func _exit_tree() -> void:	
-	for relation in relations:
-		relation.free()
-	
-
 func setup(start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
 	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
@@ -55,11 +50,11 @@ func setup(start_node: RoadNode, target_node: RoadNode, segment_info: NetSegment
 	curve_shape = line_helper.calc_curve(
 		to_local(start_node.global_position), 
 		to_local(target_node.global_position), 
-		segment_info.CurveStrength, 
-		segment_info.CurveDirection)
+		segment_info.curve_strength, 
+		segment_info.curve_direction)
 		
 
-func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info: NetConnectionInfo) -> void:
+func add_connection(start_node: RoadNode, target_node: RoadNode, relation_info: NetRelationInfo) -> void:
 	if !nodes.has(start_node) and !nodes.has(target_node):
 		push_error("Cannot add connection: Nodes not part of this segment.")
 		return
@@ -71,16 +66,16 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 	var relation = NetRelation.new()
 	var relation_id = relations.size()
 
-	relation.StartNode = start_node
-	relation.EndNode = target_node
-	relation.ConnectionInfo = connection_info
+	relation.start_node = start_node
+	relation.end_node = target_node
+	relation.relation_info = relation_info
 
 	relations.append(relation)
 
-	var starts_from_end = relation.StartNode == nodes[1]
+	var starts_from_end = relation.start_node == nodes[1]
 	
-	for i in range(relation.ConnectionInfo.Lanes.size()):
-		var lane_info = relation.ConnectionInfo.Lanes[i]
+	for i in range(relation_info.lanes.size()):
+		var lane_info = relation_info.lanes[i]
 		var offset;
 		if starts_from_end:
 			offset = (i + 1) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2
@@ -92,16 +87,16 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, connection_info
 		add_child(lane)
 		lanes.append(lane)
 
-	for i in range(relation.ConnectionInfo.Buildings.size()):
-		var building_info = relation.ConnectionInfo.Buildings[i]
-		var curve_offset = building_info.OffsetPosition
+	for i in range(relation.relation_info.buildings.size()):
+		var building_info = relation.relation_info.buildings[i]
+		var curve_offset = building_info.offset_position
 		var horizontal_offset;
 
 		if starts_from_end:
-			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2) - BuildingConstants.BUILDING_ROAD_OFFSET
+			horizontal_offset = ((relation.relation_info.lanes.size()) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2) - BuildingConstants.BUILDING_ROAD_OFFSET
 			curve_offset = curve_shape.get_baked_length() - curve_offset
 		else:
-			horizontal_offset = ((relation.ConnectionInfo.Lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + BuildingConstants.BUILDING_ROAD_OFFSET
+			horizontal_offset = ((relation.relation_info.lanes.size()) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2) + BuildingConstants.BUILDING_ROAD_OFFSET
 
 		var building = buildings_manager.create_spawner_building(building_info)
 		building.setup(relation_id, self, building_info)
@@ -129,19 +124,19 @@ func update_visuals() -> void:
 	var max_lanes = 0
 
 	for i in range(relations.size()):
-		var connection = relations[i].ConnectionInfo
-		if connection.Lanes.size() > max_lanes:
-			max_lanes = connection.Lanes.size()
+		var connection = relations[i].relation_info
+		if connection.lanes.size() > max_lanes:
+			max_lanes = connection.lanes.size()
 			max_lanes_relation_idx = i
 
-		total_lanes += connection.Lanes.size()
+		total_lanes += connection.lanes.size()
 
 	is_asymetric = max_lanes > total_lanes / float(relations.size())
 
 	main_layer_curve = curve_shape
 
 	if is_asymetric:
-		var offset_direction = -1 if relations[max_lanes_relation_idx].StartNode == nodes[1] else 1
+		var offset_direction = -1 if relations[max_lanes_relation_idx].start_node == nodes[1] else 1
 		var lane_diff = max_lanes - (total_lanes - max_lanes)
 		main_layer_offset =  NetworkConstants.LANE_WIDTH / 2 * lane_diff * offset_direction
 		main_layer_curve = line_helper.get_curve_with_offset(curve_shape, main_layer_offset)
@@ -208,10 +203,10 @@ func _update_markings_layer() -> void:
 			line_helper.draw_solid_line(curve_shape, markings_layer)
 
 	for relation in relations:
-		var starts_from_end = relation.StartNode == nodes[1]
+		var starts_from_end = relation.start_node == nodes[1]
 		var midline_side = -1 if starts_from_end else 1
 
-		for i in range(relation.ConnectionInfo.Lanes.size() - 1):
+		for i in range(relation.relation_info.lanes.size() - 1):
 			var offset = (i + 1) * NetworkConstants.LANE_WIDTH * midline_side
 			var path = line_helper.get_curve_with_offset(curve_shape, offset)
 			line_helper.draw_dash_line(path, markings_layer)

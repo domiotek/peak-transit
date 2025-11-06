@@ -1,10 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://b2tu0r5oy2hba"]
 
 [ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_4w2oo"]
+[ext_resource type="StyleBox" uid="uid://dxarxyvkaag2u" path="res://ui/resources/backdrop_styles.tres" id="1_pa63o"]
 [ext_resource type="Script" uid="uid://8xx4tjv8uu7j" path="res://ui/views/game-menu-view/game_menu_view.gd" id="1_rry45"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rry45"]
-bg_color = Color(0.137255, 0.137255, 0.137255, 0.392157)
 
 [sub_resource type="LabelSettings" id="LabelSettings_4w2oo"]
 font_size = 20
@@ -15,7 +13,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_rry45")
+theme_override_styles/panel = ExtResource("1_pa63o")
 script = ExtResource("1_rry45")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]

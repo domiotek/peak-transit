@@ -249,7 +249,7 @@ func _get_right_most_stoppers_of_other_flow(other_flow: Array) -> Array:
 
 	for stopper in right_stoppers:
 		var lane = stopper.get_lane()
-		var lanes_count = lane.segment.get_relation_of_lane(lane.id).ConnectionInfo.Lanes.size()
+		var lanes_count = lane.segment.get_relation_of_lane(lane.id).relation_info.lanes.size()
 
 		if stopper.endpoint.LaneNumber == lanes_count - 1:
 			result.append(stopper)
@@ -333,7 +333,7 @@ func _create_traffic_light_visuals() -> void:
 
 		for stopper in segment_stoppers:
 			var lane = stopper.get_lane()
-			var lanes_count = segment.get_relation_of_lane(lane.id).ConnectionInfo.Lanes.size();
+			var lanes_count = segment.get_relation_of_lane(lane.id).relation_info.lanes.size();
 
 			if stopper.endpoint.LaneNumber == 0:
 				left_most_stopper = stopper

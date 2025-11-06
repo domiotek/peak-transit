@@ -24,6 +24,7 @@ var vehicle_manager: VehicleManager
 var network_manager: NetworkManager
 var buildings_manager: BuildingsManager
 var pathing_manager: PathingManager
+var world_manager: WorldManager
 
 var game_controller: GameController
 
@@ -47,19 +48,31 @@ func setup(_game_controller: GameController) -> void:
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
 	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
+	world_manager = GDInjector.inject("WorldManager") as WorldManager
 
 	vehicle_manager.set_vehicles_layer(game_controller.get_map().get_drawing_layer("VehiclesLayer"))
-
-	world_definition = WorldDefinition.new()
 
 	simulation_manager.setup(game_controller)
 
 func get_camera_bounds() -> Rect2:
 	return game_controller.get_camera_bounds()
 
-func initialize_game() -> void:
+func initialize_game(world_file_path: String="") -> void:
 	if initialized:
 		return
+
+	if world_file_path == "":
+		world_file_path = world_manager.GetDefaultWorldFilePath()
+
+	var world_def = world_manager.LoadSerializedWorldDefinition(world_file_path)
+
+	if not world_def:
+		push_error("Failed to load world definition from file: %s" % world_file_path)
+		return
+
+	var parsed_def = WorldDefinition.deserialize(world_def)
+
+	self.world_definition = parsed_def
 
 	initialized = true
 	ui_manager.hide_main_menu()

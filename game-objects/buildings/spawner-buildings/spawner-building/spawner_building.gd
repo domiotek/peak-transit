@@ -58,7 +58,7 @@ func spawn_vehicle() -> void:
 
 func get_popup_data() -> Dictionary:
 	return {
-		"type": BuildingType.keys()[type],
+		"type": BuildingInfo.BuildingType.keys()[type],
 		"vehicle_pool": vehicles_pool,
 		"has_vehicle_leaving": vehicle_leaving != null,
 		"has_vehicle_entering": vehicles_entering.size() > 0

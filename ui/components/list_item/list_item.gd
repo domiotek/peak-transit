@@ -12,7 +12,7 @@ var data: Dictionary = {}
 @onready var support_label = $BoxContainer/SupportLabel
 @onready var button = $Button
 
-signal button_pressed(data: Dictionary)
+signal button_pressed(sender_self: ListItem, data: Dictionary)
 
 func _ready() -> void:
 	label.text = init_main_text
@@ -21,6 +21,7 @@ func _ready() -> void:
 	if init_icon:
 		button.icon = init_icon
 		button.visible = true
+		button.focus_mode = FocusMode.FOCUS_NONE
 		button.pressed.connect(_on_debug_button_pressed)
 
 
@@ -30,6 +31,9 @@ func init_item(main_text: String, support_text: String="") -> void:
 
 func show_button(image: Resource) -> void:
 	init_icon = image
+
+func disable_button(disabled: bool) -> void:
+	button.disabled = disabled
 
 func set_data(data_dict: Dictionary) -> void:
 	data = data_dict
@@ -48,4 +52,4 @@ func update_support_text(new_text: String="") -> void:
 	support_label.text = new_text
 
 func _on_debug_button_pressed() -> void:
-	emit_signal("button_pressed", data)
+	emit_signal("button_pressed", self, data)

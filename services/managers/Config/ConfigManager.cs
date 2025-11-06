@@ -7,5 +7,11 @@ public partial class ConfigManager : RefCounted
 {
     public int PathingWorkerCount { get; } = 2;
 
+    public string BuiltInWorldDirectory { get; } = "res://assets/worlds/";
+
+    public string DefaultWorldFileName { get; } = "default_world.json";
+
+    public string WorldDirectory { get; } = "user://worlds/";
+
     public DebugToggles DebugToggles { get; } = new DebugToggles();
 }

@@ -45,7 +45,7 @@ func load() -> void:
 		content_container.add_child(item)
 
 
-func _on_item_button_pressed(data: Dictionary) -> void:
+func _on_item_button_pressed(_sender: ListItem, data: Dictionary) -> void:
 	selected_node = data.get("node", null)
 	var intersection_type = selected_node.intersection_manager.get_used_intersection_type()
 	var view = _get_view(intersection_type)

@@ -1,0 +1,100 @@
+[gd_scene load_steps=5 format=3 uid="uid://cfl84n8mdwt5t"]
+
+[ext_resource type="StyleBox" uid="uid://dxarxyvkaag2u" path="res://ui/resources/backdrop_styles.tres" id="1_wag3q"]
+[ext_resource type="Script" uid="uid://b63rw3vgv73iy" path="res://ui/views/select-world-view/select_world_view.gd" id="2_entsj"]
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="2_fiapi"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_ce026"]
+font_size = 20
+
+[node name="SelectWorldView" type="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_wag3q")
+script = ExtResource("2_entsj")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(400, 450)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -213.0
+offset_right = 150.0
+offset_bottom = 137.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("2_fiapi")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 20
+
+[node name="MainContainer" type="BoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 25
+vertical = true
+
+[node name="Title" type="Label" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+text = "Select World"
+label_settings = SubResource("LabelSettings_ce026")
+horizontal_alignment = 1
+
+[node name="WorldList" type="Panel" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/MainContainer/WorldList"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/MarginContainer/MainContainer/WorldList/MarginContainer"]
+layout_mode = 2
+
+[node name="BoxContainer" type="BoxContainer" parent="PanelContainer/MarginContainer/MainContainer/WorldList/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical = true
+
+[node name="ButtonsContainer" type="BoxContainer" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="OpenFolderButton" type="Button" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+layout_mode = 2
+text = "Open worlds folder"
+
+[node name="Control" type="Control" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CancelButton" type="Button" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+layout_mode = 2
+text = "Cancel
+"
+
+[node name="ConfirmButton" type="Button" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+layout_mode = 2
+disabled = true
+text = "Select
+"

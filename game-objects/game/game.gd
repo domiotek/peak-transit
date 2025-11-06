@@ -38,18 +38,18 @@ func initialize_game(world: WorldDefinition) -> void:
 	init_map(world)
 	await get_tree().process_frame
 
-	await load_network_grid(world.NetworkDefinition)
+	await load_network_grid(world.network)
 
 	ui_manager.hide_ui_view("WorldLoadingProgressView")
 	ui_manager.show_ui_view("GameSpeedView")
 
 func init_map(world: WorldDefinition) -> void:
-	map.map_size = world.MapSize
+	map.map_size = world.map.size
 	var rect_position = -map.map_size / 2
 	camera_bounds = Rect2(rect_position, map.map_size)
 	camera.set_camera_props(camera_bounds, camera_projection_offset, camera_zoom_bounds, camera_speed)
-	camera.position = world.InitialMapPos
-	camera.zoom = Vector2.ONE * world.InitialZoom
+	camera.position = world.map.initial_pos
+	camera.zoom = Vector2.ONE * world.map.initial_zoom
 
 func load_network_grid(network_def: NetworkDefinition) -> void:
 	var network_grid = map.get_drawing_layer("RoadGrid") as NetworkGrid

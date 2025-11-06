@@ -5,6 +5,7 @@ using Godot;
 using Godot.Collections;
 using PT.DependencyProvider;
 using PT.Models.Network;
+using PT.Models.WorldDefinition.Network;
 using PT.Services.Adapters;
 
 namespace PT.Managers;

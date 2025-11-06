@@ -1,5 +1,5 @@
 using Godot;
-using PT.Models.Network;
+using PT.Models.WorldDefinition.Network;
 
 namespace PT.Models.Mappings;
 
@@ -26,7 +26,13 @@ public partial class NetLane : IMapping<NetLane>
         return new NetLane
         {
             _sourceObject = gdObject,
-            LaneInfo = gdObject.Get("data").As<NetLaneInfo>(),
+            LaneInfo = NetLaneInfo.Deserialize(
+                gdObject
+                    .Get("data")
+                    .AsGodotObject()
+                    .Call("serialize")
+                    .As<Godot.Collections.Dictionary>()
+            ),
             Id = gdObject.Get("id").AsInt32(),
         };
     }
