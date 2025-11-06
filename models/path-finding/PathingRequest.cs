@@ -1,10 +1,9 @@
 using System;
-using Godot;
-using Godot.Collections;
+using System.Collections.Generic;
 
 namespace PT.Models.PathFinding;
 
-public partial class PathingRequest : RefCounted
+public partial class PathingRequest
 {
     public Guid RequestId { get; } = Guid.NewGuid();
     public int StartNodeId { get; set; }
@@ -28,7 +27,7 @@ public partial class PathingRequest : RefCounted
 
     public PathingResponse CompleteRequest(
         PathingState state,
-        Array<PathStep> resultPath,
+        List<PathStep> resultPath,
         float totalCost = 0.0f
     )
     {

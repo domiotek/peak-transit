@@ -3,7 +3,7 @@ using PT.Models.Network;
 
 namespace PT.Models.Mappings;
 
-public partial class NetLane : RefCounted, IMapping<NetLane>
+public partial class NetLane : IMapping<NetLane>
 {
     private GodotObject _sourceObject;
 

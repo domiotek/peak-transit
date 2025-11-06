@@ -10,7 +10,7 @@ var YELLOW_LIGHT_DURATION = 1.0
 @onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 
-var endpoint: NetLaneEndpoint
+var endpoint: Dictionary
 var traffic_lights: Dictionary
 
 var active: bool = false

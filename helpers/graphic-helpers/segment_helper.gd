@@ -218,12 +218,12 @@ func get_edge_lanes(segment: NetSegment) -> Dictionary:
 
 	return result
 
-func get_other_endpoint_in_lane(endpoint_id: int) -> NetLaneEndpoint:
+func get_other_endpoint_in_lane(endpoint_id: int) -> Variant:
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 	var segment = network_manager.get_segment(endpoint.SegmentId)
 	var lane = segment.get_lane(endpoint.LaneId)
 
-	return lane.get_endpoint_by_type(!endpoint.IsOutgoing())
+	return lane.get_endpoint_by_type(!endpoint.IsOutgoing)
 
 func trim_curve_to_building_connection(curve: Curve2D, building_point: Vector2, trim_from_start: bool) -> Curve2D:
 	var new_start = building_point if trim_from_start else curve.get_point_position(0)

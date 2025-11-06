@@ -28,6 +28,9 @@ func set_camera_props(new_bounds: Rect2, projection_offset: Vector2, zoom_bounds
 	camera_speed = speed
 
 func _process(delta):
+	if not game_manager.is_game_initialized():
+		return
+
 	var movement = Vector2.ZERO
 	
 	if Input.is_action_pressed("move_viewport_right"):
@@ -45,7 +48,7 @@ func _process(delta):
 	_update_camera_position(new_pos)
 
 func _input(event):
-	if game_manager.is_game_menu_visible():
+	if not game_manager.is_game_initialized() or game_manager.is_game_menu_visible():
 		return
 
 	if event is InputEventMouseButton:

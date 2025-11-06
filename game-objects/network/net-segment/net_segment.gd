@@ -38,6 +38,10 @@ func _ready() -> void:
 	
 	main_road_layer.texture = ImageTexture.create_from_image(img)
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+
+func _exit_tree() -> void:	
+	for relation in relations:
+		relation.free()
 	
 
 func setup(start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:

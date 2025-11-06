@@ -85,10 +85,10 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 	_update_debug_layer()
 
-func get_endpoint_by_id(endpoint_id: int) -> NetLaneEndpoint:
+func get_endpoint_by_id(endpoint_id: int) -> Variant:
 	return network_manager.get_lane_endpoint(endpoint_id)
 
-func get_endpoint_by_type(is_outgoing: bool) -> NetLaneEndpoint:
+func get_endpoint_by_type(is_outgoing: bool) -> Variant:
 	return network_manager.get_lane_endpoint(from_endpoint if is_outgoing else to_endpoint)
 
 func get_curve() -> Curve2D:

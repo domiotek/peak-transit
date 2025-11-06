@@ -62,6 +62,7 @@ public partial class PathFinder : RefCounted
 
         lock (_graphLock)
         {
+            Graph.Dispose();
             Graph = new NetGraph();
         }
 
@@ -99,11 +100,7 @@ public partial class PathFinder : RefCounted
                         PathingState.Cancelled,
                         []
                     );
-                    request.OnResult.CallDeferred(
-                        request.RequestId,
-                        request.CombinationId,
-                        cancelledResponse
-                    );
+                    RespondToRequest(request, cancelledResponse);
                     continue;
                 }
 
@@ -113,11 +110,7 @@ public partial class PathFinder : RefCounted
                         request.Request,
                         _cancellationTokenSource.Token
                     );
-                    request.OnResult.CallDeferred(
-                        request.RequestId,
-                        request.CombinationId,
-                        response
-                    );
+                    RespondToRequest(request, response);
                 }
                 catch (OperationCanceledException)
                 {
@@ -126,11 +119,7 @@ public partial class PathFinder : RefCounted
                         PathingState.Cancelled,
                         []
                     );
-                    request.OnResult.CallDeferred(
-                        request.RequestId,
-                        request.CombinationId,
-                        cancelledResponse
-                    );
+                    RespondToRequest(request, cancelledResponse);
                 }
                 catch (Exception ex)
                 {
@@ -139,11 +128,7 @@ public partial class PathFinder : RefCounted
                         PathingState.Failed,
                         []
                     );
-                    request.OnResult.CallDeferred(
-                        request.RequestId,
-                        request.CombinationId,
-                        response
-                    );
+                    RespondToRequest(request, response);
                     GD.PrintErr($"Error processing pathing request: {ex.Message}");
                 }
             }
@@ -159,8 +144,6 @@ public partial class PathFinder : RefCounted
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var path = new Array<PathStep>();
-
             var (foundPath, cost) = AStarPathing.FindPathAStar(
                 Graph,
                 request.StartNodeId,
@@ -170,9 +153,7 @@ public partial class PathFinder : RefCounted
                 cancellationToken
             );
 
-            path.AddRange(foundPath);
-
-            return request.CompleteRequest(PathingState.Completed, path, cost);
+            return request.CompleteRequest(PathingState.Completed, foundPath, cost);
         }
         catch (OperationCanceledException)
         {
@@ -183,5 +164,14 @@ public partial class PathFinder : RefCounted
             GD.PrintErr($"A* pathfinding failed: {ex.Message}");
             return request.CompleteRequest(PathingState.Failed, [], 0.0f);
         }
+    }
+
+    private void RespondToRequest(WorkItem request, PathingResponse response)
+    {
+        request.OnResult.CallDeferred(
+            request.RequestId,
+            request.CombinationId,
+            response.Serialize()
+        );
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace PT.Models.PathFinding;
 
-public partial class NetGraph
+public partial class NetGraph : IDisposable
 {
     private Dictionary<int, GraphNode> Nodes { get; } = [];
 
@@ -51,5 +51,16 @@ public partial class NetGraph
     public IEnumerable<GraphNode> GetAllNodes()
     {
         return Nodes.Values;
+    }
+
+    public void Dispose()
+    {
+        foreach (var node in Nodes.Values)
+        {
+            node.Dispose();
+        }
+
+        Nodes.Clear();
+        GC.SuppressFinalize(this);
     }
 }

@@ -3,7 +3,7 @@ class_name NetworkManager
 var nodes: Dictionary[int, RoadNode] = {}
 var segments: Dictionary[int, NetSegment] = {}
 
-var lane_endpoints: Dictionary[int, NetLaneEndpoint] = {}
+var lane_endpoints: Dictionary[int, Dictionary] = {}
 
 var end_nodes: Variant = null
 
@@ -34,32 +34,31 @@ func get_node_intersection_polygon(node_id: int) -> PackedVector2Array:
 	return node.get_intersection_polygon() if node else PackedVector2Array()
 
 func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int, is_at_path_start: bool) -> int:
-	var endpoint = NetLaneEndpoint.new()
+	var endpoint = {
+		"Id": lane_endpoints.size(),
+		"Position": pos,
+		"SegmentId": segment.id,
+		"NodeId": node.id,
+		"LaneId": lane_id,
+		"LaneNumber": lane_number,
+		"IsOutgoing": is_outgoing,
+		"IsAtPathStart": is_at_path_start,
+		"Connections": []
+	}
 
-	var next_id = lane_endpoints.size()
-
-	endpoint.Id = next_id
-	endpoint.Position = pos
-	endpoint.SegmentId = segment.id
-	endpoint.NodeId = node.id
-	endpoint.LaneId = lane_id
-	endpoint.LaneNumber = lane_number
-	endpoint.SetIsOutgoing(is_outgoing)
-	endpoint.SetIsAtPathStart(is_at_path_start)
-
-	lane_endpoints[next_id] = endpoint
+	lane_endpoints[endpoint.Id] = endpoint
 
 	if is_outgoing:
-		node.outgoing_endpoints.append(next_id)
+		node.outgoing_endpoints.append(endpoint.Id)
 	else:
-		node.incoming_endpoints.append(next_id)
+		node.incoming_endpoints.append(endpoint.Id)
 
-	segment.endpoints.append(next_id)
+	segment.endpoints.append(endpoint.Id)
 
-	return next_id
+	return endpoint.Id
 
 
-func get_lane_endpoint(endpoint_id: int) -> NetLaneEndpoint:
+func get_lane_endpoint(endpoint_id: int) -> Variant:
 	if lane_endpoints.has(endpoint_id):
 		return lane_endpoints[endpoint_id]
 	else:

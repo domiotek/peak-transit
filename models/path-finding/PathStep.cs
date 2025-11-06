@@ -1,8 +1,6 @@
-using Godot;
-
 namespace PT.Models.PathFinding;
 
-public partial class PathStep : RefCounted
+public partial class PathStep
 {
     public int FromNodeId { get; }
 

@@ -20,11 +20,11 @@ func _init() -> void:
 
 func setup(_game_controller: GameController) -> void:
 	game_controller = _game_controller
-	game_controller.process_mode = Node.PROCESS_MODE_DISABLED
+	game_controller.get_map().process_mode = Node.PROCESS_MODE_DISABLED
 
 func start_simulation() -> void:
 	end_node_ids = network_manager.get_end_nodes().map(func(node): return node.id)
-	game_controller.process_mode = Node.PROCESS_MODE_INHERIT
+	game_controller.get_map().process_mode = Node.PROCESS_MODE_INHERIT
 	print("Simulation started")
 
 	simulation_running = true
@@ -34,7 +34,7 @@ func start_simulation() -> void:
 
 func stop_simulation() -> void:
 	simulation_running = false
-	game_controller.process_mode = Node.PROCESS_MODE_DISABLED
+	game_controller.get_map().process_mode = Node.PROCESS_MODE_DISABLED
 	print("Simulation stopped")
 
 func is_simulation_running() -> bool:

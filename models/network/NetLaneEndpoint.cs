@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Godot.Collections;
 
@@ -9,8 +10,7 @@ public enum EndpointType
     Outgoing,
 }
 
-[GlobalClass]
-public partial class NetLaneEndpoint : RefCounted
+public class NetLaneEndpoint
 {
     public int Id { get; set; } = -1;
     public Vector2 Position { get; set; }
@@ -27,28 +27,50 @@ public partial class NetLaneEndpoint : RefCounted
 
     public int LaneNumber { get; set; } = -1;
 
-    public Array<int> Connections { get; } = [];
-
-    public void SetIsOutgoing(bool state)
-    {
-        Type = state ? EndpointType.Outgoing : EndpointType.Incoming;
-    }
+    public List<int> Connections { get; } = [];
 
     public bool IsOutgoing()
     {
         return Type == EndpointType.Outgoing;
     }
 
-    public void AddConnection(int otherEndpointId)
+    public Dictionary Serialize()
     {
-        if (!Connections.Contains(otherEndpointId))
+        var dict = new Dictionary
         {
-            Connections.Add(otherEndpointId);
-        }
+            ["Id"] = Id,
+            ["Position"] = Position,
+            ["SegmentId"] = SegmentId,
+            ["NodeId"] = NodeId,
+            ["Type"] = (int)Type,
+            ["IsAtPathStart"] = IsAtPathStart,
+            ["LaneId"] = LaneId,
+            ["LaneNumber"] = LaneNumber,
+            ["Connections"] = Connections.ToArray(),
+        };
+        return dict;
     }
 
-    public void SetIsAtPathStart(bool state)
+    public static NetLaneEndpoint Deserialize(Dictionary dict)
     {
-        IsAtPathStart = state;
+        var endpoint = new NetLaneEndpoint
+        {
+            Id = (int)dict["Id"],
+            Position = (Vector2)dict["Position"],
+            SegmentId = (int)dict["SegmentId"],
+            NodeId = (int)dict["NodeId"],
+            Type = (bool)dict["IsOutgoing"] ? EndpointType.Outgoing : EndpointType.Incoming,
+            IsAtPathStart = (bool)dict["IsAtPathStart"],
+            LaneId = (int)dict["LaneId"],
+            LaneNumber = (int)dict["LaneNumber"],
+        };
+
+        var connectionsArray = dict["Connections"].AsInt64Array();
+        foreach (var conn in connectionsArray)
+        {
+            endpoint.Connections.Add((int)conn);
+        }
+
+        return endpoint;
     }
 }

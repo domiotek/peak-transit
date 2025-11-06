@@ -8,7 +8,7 @@ using PT.Services.Adapters;
 
 namespace PT.Models.Mappings;
 
-public partial class NetworkNode : RefCounted, IMapping<NetworkNode>
+public partial class NetworkNode : IMapping<NetworkNode>
 {
     public int Id { get; set; }
 
@@ -22,7 +22,14 @@ public partial class NetworkNode : RefCounted, IMapping<NetworkNode>
 
     public System.Collections.Generic.Dictionary<int, List<int>> EndpointConnections { get; set; } =
         [];
-    public List<NetLaneEndpoint> Endpoints { get; private set; } = [];
+    public GodotObjectCollection<NetLaneEndpoint> Endpoints
+    {
+        get
+        {
+            var networkManager = CSInjector.Inject<NetworkManagerAdapter>("NetworkManager");
+            return networkManager.GetNodeLaneEndpoints(Id);
+        }
+    }
 
     private NetworkNode() { }
 
@@ -50,7 +57,6 @@ public partial class NetworkNode : RefCounted, IMapping<NetworkNode>
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToList()),
 
             Position = nodeObject.Get("global_position").AsVector2(),
-            Endpoints = networkManager.GetNodeLaneEndpoints(id),
         };
 
         return newNode;

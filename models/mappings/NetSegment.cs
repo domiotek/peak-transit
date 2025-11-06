@@ -4,7 +4,7 @@ using Godot;
 
 namespace PT.Models.Mappings;
 
-public partial class NetSegment : RefCounted, IMapping<NetSegment>
+public partial class NetSegment : IMapping<NetSegment>
 {
     public int Id { get; set; }
 

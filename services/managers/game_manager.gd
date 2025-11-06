@@ -27,6 +27,8 @@ var pathing_manager: PathingManager
 
 var game_controller: GameController
 
+var world_definition: WorldDefinition
+
 
 var game_speed: Enums.GameSpeed = Enums.GameSpeed.PAUSE
 var initialized: bool = false
@@ -48,10 +50,9 @@ func setup(_game_controller: GameController) -> void:
 
 	vehicle_manager.set_vehicles_layer(game_controller.get_map().get_drawing_layer("VehiclesLayer"))
 
-	simulation_manager.setup(game_controller)
+	world_definition = WorldDefinition.new()
 
-func is_initialized() -> bool:
-	return initialized
+	simulation_manager.setup(game_controller)
 
 func get_camera_bounds() -> Rect2:
 	return game_controller.get_camera_bounds()
@@ -63,8 +64,6 @@ func initialize_game() -> void:
 	initialized = true
 	ui_manager.hide_main_menu()
 	set_game_speed(Enums.GameSpeed.PAUSE)
-
-	var world_definition = WorldDefinition.new()
 
 	await game_controller.initialize_game(world_definition)
 	simulation_manager.start_simulation()
@@ -86,6 +85,9 @@ func dispose_game() -> void:
 	hide_game_menu()
 	clear_state()
 	ui_manager.show_main_menu()
+
+func is_game_initialized() -> bool:
+	return initialized
 
 func show_game_menu() -> void:
 	ui_manager.show_ui_view("GameMenuView")

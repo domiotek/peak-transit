@@ -76,7 +76,7 @@ func _draw() -> void:
 
 
 func _process(_delta):
-	if not game_manager.is_initialized():
+	if not game_manager.is_game_initialized():
 		return
 
 	if Input.is_action_just_pressed("toggle_game_menu"):

@@ -68,7 +68,7 @@ func process_stopper(stopper: LaneStopper) -> bool:
 
 	return false
 
-func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: NetLaneEndpoint, to_endpoint: NetLaneEndpoint, other_endpoints: Array, target_lane: NetLane) -> bool:
+func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: Dictionary, to_endpoint: Dictionary, other_endpoints: Array, target_lane: NetLane) -> bool:
 	var crossing_vehicles = node.intersection_manager.get_vehicles_crossing(from_endpoint.Id, to_endpoint.Id)
 
 	if crossing_vehicles.size() > 0:
@@ -103,7 +103,7 @@ func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: NetLaneEndpoi
 
 	return false
 
-func _handle_straight_lane(from_endpoint: NetLaneEndpoint, to_endpoint: NetLaneEndpoint, other_endpoints: Array) -> bool:
+func _handle_straight_lane(from_endpoint: Dictionary, to_endpoint: Dictionary, other_endpoints: Array) -> bool:
 	for other_endpoint_id in other_endpoints:
 		if other_endpoint_id == from_endpoint.Id:
 			continue
