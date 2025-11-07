@@ -103,7 +103,7 @@ func _choose_intersection_handler() -> RefCounted:
 	if node.connected_segments.size() <= 2:
 		return NullIntersectionHandler.new()
 	else:
-		match node.definition.IntersectionType:
+		match node.definition.intersection_type:
 			Enums.IntersectionType.Default:
 				return DefaultIntersectionHandler.new()
 			Enums.IntersectionType.TrafficLights:
