@@ -52,13 +52,13 @@ func get_ui_view(name: String) -> Control:
 		push_error("UI View with name '%s' not found." % name)
 		return null
 
-func show_ui_view(name: String):
+func show_ui_view(name: String, data: Dictionary = {}) -> void:
 	if ui_views.has(name):
 		var view = ui_views[name]
 		view.visible = true
 		if not visible_views.has(name):
 			visible_views.append(name)
-		_render_view(view)
+		_render_view(view, data)
 	else:
 		push_error("UI View with name '%s' not found." % name)
 
@@ -132,15 +132,15 @@ func reanchor_to_world_object(control: Control, target_object: Node2D, anchor: A
 
 	control.position = position
 
-func _render_view(view: Control) -> void:
+func _render_view(view: Control, data: Dictionary) -> void:
 	if loaded_views.has(view.name):
-		_call_on_view(view, "update")
+		_call_on_view(view, "update", data)
 	else:
 		loaded_views.append(view.name)
 		_call_on_view(view, "load")
-		_call_on_view(view, "update")
+		_call_on_view(view, "update", data)
 
-func _call_on_view(view: Control, event: String) -> void:
+func _call_on_view(view: Control, event: String, data: Dictionary = {}) -> void:
 	match event:
 		"init":
 			if view.has_method("init"):
@@ -152,6 +152,6 @@ func _call_on_view(view: Control, event: String) -> void:
 
 		"update":
 			if view.has_method("update"):
-				view.update()
+				view.update(data)
 		_:
 			push_error("Unknown event '%s' for UI View." % event)

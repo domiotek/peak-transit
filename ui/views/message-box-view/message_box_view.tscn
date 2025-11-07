@@ -1,0 +1,86 @@
+[gd_scene load_steps=5 format=3 uid="uid://bfd25756i44bm"]
+
+[ext_resource type="StyleBox" uid="uid://dxarxyvkaag2u" path="res://ui/resources/backdrop_styles.tres" id="1_32ijh"]
+[ext_resource type="Script" uid="uid://frfn7a7x07d2" path="res://ui/views/message-box-view/message_box_view.gd" id="2_oxjx3"]
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="2_vu3ot"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_oxjx3"]
+font_size = 20
+
+[node name="MessageBoxView" type="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_32ijh")
+script = ExtResource("2_oxjx3")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(450, 350)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -225.0
+offset_top = -175.0
+offset_right = 225.0
+offset_bottom = 175.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("2_vu3ot")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 20
+
+[node name="MainContainer" type="BoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 25
+vertical = true
+
+[node name="Title" type="Label" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+label_settings = SubResource("LabelSettings_oxjx3")
+horizontal_alignment = 1
+
+[node name="ContentWrapper" type="Panel" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/MainContainer/ContentWrapper"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/MarginContainer/MainContainer/ContentWrapper/MarginContainer"]
+layout_mode = 2
+
+[node name="ContentText" type="Label" parent="PanelContainer/MarginContainer/MainContainer/ContentWrapper/MarginContainer/ScrollContainer"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+
+[node name="ButtonsContainer" type="BoxContainer" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="ConfirmButton" type="Button" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Ok
+"
