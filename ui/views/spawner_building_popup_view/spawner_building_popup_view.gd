@@ -42,6 +42,7 @@ func update(_data: Dictionary) -> void:
 		return
 
 	selected_building = game_manager.get_selected_object() as SpawnerBuilding
+	ui_manager.reanchor_to_world_object(self, selected_building, UIManager.AnchorPoint.BOTTOM_LEFT, is_pinned)
 
 	id_label.text = "#" + str(selected_building.id)
 
