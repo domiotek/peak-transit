@@ -7,10 +7,10 @@ namespace PT.Models.WorldDefinition;
 
 public class NetworkDefinition
 {
-    [JsonProperty("nodes")]
+    [JsonProperty("nodes", Required = Required.Always)]
     public required List<NetNodeInfo> Nodes { get; init; }
 
-    [JsonProperty("segments")]
+    [JsonProperty("segments", Required = Required.Always)]
     public required List<NetSegmentInfo> Segments { get; init; }
 
     public Dictionary Serialize()

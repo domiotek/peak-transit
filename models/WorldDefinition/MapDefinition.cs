@@ -6,14 +6,14 @@ namespace PT.Models.WorldDefinition;
 
 public class MapDefinition
 {
-    [JsonProperty("size"), JsonConverter(typeof(Vector2JsonConverter))]
-    public required Vector2 MapSize { get; init; }
+    [JsonProperty("size", Required = Required.Always), JsonConverter(typeof(Vector2JsonConverter))]
+    public required Vector2 MapSize { get; set; }
 
     [JsonProperty("initialPosition"), JsonConverter(typeof(Vector2JsonConverter))]
-    public Vector2 InitialMapPos { get; } = new Vector2(0, 0);
+    public Vector2 InitialMapPos { get; set; } = new Vector2(0, 0);
 
     [JsonProperty("initialZoom")]
-    public float InitialZoom { get; } = 1.0f;
+    public float InitialZoom { get; set; } = 1.0f;
 
     public Godot.Collections.Dictionary Serialize()
     {

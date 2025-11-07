@@ -11,16 +11,16 @@ public enum CurveDirection
 
 public class NetSegmentInfo
 {
-    [JsonProperty("nodes")]
+    [JsonProperty("nodes", Required = Required.Always)]
     public required List<int> Nodes { get; init; } = [];
 
     [JsonProperty("bendStrength")]
     public float CurveStrength { get; init; } = 0f;
 
-    [JsonProperty("bendDir")]
+    [JsonProperty("bendDir", Required = Required.Always)]
     public required CurveDirection CurveDirection { get; init; }
 
-    [JsonProperty("relations")]
+    [JsonProperty("relations", Required = Required.Always)]
     public required List<NetRelationInfo> Relations { get; init; }
 
     [JsonProperty("maxSpeed")]

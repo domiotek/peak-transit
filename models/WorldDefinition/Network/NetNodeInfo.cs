@@ -16,7 +16,10 @@ public class NetNodeInfo
     [JsonIgnore]
     public int Id { get; set; }
 
-    [JsonProperty("pos"), JsonConverter(typeof(PT.Helpers.Vector2JsonConverter))]
+    [
+        JsonProperty("pos", Required = Required.Always),
+        JsonConverter(typeof(PT.Helpers.Vector2JsonConverter))
+    ]
     public required Vector2 Position { get; set; }
 
     [JsonProperty("intersection")]

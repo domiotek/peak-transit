@@ -5,16 +5,16 @@ namespace PT.Models.WorldDefinition;
 
 public class SlimWorldDefinition
 {
-    [JsonProperty("name")]
+    [JsonProperty("name", Required = Required.Always)]
     public required string Name { get; set; }
 
     [JsonIgnore]
     public string FilePath { get; set; } = string.Empty;
 
-    [JsonProperty("description")]
+    [JsonProperty("description", Required = Required.Always)]
     public required string Description { get; set; }
 
-    [JsonProperty("createdAt")]
+    [JsonProperty("createdAt", Required = Required.Always)]
     public required string CreatedAt { get; set; }
 
     [JsonIgnore]

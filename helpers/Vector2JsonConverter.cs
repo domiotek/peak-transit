@@ -15,9 +15,9 @@ public class Vector2JsonConverter : JsonConverter<Vector2>
         JsonSerializer serializer
     )
     {
-        if (reader.TokenType == JsonToken.Null)
+        if (reader.TokenType is JsonToken.None or JsonToken.Null)
         {
-            return Vector2.Zero;
+            throw new JsonSerializationException("Cannot convert null value to Vector2.");
         }
 
         var token = JToken.Load(reader);

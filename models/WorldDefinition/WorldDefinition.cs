@@ -4,10 +4,10 @@ namespace PT.Models.WorldDefinition;
 
 public partial class WorldDefinition : SlimWorldDefinition
 {
-    [JsonProperty("map")]
+    [JsonProperty("map", Required = Required.Always)]
     public required MapDefinition MapDefinition { get; init; }
 
-    [JsonProperty("network")]
+    [JsonProperty("network", Required = Required.Always)]
     public required NetworkDefinition NetworkDefinition { get; init; }
 
     public new Godot.Collections.Dictionary Serialize()

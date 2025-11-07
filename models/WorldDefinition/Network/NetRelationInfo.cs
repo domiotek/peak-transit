@@ -6,7 +6,7 @@ namespace PT.Models.WorldDefinition.Network;
 
 public class NetRelationInfo
 {
-    [JsonProperty("lanes")]
+    [JsonProperty("lanes", Required = Required.Always)]
     public required List<NetLaneInfo> Lanes { get; init; }
 
     [JsonProperty("buildings")]
