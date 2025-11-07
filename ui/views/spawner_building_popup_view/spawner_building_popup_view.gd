@@ -36,7 +36,7 @@ func _ready() -> void:
 	debugger_button.pressed.connect(_on_debugger_button_pressed)
 	pin_button.pressed.connect(_on_pin_button_toggled)
 
-func update() -> void:
+func update(_data: Dictionary) -> void:
 	if game_manager.get_selection_type() != GameManager.SelectionType.SPAWNER_BUILDING:
 		_on_close_button_pressed()
 		return
@@ -58,7 +58,6 @@ func update() -> void:
 
 func _process(_delta: float) -> void:
 	if visible and selected_building:
-		ui_manager.reanchor_to_world_object(self, selected_building, UIManager.AnchorPoint.BOTTOM_LEFT, is_pinned)
 		var data = selected_building.get_popup_data()
 
 		for i in range(data_items.size()):
