@@ -53,23 +53,37 @@ public partial class WorldManager : RefCounted
         return Path.Combine(builtInWorldDirectory, defaultWorldFileName);
     }
 
-    public WorldDefinition LoadWorldDefinition(string filePath)
+    public (WorldDefinition parsedDef, string parsingError) LoadWorldDefinition(string filePath)
     {
         if (!FSHelper.EnsureFileExists(filePath))
-            return null;
+            return (null, "File does not exist");
 
         var fileContents = FileAccess.Open(filePath, FileAccess.ModeFlags.Read).GetAsText();
-        var definition = Newtonsoft.Json.JsonConvert.DeserializeObject<WorldDefinition>(
-            fileContents
-        );
 
-        return definition;
+        try
+        {
+            var definition = Newtonsoft.Json.JsonConvert.DeserializeObject<WorldDefinition>(
+                fileContents
+            );
+            definition.FilePath = filePath;
+
+            return (definition, null);
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"Failed to load world definition from {filePath}: {ex.Message}");
+            return (null, ex.Message);
+        }
     }
 
     public Dictionary LoadSerializedWorldDefinition(string filePath)
     {
-        var definition = LoadWorldDefinition(filePath);
-        return definition?.Serialize();
+        var (definition, parsingError) = LoadWorldDefinition(filePath);
+        return new Dictionary
+        {
+            ["definition"] = definition?.Serialize(),
+            ["parsingError"] = parsingError,
+        };
     }
 
     private static void CollectWorldsFromPath(string basePath, List<SlimWorldDefinition> worlds)
@@ -94,7 +108,9 @@ public partial class WorldManager : RefCounted
             );
 
             if (slimWorldDef == null)
-                return;
+                continue;
+
+            slimWorldDef.FilePath = filePath;
 
             worlds.Add(slimWorldDef);
         }

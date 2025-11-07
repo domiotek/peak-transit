@@ -64,13 +64,20 @@ func initialize_game(world_file_path: String="") -> void:
 	if world_file_path == "":
 		world_file_path = world_manager.GetDefaultWorldFilePath()
 
+	print("Loading world from file: %s" % world_file_path)
+
 	var world_def = world_manager.LoadSerializedWorldDefinition(world_file_path)
 
-	if not world_def:
+	if not world_def['definition']:
 		push_error("Failed to load world definition from file: %s" % world_file_path)
+		ui_manager.show_ui_view(MessageBoxView.VIEW_NAME, {
+			"title": "Error during world load",
+			"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [world_file_path, world_def['parsingError'] if world_def.has('parsingError') else "None"],
+		});
+
 		return
 
-	var parsed_def = WorldDefinition.deserialize(world_def)
+	var parsed_def = WorldDefinition.deserialize(world_def.definition)
 
 	self.world_definition = parsed_def
 
