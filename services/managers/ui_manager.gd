@@ -7,12 +7,29 @@ enum AnchorPoint {
 	BOTTOM_RIGHT,
 }
 
-
 var ui_views: Dictionary[String, Control] = {}
 
 var visible_views: Array[String] = []
 var loaded_views: Array[String] = []
 
+var main_menu: Control
+var game_viewport: GameController
+
+func initialize(_main_menu: Control, _game_viewport: GameController) -> void:
+	main_menu = _main_menu
+	game_viewport = _game_viewport
+
+
+func show_main_menu() -> void:
+	main_menu.visible = true
+	game_viewport.visible = false
+
+	for view in visible_views:
+		hide_ui_view(view)
+
+func hide_main_menu() -> void:
+	main_menu.visible = false
+	game_viewport.visible = true
 
 func register_ui_view(name: String, node: Control):
 	if ui_views.has(name):
@@ -35,13 +52,13 @@ func get_ui_view(name: String) -> Control:
 		push_error("UI View with name '%s' not found." % name)
 		return null
 
-func show_ui_view(name: String):
+func show_ui_view(name: String, data: Dictionary = {}) -> void:
 	if ui_views.has(name):
 		var view = ui_views[name]
 		view.visible = true
 		if not visible_views.has(name):
 			visible_views.append(name)
-		_render_view(view)
+		_render_view(view, data)
 	else:
 		push_error("UI View with name '%s' not found." % name)
 
@@ -63,6 +80,9 @@ func toggle_ui_view(name: String):
 	else:
 		push_error("UI View with name '%s' not found." % name)
 
+func hide_all_ui_views() -> void:
+	for ui_view_id in visible_views.duplicate():
+		hide_ui_view(ui_view_id)
 
 func is_mouse_over_ui(mouse_position: Vector2) -> bool:
 	for ui_view_id in visible_views:
@@ -112,15 +132,15 @@ func reanchor_to_world_object(control: Control, target_object: Node2D, anchor: A
 
 	control.position = position
 
-func _render_view(view: Control) -> void:
+func _render_view(view: Control, data: Dictionary) -> void:
 	if loaded_views.has(view.name):
-		_call_on_view(view, "update")
+		_call_on_view(view, "update", data)
 	else:
 		loaded_views.append(view.name)
 		_call_on_view(view, "load")
-		_call_on_view(view, "update")
+		_call_on_view(view, "update", data)
 
-func _call_on_view(view: Control, event: String) -> void:
+func _call_on_view(view: Control, event: String, data: Dictionary = {}) -> void:
 	match event:
 		"init":
 			if view.has_method("init"):
@@ -132,6 +152,6 @@ func _call_on_view(view: Control, event: String) -> void:
 
 		"update":
 			if view.has_method("update"):
-				view.update()
+				view.update(data)
 		_:
 			push_error("Unknown event '%s' for UI View." % event)

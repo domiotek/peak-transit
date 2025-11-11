@@ -1,10 +1,9 @@
 using Godot;
-using Godot.Collections;
-using PT.Models.Network;
+using PT.Models.WorldDefinition.Network;
 
 namespace PT.Models.Mappings;
 
-public partial class NetLane : Node2D, IMapping<NetLane>
+public partial class NetLane : IMapping<NetLane>
 {
     private GodotObject _sourceObject;
 
@@ -27,7 +26,13 @@ public partial class NetLane : Node2D, IMapping<NetLane>
         return new NetLane
         {
             _sourceObject = gdObject,
-            LaneInfo = gdObject.Get("data").As<NetLaneInfo>(),
+            LaneInfo = NetLaneInfo.Deserialize(
+                gdObject
+                    .Get("data")
+                    .AsGodotObject()
+                    .Call("serialize")
+                    .As<Godot.Collections.Dictionary>()
+            ),
             Id = gdObject.Get("id").AsInt32(),
         };
     }

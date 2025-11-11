@@ -28,15 +28,15 @@ func create_spawner_building(info: BuildingInfo) -> SpawnerBuilding:
 
 	var building: SpawnerBuilding = null
 
-	match info.Type:
-		BaseBuilding.BuildingType.RESIDENTIAL:
+	match info.type:
+		BuildingInfo.BuildingType.Residential:
 			building = RESIDENTIAL_BUILDING_SCENE.instantiate() as SpawnerBuilding
-		BaseBuilding.BuildingType.COMMERCIAL:
+		BuildingInfo.BuildingType.Commercial:
 			building = COMMERCIAL_BUILDING_SCENE.instantiate() as SpawnerBuilding
-		BaseBuilding.BuildingType.INDUSTRIAL:
+		BuildingInfo.BuildingType.Industrial:
 			building = INDUSTRIAL_BUILDING_SCENE.instantiate() as SpawnerBuilding
 		_:
-			push_error("Unsupported building type: %s" % str(info.Type))
+			push_error("Unsupported building type: %s" % str(info.type))
 			return null
 	building.id = id
 	buildings[id] = building
@@ -60,7 +60,7 @@ func get_random_building() -> BaseBuilding:
 	var random_index = randi() % building_list.size()
 	return building_list[random_index]
 
-func get_random_building_with_constraints(of_type: BaseBuilding.BuildingType, other_than: int) -> BaseBuilding:
+func get_random_building_with_constraints(of_type: BuildingInfo.BuildingType, other_than: int) -> BaseBuilding:
 	var building_list = buildings.values()
 	if building_list.size() == 0:
 		return null
@@ -73,8 +73,8 @@ func get_random_building_with_constraints(of_type: BaseBuilding.BuildingType, ot
 	var random_index = randi() % filtered_list.size()
 	return filtered_list[random_index]
 
-func get_random_building_type(other_than: BaseBuilding.BuildingType) -> BaseBuilding.BuildingType:
-	var types = BaseBuilding.BuildingType.values()
+func get_random_building_type(other_than: BuildingInfo.BuildingType) -> BuildingInfo.BuildingType:
+	var types = BuildingInfo.BuildingType.values()
 	types.erase(other_than)
 
 	if types.size() == 0:
@@ -82,6 +82,8 @@ func get_random_building_type(other_than: BaseBuilding.BuildingType) -> BaseBuil
 	var random_index = randi() % types.size()
 	return types[random_index]
 
+func clear_state() -> void:
+	buildings.clear()
 
 func _get_next_id() -> int:
 	var max_id = -1

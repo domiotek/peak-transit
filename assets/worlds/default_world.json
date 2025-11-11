@@ -1,0 +1,457 @@
+{
+	"name": "Default World",
+	"description": "This is the default world.",
+	"createdAt": "2024-01-01T00:00:00Z",
+	"map": {
+		"size": [
+			5000,
+			5000
+		],
+		"initialPosition": [
+			0,
+			0
+		],
+		"initialZoom": 1
+	},
+	"network": {
+		"nodes": [
+			{
+				"pos": [
+					-114,
+					46
+				],
+				"intersection": 1
+			},
+			{
+				"pos": [
+					126,
+					47
+				]
+			},
+			{
+				"pos": [
+					238,
+					97
+				]
+			},
+			{
+				"pos": [
+					428,
+					37
+				]
+			},
+			{
+				"pos": [
+					765,
+					-302
+				],
+				"intersection": 1,
+				"priSegments": [
+					6,
+					3
+				],
+				"stpSegments": [
+					5
+				]
+			},
+			{
+				"pos": [
+					400,
+					-600
+				]
+			},
+			{
+				"pos": [
+					1000,
+					-600
+				]
+			},
+			{
+				"pos": [
+					-600,
+					-800
+				]
+			},
+			{
+				"pos": [
+					300,
+					1000
+				],
+				"intersection": 1
+			},
+			{
+				"pos": [
+					-600,
+					200
+				],
+				"priSegments": [
+					0,
+					10
+				]
+			},
+			{
+				"pos": [
+					-600,
+					800
+				]
+			},
+			{
+				"pos": [
+					-1200,
+					200
+				]
+			},
+			{
+				"pos": [
+					800,
+					1500
+				]
+			}
+		],
+		"segments": [
+			{
+				"nodes": [
+					0,
+					1
+				],
+				"bendDir": -1,
+				"bendStrength": 0.2,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					1,
+					2
+				],
+				"bendDir": 1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					2,
+					3
+				],
+				"bendStrength": 0.4,
+				"bendDir": 1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					3,
+					4
+				],
+				"bendDir": -1,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{
+								"direction": 6
+							},
+							{
+								"direction": 7,
+								"maxSpeed": 80
+							},
+							{
+								"maxSpeed": 150
+							}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					4,
+					5
+				],
+				"bendStrength": 0.1,
+				"bendDir": 1,
+				"relations": [
+					{
+						"lanes": [
+							{}
+						],
+						"buildings": [
+							{
+								"type": 1,
+								"offset": 150
+							}
+						]
+					},
+					{
+						"lanes": [
+							{}
+						],
+						"buildings": [
+							{
+								"type": 0,
+								"offset": 30
+							},
+							{
+								"type": 0,
+								"offset": 90
+							},
+							{
+								"type": 0,
+								"offset": 150
+							},
+							{
+								"type": 0,
+								"offset": 210
+							},
+							{
+								"type": 0,
+								"offset": 270
+							},
+							{
+								"type": 0,
+								"offset": 330
+							}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					4,
+					6
+				],
+				"bendStrength": 0.1,
+				"bendDir": 1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					0,
+					7
+				],
+				"bendDir": 1,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						],
+						"buildings": [
+							{
+								"type": 0,
+								"offset": 100
+							}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					0,
+					8
+				],
+				"bendDir": 1,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					0,
+					9
+				],
+				"bendDir": 1,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					9,
+					10
+				],
+				"bendDir": 1,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					9,
+					11
+				],
+				"bendDir": 1,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						],
+						"buildings": [
+							{
+								"type": 2,
+								"offset": 150
+							},
+							{
+								"type": 2,
+								"offset": 200
+							}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					10,
+					8
+				],
+				"bendDir": 1,
+				"bendStrength": 0.4,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					8,
+					12
+				],
+				"bendDir": 1,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			}
+		]
+	}
+}

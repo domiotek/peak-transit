@@ -7,18 +7,14 @@ var COLLISION_ZONE = preload("res://game-objects/buildings/collision-zone/collis
 var STOPPER = preload("res://game-objects/buildings/building-stopper/building_stopper.tscn")
 var SYMPATHETIC_STOPPER = preload("res://game-objects/buildings/sympathetic-stopper/sympathetic_stopper.tscn")
 
-enum BuildingType {
-	RESIDENTIAL,
-	COMMERCIAL,
-	INDUSTRIAL
-}
-
 var id: int
 var building_info: BuildingInfo
 var segment: NetSegment
 var target_relation_idx: int = -1
 var target_relation_dest_endpoint_id: int = -1
-var type: BuildingType
+var type: BuildingInfo.BuildingType
+
+var is_setup: bool = false
 
 var connections: Dictionary = {
 	"in": {},
@@ -48,6 +44,9 @@ func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
 func _physics_process(delta: float) -> void:
+	if not is_setup:
+		return
+
 	_check_stopper()
 	_check_entering_vehicles(delta)
 	_check_leaving_vehicle()
@@ -56,7 +55,7 @@ func setup(relation_id: int, _segment: NetSegment, _building_info: BuildingInfo)
 	target_relation_idx = relation_id
 	self.segment = _segment
 	self.building_info = _building_info
-	self.type = _building_info.Type
+	self.type = _building_info.type
 
 func setup_connections() -> void:
 	var endpoints = _get_connection_endpoints()
@@ -111,6 +110,7 @@ func setup_connections() -> void:
 		out_connection_zones_mapping[connection["next_endpoint"]] = zones
 
 	_update_debug_visuals()
+	is_setup = true
 
 func get_in_connections() -> Array:
 	var in_conns = []

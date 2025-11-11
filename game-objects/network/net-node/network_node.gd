@@ -12,7 +12,7 @@ class_name RoadNode
 @onready var game_manager = GDInjector.inject("GameManager") as GameManager
 
 @export var id: int
-var definition: NetNode
+var definition: NetNodeInfo
 var connections: Dictionary = {}
 var incoming_endpoints: Array = []
 var outgoing_endpoints: Array = []
@@ -196,8 +196,8 @@ func _fill_segment_priorities() -> void:
 
 	for segment in connected_segments:
 		var dest_node_id = segment.get_other_node_id(id)
-		var is_in_priority = definition.PrioritySegments.has(dest_node_id)
-		var is_in_stop = definition.StopSegments.has(dest_node_id)
+		var is_in_priority = definition.priority_segments.has(dest_node_id)
+		var is_in_stop = definition.stop_segments.has(dest_node_id)
 
 		if is_in_priority:
 			if priority_count >= 2 || is_in_stop:

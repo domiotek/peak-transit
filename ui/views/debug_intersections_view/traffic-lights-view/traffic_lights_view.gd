@@ -81,7 +81,7 @@ func _on_debug_button_pressed() -> void:
 	game_manager.set_selection(node, GameManager.SelectionType.NODE)
 	game_manager.debug_selection = true
 
-func _on_stopper_debug_button_pressed(data: Dictionary) -> void:
+func _on_stopper_debug_button_pressed(_sender: ListItem, data: Dictionary) -> void:
 	if not is_bound or not node:
 		return
 

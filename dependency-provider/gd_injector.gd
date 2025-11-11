@@ -50,3 +50,5 @@ func _init_deferred_dependencies():
 	for dep in deferred_init_list:
 		if dep.has_method("inject_dependencies"):
 			dep.inject_dependencies()
+
+	deferred_init_list.clear()

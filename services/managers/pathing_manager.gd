@@ -85,6 +85,15 @@ func find_path_with_multiple_options(combinations: Array, callback: Callable, ti
 			i
 		)
 
+func cancel_all_requests() -> void:
+	active_requests.clear()
+
+func clear_state() -> void:
+	active_requests.clear()
+	path_cache.clear()
+	request_counter = 0
+	path_finder.ClearGraph()
+
 func _get_request_id() -> int:
 	request_counter += 1
 	return (Time.get_ticks_msec() * 10000) + request_counter
@@ -97,6 +106,10 @@ func _is_cache_entry_valid(cache_key: String) -> bool:
 		return false
 	
 	var cache_entry = path_cache[cache_key]
+
+	if not is_instance_valid(cache_entry["result"]):
+		return false
+
 	var current_time = Time.get_unix_time_from_system()
 	var entry_time = cache_entry["timestamp"]
 	
@@ -104,9 +117,10 @@ func _is_cache_entry_valid(cache_key: String) -> bool:
 
 func _get_cached_result(cache_key: String):
 	if _is_cache_entry_valid(cache_key):
-		return path_cache[cache_key]["result"]
+		return path_cache[cache_key]["result"].Clone()
 	else:
 		path_cache.erase(cache_key)
+
 		return null
 
 func _on_pathfinding_result(request_id: int, combination_id: int, path_result) -> void:
@@ -119,18 +133,6 @@ func _on_pathfinding_result(request_id: int, combination_id: int, path_result) -
 	
 	path_context.results[combination_id] = path_result
 	path_context.completed_count += 1
-	
-	if path_result != null and path_result.State == 1:
-		var cache_key = _generate_cache_key(
-			path_result.StartNodeId,
-			path_result.EndNodeId,
-			path_result.ForcedStartEndpointId,
-			path_result.ForcedEndEndpointId
-		)
-		path_cache[cache_key] = {
-			"result": path_result,
-			"timestamp": Time.get_unix_time_from_system()
-		}
 	
 	if path_context.completed_count >= path_context.total_count:
 		path_context.is_finished = true
@@ -169,6 +171,17 @@ func _select_best_path(results: Array, callback: Callable) -> void:
 	if best_result_index == -1:
 		best_result = {
 			"State": 2,
+		}
+	else: 
+		var cache_key = _generate_cache_key(
+			best_result.StartNodeId,
+			best_result.EndNodeId,
+			best_result.ForcedStartEndpointId,
+			best_result.ForcedEndEndpointId
+		)
+		path_cache[cache_key] = {
+			"result": best_result,
+			"timestamp": Time.get_unix_time_from_system()
 		}
 		
 	callback.call(best_result)

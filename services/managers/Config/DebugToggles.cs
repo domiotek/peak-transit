@@ -4,7 +4,7 @@ using Godot;
 namespace PT.Services.Managers.Config;
 
 [GlobalClass]
-public partial class DebugToggles : GodotObject
+public partial class DebugToggles : RefCounted
 {
     [Signal]
     public delegate void ToggleChangedEventHandler(string toggleName, bool value);

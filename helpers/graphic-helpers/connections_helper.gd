@@ -27,7 +27,7 @@ func setup_one_segment_connections(node: RoadNode) -> void:
 				if in_endpoint.LaneNumber != out_endpoint.LaneNumber:
 					continue
 
-				in_endpoint.AddConnection(out_id)
+				in_endpoint.Connections.append(out_id)
 				var connections_array = node.connections.get(in_id, [])
 				connections_array.append(out_id)
 				node.connections[in_id] = connections_array
@@ -70,7 +70,7 @@ func setup_two_segment_connections(node: RoadNode) -> void:
 				if abs(in_endpoint.LaneNumber - out_endpoint.LaneNumber) >1:
 					continue
 
-				in_endpoint.AddConnection(out_id)
+				in_endpoint.Connections.append(out_id)
 				var connections_array = node.connections.get(in_id, [])
 				connections_array.append(out_id)
 				node.connections[in_id] = connections_array
@@ -151,18 +151,12 @@ func create_connecting_path(in_id: int, out_id: int, node: RoadNode, direction: 
 	node.add_connection_path(in_id, out_id, curve, direction)
 
 
-func add_direction_marker(node: RoadNode, in_endpoint: NetLaneEndpoint, asset_name: String, marker_offset: float=NetworkConstants.DIRECTION_MARKER_OFFSET) -> void:
+func add_direction_marker(node: RoadNode, in_endpoint: Dictionary, asset_name: String, marker_offset: float=NetworkConstants.DIRECTION_MARKER_OFFSET) -> void:
 	var asset_path = "res://assets/road_markers/" + asset_name + "_marker.svg"
 	var marker_image = load(asset_path)
 
 	if not marker_image:
 		print("Failed to load asset: ", asset_path)
-
-	var marker_sprite = Sprite2D.new()
-	marker_sprite.texture = marker_image
-	marker_sprite.scale = Vector2(0.125, 0.125)
-	marker_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-
 
 	var target_segment = network_manager.get_segment(in_endpoint.SegmentId)
 
@@ -194,6 +188,11 @@ func add_direction_marker(node: RoadNode, in_endpoint: NetLaneEndpoint, asset_na
 	var point_on_curve = curve.sample_baked(offset)
 	var tangent = curve.sample_baked_with_rotation(offset).y
 	var position = point_on_curve + tangent.normalized()
+
+	var marker_sprite = Sprite2D.new()
+	marker_sprite.texture = marker_image
+	marker_sprite.scale = Vector2(0.125, 0.125)
+	marker_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 	marker_sprite.position = node.to_local(position)
 	var rotation = tangent.angle() + rotation_offset

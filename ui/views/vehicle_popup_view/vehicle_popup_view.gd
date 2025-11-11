@@ -30,8 +30,8 @@ func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
-	ui_manager.register_ui_view("VehiclePopupView", self)
 	visible = false
+	ui_manager.register_ui_view("VehiclePopupView", self)
 
 	close_button.pressed.connect(_on_close_button_pressed)
 	delete_button.pressed.connect(_on_delete_button_pressed)
@@ -40,7 +40,7 @@ func _ready() -> void:
 	pin_button.pressed.connect(_on_pin_button_toggled)
 	reroute_button.pressed.connect(_on_reroute_button_pressed)
 
-func update() -> void:
+func update(_data: Dictionary) -> void:
 	if game_manager.get_selection_type() != GameManager.SelectionType.VEHICLE:
 		_on_close_button_pressed()
 		return

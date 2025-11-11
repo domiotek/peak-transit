@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using PT.Constants;
 using PT.Managers;
 using PT.Services;
 using PT.Services.Adapters;
@@ -18,8 +17,7 @@ public partial class CSInjector : Node
         DIContainer.Register("ConfigManager", new ConfigManager());
         DIContainer.Register("LaneCalculator", new LaneCalculator());
         DIContainer.Register("PathFinder", new PathFinder());
-
-        DIContainer.Register("NetworkDefinition", new NetworkDefinition());
+        DIContainer.Register("WorldManager", new WorldManager());
 
         RegisterAdapter("NetworkManager", typeof(NetworkManagerAdapter));
 

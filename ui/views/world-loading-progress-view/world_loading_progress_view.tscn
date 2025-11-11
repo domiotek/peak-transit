@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3 uid="uid://dwvxntd8ejmoh"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_qpcfw"]
+[ext_resource type="Script" uid="uid://dd04fn4ruus5b" path="res://ui/views/world-loading-progress-view/world_loading_progress_view.gd" id="2_psb40"]
+
+[node name="WorldLoadingProgressView" type="PanelContainer"]
+custom_minimum_size = Vector2(450, 100)
+theme_override_styles/panel = ExtResource("1_qpcfw")
+script = ExtResource("2_psb40")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="MainFlowContainer" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+vertical = true
+
+[node name="HeaderBoxContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+text = "Loading world"
+
+[node name="MainContentContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 9
+vertical = true
+
+[node name="ActionName" type="Label" parent="MarginContainer/MainFlowContainer/MainContentContainer"]
+layout_mode = 2
+text = "Loading nodes..."
+
+[node name="ActionProgress" type="ProgressBar" parent="MarginContainer/MainFlowContainer/MainContentContainer"]
+layout_mode = 2
+step = 1.0

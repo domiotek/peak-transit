@@ -10,13 +10,6 @@ enum SelectionType {
 	SPAWNER_BUILDING
 }
 
-var camera_bounds: Rect2
-var camera_projection_offset := Vector2(2, 1.35)
-var camera_speed := 500.0
-var camera_zoom_bounds: Array[Vector2] = [Vector2(0.5, 0.5), Vector2(6, 6)]
-var map_size := Vector2(5000, 5000)
-var initial_map_pos = Vector2(150, 900)
-
 var selected_object: Object = null
 var selection_type: SelectionType = SelectionType.NONE
 var selection_popup_id: Variant = null
@@ -26,35 +19,120 @@ var vehicle_with_path_drawn: Vehicle = null
 var ui_manager: UIManager
 var config_manager: ConfigManager
 var line_helper: LineHelper
+var simulation_manager: SimulationManager
+var vehicle_manager: VehicleManager
+var network_manager: NetworkManager
+var buildings_manager: BuildingsManager
+var pathing_manager: PathingManager
+var world_manager: WorldManager
 
-var map: Map
+var game_controller: GameController
 
-var game_speed: Enums.GameSpeed = Enums.GameSpeed.LOW
+var world_definition: WorldDefinition
+
+
+var game_speed: Enums.GameSpeed = Enums.GameSpeed.PAUSE
+var initialized: bool = false
+var game_menu_visible: bool = false
+
 signal game_speed_changed(new_speed: Enums.GameSpeed)
+signal world_loading_progress(action: String, progress: float)
 
-func initialize(_map: Node2D, camera: Camera2D) -> void:
+func setup(_game_controller: GameController) -> void:
+	game_controller = _game_controller
+
 	ui_manager = GDInjector.inject("UIManager") as UIManager
-	map = _map as Map
-
-	map.map_size = map_size
-	var rect_position = -map_size / 2
-	camera_bounds = Rect2(rect_position, map_size)
-	camera.set_camera_props(camera_bounds, camera_projection_offset, camera_zoom_bounds, camera_speed)
-	camera.position = initial_map_pos
-
-	var simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager
-	var vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
+	simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager
+	vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
+	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
+	world_manager = GDInjector.inject("WorldManager") as WorldManager
 
-	vehicle_manager.set_vehicles_layer(map.get_drawing_layer("VehiclesLayer"))
+	vehicle_manager.set_vehicles_layer(game_controller.get_map().get_drawing_layer("VehiclesLayer"))
 
-	simulation_manager.start_simulation()
+	simulation_manager.setup(game_controller)
 
 func get_camera_bounds() -> Rect2:
-	return camera_bounds
+	return game_controller.get_camera_bounds()
+
+func initialize_game(world_file_path: String="") -> void:
+	if initialized:
+		return
+
+	if world_file_path == "":
+		world_file_path = world_manager.GetDefaultWorldFilePath()
+
+	print("Loading world from file: %s" % world_file_path)
+
+	var world_def = world_manager.LoadSerializedWorldDefinition(world_file_path)
+
+	if not world_def['definition']:
+		push_error("Failed to load world definition from file: %s" % world_file_path)
+		ui_manager.show_ui_view(MessageBoxView.VIEW_NAME, {
+			"title": "Error during world load",
+			"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [world_file_path, world_def['parsingError'] if world_def.has('parsingError') else "None"],
+		});
+
+		return
+
+	var parsed_def = WorldDefinition.deserialize(world_def.definition)
+
+	self.world_definition = parsed_def
+
+	initialized = true
+	ui_manager.hide_main_menu()
+	set_game_speed(Enums.GameSpeed.PAUSE)
+
+	await game_controller.initialize_game(world_definition)
+	simulation_manager.start_simulation()
+
+func dispose_game() -> void:
+	if not initialized:
+		return
+
+	initialized = false
+	simulation_manager.stop_simulation()
+
+	ui_manager.hide_all_ui_views()
+
+	var map = game_controller.get_map()
+	map.clear_drawing_layer("VehiclesLayer")
+	map.clear_drawing_layer("VehicleRouteLayer")
+	map.clear_drawing_layer("RoadGrid")
+
+	hide_game_menu()
+	clear_state()
+	ui_manager.show_main_menu()
+
+func is_game_initialized() -> bool:
+	return initialized
+
+func show_game_menu() -> void:
+	ui_manager.show_ui_view("GameMenuView")
+	game_menu_visible = true
+	set_game_speed(Enums.GameSpeed.PAUSE)
+
+func hide_game_menu() -> void:
+	ui_manager.hide_ui_view("GameMenuView")
+	game_menu_visible = false
+
+func toggle_game_menu() -> void:
+	if game_menu_visible:
+		hide_game_menu()
+	else:
+		show_game_menu()
+
+func is_game_menu_visible() -> bool:
+	return game_menu_visible
+
+
+func push_loading_progress(action: String, progress: float) -> void:
+	world_loading_progress.emit(action, progress)
 
 func set_game_speed(speed: Enums.GameSpeed) -> void:
-	game_speed = speed
+	game_speed = speed 
 
 	match game_speed:
 		Enums.GameSpeed.PAUSE:
@@ -146,7 +224,7 @@ func draw_vehicle_route(vehicle: Vehicle) -> void:
 		return
 
 		
-	var route_layer = map.get_drawing_layer("VehicleRouteLayer") as Node2D
+	var route_layer = game_controller.get_map().get_drawing_layer("VehicleRouteLayer") as Node2D
 	if not route_layer:
 		return
 
@@ -189,7 +267,7 @@ func clear_drawn_route() -> void:
 	if vehicle_with_path_drawn.navigator.is_connected("trip_rerouted", Callable(self, "redraw_route")):
 		vehicle_with_path_drawn.navigator.trip_rerouted.disconnect(Callable(self, "redraw_route"))
 
-	var route_layer = map.get_drawing_layer("VehicleRouteLayer") as Node2D
+	var route_layer = game_controller.get_map().get_drawing_layer("VehicleRouteLayer") as Node2D
 	if not route_layer:
 		return
 
@@ -203,3 +281,16 @@ func redraw_route() -> void:
 
 	call_deferred("clear_drawn_route")
 	call_deferred("draw_vehicle_route", vehicle_with_path_drawn)
+
+func clear_state() -> void:
+	selected_object = null
+	selection_type = SelectionType.NONE
+	selection_popup_id = null
+	debug_selection = false
+	vehicle_with_path_drawn = null
+
+	simulation_manager.vehicles_count = 0
+	pathing_manager.clear_state()
+	vehicle_manager.clear_state()
+	network_manager.clear_state()
+	buildings_manager.clear_state()

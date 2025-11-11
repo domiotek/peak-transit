@@ -93,6 +93,16 @@ func get_vehicle_from_area(area: Area2D) -> Vehicle:
 		return first_parent.get_parent() as Vehicle
 	return null
 
+func clear_all_vehicles() -> void:
+	var vehicle_ids = vehicles.keys()
+	for vehicle_id in vehicle_ids:
+		remove_vehicle(vehicle_id)
+
+func clear_state() -> void:
+	vehicles.clear()
+	freed_ids_pool.clear()
+	next_fresh_id = 0
+
 func _generate_vehicle_id() -> int:
 	if freed_ids_pool.size() > 0:
 		return freed_ids_pool.pop_back()

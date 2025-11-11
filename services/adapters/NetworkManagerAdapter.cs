@@ -1,5 +1,6 @@
-using System.Collections.Generic;
+using System.Linq;
 using Godot;
+using Godot.Collections;
 using PT.Models.Mappings;
 using PT.Models.Network;
 
@@ -11,17 +12,21 @@ public class NetworkManagerAdapter(GodotObject managerGdObject)
 
     public NetLaneEndpoint GetLaneEndpoint(int id)
     {
-        return (NetLaneEndpoint)_managerGdObject.Call("get_lane_endpoint", id);
+        return NetLaneEndpoint.Deserialize(
+            _managerGdObject.Call("get_lane_endpoint", id).As<Dictionary>()
+        );
     }
 
-    public List<NetLaneEndpoint> GetNodeLaneEndpoints(int nodeId)
+    public GodotObjectCollection<NetLaneEndpoint> GetNodeLaneEndpoints(int nodeId)
     {
-        return
-        [
-            .. _managerGdObject
-                .Call("get_node_endpoints", nodeId)
-                .AsGodotObjectArray<NetLaneEndpoint>(),
-        ];
+        return new GodotObjectCollection<NetLaneEndpoint>(
+            [
+                .. _managerGdObject
+                    .Call("get_node_endpoints", nodeId)
+                    .AsGodotArray<Dictionary>()
+                    .Select(NetLaneEndpoint.Deserialize),
+            ]
+        );
     }
 
     public NetSegment GetSegment(int segmentId)

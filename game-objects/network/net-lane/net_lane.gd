@@ -85,10 +85,10 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 	_update_debug_layer()
 
-func get_endpoint_by_id(endpoint_id: int) -> NetLaneEndpoint:
+func get_endpoint_by_id(endpoint_id: int) -> Variant:
 	return network_manager.get_lane_endpoint(endpoint_id)
 
-func get_endpoint_by_type(is_outgoing: bool) -> NetLaneEndpoint:
+func get_endpoint_by_type(is_outgoing: bool) -> Variant:
 	return network_manager.get_lane_endpoint(from_endpoint if is_outgoing else to_endpoint)
 
 func get_curve() -> Curve2D:
@@ -184,7 +184,7 @@ func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 	return count
 
 func get_max_allowed_speed() -> float:
-	return data.MaxSpeed if data.MaxSpeed > 0 else segment.data.MaxSpeed if segment.data.MaxSpeed > 0 else INF
+	return data.max_speed if data.max_speed > 0 else segment.data.max_speed if segment.data.max_speed > 0 else INF
 
 func get_lane_usage() -> float:
 	return lane_usage_ema

@@ -14,13 +14,15 @@ namespace PT.Services;
 record WorkItem(PathingRequest Request, Callable OnResult, long RequestId, int CombinationId = 0);
 
 [GlobalClass]
-public partial class PathFinder : GodotObject
+public partial class PathFinder : RefCounted
 {
     private NetGraph Graph { get; set; } = new NetGraph();
 
     private List<Thread> FinderThreads { get; set; } = [];
     private readonly ConcurrentQueue<WorkItem> _queue = new();
     private readonly AutoResetEvent _signal = new(false);
+    private CancellationTokenSource _cancellationTokenSource = new();
+    private readonly object _graphLock = new();
 
     public PathFinder()
     {
@@ -40,12 +42,31 @@ public partial class PathFinder : GodotObject
 
     public void BuildGraph(Array<GodotObject> nodes)
     {
-        foreach (var nodeObject in nodes)
+        lock (_graphLock)
         {
-            var netNode = Models.Mappings.NetworkNode.Map(nodeObject);
+            foreach (var nodeObject in nodes)
+            {
+                var netNode = Models.Mappings.NetworkNode.Map(nodeObject);
 
-            Graph.AddNode(netNode);
+                Graph.AddNode(netNode);
+            }
         }
+    }
+
+    public void ClearGraph()
+    {
+        _cancellationTokenSource.Cancel();
+
+        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        lock (_graphLock)
+        {
+            Graph.Dispose();
+            Graph = new NetGraph();
+        }
+
+        AStarPathing.ClearCache();
     }
 
     public void FindPath(
@@ -72,14 +93,33 @@ public partial class PathFinder : GodotObject
 
             while (_queue.TryDequeue(out var request))
             {
+                if (_cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    var cancelledResponse = PathingResponse.CompleteRequest(
+                        request.Request,
+                        PathingState.Cancelled,
+                        []
+                    );
+                    RespondToRequest(request, cancelledResponse);
+                    continue;
+                }
+
                 try
                 {
-                    var response = ProcessPathingRequest(request.Request);
-                    request.OnResult.CallDeferred(
-                        request.RequestId,
-                        request.CombinationId,
-                        response
+                    var response = ProcessPathingRequest(
+                        request.Request,
+                        _cancellationTokenSource.Token
                     );
+                    RespondToRequest(request, response);
+                }
+                catch (OperationCanceledException)
+                {
+                    var cancelledResponse = PathingResponse.CompleteRequest(
+                        request.Request,
+                        PathingState.Cancelled,
+                        []
+                    );
+                    RespondToRequest(request, cancelledResponse);
                 }
                 catch (Exception ex)
                 {
@@ -88,34 +128,50 @@ public partial class PathFinder : GodotObject
                         PathingState.Failed,
                         []
                     );
-                    request.OnResult.Call(request.RequestId, request.CombinationId, response);
+                    RespondToRequest(request, response);
                     GD.PrintErr($"Error processing pathing request: {ex.Message}");
                 }
             }
         }
     }
 
-    private PathingResponse ProcessPathingRequest(PathingRequest request)
+    private PathingResponse ProcessPathingRequest(
+        PathingRequest request,
+        CancellationToken cancellationToken
+    )
     {
         try
         {
-            var path = new Array<PathStep>();
-            var (foundPath, totalCost) = AStarPathing.FindPathAStar(
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var (foundPath, cost) = AStarPathing.FindPathAStar(
                 Graph,
                 request.StartNodeId,
                 request.EndNodeId,
                 request.ForcedStartEndpointId != -1 ? request.ForcedStartEndpointId : null,
-                request.ForcedEndEndpointId != -1 ? request.ForcedEndEndpointId : null
+                request.ForcedEndEndpointId != -1 ? request.ForcedEndEndpointId : null,
+                cancellationToken
             );
 
-            path.AddRange(foundPath);
-
-            return request.CompleteRequest(PathingState.Completed, path, totalCost);
+            return request.CompleteRequest(PathingState.Completed, foundPath, cost);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
             GD.PrintErr($"A* pathfinding failed: {ex.Message}");
             return request.CompleteRequest(PathingState.Failed, [], 0.0f);
         }
+    }
+
+    private void RespondToRequest(WorkItem request, PathingResponse response)
+    {
+        request.OnResult.CallDeferred(
+            request.RequestId,
+            request.CombinationId,
+            response.Serialize()
+        );
     }
 }

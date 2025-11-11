@@ -5,24 +5,30 @@ using Godot;
 using Godot.Collections;
 using PT.DependencyProvider;
 using PT.Models.Network;
+using PT.Models.WorldDefinition.Network;
 using PT.Services.Adapters;
 
 namespace PT.Managers;
 
 [GlobalClass]
-public partial class LaneCalculator : GodotObject
+public partial class LaneCalculator : RefCounted
 {
     public Godot.Collections.Dictionary<int, Array<int>> CalculateLaneConnections(
-        Array<NetLaneEndpoint> incomingEndpoints,
-        Array<NetLaneEndpoint> leftEndpoints,
-        Array<NetLaneEndpoint> forwardEndpoints,
-        Array<NetLaneEndpoint> rightEndpoints
+        Array<Dictionary> _incomingEndpoints,
+        Array<Dictionary> _leftEndpoints,
+        Array<Dictionary> _forwardEndpoints,
+        Array<Dictionary> _rightEndpoints
     )
     {
-        if (incomingEndpoints.Count == 0)
+        if (_incomingEndpoints.Count == 0)
             return [];
 
         var netManager = CSInjector.Inject<NetworkManagerAdapter>("NetworkManager");
+
+        var incomingEndpoints = _incomingEndpoints.Select(NetLaneEndpoint.Deserialize).ToList();
+        var leftEndpoints = _leftEndpoints.Select(NetLaneEndpoint.Deserialize).ToList();
+        var forwardEndpoints = _forwardEndpoints.Select(NetLaneEndpoint.Deserialize).ToList();
+        var rightEndpoints = _rightEndpoints.Select(NetLaneEndpoint.Deserialize).ToList();
 
         var lanes = netManager.GetSegment(incomingEndpoints[0].SegmentId).Lanes;
 
@@ -78,9 +84,9 @@ public partial class LaneCalculator : GodotObject
     private List<int> SetForcedLaneConnections(
         LaneDirection direction,
         NetLaneEndpoint laneEndpoint,
-        Array<NetLaneEndpoint> forwardEndpoints,
-        Array<NetLaneEndpoint> leftEndpoints,
-        Array<NetLaneEndpoint> rightEndpoints,
+        List<NetLaneEndpoint> forwardEndpoints,
+        List<NetLaneEndpoint> leftEndpoints,
+        List<NetLaneEndpoint> rightEndpoints,
         int n = 2
     )
     {
@@ -113,7 +119,7 @@ public partial class LaneCalculator : GodotObject
     }
 
     private List<int> MapToNTargetEndpoints(
-        Array<NetLaneEndpoint> targetEndpoints,
+        List<NetLaneEndpoint> targetEndpoints,
         NetLaneEndpoint laneEndpoint,
         int n = 2
     )
@@ -130,7 +136,7 @@ public partial class LaneCalculator : GodotObject
     }
 
     private List<int> MapToNLaneEndpointFromCenter(
-        Array<NetLaneEndpoint> targetEndpoints,
+        List<NetLaneEndpoint> targetEndpoints,
         int laneNumber
     )
     {
@@ -145,9 +151,9 @@ public partial class LaneCalculator : GodotObject
         int lanesCount,
         NetLaneEndpoint laneEndpoint,
         NetLaneInfo laneInfo,
-        Array<NetLaneEndpoint> leftEndpoints,
-        Array<NetLaneEndpoint> rightEndpoints,
-        Array<NetLaneEndpoint> forwardEndpoints,
+        List<NetLaneEndpoint> leftEndpoints,
+        List<NetLaneEndpoint> rightEndpoints,
+        List<NetLaneEndpoint> forwardEndpoints,
         bool hasSufficientIncomingLanes
     )
     {

@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using PT.Models.Network;
 
 namespace PT.Models.PathFinding;
 
-public class GraphNode(Mappings.NetworkNode node)
+public class GraphNode(Mappings.NetworkNode node) : IDisposable
 {
     public int Id { get; set; } = node.Id;
 
@@ -14,7 +15,13 @@ public class GraphNode(Mappings.NetworkNode node)
 
     public Dictionary<int, List<int>> EndpointConnections { get; } = node.EndpointConnections;
 
-    public List<NetLaneEndpoint> Endpoints { get; } = node.Endpoints;
+    public GodotObjectCollection<NetLaneEndpoint> Endpoints { get; } = node.Endpoints;
 
     public Dictionary<int, int> OutgoingToIncomingEndpointsMapping { get; } = [];
+
+    public void Dispose()
+    {
+        Endpoints.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
