@@ -1,0 +1,4 @@
+class_name SimulationConstants
+
+const SIMULATION_LIGTHTS_ON_THRESHOLD = 0.9
+const SIMULATION_LIGTHTS_OFF_THRESHOLD = 0.4

@@ -5,6 +5,7 @@ class_name SimulationManager
 var vehicle_manager: VehicleManager
 var network_manager: NetworkManager
 var game_manager: GameManager
+var config_manager: ConfigManager
 
 var simulation_running: bool = false
 
@@ -12,21 +13,28 @@ var end_node_ids: Array = []
 var vehicles_count = 0
 var max_vehicles = 4
 
-
 var game_controller: GameController
 
-func _init() -> void:
+
+func inject_dependencies() -> void:
 	vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	game_manager = GDInjector.inject("GameManager") as GameManager
+	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+
+	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+
 
 func setup(_game_controller: GameController) -> void:
 	game_controller = _game_controller
 	game_controller.get_map().process_mode = Node.PROCESS_MODE_DISABLED
 
+
 func start_simulation() -> void:
 	end_node_ids = network_manager.get_end_nodes().map(func(node): return node.id)
 	game_controller.get_map().process_mode = Node.PROCESS_MODE_INHERIT
+	game_controller.get_map().enable_day_night_cycle(config_manager.DebugToggles.UseDayNightCycle, game_manager.clock.get_day_progress_percentage())
+
 	print("Simulation started")
 
 	simulation_running = true
@@ -34,17 +42,21 @@ func start_simulation() -> void:
 	for i in max_vehicles:
 		_spawn_bus()
 
+
 func stop_simulation() -> void:
 	simulation_running = false
 	game_controller.get_map().process_mode = Node.PROCESS_MODE_DISABLED
 	print("Simulation stopped")
 
+
 func is_simulation_running() -> bool:
 	return simulation_running
+
 
 func step_simulation(delta: float) -> void:
 	if simulation_running:
 		game_manager.clock.advance_time(delta)
+		game_controller.get_map().update_day_progress(game_manager.clock.get_day_progress_percentage())
 
 
 func _get_random_nodes() -> Array:
@@ -55,6 +67,7 @@ func _get_random_nodes() -> Array:
 		end_node_id = end_node_ids[randi() % end_node_ids.size()]
 
 	return [start_node_id, end_node_id]
+
 
 func _spawn_bus() -> void:
 	if not simulation_running:
@@ -69,6 +82,12 @@ func _spawn_bus() -> void:
 
 	bus.connect("trip_completed", Callable(self, "_on_vehicle_trip_completed"))
 
+
 func _on_vehicle_trip_completed(_id) -> void:
 	if simulation_running:
 		_spawn_bus()
+
+
+func _on_debug_toggles_changed(toggle_name: String, value: bool) -> void:
+	if toggle_name == "UseDayNightCycle":
+		game_controller.get_map().enable_day_night_cycle(value, game_manager.clock.get_day_progress_percentage())
