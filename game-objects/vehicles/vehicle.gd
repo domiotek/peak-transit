@@ -16,7 +16,7 @@ signal trip_abandoned(vehicle_id)
 @onready var pathing_manager: PathingManager = GDInjector.inject("PathingManager") as PathingManager
 @onready var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
 
-var config: Dictionary
+var config: VehicleConfig
 
 var main_path_follower: PathFollow2D
 
@@ -32,7 +32,7 @@ func _ready():
 	config = vehicle_config
 
 	main_path_follower = config["path_followers"][0]["follower"]
-	
+
 	driver.set_ai(config["ai"])
 	driver.set_navigator(navigator)
 	driver.set_brake_lights(config["brake_lights"])
@@ -47,6 +47,7 @@ func _ready():
 	navigator.connect("trip_ended", Callable(self, "_on_trip_ended"))
 	navigator.setup(self)
 
+
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 	if from_building == to_building:
 		push_error("Invalid trip: Start and end buildings are the same for vehicle ID %d" % id)
@@ -54,12 +55,14 @@ func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 
 	navigator.setup_trip_between_buildings(from_building, to_building)
 
+
 func init_simple_trip(from_node_id: int, to_node_id: int) -> void:
 	if from_node_id == to_node_id:
 		push_error("Invalid trip: Start and end nodes are the same for vehicle ID %d" % id)
 		return
 
 	navigator.setup_trip(from_node_id, to_node_id)
+
 
 func get_popup_data() -> Dictionary:
 	var data = {
@@ -70,20 +73,24 @@ func get_popup_data() -> Dictionary:
 		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
 		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,
 		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")],
-		"time_blocked": int(driver.get_time_blocked())
+		"time_blocked": int(driver.get_time_blocked()),
 	}
 
 	return data
 
+
 func get_total_progress() -> float:
 	return navigator.get_total_progress()
+
 
 func get_all_trip_curves() -> Array:
 	return navigator.get_trip_curves()
 
+
 func assign_to_path(path: Path2D, progress: float) -> void:
 	main_path_follower.reparent(path, true)
 	main_path_follower.progress = progress
+
 
 func _physics_process(_delta: float) -> void:
 	if driver.just_enabled_casters:
@@ -112,7 +119,7 @@ func _process(delta: float) -> void:
 
 	main_path_follower.progress_ratio += delta * current_speed / trail_length
 	self.global_transform = main_path_follower.global_transform
-	
+
 	for path_follower_def in config["path_followers"]:
 		var path_follower = path_follower_def["follower"]
 		if path_follower == main_path_follower:
@@ -124,12 +131,12 @@ func _process(delta: float) -> void:
 
 		if not is_initialized and main_path_follower.progress < path_follower_def["offset"]:
 			continue
-		
+
 		if not is_initialized or path_follower.progress_ratio == 1.0:
 			var next_path = navigator.get_next_path(path_follower.get_parent() as Path2D)
 			if not next_path:
 				next_path = main_path_follower.get_parent() as Path2D
-				
+
 			path_follower.reparent(next_path, true)
 			path_follower.progress = 0
 
@@ -137,10 +144,10 @@ func _process(delta: float) -> void:
 
 		path_follower.progress_ratio += delta * current_speed / trailer_path.get_baked_length()
 		var trailer_direction = path_follower.global_rotation
-	
+
 		var vehicle_direction = self.global_rotation
 		var desired_trailer_rotation = trailer_direction - vehicle_direction
-		
+
 		while desired_trailer_rotation > PI:
 			desired_trailer_rotation -= 2 * PI
 		while desired_trailer_rotation < -PI:
@@ -154,13 +161,14 @@ func _process(delta: float) -> void:
 	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
 		navigator.complete_current_step()
 
+
 func _on_trip_started() -> void:
 	for body_area in config["body_areas"]:
 		body_area.connect("input_event", Callable(self, "_on_input_event"))
 
 	for collision_area in config["collision_areas"]:
 		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
-	
+
 	var starts_at_building = navigator.current_step["type"] == Navigator.StepType.BUILDING
 
 	if starts_at_building:
@@ -180,21 +188,25 @@ func _on_trip_started() -> void:
 	emit_signal("trip_started", id)
 	config["id_label"].text = str(id)
 
+
 func _on_trip_ended(completed: bool) -> void:
 	if completed:
 		emit_signal("trip_completed", id)
 	else:
 		emit_signal("trip_abandoned", id)
 
+
 func _on_input_event(_viewport, event, _shape_idx) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		game_manager.set_selection(self, GameManager.SelectionType.VEHICLE)
+
 
 func _on_body_area_body_entered(_body) -> void:
 	if config["collision_areas"].has(_body):
 		return
 
 	driver.emergency_stop()
+
 
 func _on_caster_state_changed(caster_id: String, is_colliding: bool) -> void:
 	match caster_id:
@@ -209,6 +221,7 @@ func _on_caster_state_changed(caster_id: String, is_colliding: bool) -> void:
 		"right":
 			config["caster_indicators"]["right"].set_active(is_colliding)
 
+
 func _on_driver_state_changed(new_state: Driver.VehicleState) -> void:
 	var line = config["blockade_indicator"] as Line2D
 	match new_state:
@@ -216,6 +229,7 @@ func _on_driver_state_changed(new_state: Driver.VehicleState) -> void:
 			line.default_color = Color.RED
 		_:
 			line.default_color = Color.WHITE
+
 
 func _check_for_building_entry() -> bool:
 	if not navigator.current_step.has("building_to_enter"):
