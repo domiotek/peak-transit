@@ -1,10 +1,12 @@
 extends Control
 
+class_name GameSpeedView
+
 
 var ui_manager: UIManager
 var game_manager: GameManager
 
-var VIEW_NAME = "GameSpeedView"
+static var VIEW_NAME = "GameSpeedView"
 
 @onready var pause_button: Button = $BoxContainer/PauseButton
 @onready var low_button: Button = $BoxContainer/LowButton

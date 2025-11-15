@@ -1,0 +1,70 @@
+[gd_scene load_steps=7 format=3 uid="uid://6ipl1lxu6eyw"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_wlp68"]
+[ext_resource type="Texture2D" uid="uid://dks3q3tth8n8y" path="res://assets/ui_icons/play.png" id="2_mk5mc"]
+[ext_resource type="Script" uid="uid://cte05qeyf2kxh" path="res://ui/views/game-clock-view/game_clock_view.gd" id="2_sbo7u"]
+
+[sub_resource type="Animation" id="Animation_sbo7u"]
+resource_name = "pulse"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1, 2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0.44705883), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_lymmv"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_d4q7o"]
+_data = {
+&"RESET": SubResource("Animation_lymmv"),
+&"pulse": SubResource("Animation_sbo7u")
+}
+
+[node name="GameClockView" type="PanelContainer"]
+offset_right = 136.0
+offset_bottom = 32.0
+theme_override_styles/panel = ExtResource("1_wlp68")
+script = ExtResource("2_sbo7u")
+
+[node name="BoxContainer" type="BoxContainer" parent="."]
+clip_contents = true
+layout_mode = 2
+alignment = 1
+
+[node name="SimStateIcon" type="TextureRect" parent="BoxContainer"]
+layout_mode = 2
+texture = ExtResource("2_mk5mc")
+stretch_mode = 3
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="BoxContainer/SimStateIcon"]
+process_mode = 3
+libraries = {
+&"": SubResource("AnimationLibrary_d4q7o")
+}
+autoplay = "pulse"
+
+[node name="Label" type="Label" parent="BoxContainer"]
+layout_mode = 2
+text = "WED, 8:00"

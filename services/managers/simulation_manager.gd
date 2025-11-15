@@ -4,6 +4,7 @@ class_name SimulationManager
 
 var vehicle_manager: VehicleManager
 var network_manager: NetworkManager
+var game_manager: GameManager
 
 var simulation_running: bool = false
 
@@ -17,6 +18,7 @@ var game_controller: GameController
 func _init() -> void:
 	vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	game_manager = GDInjector.inject("GameManager") as GameManager
 
 func setup(_game_controller: GameController) -> void:
 	game_controller = _game_controller
@@ -39,6 +41,10 @@ func stop_simulation() -> void:
 
 func is_simulation_running() -> bool:
 	return simulation_running
+
+func step_simulation(delta: float) -> void:
+	if simulation_running:
+		game_manager.clock.advance_time(delta)
 
 
 func _get_random_nodes() -> Array:

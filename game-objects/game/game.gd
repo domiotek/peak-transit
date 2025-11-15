@@ -14,10 +14,12 @@ var camera_zoom_bounds: Array[Vector2] = [Vector2(0.5, 0.5), Vector2(6, 6)]
 var ui_manager: UIManager
 var config_manager: ConfigManager
 var game_manager: GameManager
+var simulation_manager: SimulationManager
 var circle_helper: DebugCircleHelper
 
 func _ready() -> void:
 	game_manager = GDInjector.inject("GameManager") as GameManager
+	simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager
 	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
@@ -41,7 +43,8 @@ func initialize_game(world: WorldDefinition) -> void:
 	await load_network_grid(world.network)
 
 	ui_manager.hide_ui_view("WorldLoadingProgressView")
-	ui_manager.show_ui_view("GameSpeedView")
+	ui_manager.show_ui_view(GameSpeedView.VIEW_NAME)
+	ui_manager.show_ui_view(GameClockView.VIEW_NAME)
 
 func init_map(world: WorldDefinition) -> void:
 	map.map_size = world.map.size
@@ -75,9 +78,11 @@ func _draw() -> void:
 		circle_helper.draw_debug_circle(camera.get_screen_center_position(), Color.BLUE, debug_layer, {"size": 10.0})
 
 
-func _process(_delta):
+func _process(delta):
 	if not game_manager.is_game_initialized():
 		return
+
+	simulation_manager.step_simulation(delta)
 
 	if Input.is_action_just_pressed("toggle_game_menu"):
 		game_manager.toggle_game_menu()

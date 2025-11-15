@@ -34,6 +34,7 @@ var world_definition: WorldDefinition
 var game_speed: Enums.GameSpeed = Enums.GameSpeed.PAUSE
 var initialized: bool = false
 var game_menu_visible: bool = false
+var clock = ClockManager.new()
 
 signal game_speed_changed(new_speed: Enums.GameSpeed)
 signal world_loading_progress(action: String, progress: float)
