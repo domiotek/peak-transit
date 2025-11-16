@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://dqom42bfhcruj"]
+[gd_scene load_steps=11 format=3 uid="uid://dqom42bfhcruj"]
 
 [ext_resource type="PackedScene" uid="uid://1twv1cec0hc6" path="res://game-objects/vehicles/vehicle.tscn" id="1_vb4g1"]
 [ext_resource type="Script" uid="uid://ofhugjeihcvu" path="res://game-objects/vehicles/articulated-bus/articulated_bus.gd" id="2_2xaxp"]
 [ext_resource type="PackedScene" uid="uid://cx5r114fjgwq7" path="res://game-objects/light/light.tscn" id="3_xwv6l"]
+[ext_resource type="PackedScene" uid="uid://4kuxfxcr7jee" path="res://game-objects/vehicles/headlight/headlight.tscn" id="4_xwv6l"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_q147t"]
 font_size = 8
@@ -163,6 +164,16 @@ shape = SubResource("RectangleShape2D_65tko")
 [node name="PathFollower" type="PathFollow2D" parent="FrontBody" index="16"]
 position = Vector2(6.10352e-05, 4.19617e-05)
 loop = false
+
+[node name="LeftBeam" parent="FrontBody" index="17" instance=ExtResource("4_xwv6l")]
+z_index = 100
+z_as_relative = false
+position = Vector2(30.5, -7)
+
+[node name="RightBeam" parent="FrontBody" index="18" instance=ExtResource("4_xwv6l")]
+z_index = 100
+z_as_relative = false
+position = Vector2(30.5, 5)
 
 [node name="Trailer" type="Node2D" parent="." index="1"]
 position = Vector2(-28, 0)

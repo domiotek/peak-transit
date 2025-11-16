@@ -1,6 +1,6 @@
 class_name CasterCollection
 
-const KEYS = ["close", "medium", "long", "left", "right"]
+const KEYS: Array[String] = ["close", "medium", "long", "left", "right"]
 
 var close: RayCast2D
 var medium: RayCast2D

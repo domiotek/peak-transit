@@ -2,6 +2,7 @@ class_name VehicleConfig
 
 var ai
 var blockade_observer: Area2D
+var head_lights: Array[Headlight]
 var brake_lights: Array[Node2D]
 var casters: CasterCollection
 var caster_indicators: CasterCollection.CasterIndicatorCollection

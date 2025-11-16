@@ -33,10 +33,14 @@ var constants: Dictionary = { }
 
 var state: VehicleState = VehicleState.IDLE
 
+var beam_light_nodes: Array = []
 var brake_light_nodes: Array = []
 var casters: CasterCollection
 var blockade_observer: Area2D
 var time_blocked: float = 0.0
+
+var _headlights_state = false
+var _headlights_state_change_ticks_counter: float = 0
 
 signal caster_state_changed(caster_id: String, is_colliding: bool)
 signal state_changed(new_state: VehicleState)
@@ -59,8 +63,9 @@ func set_owner(vehicle: Vehicle) -> void:
 	owner = vehicle
 
 
-func set_brake_lights(nodes: Array) -> void:
-	brake_light_nodes = nodes
+func set_lights(beam_nodes: Array, brake_nodes: Array) -> void:
+	beam_light_nodes = beam_nodes
+	brake_light_nodes = brake_nodes
 
 
 func set_casters(used_casters: CasterCollection) -> void:
@@ -136,6 +141,17 @@ func get_time_blocked() -> float:
 	return time_blocked
 
 
+func set_headlights_enabled(enabled: bool, set_instant: bool) -> void:
+	if not set_instant:
+		var rand_time = randi() % SimulationConstants.VEHICLE_HEADLIGHTS_STATE_CHANGE_TICKS_VARIANCE + 1
+		_headlights_state_change_ticks_counter = rand_time
+		return
+
+	_headlights_state = enabled
+	for beam_light in beam_light_nodes:
+		beam_light.set_enabled(enabled)
+
+
 func tick_speed(delta: float) -> float:
 	target_speed = get_max_allowed_speed()
 
@@ -158,6 +174,13 @@ func tick_speed(delta: float) -> float:
 		_on_blockade_area_exited(null)
 
 	return current_speed
+
+
+func tick_lights(delta: float) -> void:
+	if _headlights_state_change_ticks_counter > 0:
+		_headlights_state_change_ticks_counter -= delta
+		if _headlights_state_change_ticks_counter <= 0:
+			set_headlights_enabled(not _headlights_state, true)
 
 
 func check_blockade_cleared(delta: float) -> bool:

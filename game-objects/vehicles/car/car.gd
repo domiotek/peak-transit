@@ -12,6 +12,7 @@ func _get_vehicle_config() -> Variant:
 
 	_config.ai = CarAI.new()
 	_config.blockade_observer = forward_blockage_area
+	_config.head_lights = [$Body/LeftBeam, $Body/RightBeam] as Array[Headlight]
 	_config.brake_lights = [$Body/LeftBrakeLight, $Body/RightBrakeLight] as Array[Node2D]
 	_config.casters = CasterCollection.new(
 		$CloseRayCaster,

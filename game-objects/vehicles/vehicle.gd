@@ -12,6 +12,7 @@ signal trip_completed(vehicle_id)
 signal trip_abandoned(vehicle_id)
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
+@onready var simulation_manager: SimulationManager = GDInjector.inject("SimulationManager") as SimulationManager
 @onready var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 @onready var pathing_manager: PathingManager = GDInjector.inject("PathingManager") as PathingManager
 @onready var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
@@ -24,7 +25,7 @@ var main_path_follower: PathFollow2D
 func _ready():
 	driver.set_owner(self)
 
-	var vehicle_config = _get_vehicle_config()
+	var vehicle_config = _get_vehicle_config() as VehicleConfig
 
 	if not vehicle_config:
 		push_error("Vehicle ID %d has no config assigned!" % id)
@@ -35,7 +36,7 @@ func _ready():
 
 	driver.set_ai(config["ai"])
 	driver.set_navigator(navigator)
-	driver.set_brake_lights(config["brake_lights"])
+	driver.set_lights(config.head_lights, config.brake_lights)
 	driver.set_casters(config["casters"])
 
 	driver.set_blockade_observer(config["blockade_observer"])
@@ -46,6 +47,8 @@ func _ready():
 	navigator.connect("trip_started", Callable(self, "_on_trip_started"))
 	navigator.connect("trip_ended", Callable(self, "_on_trip_ended"))
 	navigator.setup(self)
+
+	simulation_manager.desired_world_lights_state_changed.connect(Callable(self, "_on_lights_state_change"))
 
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
@@ -105,6 +108,8 @@ func _process(delta: float) -> void:
 
 	if not navigator.can_advance(delta):
 		return
+
+	driver.tick_lights(delta)
 
 	if driver.state == Driver.VehicleState.BLOCKED:
 		if driver.just_enabled_casters:
@@ -179,6 +184,7 @@ func _on_trip_started() -> void:
 	else:
 		self.position = (navigator.get_current_step()["path"] as Curve2D).get_point_position(0)
 	set_deferred("visible", true)
+	driver.set_headlights_enabled(simulation_manager.get_desired_world_lights_state(), true)
 
 	for collision_area in config["collision_areas"]:
 		collision_area.monitoring = true
@@ -242,3 +248,7 @@ func _check_for_building_entry() -> bool:
 
 func _get_vehicle_config() -> Variant:
 	return null
+
+
+func _on_lights_state_change(should_be_on: bool) -> void:
+	driver.set_headlights_enabled(should_be_on, false)

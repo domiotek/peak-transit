@@ -1,17 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://4sw2ac70svb1"]
+[gd_scene load_steps=6 format=3 uid="uid://4sw2ac70svb1"]
 
 [ext_resource type="Script" uid="uid://dst8hkiihppr5" path="res://game-objects/map/map.gd" id="1_4xfga"]
 [ext_resource type="PackedScene" uid="uid://kpgpxpqvp4er" path="res://game-objects/network/net-grid/network_grid.tscn" id="2_emwqe"]
-
-[sub_resource type="Gradient" id="Gradient_emwqe"]
-offsets = PackedFloat32Array(0, 0.523316)
-colors = PackedColorArray(0.605274, 0.605274, 0.605274, 1, 0, 0, 0, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_3j3li"]
-gradient = SubResource("Gradient_emwqe")
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 1)
 
 [sub_resource type="Animation" id="Animation_3j3li"]
 length = 0.001
@@ -63,14 +53,6 @@ script = ExtResource("1_4xfga")
 [node name="VehicleRouteLayer" type="Node2D" parent="Layers"]
 z_index = 27
 z_as_relative = false
-
-[node name="PointLight2D" type="PointLight2D" parent="Layers"]
-z_index = 100
-z_as_relative = false
-position = Vector2(149.656, 123.25)
-scale = Vector2(5.79199, -4.39844)
-energy = 8.61
-texture = SubResource("GradientTexture2D_3j3li")
 
 [node name="DayNightCycle" type="AnimationPlayer" parent="."]
 libraries = {

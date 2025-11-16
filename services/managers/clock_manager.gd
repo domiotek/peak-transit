@@ -6,6 +6,7 @@ var current_day: Enums.Day = Enums.Day.MONDAY
 var accumulated_minutes: float = 0.0 # Track fractional minutes
 
 signal time_changed(new_time: ClockTime)
+signal day_night_changed(is_day: bool)
 
 
 func _init() -> void:
@@ -17,6 +18,7 @@ func _init() -> void:
 
 
 func advance_time(delta: float) -> void:
+	var was_day = is_day()
 	var game_minutes_passed = delta / 3.0 # 3 real seconds = 1 in-game minute (20x speed)
 
 	accumulated_minutes += game_minutes_passed
@@ -38,6 +40,9 @@ func advance_time(delta: float) -> void:
 
 	emit_signal("time_changed", get_time())
 
+	if was_day != is_day():
+		emit_signal("day_night_changed", not was_day)
+
 
 func get_time() -> ClockTime:
 	return ClockTime.create(current_hour, current_minute, current_day)
@@ -45,3 +50,8 @@ func get_time() -> ClockTime:
 
 func get_day_progress_percentage() -> float:
 	return (current_hour * 60 + current_minute + accumulated_minutes) / (24.0 * 60)
+
+
+func is_day() -> bool:
+	var day_progress = get_day_progress_percentage()
+	return day_progress >= 0.25 and day_progress < 0.75

@@ -16,6 +16,7 @@ func _get_vehicle_config() -> Variant:
 
 	_config.ai = BusAI.new()
 	_config.blockade_observer = forward_blockage_area
+	_config.head_lights = [$FrontBody/LeftBeam, $FrontBody/RightBeam] as Array[Headlight]
 	_config.brake_lights = [$Trailer/TrailerBody/LeftBrakeLight, $Trailer/TrailerBody/RightBrakeLight] as Array[Node2D]
 	_config.casters = CasterCollection.new(
 		$FrontBody/CloseRayCaster,

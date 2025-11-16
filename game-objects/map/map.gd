@@ -3,18 +3,16 @@ extends Node2D
 class_name Map
 
 var map_size: Vector2
-var day_night_cycle_enabled: bool
 var are_lights_on: bool
 
 @onready var day_night_anim_player: AnimationPlayer = $DayNightCycle
 
-signal lights_state_change(new_state: bool)
+signal world_desired_lights_state_change(new_state: bool)
 
 
 func _ready() -> void:
 	day_night_anim_player.play("day_night_cycle")
 	day_night_anim_player.pause()
-	day_night_cycle_enabled = false
 
 
 func _draw():
@@ -46,24 +44,31 @@ func clear_drawing_layer(layer_name: String) -> void:
 		child.queue_free()
 
 
-func enable_day_night_cycle(enable: bool, day_progression: float = 0.0) -> void:
-	update_day_progress(day_progression if enable else 0.5)
-	day_night_cycle_enabled = enable
-
-
 func update_day_progress(day_progression: float) -> void:
-	if not day_night_cycle_enabled:
-		return
-
 	day_night_anim_player.seek(day_progression * day_night_anim_player.current_animation_length, true)
 
-	_check_lights_state(day_progression)
+	_update_world_lights_state(day_progression)
 
 
-func _check_lights_state(day_progression: float) -> void:
-	if day_progression >= SimulationConstants.SIMULATION_LIGTHTS_ON_THRESHOLD and not are_lights_on:
+func should_world_lights_be_on(day_progression: float) -> bool:
+	if day_progression >= SimulationConstants.SIMULATION_LIGHTS_ON_THRESHOLD or day_progression < SimulationConstants.SIMULATION_LIGHTS_OFF_THRESHOLD:
+		return true
+	elif day_progression >= SimulationConstants.SIMULATION_LIGHTS_OFF_THRESHOLD:
+		return false
+
+	return false
+
+
+func _update_world_lights_state(day_progression: float) -> void:
+	var desired_state = should_world_lights_be_on(day_progression)
+	var actual_state = are_lights_on
+
+	if desired_state == actual_state:
+		return
+
+	if desired_state:
 		are_lights_on = true
-		emit_signal("lights_state_change", are_lights_on)
-	elif day_progression < SimulationConstants.SIMULATION_LIGTHTS_OFF_THRESHOLD and are_lights_on:
+		emit_signal("world_desired_lights_state_change", are_lights_on)
+	else:
 		are_lights_on = false
-		emit_signal("lights_state_change", are_lights_on)
+		emit_signal("world_desired_lights_state_change", are_lights_on)

@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://b0jfg2inmke4k"]
+[gd_scene load_steps=9 format=3 uid="uid://b0jfg2inmke4k"]
 
 [ext_resource type="PackedScene" uid="uid://1twv1cec0hc6" path="res://game-objects/vehicles/vehicle.tscn" id="1_adgb3"]
 [ext_resource type="Script" uid="uid://fg6igepkiofx" path="res://game-objects/vehicles/bus/bus.gd" id="2_8bm15"]
 [ext_resource type="PackedScene" uid="uid://cx5r114fjgwq7" path="res://game-objects/light/light.tscn" id="2_ioive"]
+[ext_resource type="PackedScene" uid="uid://4kuxfxcr7jee" path="res://game-objects/vehicles/headlight/headlight.tscn" id="4_insyj"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_8bm15"]
 font_size = 8
@@ -69,7 +70,17 @@ position = Vector2(-60, 49)
 inactive_color = Color(0.531182, 0, 0.263433, 1)
 active_color = Color(1, 0.359538, 0.595255, 1)
 
-[node name="Label" type="Label" parent="Body" index="8"]
+[node name="LeftBeam" parent="Body" index="8" instance=ExtResource("4_insyj")]
+z_index = 100
+z_as_relative = false
+position = Vector2(-40, 38)
+
+[node name="RightBeam" parent="Body" index="9" instance=ExtResource("4_insyj")]
+z_index = 100
+z_as_relative = false
+position = Vector2(-40, 50)
+
+[node name="Label" type="Label" parent="Body" index="10"]
 offset_left = -94.0
 offset_top = 36.0
 offset_right = -78.0

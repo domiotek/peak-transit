@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://4kuxfxcr7jee"]
+
+[ext_resource type="Texture2D" uid="uid://dqy3wydebmqlt" path="res://assets/cone_light_mask.png" id="1_l8usa"]
+[ext_resource type="Script" uid="uid://dnmiv0slun0ww" path="res://game-objects/vehicles/headlight/headlight.gd" id="1_xh8nq"]
+
+[node name="Headlight" type="Node2D"]
+script = ExtResource("1_xh8nq")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(21, 4.61853e-14)
+rotation = 1.5708
+scale = Vector2(0.141892, 0.141892)
+energy = 8.0
+range_z_max = 6
+texture = ExtResource("1_l8usa")
