@@ -39,6 +39,7 @@ width = 1.0
 position = Vector2(-72, 37)
 inactive_color = Color(0.2, 0, 0, 1)
 active_color = Color(1, 0, 0, 1)
+ilumination_scale = 0.25
 
 [node name="LeftRayIndicator" parent="Body" index="2" instance=ExtResource("3_jn7db")]
 position = Vector2(-43, 38)
@@ -56,6 +57,7 @@ ilumination_scale = 0.25
 position = Vector2(-72, 51)
 inactive_color = Color(0.2, 0, 0, 1)
 active_color = Color(1, 0, 0, 1)
+ilumination_scale = 0.25
 
 [node name="LongRayIndicator" parent="Body" index="5" instance=ExtResource("3_jn7db")]
 position = Vector2(-60, 39)

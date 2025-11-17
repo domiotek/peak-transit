@@ -1,10 +1,12 @@
 extends Node2D
+
 class_name NetLane
 
 var speed_limit_sign_scene = preload("res://game-objects/network/speed-limit-sign/speed_limit_sign.tscn")
 
 var LANE_USAGE_EMA_ALPHA: float = 0.1
 
+@onready var main_layer: Node2D = $MainLayer
 @onready var trail: Path2D = $PathingTrail
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var usage_indicator: Line2D = $UsageIndicator
@@ -32,6 +34,7 @@ var lane_usage_ema: float = 0.0
 @onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 @onready var vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 
+
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 	usage_timer.timeout.connect(_update_lane_usage)
@@ -49,19 +52,20 @@ func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lan
 	offset = lane_offset
 	relation_id = _relation_id
 
+
 func update_trail_shape(curve: Curve2D) -> void:
 	if curve == null:
 		return
 
 	var new_curve = line_helper.get_curve_with_offset(curve, offset)
-	var points = {}
+	var points = { }
 
 	for node in segment.nodes:
 		var point = _get_endpoint_for_node(node, new_curve)
 		var road_side = segment_helper.get_road_side_at_endpoint(segment, point)
 		var point_global = to_global(point)
 
-		var is_outgoing = road_side == SegmentHelper.RoadSide.Left;
+		var is_outgoing = road_side == SegmentHelper.RoadSide.Left
 		var is_at_path_start = segment.nodes[0] == node
 
 		if is_outgoing and not is_at_path_start:
@@ -82,17 +86,22 @@ func update_trail_shape(curve: Curve2D) -> void:
 	new_curve = line_helper.trim_curve(new_curve, points[0], points[1])
 	trail.curve = new_curve
 	usage_indicator.points = new_curve.tessellate()
+	_populate_main_layer()
 
 	_update_debug_layer()
+
 
 func get_endpoint_by_id(endpoint_id: int) -> Variant:
 	return network_manager.get_lane_endpoint(endpoint_id)
 
+
 func get_endpoint_by_type(is_outgoing: bool) -> Variant:
 	return network_manager.get_lane_endpoint(from_endpoint if is_outgoing else to_endpoint)
 
+
 func get_curve() -> Curve2D:
 	return trail.curve
+
 
 func assign_vehicle(vehicle: Vehicle) -> void:
 	if vehicle in assigned_vehicles:
@@ -101,6 +110,7 @@ func assign_vehicle(vehicle: Vehicle) -> void:
 		return
 
 	assigned_vehicles.append(vehicle)
+
 
 func remove_vehicle(vehicle: Vehicle) -> void:
 	if vehicle == null:
@@ -113,14 +123,16 @@ func remove_vehicle(vehicle: Vehicle) -> void:
 
 	assigned_vehicles.erase(vehicle)
 
+
 func get_remaining_space() -> float:
-	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1] if assigned_vehicles.size() > 0  else null
+	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1] if assigned_vehicles.size() > 0 else null
 
 	if last_vehicle and not is_instance_valid(last_vehicle):
 		assigned_vehicles.pop_back()
 		return get_remaining_space()
 
 	return last_vehicle.main_path_follower.progress if last_vehicle else trail.curve.get_baked_length()
+
 
 func get_first_vehicle() -> Vehicle:
 	var first_vehicle = assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
@@ -130,6 +142,7 @@ func get_first_vehicle() -> Vehicle:
 		return get_first_vehicle()
 
 	return assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
+
 
 func get_last_vehicle() -> Vehicle:
 	if assigned_vehicles.size() == 0:
@@ -142,17 +155,19 @@ func get_last_vehicle() -> Vehicle:
 		assigned_vehicles.pop_back()
 		return get_last_vehicle()
 
+
 func get_vehicle_count(only_waiting: bool = false) -> int:
 	if not only_waiting:
 		return assigned_vehicles.size()
 
 	return assigned_vehicles.filter(func(v): return v.driver.get_state() == Driver.VehicleState.BLOCKED).size()
 
+
 func get_vehicles_stats() -> Dictionary:
 	var stats = {
 		"total": 0,
 		"waiting": 0,
-		"moving": 0
+		"moving": 0,
 	}
 
 	for vehicle in assigned_vehicles:
@@ -167,6 +182,7 @@ func get_vehicles_stats() -> Dictionary:
 	stats["total"] += stats["waiting"] + stats["moving"]
 
 	return stats
+
 
 func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 	var count = 0
@@ -183,11 +199,14 @@ func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 
 	return count
 
+
 func get_max_allowed_speed() -> float:
 	return data.max_speed if data.max_speed > 0 else segment.data.max_speed if segment.data.max_speed > 0 else INF
 
+
 func get_lane_usage() -> float:
 	return lane_usage_ema
+
 
 func _update_lane_usage() -> void:
 	var stats = get_vehicles_stats()
@@ -198,13 +217,15 @@ func _update_lane_usage() -> void:
 
 	usage_indicator.default_color = _get_color_for_usage(lane_usage_ema)
 
+
 func _get_color_for_usage(usage: float) -> Color:
 	usage = clamp(usage, 0.0, 1.0)
-	
+
 	var low_usage = Color(0.9, 0.9, 0.9, 0.3)
 	var full_usage = Color(1.0, 0.0, 0.0, 0.6)
 
 	return low_usage.lerp(full_usage, usage)
+
 
 func _get_endpoint_for_node(node: RoadNode, curve: Curve2D) -> Vector2:
 	var polygon = node.get_intersection_polygon()
@@ -238,6 +259,19 @@ func _update_debug_layer() -> void:
 		debug_layer.add_child(sign_instance)
 
 
+func _populate_main_layer() -> void:
+	for child in main_layer.get_children():
+		child.queue_free()
+
+	var chunks = line_helper.get_curve_chunks(trail.curve, NetworkConstants.LANE_WIDTH * 2)
+	for chunk in chunks:
+		var line = Line2D.new()
+		line.width = NetworkConstants.LANE_WIDTH
+		line.default_color = Color(0.2, 0.2, 0.2)
+		line.points = chunk.get_baked_points()
+		main_layer.add_child(line)
+
+
 func _calc_lane_number() -> int:
 	return abs(int(offset / NetworkConstants.LANE_WIDTH))
 
@@ -246,6 +280,7 @@ func _on_debug_toggles_changed(_name, _state) -> void:
 	_update_debug_layer()
 
 	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
+
 
 func _on_vehicle_destroyed(vehicle_id: int) -> void:
 	for vehicle in assigned_vehicles:

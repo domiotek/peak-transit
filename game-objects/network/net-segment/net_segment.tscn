@@ -12,6 +12,7 @@ round_precision = 16
 antialiased = true
 
 [node name="MarkingsLayer" type="Node2D" parent="."]
+z_index = 1
 
 [node name="DebugLayer" type="Node2D" parent="."]
 z_index = 1

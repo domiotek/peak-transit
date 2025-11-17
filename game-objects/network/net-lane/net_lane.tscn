@@ -7,6 +7,8 @@
 [node name="NetLane" type="Node2D"]
 script = ExtResource("1_1nvuj")
 
+[node name="MainLayer" type="Node2D" parent="."]
+
 [node name="PathingTrail" type="Path2D" parent="."]
 curve = SubResource("Curve2D_csds3")
 
