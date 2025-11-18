@@ -494,3 +494,53 @@ func get_curve_chunks(curve: Curve2D, chunk_length: float) -> Array:
 		current_distance += chunk_length
 
 	return chunks
+
+
+func get_polygon_chunks(poly: Polygon2D, chunk_size: float = 100.0) -> Array[Polygon2D]:
+	var chunks: Array[Polygon2D] = []
+
+	if not poly or poly.polygon.size() < 3:
+		return chunks
+
+	var points = poly.polygon
+	var min_x = INF
+	var min_y = INF
+	var max_x = -INF
+	var max_y = -INF
+
+	for point in points:
+		min_x = min(min_x, point.x)
+		min_y = min(min_y, point.y)
+		max_x = max(max_x, point.x)
+		max_y = max(max_y, point.y)
+
+	var y = min_y
+	while y < max_y:
+		var x = min_x
+		while x < max_x:
+			var cell_rect = PackedVector2Array(
+				[
+					Vector2(x, y),
+					Vector2(x + chunk_size, y),
+					Vector2(x + chunk_size, y + chunk_size),
+					Vector2(x, y + chunk_size),
+				],
+			)
+
+			var intersected = Geometry2D.intersect_polygons(points, cell_rect)
+
+			for intersected_poly in intersected:
+				if intersected_poly.size() >= 3:
+					var chunk_poly = Polygon2D.new()
+					chunk_poly.polygon = intersected_poly
+					chunk_poly.color = poly.color
+					chunk_poly.texture = poly.texture
+					chunk_poly.texture_offset = poly.texture_offset
+					chunk_poly.texture_scale = poly.texture_scale
+					chunk_poly.texture_rotation = poly.texture_rotation
+					chunks.append(chunk_poly)
+
+			x += chunk_size
+		y += chunk_size
+
+	return chunks
