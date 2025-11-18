@@ -195,12 +195,14 @@ uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
 position = Vector2(-24, -9)
 inactive_color = Color(0.2, 0, 0, 1)
 active_color = Color(1, 0, 0, 1)
+backlight_energy = 15.0
 ilumination_scale = 0.25
 
 [node name="RightBrakeLight" parent="Trailer/TrailerBody" index="1" instance=ExtResource("3_xwv6l")]
 position = Vector2(-24, 9)
 inactive_color = Color(0.2, 0, 0, 1)
 active_color = Color(1, 0, 0, 1)
+backlight_energy = 15.0
 ilumination_scale = 0.25
 
 [node name="TrailerLink" type="Polygon2D" parent="Trailer/TrailerBody" index="2"]
