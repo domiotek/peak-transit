@@ -71,6 +71,10 @@ func step_simulation(delta: float) -> void:
 			game_controller.get_map().update_day_progress(game_manager.clock.get_day_progress_percentage())
 
 
+func clock() -> ClockManager:
+	return game_manager.clock
+
+
 func is_day() -> bool:
 	return game_manager.clock.is_day()
 
