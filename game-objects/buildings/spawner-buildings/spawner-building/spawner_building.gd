@@ -53,7 +53,7 @@ func spawn_vehicle() -> void:
 		push_warning("Target building ID %d is on the same segment as spawner building ID %d. Skipping." % [target_building.id, id])
 		return
 
-	var vehicle = vehicle_manager.create_vehicle(VehicleManager.VEHICLE_TYPE.CAR)
+	var vehicle = vehicle_manager.create_vehicle(VehicleManager.VehicleType.CAR)
 
 	vehicle.trip_abandoned.connect(Callable(self, "_vehicle_routing_failed"))
 

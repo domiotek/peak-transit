@@ -49,6 +49,7 @@ public class AStarPathing
         NetGraph graph,
         int startNodeId,
         int endNodeId,
+        VehicleCategory vehicleType,
         int? forcedStartEndpointId,
         int? forcedEndEndpointId,
         CancellationToken cancellationToken = default
@@ -157,6 +158,7 @@ public class AStarPathing
                 graph,
                 currentNode,
                 endGraphNode,
+                vehicleType,
                 forcedStartEndpointId
             );
 
@@ -182,6 +184,7 @@ public class AStarPathing
         NetGraph graph,
         AStarNode currentNode,
         GraphNode endNode,
+        VehicleCategory vehicleType,
         int? forcedEndpoint
     )
     {
@@ -201,6 +204,24 @@ public class AStarPathing
             var filteredViaPoints = route
                 .Via.Where(via => availableEndpoints == null || availableEndpoints.Contains(via))
                 .Where(via => forcedEndpoint == null || via == forcedEndpoint)
+                .Where(via =>
+                {
+                    if (currentNode.FromEndpointId == null)
+                        return true;
+
+                    var sourceEndpoint = currentNode.GraphNode.Endpoints.FirstOrDefault(e =>
+                        e.Id == currentNode.FromEndpointId
+                    );
+
+                    if (sourceEndpoint == null)
+                        return false;
+
+                    var allowedVehicles = sourceEndpoint.ConnectionsExt.ContainsKey(via)
+                        ? sourceEndpoint.ConnectionsExt[via].AllowedVehicles
+                        : new List<VehicleCategory>();
+
+                    return allowedVehicles.Count == 0 || allowedVehicles.Contains(vehicleType);
+                })
                 .ToList();
 
             foreach (var viaPoint in filteredViaPoints)

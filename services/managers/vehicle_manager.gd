@@ -1,26 +1,33 @@
 extends RefCounted
+
 class_name VehicleManager
 
-var CAR = preload("res://game-objects/vehicles/car/car.tscn")
-var BUS = preload("res://game-objects/vehicles/bus/bus.tscn")
-var ARTICULATED_BUS = preload("res://game-objects/vehicles/articulated-bus/articulated_bus.tscn")
+var CarScene = preload("res://game-objects/vehicles/car/car.tscn")
+var BusScene = preload("res://game-objects/vehicles/bus/bus.tscn")
+var ArticulatedBusScene = preload("res://game-objects/vehicles/articulated-bus/articulated_bus.tscn")
 
-enum VEHICLE_TYPE {
+enum VehicleType {
 	CAR,
 	BUS,
-	ARTICULATED_BUS
+	ARTICULATED_BUS,
+}
+
+enum VehicleCategory {
+	PRIVATE,
+	PUBLIC_TRANSPORT,
 }
 
 var game_manager: GameManager
 
 var vehicles_layer: Node2D
 
-var vehicles: Dictionary[int, Vehicle] = {}
+var vehicles: Dictionary[int, Vehicle] = { }
 
 var freed_ids_pool: Array[int] = []
 var next_fresh_id: int = 0
 
 signal vehicle_destroyed(vehicle_id: int)
+
 
 func set_vehicles_layer(layer: Node2D) -> void:
 	vehicles_layer = layer
@@ -28,17 +35,16 @@ func set_vehicles_layer(layer: Node2D) -> void:
 	game_manager = GDInjector.inject("GameManager") as GameManager
 
 
-func create_vehicle(vehicle_type: VEHICLE_TYPE) -> Vehicle:
-
+func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
 	var vehicle: Vehicle
 
 	match vehicle_type:
-		VEHICLE_TYPE.CAR:
-			vehicle = CAR.instantiate()
-		VEHICLE_TYPE.BUS:
-			vehicle = BUS.instantiate()
-		VEHICLE_TYPE.ARTICULATED_BUS:
-			vehicle = ARTICULATED_BUS.instantiate()
+		VehicleType.CAR:
+			vehicle = CarScene.instantiate()
+		VehicleType.BUS:
+			vehicle = BusScene.instantiate()
+		VehicleType.ARTICULATED_BUS:
+			vehicle = ArticulatedBusScene.instantiate()
 		_:
 			push_error("Unknown vehicle type: %d" % vehicle_type)
 			return null
@@ -56,9 +62,10 @@ func create_vehicle(vehicle_type: VEHICLE_TYPE) -> Vehicle:
 func get_vehicle(vehicle_id: int) -> Vehicle:
 	if vehicles.has(vehicle_id):
 		return vehicles[vehicle_id]
-	else:
-		push_error("Vehicle with ID %d not found." % vehicle_id)
-		return null
+
+	push_error("Vehicle with ID %d not found." % vehicle_id)
+	return null
+
 
 func remove_vehicle(vehicle_id: int) -> void:
 	if not vehicles.has(vehicle_id):
@@ -78,8 +85,10 @@ func remove_vehicle(vehicle_id: int) -> void:
 	vehicle.queue_free()
 	freed_ids_pool.append(vehicle_id)
 
+
 func vehicles_count() -> int:
 	return vehicles.size()
+
 
 func get_vehicle_from_area(area: Area2D) -> Vehicle:
 	if not area:
@@ -89,26 +98,30 @@ func get_vehicle_from_area(area: Area2D) -> Vehicle:
 
 	if first_parent is Vehicle:
 		return first_parent as Vehicle
-	elif first_parent.get_parent() is Vehicle:
+
+	if first_parent.get_parent() is Vehicle:
 		return first_parent.get_parent() as Vehicle
 	return null
+
 
 func clear_all_vehicles() -> void:
 	var vehicle_ids = vehicles.keys()
 	for vehicle_id in vehicle_ids:
 		remove_vehicle(vehicle_id)
 
+
 func clear_state() -> void:
 	vehicles.clear()
 	freed_ids_pool.clear()
 	next_fresh_id = 0
 
+
 func _generate_vehicle_id() -> int:
 	if freed_ids_pool.size() > 0:
 		return freed_ids_pool.pop_back()
-	else:
-		next_fresh_id += 1
-		return next_fresh_id - 1
+
+	next_fresh_id += 1
+	return next_fresh_id - 1
 
 
 func _on_vehicle_cleanup(vehicle_id: int) -> void:

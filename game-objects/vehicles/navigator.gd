@@ -2,12 +2,12 @@ extends RefCounted
 
 class_name Navigator
 
-var REROUTE_COOLDOWN = 5.0
+const REROUTE_COOLDOWN = 5.0
 
 enum StepType {
 	SEGMENT,
 	NODE,
-	BUILDING
+	BUILDING,
 }
 
 var vehicle: Vehicle
@@ -36,10 +36,10 @@ var reroute_cooldown: float = 0.0
 var trip_curves_cache: Array = []
 var used_paths: Array = []
 
-
 signal trip_started()
 signal trip_ended(completed: bool)
 signal trip_rerouted()
+
 
 func setup(owner: Vehicle) -> void:
 	vehicle = owner
@@ -53,7 +53,8 @@ func setup(owner: Vehicle) -> void:
 func setup_trip(from_node_id: int, to_node_id: int) -> void:
 	trip_points = [from_node_id, to_node_id]
 
-	pathing_manager.find_path(from_node_id, to_node_id, Callable(self, "_on_pathfinder_result"))
+	pathing_manager.find_path(from_node_id, to_node_id, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+
 
 func setup_trip_between_buildings(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 	var out_connections = from_building.get_out_connections()
@@ -64,16 +65,18 @@ func setup_trip_between_buildings(from_building: BaseBuilding, to_building: Base
 		for in_conn in in_connections:
 			var out_endpoint = out_conn["lane"].get_endpoint_by_type(true)
 			var in_endpoint = in_conn["lane"].get_endpoint_by_type(false)
-			combinations.append({
-				"from_node": out_endpoint.NodeId,
-				"to_node": in_endpoint.NodeId,
-				"from_endpoint": out_endpoint.Id,
-				"to_endpoint": in_endpoint.Id
-			})
+			combinations.append(
+				{
+					"from_node": out_endpoint.NodeId,
+					"to_node": in_endpoint.NodeId,
+					"from_endpoint": out_endpoint.Id,
+					"to_endpoint": in_endpoint.Id,
+				},
+			)
 
 	trip_buildings = [from_building, to_building]
 
-	pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"))
+	pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
 
 
 func get_current_step() -> Dictionary:
@@ -81,14 +84,17 @@ func get_current_step() -> Dictionary:
 
 	return current_step
 
+
 func get_distance_left() -> float:
 	return current_step["length"] - current_step["progress"]
+
 
 func can_advance(delta: float) -> bool:
 	if reroute_cooldown > 0.0:
 		reroute_cooldown = max(reroute_cooldown - delta, 0.0)
 
 	return step_ready
+
 
 func complete_current_step() -> void:
 	step_ready = false
@@ -101,7 +107,7 @@ func complete_current_step() -> void:
 		else:
 			if current_step.has("target_building") and current_step["target_building"].has_method("notify_vehicle_entered"):
 				current_step["target_building"].notify_vehicle_entered(vehicle)
-			
+
 			emit_signal("trip_ended", true)
 	elif current_step["type"] == StepType.NODE:
 		trip_step_index += 1
@@ -110,6 +116,7 @@ func complete_current_step() -> void:
 		_leave_building()
 	else:
 		_pass_node()
+
 
 func clean_up() -> void:
 	if current_step and current_step["type"] == StepType.SEGMENT:
@@ -128,9 +135,11 @@ func clean_up() -> void:
 		else:
 			current_step["target_building"].notify_vehicle_entered(vehicle)
 
+
 func abandon_trip() -> void:
 	clean_up()
 	emit_signal("trip_ended", false)
+
 
 func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
 	if current_step["type"] == StepType.NODE or current_step["type"] == StepType.BUILDING:
@@ -146,13 +155,22 @@ func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
 	var new_trip = [current_step["prev_node"], trip_points[1] if to_endpoint_id == -1 else to_endpoint_id]
 	var finish_endpoint = segment_helper.get_other_endpoint_in_lane(last_step_forced_endpoint) if last_step_forced_endpoint != -1 else null
 
-	pathing_manager.find_path(new_trip[0], new_trip[1], Callable(self, "_on_pathfinder_result"), current_step["from_endpoint"], finish_endpoint.Id if finish_endpoint else -1)
+	pathing_manager.find_path(
+		new_trip[0],
+		new_trip[1],
+		Callable(self, "_on_pathfinder_result"),
+		vehicle.config.category,
+		current_step["from_endpoint"],
+		finish_endpoint.Id if finish_endpoint else -1,
+	)
+
 
 func get_total_progress() -> float:
 	if total_trip_distance == 0:
 		return 0.0
 
 	return (traveled_distance_till_current_step + current_step["progress"]) / total_trip_distance
+
 
 func get_trip_curves() -> Array:
 	if trip_curves_cache.size() > 0:
@@ -192,12 +210,14 @@ func get_trip_curves() -> Array:
 	trip_curves_cache = curves
 	return curves
 
+
 func get_next_path(ref_path: Path2D) -> Path2D:
 	for i in range(used_paths.size()):
 		if used_paths[i] == ref_path and i + 1 < used_paths.size():
 			return used_paths[i + 1]
 
 	return null
+
 
 func _on_pathfinder_result(path: Variant) -> void:
 	if trip_path.size() > 0:
@@ -216,10 +236,11 @@ func _on_pathfinder_result(path: Variant) -> void:
 	else:
 		emit_signal("trip_ended", false)
 
+
 func _handle_reroute(path: Variant) -> void:
 	if path.State != 1:
 		step_ready = true
-		return	# Failed to find a new path, continue current trip
+		return # Failed to find a new path, continue current trip
 
 	var existing_path = trip_path.slice(0, trip_step_index + 1)
 	var remaining_existing_path = trip_path.slice(trip_step_index + 1, trip_path.size())
@@ -238,7 +259,7 @@ func _handle_reroute(path: Variant) -> void:
 
 	if not is_different:
 		step_ready = true
-		return	# New path is the same as the remaining existing path, continue current trip
+		return # New path is the same as the remaining existing path, continue current trip
 
 	trip_curves_cache = []
 	trip_path = updated_path
@@ -251,6 +272,7 @@ func _calc_trip_distance() -> void:
 
 	for curve in curves:
 		total_trip_distance += curve.get_baked_length()
+
 
 func _start_trip() -> void:
 	var start_step = trip_path[0]
@@ -284,10 +306,11 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 		current_step["building_to_enter"] = {
 			"building": trip_buildings[1],
 			"connection": building_in_connection,
-			"trigger_distance": line_helper.get_distance_from_point(lane.trail.curve, building_in_connection["lane_point"])
+			"trigger_distance": line_helper.get_distance_from_point(lane.trail.curve, building_in_connection["lane_point"]),
 		}
 
 	step_ready = true
+
 
 func _pass_node() -> void:
 	var step = trip_path[trip_step_index]
@@ -317,6 +340,7 @@ func _pass_node() -> void:
 
 	step_ready = true
 
+
 func _create_building_step(building: BaseBuilding, connection: Dictionary) -> Dictionary:
 	return {
 		"type": StepType.BUILDING,
@@ -329,8 +353,9 @@ func _create_building_step(building: BaseBuilding, connection: Dictionary) -> Di
 		"lane_point": connection["lane_point"],
 		"next_node": null,
 		"is_entering": connection["relation"] == "in",
-		"is_leaving": connection["relation"] == "out"
+		"is_leaving": connection["relation"] == "out",
 	}
+
 
 func _assign_to_building_step(step: Dictionary) -> void:
 	used_paths.append(step["connection"]["path"])
@@ -338,6 +363,7 @@ func _assign_to_building_step(step: Dictionary) -> void:
 
 	current_step = step
 	step_ready = true
+
 
 func _leave_building() -> void:
 	var building_step = current_step
@@ -353,6 +379,7 @@ func _leave_building() -> void:
 	lane.assign_vehicle(vehicle)
 
 	step_ready = true
+
 
 func _enter_building() -> void:
 	var building_data = current_step["building_to_enter"]
@@ -398,7 +425,7 @@ func _create_segment_step(lane: NetLane) -> Dictionary:
 			"is_intersection": node.connected_segments.size() > 2,
 			"from": finish_endpoint.Id,
 			"to": trip_path[trip_step_index + 1].ViaEndpointId if trip_step_index + 1 < trip_path.size() else null,
-			"approaching_intersection": node.connected_segments.size() > 2
+			"approaching_intersection": node.connected_segments.size() > 2,
 		}
 
 	return step

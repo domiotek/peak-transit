@@ -101,7 +101,7 @@ func _spawn_bus() -> void:
 	if not simulation_running:
 		return
 
-	var bus = vehicle_manager.create_vehicle(VehicleManager.VEHICLE_TYPE.ARTICULATED_BUS if randf() < 0.5 else VehicleManager.VEHICLE_TYPE.BUS)
+	var bus = vehicle_manager.create_vehicle(VehicleManager.VehicleType.ARTICULATED_BUS if randf() < 0.5 else VehicleManager.VehicleType.BUS)
 	var nodes = _get_random_nodes()
 
 	await bus.get_tree().create_timer(bus.id).timeout

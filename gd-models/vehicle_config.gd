@@ -1,6 +1,7 @@
 class_name VehicleConfig
 
 var ai
+var category: VehicleManager.VehicleCategory
 var blockade_observer: Area2D
 var head_lights: Array[Headlight]
 var brake_lights: Array[Node2D]

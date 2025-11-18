@@ -5,7 +5,7 @@ enum GameSpeed {
 	LOW = 1,
 	MEDIUM = 2,
 	HIGH = 3,
-	TURBO = 4
+	TURBO = 4,
 }
 
 enum Day {
@@ -15,7 +15,7 @@ enum Day {
 	THURSDAY = 4,
 	FRIDAY = 5,
 	SATURDAY = 6,
-	SUNDAY = 7
+	SUNDAY = 7,
 }
 
 enum IntersectionType {
@@ -34,6 +34,13 @@ enum Direction {
 	BACKWARD,
 }
 
+enum BaseDirection {
+	FORWARD,
+	BACKWARD,
+	LEFT,
+	RIGHT,
+}
+
 enum PathConflictType {
 	NONE,
 	LINE_CROSSING,
@@ -43,11 +50,11 @@ enum PathConflictType {
 enum IntersectionPriority {
 	YIELD,
 	STOP,
-	PRIORITY
+	PRIORITY,
 }
 
 enum TrafficLightState {
 	RED,
 	GREEN,
-	INITIAL
+	INITIAL,
 }

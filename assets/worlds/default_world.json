@@ -187,14 +187,29 @@
 					{
 						"lanes": [
 							{
-								"direction": 6
+								"direction": 6,
+								"allowedVehicles": {
+									"2": [
+										0
+									]
+								}
 							},
 							{
 								"direction": 7,
+								"allowedVehicles": {
+									"2": [
+										1
+									]
+								},
 								"maxSpeed": 80
 							},
 							{
-								"maxSpeed": 150
+								"maxSpeed": 150,
+								"allowedVehicles": {
+									"0": [
+										1
+									]
+								}
 							}
 						]
 					},

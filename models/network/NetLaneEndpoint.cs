@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Godot.Collections;
+using PT.Models.WorldDefinition.Network;
 
 namespace PT.Models.Network;
 
@@ -29,6 +30,9 @@ public class NetLaneEndpoint
 
     public List<int> Connections { get; } = [];
 
+    public System.Collections.Generic.Dictionary<int, EndpointConnection> ConnectionsExt { get; } =
+        [];
+
     public bool IsOutgoing()
     {
         return Type == EndpointType.Outgoing;
@@ -36,6 +40,12 @@ public class NetLaneEndpoint
 
     public Dictionary Serialize()
     {
+        var connectionDirectionsDict = new Dictionary();
+        foreach (var kvp in ConnectionsExt)
+        {
+            connectionDirectionsDict[kvp.Key] = kvp.Value.Serialize();
+        }
+
         var dict = new Dictionary
         {
             ["Id"] = Id,
@@ -47,6 +57,7 @@ public class NetLaneEndpoint
             ["LaneId"] = LaneId,
             ["LaneNumber"] = LaneNumber,
             ["Connections"] = Connections.ToArray(),
+            ["ConnectionsExt"] = connectionDirectionsDict,
         };
         return dict;
     }
@@ -69,6 +80,14 @@ public class NetLaneEndpoint
         foreach (var conn in connectionsArray)
         {
             endpoint.Connections.Add((int)conn);
+        }
+
+        var connectionDirectionsDict = dict["ConnectionsExt"].As<Dictionary>();
+        foreach (var kvp in connectionDirectionsDict)
+        {
+            endpoint.ConnectionsExt[(int)kvp.Key] = EndpointConnection.Deserialize(
+                (Dictionary)kvp.Value
+            );
         }
 
         return endpoint;

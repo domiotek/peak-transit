@@ -9,18 +9,22 @@ public partial class PathingRequest
     public int StartNodeId { get; set; }
     public int EndNodeId { get; set; }
 
+    public VehicleCategory RequesterVehicleType { get; set; }
+
     public int ForcedStartEndpointId { get; set; } = -1;
     public int ForcedEndEndpointId { get; set; } = -1;
 
     public PathingRequest(
         int startNodeId,
         int endNodeId,
+        VehicleCategory requesterVehicleType,
         int forcedStartEndpointId = -1,
         int forcedEndEndpointId = -1
     )
     {
         StartNodeId = startNodeId;
         EndNodeId = endNodeId;
+        RequesterVehicleType = requesterVehicleType;
         ForcedStartEndpointId = forcedStartEndpointId;
         ForcedEndEndpointId = forcedEndEndpointId;
     }
