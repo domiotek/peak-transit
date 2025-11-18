@@ -24,6 +24,7 @@ enum IntersectionType {
 }
 
 enum Direction {
+	UNSPECIFIED = -1,
 	RIGHT,
 	FORWARD,
 	RIGHT_FORWARD,
@@ -35,6 +36,7 @@ enum Direction {
 }
 
 enum BaseDirection {
+	UNSPECIFIED = -1,
 	FORWARD,
 	BACKWARD,
 	LEFT,
