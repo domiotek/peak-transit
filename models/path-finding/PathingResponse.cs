@@ -7,7 +7,7 @@ namespace PT.Models.PathFinding;
 public partial class PathingResponse : PathingRequest
 {
     private PathingResponse()
-        : base(0, 0) { }
+        : base(0, 0, VehicleCategory.Private) { }
 
     public PathingState State { get; internal set; } = PathingState.Pending;
 

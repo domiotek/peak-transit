@@ -15,6 +15,7 @@ func _get_vehicle_config() -> Variant:
 	var _config = VehicleConfig.new()
 
 	_config.ai = BusAI.new()
+	_config.category = VehicleManager.VehicleCategory.PUBLIC_TRANSPORT
 	_config.blockade_observer = forward_blockage_area
 	_config.head_lights = [$FrontBody/LeftBeam, $FrontBody/RightBeam] as Array[Headlight]
 	_config.brake_lights = [$Trailer/TrailerBody/LeftBrakeLight, $Trailer/TrailerBody/RightBrakeLight] as Array[Node2D]

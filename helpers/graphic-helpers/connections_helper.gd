@@ -5,14 +5,16 @@ var line_helper
 var segment_helper
 var network_manager
 
+
 func inject_dependencies() -> void:
 	lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
 	segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 
+
 func setup_one_segment_connections(node: RoadNode) -> void:
-	if node == null or  node.connected_segments.size() != 1:
+	if node == null or node.connected_segments.size() != 1:
 		return
 
 	var segment = node.connected_segments[0]
@@ -50,9 +52,8 @@ func setup_one_segment_connections(node: RoadNode) -> void:
 
 				node.add_connection_path(in_id, out_id, curve, Enums.Direction.BACKWARD)
 				add_direction_marker(node, in_endpoint, "backward", 0)
-			
-		 
-		
+
+
 func setup_two_segment_connections(node: RoadNode) -> void:
 	if node == null or node.connected_segments.size() != 2:
 		return
@@ -67,7 +68,7 @@ func setup_two_segment_connections(node: RoadNode) -> void:
 		for out_id in node.outgoing_endpoints:
 			var out_endpoint = network_manager.get_lane_endpoint(out_id)
 			if other_segment.endpoints.has(out_id):
-				if abs(in_endpoint.LaneNumber - out_endpoint.LaneNumber) >1:
+				if abs(in_endpoint.LaneNumber - out_endpoint.LaneNumber) > 1:
 					continue
 
 				in_endpoint.Connections.append(out_id)
@@ -77,25 +78,25 @@ func setup_two_segment_connections(node: RoadNode) -> void:
 
 				create_connecting_path(in_id, out_id, node, Enums.Direction.FORWARD)
 
+
 func setup_mutli_segment_connections(node: RoadNode) -> void:
-
 	for segment in node.connected_segments:
-		var in_endpoints = segment.endpoints.filter(func (_id): return node.incoming_endpoints.has(_id))
+		var in_endpoints = segment.endpoints.filter(func(_id): return node.incoming_endpoints.has(_id))
 
-		var directions = segment_helper.get_segment_directions_from_segment(node, segment, node.connected_segments.filter(func (s): return s != segment))
+		var directions = segment_helper.get_segment_directions_from_segment(node, segment, node.connected_segments.filter(func(s): return s != segment))
 
 		var endpoints_dict = {
 			"forward": [],
 			"backward": [],
 			"left": [],
-			"right": []
+			"right": [],
 		}
 
 		var ids_dict = {
 			"forward": [],
 			"backward": [],
 			"left": [],
-			"right": []
+			"right": [],
 		}
 
 		node.segment_directions[segment.id] = directions
@@ -104,10 +105,10 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 			if directions[direction] == null:
 				continue
 
-			var ids = directions[direction].endpoints.filter(func (_id): return node.outgoing_endpoints.has(_id))
+			var ids = directions[direction].endpoints.filter(func(_id): return node.outgoing_endpoints.has(_id))
 			ids_dict[direction] = ids
-			for _id in ids:
-				var endpoint = network_manager.get_lane_endpoint(_id)
+			for endpoint_id in ids:
+				var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 				if endpoint:
 					endpoints_dict[direction].append(endpoint)
 
@@ -117,21 +118,65 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 			if endpoint:
 				in_endpoints_array.append(endpoint)
 
-		var new_connections = lane_calculator.CalculateLaneConnections(in_endpoints_array, endpoints_dict["left"], endpoints_dict["forward"], endpoints_dict["right"])
+		var new_connections = lane_calculator.CalculateLaneConnections(
+			in_endpoints_array,
+			endpoints_dict["left"],
+			endpoints_dict["forward"],
+			endpoints_dict["right"],
+		)
 
 		node.connections.merge(new_connections)
 
 		for in_id in new_connections.keys():
 			var in_endpoint = network_manager.get_lane_endpoint(in_id)
+			var in_lane = network_manager.get_segment(in_endpoint.SegmentId).get_lane(in_endpoint.LaneId)
 
 			for out_id in new_connections[in_id]:
 				var conn_direction = determine_connection_direction(ids_dict, out_id)
 				create_connecting_path(in_id, out_id, node, conn_direction)
+				in_endpoint.Connections.append(out_id)
+				var base_direction = convert_to_base_direction(conn_direction)
+				in_endpoint.ConnectionsExt[out_id] = {
+					"Direction": base_direction,
+					"AllowedVehicles": in_lane.data.allowed_vehicles.get(base_direction, []),
+				}
+
+			var public_transport_only_direction = _check_for_public_transport_only_direction(in_lane)
 
 			var direction = determine_lane_direction(ids_dict, new_connections[in_id])
+			segment.get_lane(in_endpoint.LaneId).direction = direction
+
+			if public_transport_only_direction != Enums.BaseDirection.UNSPECIFIED:
+				var subtracted_direction = subtract_base_direction(direction, public_transport_only_direction)
+
+				if subtracted_direction != Enums.Direction.UNSPECIFIED:
+					direction = subtracted_direction
+					var pt_direction_marker_name = _map_direction_to_marker_name(convert_to_combined_direction(public_transport_only_direction))
+					add_direction_marker(
+						node,
+						in_endpoint,
+						pt_direction_marker_name,
+						NetworkConstants.SUPPORT_DIRECTION_MARKER_OFFSET,
+						NetworkConstants.SUPPORT_MARKER_TINT,
+					)
+					add_direction_marker(
+						node,
+						in_endpoint,
+						"bus_lane",
+						NetworkConstants.SUPPORT_DIRECTION_MARKER_OFFSET + NetworkConstants.DIRECTION_LABEL_OFFSET,
+						NetworkConstants.SUPPORT_MARKER_TINT,
+					)
+				else:
+					add_direction_marker(
+						node,
+						in_endpoint,
+						"bus_lane",
+						NetworkConstants.DIRECTION_MARKER_OFFSET + NetworkConstants.DIRECTION_LABEL_OFFSET,
+					)
+
 			var direction_marker_name = _map_direction_to_marker_name(direction)
 			add_direction_marker(node, in_endpoint, direction_marker_name)
-			segment.get_lane(in_endpoint.LaneId).direction = direction
+
 
 func create_connecting_path(in_id: int, out_id: int, node: RoadNode, direction: Enums.Direction) -> void:
 	var in_endpoint = network_manager.get_lane_endpoint(in_id)
@@ -151,7 +196,13 @@ func create_connecting_path(in_id: int, out_id: int, node: RoadNode, direction: 
 	node.add_connection_path(in_id, out_id, curve, direction)
 
 
-func add_direction_marker(node: RoadNode, in_endpoint: Dictionary, asset_name: String, marker_offset: float=NetworkConstants.DIRECTION_MARKER_OFFSET) -> void:
+func add_direction_marker(
+		node: RoadNode,
+		in_endpoint: Dictionary,
+		asset_name: String,
+		marker_offset: float = NetworkConstants.DIRECTION_MARKER_OFFSET,
+		modulate = Color(1, 1, 1, 1),
+) -> void:
 	var asset_path = "res://assets/road_markers/" + asset_name + "_marker.svg"
 	var marker_image = load(asset_path)
 
@@ -173,10 +224,10 @@ func add_direction_marker(node: RoadNode, in_endpoint: Dictionary, asset_name: S
 	var start_point = curve.sample_baked(0)
 	var end_point = curve.sample_baked(curve_length)
 	var endpoint_pos = in_endpoint.Position
-	
+
 	var distance_to_start = start_point.distance_to(endpoint_pos)
 	var distance_to_end = end_point.distance_to(endpoint_pos)
-	
+
 	var offset
 	var rotation_offset = 0.0
 	if distance_to_start < distance_to_end:
@@ -193,29 +244,56 @@ func add_direction_marker(node: RoadNode, in_endpoint: Dictionary, asset_name: S
 	marker_sprite.texture = marker_image
 	marker_sprite.scale = Vector2(0.125, 0.125)
 	marker_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	marker_sprite.modulate = modulate
 
 	marker_sprite.position = node.to_local(position)
 	var rotation = tangent.angle() + rotation_offset
 	marker_sprite.rotation = rotation
 	node.markings_layer.add_child(marker_sprite)
 
+
 func determine_connection_direction(directions_dict: Dictionary, other_endpoint: int) -> Enums.Direction:
 	if directions_dict["left"].has(other_endpoint):
 		return Enums.Direction.LEFT
-	elif directions_dict["forward"].has(other_endpoint):
+	if directions_dict["forward"].has(other_endpoint):
 		return Enums.Direction.FORWARD
-	elif directions_dict["right"].has(other_endpoint):
+	if directions_dict["right"].has(other_endpoint):
 		return Enums.Direction.RIGHT
 
 	return Enums.Direction.BACKWARD
 
+
+func convert_to_base_direction(direction: Enums.Direction) -> Enums.BaseDirection:
+	match direction:
+		Enums.Direction.FORWARD:
+			return Enums.BaseDirection.FORWARD
+		Enums.Direction.LEFT:
+			return Enums.BaseDirection.LEFT
+		Enums.Direction.RIGHT:
+			return Enums.BaseDirection.RIGHT
+		_:
+			return Enums.BaseDirection.FORWARD
+
+
+func convert_to_combined_direction(base_direction: Enums.BaseDirection) -> Enums.Direction:
+	match base_direction:
+		Enums.BaseDirection.FORWARD:
+			return Enums.Direction.FORWARD
+		Enums.BaseDirection.LEFT:
+			return Enums.Direction.LEFT
+		Enums.BaseDirection.RIGHT:
+			return Enums.Direction.RIGHT
+		_:
+			return Enums.Direction.UNSPECIFIED
+
+
 func determine_lane_direction(directions_dict: Dictionary, lane_connections: Array) -> Enums.Direction:
-	var has_left = directions_dict["left"].filter(func (x): return lane_connections.has(x)).size() > 0
-	var has_forward = directions_dict["forward"].filter(func (x): return lane_connections.has(x)).size() > 0
-	var has_right = directions_dict["right"].filter(func (x): return lane_connections.has(x)).size() > 0
+	var has_left = directions_dict["left"].filter(func(x): return lane_connections.has(x)).size() > 0
+	var has_forward = directions_dict["forward"].filter(func(x): return lane_connections.has(x)).size() > 0
+	var has_right = directions_dict["right"].filter(func(x): return lane_connections.has(x)).size() > 0
 
 	var direction_bits = (int(has_left) << 2) | (int(has_forward) << 1) | int(has_right)
-	
+
 	match direction_bits:
 		0b001:
 			return Enums.Direction.RIGHT
@@ -234,18 +312,57 @@ func determine_lane_direction(directions_dict: Dictionary, lane_connections: Arr
 		_:
 			return Enums.Direction.BACKWARD
 
+
 func is_combined_direction(direction: Enums.Direction) -> bool:
 	return direction in [Enums.Direction.LEFT_FORWARD, Enums.Direction.RIGHT_FORWARD, Enums.Direction.LEFT_RIGHT, Enums.Direction.ALL_DIRECTIONS]
+
 
 func is_in_combined_direction(direction: Enums.Direction, basic_direction: Enums.Direction) -> bool:
 	if basic_direction == Enums.Direction.FORWARD:
 		return direction in [Enums.Direction.FORWARD, Enums.Direction.LEFT_FORWARD, Enums.Direction.RIGHT_FORWARD, Enums.Direction.ALL_DIRECTIONS]
-	elif basic_direction == Enums.Direction.LEFT:
+	if basic_direction == Enums.Direction.LEFT:
 		return direction in [Enums.Direction.LEFT, Enums.Direction.LEFT_FORWARD, Enums.Direction.LEFT_RIGHT, Enums.Direction.ALL_DIRECTIONS]
-	elif basic_direction == Enums.Direction.RIGHT:
+	if basic_direction == Enums.Direction.RIGHT:
 		return direction in [Enums.Direction.RIGHT, Enums.Direction.RIGHT_FORWARD, Enums.Direction.LEFT_RIGHT, Enums.Direction.ALL_DIRECTIONS]
-		
+
 	return false
+
+
+func subtract_base_direction(direction: Enums.Direction, base_direction: Enums.BaseDirection) -> Enums.Direction:
+	if base_direction == null:
+		return direction
+
+	match base_direction:
+		Enums.BaseDirection.FORWARD:
+			if direction == Enums.Direction.FORWARD:
+				return Enums.Direction.UNSPECIFIED
+			if direction == Enums.Direction.LEFT_FORWARD:
+				return Enums.Direction.LEFT
+			if direction == Enums.Direction.RIGHT_FORWARD:
+				return Enums.Direction.RIGHT
+			if direction == Enums.Direction.ALL_DIRECTIONS:
+				return Enums.Direction.LEFT_RIGHT
+		Enums.BaseDirection.LEFT:
+			if direction == Enums.Direction.LEFT:
+				return Enums.Direction.UNSPECIFIED
+			if direction == Enums.Direction.LEFT_FORWARD:
+				return Enums.Direction.FORWARD
+			if direction == Enums.Direction.LEFT_RIGHT:
+				return Enums.Direction.RIGHT
+			if direction == Enums.Direction.ALL_DIRECTIONS:
+				return Enums.Direction.RIGHT_FORWARD
+		Enums.BaseDirection.RIGHT:
+			if direction == Enums.Direction.RIGHT:
+				return Enums.Direction.UNSPECIFIED
+			if direction == Enums.Direction.RIGHT_FORWARD:
+				return Enums.Direction.FORWARD
+			if direction == Enums.Direction.LEFT_RIGHT:
+				return Enums.Direction.LEFT
+			if direction == Enums.Direction.ALL_DIRECTIONS:
+				return Enums.Direction.LEFT_FORWARD
+
+	return direction
+
 
 func _map_direction_to_marker_name(direction: Enums.Direction) -> String:
 	match direction:
@@ -265,3 +382,11 @@ func _map_direction_to_marker_name(direction: Enums.Direction) -> String:
 			return "all_directions"
 		_:
 			return "backward"
+
+
+func _check_for_public_transport_only_direction(lane: NetLane) -> Enums.BaseDirection:
+	for base_direction in Enums.BaseDirection.values():
+		var allowed_vehicles = lane.data.allowed_vehicles.get(base_direction, [])
+		if allowed_vehicles.size() == 1 and allowed_vehicles[0] == VehicleManager.VehicleCategory.PUBLIC_TRANSPORT:
+			return base_direction
+	return Enums.BaseDirection.UNSPECIFIED

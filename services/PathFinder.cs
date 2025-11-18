@@ -74,12 +74,19 @@ public partial class PathFinder : RefCounted
         int toNodeId,
         long requestId,
         Callable onResult,
+        VehicleCategory requesterVehicleType,
         int forceFromEndpoint = -1,
         int forceToEndpoint = -1,
         int combinationId = 0
     )
     {
-        var request = new PathingRequest(fromNodeId, toNodeId, forceFromEndpoint, forceToEndpoint);
+        var request = new PathingRequest(
+            fromNodeId,
+            toNodeId,
+            requesterVehicleType,
+            forceFromEndpoint,
+            forceToEndpoint
+        );
 
         _queue.Enqueue(new WorkItem(request, onResult, requestId, combinationId));
         _signal.Set();
@@ -148,6 +155,7 @@ public partial class PathFinder : RefCounted
                 Graph,
                 request.StartNodeId,
                 request.EndNodeId,
+                request.RequesterVehicleType,
                 request.ForcedStartEndpointId != -1 ? request.ForcedStartEndpointId : null,
                 request.ForcedEndEndpointId != -1 ? request.ForcedEndEndpointId : null,
                 cancellationToken
