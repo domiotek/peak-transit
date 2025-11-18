@@ -31,6 +31,8 @@ public partial class DebugToggles : RefCounted
 
     public bool DrawBuildingConnections { get; private set; } = false;
 
+    public bool UseDayNightCycle { get; private set; } = true;
+
     public void SetToggle(string toggleName, bool value)
     {
         var property = GetType()

@@ -10,39 +10,43 @@ class_name ArticulatedBus
 @onready var trailer_collision_area = $Trailer/CollisionArea
 @onready var forward_blockage_area = $FrontBody/ForwardBlockadeObserver
 
+
 func _get_vehicle_config() -> Variant:
-	return {
-		"ai": BusAI.new(),
-		"blockade_observer": forward_blockage_area,
-		"brake_lights": [$Trailer/TrailerBody/LeftBrakeLight, $Trailer/TrailerBody/RightBrakeLight],
-		"casters": {
-			"close": $FrontBody/CloseRayCaster,
-			"medium": $FrontBody/MediumRayCaster,
-			"long": $FrontBody/LongRayCaster,
-			"left": $FrontBody/LeftRayCaster,
-			"right": $FrontBody/RightRayCaster
+	var _config = VehicleConfig.new()
+
+	_config.ai = BusAI.new()
+	_config.blockade_observer = forward_blockage_area
+	_config.head_lights = [$FrontBody/LeftBeam, $FrontBody/RightBeam] as Array[Headlight]
+	_config.brake_lights = [$Trailer/TrailerBody/LeftBrakeLight, $Trailer/TrailerBody/RightBrakeLight] as Array[Node2D]
+	_config.casters = CasterCollection.new(
+		$FrontBody/CloseRayCaster,
+		$FrontBody/MediumRayCaster,
+		$FrontBody/LongRayCaster,
+		$FrontBody/LeftRayCaster,
+		$FrontBody/RightRayCaster,
+	)
+	_config.caster_indicators = CasterCollection.CasterIndicatorCollection.new(
+		$FrontBody/CloseRayIndicator,
+		$FrontBody/MediumRayIndicator,
+		$FrontBody/LongRayIndicator,
+		$FrontBody/LeftRayIndicator,
+		$FrontBody/RightRayIndicator,
+	)
+	_config.id_label = $FrontBody/Label
+	_config.path_followers = [
+		{
+			"follower": front_path_follower,
+			"offset": 0.0,
+			"body": $FrontBody,
 		},
-		"caster_indicators": {
-			"close": $FrontBody/CloseRayIndicator,
-			"medium": $FrontBody/MediumRayIndicator,
-			"long": $FrontBody/LongRayIndicator,
-			"left": $FrontBody/LeftRayIndicator,
-			"right": $FrontBody/RightRayIndicator
+		{
+			"follower": trailer_path_follower,
+			"offset": 28.0,
+			"body": $Trailer,
 		},
-		"id_label": $FrontBody/Label,
-		"path_followers": [
-			{
-				"follower": front_path_follower, 
-				"offset": 0.0, 
-				"body": $FrontBody
-			}, 
-			{
-				"follower": trailer_path_follower, 
-				"offset": 28.0, 
-				"body": $Trailer
-			}
-		],
-		"body_areas": [main_body_area, trailer_body_area],
-		"collision_areas": [main_collision_area, trailer_collision_area],
-		"blockade_indicator": $FrontBody/Line2D
-	}
+	] as Array[Dictionary]
+	_config.body_areas = [main_body_area, trailer_body_area] as Array[Area2D]
+	_config.collision_areas = [main_collision_area, trailer_collision_area] as Array[Area2D]
+	_config.blockade_indicator = $FrontBody/Line2D
+
+	return _config

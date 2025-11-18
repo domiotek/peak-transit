@@ -16,6 +16,7 @@ uv = PackedVector2Array(2.31244, -2.51594, 2.31244, -2.50031, 2.31244, -2.53156,
 inactive_color = Color(0.054902, 0.196078, 0, 1)
 active_color = Color(0.141176, 0.784314, 0, 1)
 radius = 2.0
+light_energy = 0.0
 
 [node name="ArrowShape" type="Sprite2D" parent="."]
 clip_children = 1
@@ -27,3 +28,5 @@ scale = Vector2(6.85714, 6.85714)
 inactive_color = Color(0.054902, 0.196078, 0, 1)
 active_color = Color(0.141176, 0.784314, 0, 1)
 radius = 2.0
+light_energy = 8.0
+ilumination_scale = 2.0

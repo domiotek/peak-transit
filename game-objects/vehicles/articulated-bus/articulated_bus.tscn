@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://dqom42bfhcruj"]
+[gd_scene load_steps=11 format=3 uid="uid://dqom42bfhcruj"]
 
 [ext_resource type="PackedScene" uid="uid://1twv1cec0hc6" path="res://game-objects/vehicles/vehicle.tscn" id="1_vb4g1"]
 [ext_resource type="Script" uid="uid://ofhugjeihcvu" path="res://game-objects/vehicles/articulated-bus/articulated_bus.gd" id="2_2xaxp"]
 [ext_resource type="PackedScene" uid="uid://cx5r114fjgwq7" path="res://game-objects/light/light.tscn" id="3_xwv6l"]
+[ext_resource type="PackedScene" uid="uid://4kuxfxcr7jee" path="res://game-objects/vehicles/headlight/headlight.tscn" id="4_xwv6l"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_q147t"]
 font_size = 8
@@ -42,26 +43,31 @@ width = 1.0
 position = Vector2(27.0001, -5.99996)
 inactive_color = Color(0.328363, 0.188552, 0.0617831, 1)
 active_color = Color(0.993088, 0.761047, 0.36313, 1)
+ilumination_scale = 0.25
 
 [node name="RightRayIndicator" parent="FrontBody" index="2" instance=ExtResource("3_xwv6l")]
 position = Vector2(27.0001, 6.00004)
 inactive_color = Color(0.329412, 0.188235, 0.0627451, 1)
 active_color = Color(0.992157, 0.760784, 0.364706, 1)
+ilumination_scale = 0.25
 
 [node name="LongRayIndicator" parent="FrontBody" index="3" instance=ExtResource("3_xwv6l")]
 position = Vector2(10.0001, -4.99996)
 inactive_color = Color(0.0998999, 5.17646e-05, 0.34762, 1)
 active_color = Color(0.602044, 0.610385, 1, 1)
+ilumination_scale = 0.25
 
 [node name="MediumRayIndicator" parent="FrontBody" index="4" instance=ExtResource("3_xwv6l")]
 position = Vector2(10.0001, 4.19617e-05)
 inactive_color = Color(0.2, 0.364706, 0, 1)
 active_color = Color(0.394249, 0.68442, 0, 1)
+ilumination_scale = 0.25
 
 [node name="CloseRayIndicator" parent="FrontBody" index="5" instance=ExtResource("3_xwv6l")]
 position = Vector2(10.0001, 5.00004)
 inactive_color = Color(0.531182, 0, 0.263433, 1)
 active_color = Color(1, 0.359538, 0.595255, 1)
+ilumination_scale = 0.25
 
 [node name="Label" type="Label" parent="FrontBody" index="6"]
 offset_left = -7.0
@@ -164,6 +170,16 @@ shape = SubResource("RectangleShape2D_65tko")
 position = Vector2(6.10352e-05, 4.19617e-05)
 loop = false
 
+[node name="LeftBeam" parent="FrontBody" index="17" instance=ExtResource("4_xwv6l")]
+z_index = 100
+z_as_relative = false
+position = Vector2(30.5, -7)
+
+[node name="RightBeam" parent="FrontBody" index="18" instance=ExtResource("4_xwv6l")]
+z_index = 100
+z_as_relative = false
+position = Vector2(30.5, 5)
+
 [node name="Trailer" type="Node2D" parent="." index="1"]
 position = Vector2(-28, 0)
 
@@ -179,11 +195,15 @@ uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
 position = Vector2(-24, -9)
 inactive_color = Color(0.2, 0, 0, 1)
 active_color = Color(1, 0, 0, 1)
+backlight_energy = 15.0
+ilumination_scale = 0.25
 
 [node name="RightBrakeLight" parent="Trailer/TrailerBody" index="1" instance=ExtResource("3_xwv6l")]
 position = Vector2(-24, 9)
 inactive_color = Color(0.2, 0, 0, 1)
 active_color = Color(1, 0, 0, 1)
+backlight_energy = 15.0
+ilumination_scale = 0.25
 
 [node name="TrailerLink" type="Polygon2D" parent="Trailer/TrailerBody" index="2"]
 z_index = -2

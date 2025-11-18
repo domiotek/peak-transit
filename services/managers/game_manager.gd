@@ -7,7 +7,7 @@ enum SelectionType {
 	VEHICLE,
 	NODE,
 	STOPPER,
-	SPAWNER_BUILDING
+	SPAWNER_BUILDING,
 }
 
 var selected_object: Object = null
@@ -30,13 +30,14 @@ var game_controller: GameController
 
 var world_definition: WorldDefinition
 
-
 var game_speed: Enums.GameSpeed = Enums.GameSpeed.PAUSE
 var initialized: bool = false
 var game_menu_visible: bool = false
+var clock = ClockManager.new()
 
 signal game_speed_changed(new_speed: Enums.GameSpeed)
 signal world_loading_progress(action: String, progress: float)
+
 
 func setup(_game_controller: GameController) -> void:
 	game_controller = _game_controller
@@ -54,10 +55,12 @@ func setup(_game_controller: GameController) -> void:
 
 	simulation_manager.setup(game_controller)
 
+
 func get_camera_bounds() -> Rect2:
 	return game_controller.get_camera_bounds()
 
-func initialize_game(world_file_path: String="") -> void:
+
+func initialize_game(world_file_path: String = "") -> void:
 	if initialized:
 		return
 
@@ -70,10 +73,13 @@ func initialize_game(world_file_path: String="") -> void:
 
 	if not world_def['definition']:
 		push_error("Failed to load world definition from file: %s" % world_file_path)
-		ui_manager.show_ui_view(MessageBoxView.VIEW_NAME, {
-			"title": "Error during world load",
-			"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [world_file_path, world_def['parsingError'] if world_def.has('parsingError') else "None"],
-		});
+		ui_manager.show_ui_view(
+			MessageBoxView.VIEW_NAME,
+			{
+				"title": "Error during world load",
+				"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [world_file_path, world_def['parsingError'] if world_def.has('parsingError') else "None"],
+			},
+		)
 
 		return
 
@@ -87,6 +93,7 @@ func initialize_game(world_file_path: String="") -> void:
 
 	await game_controller.initialize_game(world_definition)
 	simulation_manager.start_simulation()
+
 
 func dispose_game() -> void:
 	if not initialized:
@@ -106,23 +113,28 @@ func dispose_game() -> void:
 	clear_state()
 	ui_manager.show_main_menu()
 
+
 func is_game_initialized() -> bool:
 	return initialized
+
 
 func show_game_menu() -> void:
 	ui_manager.show_ui_view("GameMenuView")
 	game_menu_visible = true
 	set_game_speed(Enums.GameSpeed.PAUSE)
 
+
 func hide_game_menu() -> void:
 	ui_manager.hide_ui_view("GameMenuView")
 	game_menu_visible = false
+
 
 func toggle_game_menu() -> void:
 	if game_menu_visible:
 		hide_game_menu()
 	else:
 		show_game_menu()
+
 
 func is_game_menu_visible() -> bool:
 	return game_menu_visible
@@ -131,8 +143,9 @@ func is_game_menu_visible() -> bool:
 func push_loading_progress(action: String, progress: float) -> void:
 	world_loading_progress.emit(action, progress)
 
+
 func set_game_speed(speed: Enums.GameSpeed) -> void:
-	game_speed = speed 
+	game_speed = speed
 
 	match game_speed:
 		Enums.GameSpeed.PAUSE:
@@ -150,8 +163,10 @@ func set_game_speed(speed: Enums.GameSpeed) -> void:
 
 	game_speed_changed.emit(game_speed)
 
+
 func get_game_speed() -> Enums.GameSpeed:
 	return game_speed
+
 
 func set_selection(object: Object, type: SelectionType) -> void:
 	selection_type = type
@@ -179,23 +194,29 @@ func set_selection(object: Object, type: SelectionType) -> void:
 	if selection_popup_id:
 		ui_manager.show_ui_view(selection_popup_id)
 
+
 func clear_selection() -> void:
 	set_selection(null, SelectionType.NONE)
+
 
 func get_selection() -> Dictionary:
 	return {
 		"object": selected_object,
-		"type": selection_type
+		"type": selection_type,
 	}
+
 
 func get_selected_object() -> Object:
 	return selected_object
 
+
 func get_selection_type() -> SelectionType:
 	return selection_type
 
+
 func is_debug_pick_enabled() -> bool:
 	return debug_selection
+
 
 func try_hit_debug_pick(object: Object) -> bool:
 	if not debug_selection:
@@ -219,11 +240,11 @@ func try_hit_debug_pick(object: Object) -> bool:
 
 	return false
 
+
 func draw_vehicle_route(vehicle: Vehicle) -> void:
 	if not vehicle:
 		return
 
-		
 	var route_layer = game_controller.get_map().get_drawing_layer("VehicleRouteLayer") as Node2D
 	if not route_layer:
 		return
@@ -236,18 +257,18 @@ func draw_vehicle_route(vehicle: Vehicle) -> void:
 
 	for curve in route:
 		var curve2d = curve as Curve2D
-	
+
 		line_helper.convert_curve_global_to_local(curve2d, route_layer)
 
 		var line2d = Line2D.new()
 		line2d.width = 2
 		line2d.default_color = Color.YELLOW
-		
+
 		var curve_length = curve2d.get_baked_length()
 		if curve_length > 0:
 			var sample_distance = 5.0
 			var num_samples = int(curve_length / sample_distance) + 1
-			
+
 			for i in range(num_samples):
 				var offset: float = 0.0
 				if num_samples > 1:
@@ -259,6 +280,7 @@ func draw_vehicle_route(vehicle: Vehicle) -> void:
 				line2d.add_point(curve2d.get_point_position(i))
 
 		route_layer.add_child(line2d)
+
 
 func clear_drawn_route() -> void:
 	if not vehicle_with_path_drawn:
@@ -281,6 +303,7 @@ func redraw_route() -> void:
 
 	call_deferred("clear_drawn_route")
 	call_deferred("draw_vehicle_route", vehicle_with_path_drawn)
+
 
 func clear_state() -> void:
 	selected_object = null

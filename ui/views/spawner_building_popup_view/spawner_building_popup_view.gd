@@ -1,6 +1,5 @@
 extends Control
 
-
 var ui_manager: UIManager
 var game_manager: GameManager
 
@@ -10,7 +9,6 @@ var is_pinned: bool = false
 var data_items: Array = []
 
 var item_scene = preload("res://ui/components/value_list_item/value_list_item.tscn")
-
 
 @onready var close_button: Button = $MarginContainer/MainFlowContainer/HeaderBoxContainer/CloseButton
 @onready var pin_button: Button = $MarginContainer/MainFlowContainer/HeaderBoxContainer/PinButton
@@ -36,6 +34,7 @@ func _ready() -> void:
 	debugger_button.pressed.connect(_on_debugger_button_pressed)
 	pin_button.pressed.connect(_on_pin_button_toggled)
 
+
 func update(_data: Dictionary) -> void:
 	if game_manager.get_selection_type() != GameManager.SelectionType.SPAWNER_BUILDING:
 		_on_close_button_pressed()
@@ -54,34 +53,42 @@ func update(_data: Dictionary) -> void:
 			item.init_item(key, key.capitalize(), str(value))
 			properties_container.add_child(item)
 			data_items.append(item)
-			
+
 	toggle_debug_button.flat = not selected_building.are_debug_visuals_enabled()
+
 
 func _process(_delta: float) -> void:
 	if visible and selected_building:
 		var data = selected_building.get_popup_data()
+		ui_manager.reanchor_to_world_object(self, selected_building, UIManager.AnchorPoint.BOTTOM_LEFT, is_pinned)
 
 		for i in range(data_items.size()):
 			var item = data_items[i]
 			item.set_value(str(data[item.id]))
+
 
 func _on_close_button_pressed() -> void:
 	ui_manager.hide_ui_view("SpawnerBuildingPopupView")
 	selected_building = null
 	_handle_pinned_button(false)
 
+
 func _on_toggle_debug_button_pressed() -> void:
 	selected_building.toggle_debug_visuals()
 	toggle_debug_button.flat = not selected_building.are_debug_visuals_enabled()
 
+
 func _on_spawn_car_button_pressed() -> void:
 	selected_building.spawn_vehicle()
+
 
 func _on_debugger_button_pressed() -> void:
 	game_manager.debug_selection = not game_manager.debug_selection
 
+
 func _on_pin_button_toggled() -> void:
 	_handle_pinned_button(not is_pinned)
+
 
 func _handle_pinned_button(active: bool) -> void:
 	is_pinned = active

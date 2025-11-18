@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://ccncdb455yrno"]
+[gd_scene load_steps=12 format=3 uid="uid://ccncdb455yrno"]
 
 [ext_resource type="Script" uid="uid://dhdi35g0oovy8" path="res://game-objects/game/game.gd" id="1_lbhrr"]
 [ext_resource type="Script" uid="uid://dop8vfgf1q1ae" path="res://game-objects/camera/camera.gd" id="2_iywne"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://5m3t38n6i8mw" path="res://ui/views/debug_toggles_view/debug_toggles_view.tscn" id="5_801pt"]
 [ext_resource type="PackedScene" uid="uid://ebb720gj6a3y" path="res://ui/views/debug_intersections_view/debug_intersections_view.tscn" id="6_131kq"]
 [ext_resource type="PackedScene" uid="uid://vy0ji1ac0ru5" path="res://ui/views/game_speed_view/game_speed_view.tscn" id="7_olljk"]
+[ext_resource type="PackedScene" uid="uid://6ipl1lxu6eyw" path="res://ui/views/game-clock-view/game_clock_view.tscn" id="8_18rte"]
 [ext_resource type="PackedScene" uid="uid://d4e2qlngqhdac" path="res://ui/views/spawner_building_popup_view/spawner_building_popup_view.tscn" id="8_jdet1"]
 [ext_resource type="PackedScene" uid="uid://dwvxntd8ejmoh" path="res://ui/views/world-loading-progress-view/world_loading_progress_view.tscn" id="9_lj8l1"]
 [ext_resource type="PackedScene" uid="uid://b2tu0r5oy2hba" path="res://ui/views/game-menu-view/game_menu_view.tscn" id="10_qsgkn"]
@@ -72,6 +73,17 @@ offset_right = 200.0
 offset_bottom = -10.0
 grow_vertical = 0
 
+[node name="GameClockView" parent="UI" instance=ExtResource("8_18rte")]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -68.0
+offset_top = 5.0
+offset_right = 68.0
+offset_bottom = 37.0
+grow_horizontal = 2
+
 [node name="SpawnerBuildingPopupView" parent="UI" instance=ExtResource("8_jdet1")]
 anchors_preset = 0
 anchor_right = 0.0
@@ -96,3 +108,4 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="GameMenuView" parent="UI" instance=ExtResource("10_qsgkn")]
+visible = false
