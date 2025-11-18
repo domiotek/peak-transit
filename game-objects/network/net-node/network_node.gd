@@ -2,7 +2,7 @@ extends Node2D
 
 class_name RoadNode
 
-@onready var layerHelper = GDInjector.inject("NodeLayerHelper") as NodeLayerHelper
+@onready var layer_helper = GDInjector.inject("NodeLayerHelper") as NodeLayerHelper
 @onready var circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
 @onready var lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
 @onready var connections_helper = GDInjector.inject("ConnectionsHelper") as ConnectionsHelper
@@ -69,23 +69,32 @@ func update_visuals() -> void:
 		var node_width = max_lanes * NetworkConstants.LANE_WIDTH
 
 		if connected_segments.size() > 2:
-			corner_points = layerHelper.find_intersection_corners(connected_segments)
+			corner_points = layer_helper.find_intersection_corners(connected_segments)
 
-			main_layer.polygon = layerHelper.create_precise_intersection_layer(self, connected_segments, corner_points)
+			main_layer.polygon = layer_helper.create_precise_intersection_layer(self, connected_segments, corner_points)
 			var coatings = line_helper.get_polygon_chunks(main_layer, NetworkConstants.LANE_WIDTH)
 			for coating in coatings:
 				coating.color = Color(0.2, 0.2, 0.2)
 				coating_layer.add_child(coating)
 
 		elif connected_segments.size() == 2 and connected_segments[0].total_lanes != connected_segments[1].total_lanes:
-			layerHelper.create_trapezoid_underlayer(self, connected_segments)
+			layer_helper.create_trapezoid_underlayer(self, connected_segments)
 		elif connected_segments.size() == 2:
-			layerHelper.create_rectangle_underlayer(self, connected_segments, node_width, NetworkConstants.LANE_WIDTH)
+			layer_helper.create_rectangle_underlayer(self, connected_segments, node_width, NetworkConstants.LANE_WIDTH)
 		elif connected_segments.size() == 1:
-			layerHelper.create_circle_underlayer(self, connected_segments[0], connected_segments[0].total_lanes * NetworkConstants.LANE_WIDTH / 2.0)
+			layer_helper.create_circle_underlayer(
+				self,
+				connected_segments[0],
+				connected_segments[0].total_lanes * NetworkConstants.LANE_WIDTH / 2.0,
+			)
 
 		if connected_segments.size() < 3:
-			boundary_layer.polygon = layerHelper.create_simple_intersection(self, connected_segments, node_width, NetworkConstants.LANE_WIDTH)
+			boundary_layer.polygon = layer_helper.create_simple_intersection(
+				self,
+				connected_segments,
+				node_width,
+				NetworkConstants.LANE_WIDTH,
+			)
 
 	_update_debug_layer()
 
@@ -127,16 +136,16 @@ func get_connection_path(in_id: int, out_id: int) -> Path2D:
 	var key = str(in_id) + "-" + str(out_id)
 	if connection_paths.has(key):
 		return connection_paths[key]
-	else:
-		return null
+
+	return null
 
 
 func get_connection_direction(in_id: int, out_id: int) -> Enums.Direction:
 	var key = str(in_id) + "-" + str(out_id)
 	if connection_directions.has(key):
 		return connection_directions[key]
-	else:
-		return Enums.Direction.BACKWARD
+
+	return Enums.Direction.BACKWARD
 
 
 func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
@@ -186,7 +195,12 @@ func _draw_stop_lines() -> void:
 	for endpoint_id in incoming_endpoints:
 		var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 		var lane = network_manager.get_segment(endpoint.SegmentId).lanes[endpoint.LaneId]
-		var perpendicular_line = line_helper.create_perpendicular_line_at_point(lane.trail.curve, endpoint.Position, self, NetworkConstants.LANE_WIDTH)
+		var perpendicular_line = line_helper.create_perpendicular_line_at_point(
+			lane.trail.curve,
+			endpoint.Position,
+			self,
+			NetworkConstants.LANE_WIDTH,
+		)
 
 		if perpendicular_line:
 			var priority = segment_priorities.get(endpoint.SegmentId, Enums.IntersectionPriority.YIELD)
@@ -218,7 +232,9 @@ func _fill_segment_priorities() -> void:
 
 		if is_in_priority:
 			if priority_count >= 2 || is_in_stop:
-				push_error("Intersection node " + str(id) + " has more than two priority segments or a segment marked as both priority and stop. All non-priority segments will be set to yield.")
+				var warn_message = ("Intersection node " + str(id) + " has more than two priority segments or a segment " +
+					"marked as both priority and stop. All non-priority segments will be set to yield." )
+				push_warning(warn_message)
 				segment_priorities = get_all_yield.call()
 				return
 
@@ -263,8 +279,13 @@ func _update_debug_layer() -> void:
 			var color = Color.DARK_KHAKI if incoming_endpoints.has(in_id) else Color.DARK_ORANGE
 
 			var endpoint = network_manager.get_lane_endpoint(in_id)
-			var circleText = str(endpoint.Id)
-			circle_helper.draw_debug_circle(to_local(endpoint.Position), color, debug_layer, { "size": 6.0, "text": circleText })
+			var circle_text = str(endpoint.Id)
+			circle_helper.draw_debug_circle(
+				to_local(endpoint.Position),
+				color,
+				debug_layer,
+				{ "size": 6.0, "text": circle_text },
+			)
 
 		for point in corner_points:
 			var circle = circle_helper.DebugCircle.new()

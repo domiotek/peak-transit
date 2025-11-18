@@ -22,7 +22,14 @@ func calc_curve(start_pos: Vector2, target_pos: Vector2, strength: float, direct
 	return curve
 
 
-func calc_curve_asymmetric(start_pos: Vector2, target_pos: Vector2, start_strength: float, end_strength: float, direction: int, bulge_factor: float = 0.0) -> Curve2D:
+func calc_curve_asymmetric(
+		start_pos: Vector2,
+		target_pos: Vector2,
+		start_strength: float,
+		end_strength: float,
+		direction: int,
+		bulge_factor: float = 0.0,
+) -> Curve2D:
 	var line_vector = target_pos - start_pos
 	var line_length = line_vector.length()
 

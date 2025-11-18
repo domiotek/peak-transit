@@ -4,7 +4,7 @@ class_name NetLane
 
 var speed_limit_sign_scene = preload("res://game-objects/network/speed-limit-sign/speed_limit_sign.tscn")
 
-var LANE_USAGE_EMA_ALPHA: float = 0.1
+const LANE_USAGE_EMA_ALPHA: float = 0.1
 
 @onready var main_layer: Node2D = $MainLayer
 @onready var trail: Path2D = $PathingTrail
@@ -151,9 +151,9 @@ func get_last_vehicle() -> Vehicle:
 	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
 	if is_instance_valid(last_vehicle):
 		return last_vehicle
-	else:
-		assigned_vehicles.pop_back()
-		return get_last_vehicle()
+
+	assigned_vehicles.pop_back()
+	return get_last_vehicle()
 
 
 func get_vehicle_count(only_waiting: bool = false) -> int:
