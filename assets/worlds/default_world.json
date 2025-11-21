@@ -468,5 +468,42 @@
 				]
 			}
 		]
+	},
+	"transport": {
+		"demandPresets": [
+			[
+				{
+					"range": [
+						0.5,
+						1.0
+					],
+					"chance": 0.7,
+					"tolerance": 0.2
+				}
+			]
+		],
+		"stops": [
+			{
+				"pos": {
+					"segment": [
+						0,
+						5
+					],
+					"offset": 0.3
+				},
+				"name": "Stop #0",
+				"demandPreset": 0,
+				"shelter": true,
+				"canWait": true
+			}
+		],
+		"lines": [
+			{
+				"routes": [
+					{},
+					{}
+				]
+			}
+		]
 	}
 }

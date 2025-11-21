@@ -7,6 +7,8 @@ var built_in: bool = false
 
 var map: MapDefinition
 var network: NetworkDefinition
+var transport: TransportDefinition
+
 
 static func deserialize(data: Dictionary) -> WorldDefinition:
 	var world_def = WorldDefinition.new()
@@ -17,5 +19,5 @@ static func deserialize(data: Dictionary) -> WorldDefinition:
 
 	world_def.map = MapDefinition.deserialize(data.get("map"))
 	world_def.network = NetworkDefinition.deserialize(data.get("network"))
-
+	world_def.transport = TransportDefinition.deserialize(data.get("transport"))
 	return world_def
