@@ -1,16 +1,17 @@
 extends Node2D
+
 class_name NetworkGrid
 
-var NETWORK_NODE = preload("res://game-objects/network/net-node/network_node.tscn")
-var NET_SEGMENT = preload("res://game-objects/network/net-segment/net_segment.tscn")
+var NetworkNodeScene = preload("res://game-objects/network/net-node/network_node.tscn")
+var NetworkSegmentScene = preload("res://game-objects/network/net-segment/net_segment.tscn")
 
 @onready var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 @onready var buildings_manager: BuildingsManager = GDInjector.inject("BuildingsManager") as BuildingsManager
 @onready var path_finder: PathFinder = GDInjector.inject("PathFinder") as PathFinder
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
-func load_network_definition(network_def: NetworkDefinition) -> void:
 
+func load_network_definition(network_def: NetworkDefinition) -> void:
 	for i in range(network_def.nodes.size()):
 		var node = network_def.nodes[i]
 		var road_node = _create_node(node, i)
@@ -20,10 +21,9 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 		game_manager.push_loading_progress("Creating network nodes...", i / float(network_def.nodes.size()))
 		await get_tree().process_frame
 
-
 	for i in range(network_def.segments.size()):
 		var segment_info = network_def.segments[i]
-		var segment = _createSegment(segment_info)
+		var segment = _create_segment(segment_info)
 		network_manager.register_segment(segment)
 		add_child(segment)
 		segment.update_visuals()
@@ -61,7 +61,7 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 
 
 func _create_node(node_info: NetNodeInfo, id: int) -> RoadNode:
-	var road_node = NETWORK_NODE.instantiate()
+	var road_node = NetworkNodeScene.instantiate()
 	road_node.id = id
 	road_node.position = node_info.position
 	road_node.definition = node_info
@@ -69,22 +69,22 @@ func _create_node(node_info: NetNodeInfo, id: int) -> RoadNode:
 	return road_node
 
 
-func _createSegment(segment_info: NetSegmentInfo):
-	var node_A = network_manager.get_node(segment_info.nodes[0])
-	var node_B = network_manager.get_node(segment_info.nodes[1])
+func _create_segment(segment_info: NetSegmentInfo):
+	var node_a = network_manager.get_node(segment_info.nodes[0])
+	var node_b = network_manager.get_node(segment_info.nodes[1])
 
-	if not node_A or not node_B:
+	if not node_a or not node_b:
 		push_error("Invalid segment setup: Start or target node not found.")
 		return null
 
-	var segment = NET_SEGMENT.instantiate()
-	segment.setup(node_A, node_B, segment_info)
+	var segment = NetworkSegmentScene.instantiate()
+	segment.setup(node_a, node_b, segment_info)
 
 	for i in range(segment_info.relations.size()):
 		var relation = segment_info.relations[i]
-		if i==0:
-			segment.add_connection(node_A, node_B, relation)
+		if i == 0:
+			segment.add_connection(node_a, node_b, relation)
 		else:
-			segment.add_connection(node_B, node_A, relation)
+			segment.add_connection(node_b, node_a, relation)
 
 	return segment
