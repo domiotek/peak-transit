@@ -19,3 +19,6 @@ const SHARP_LANE_CONNECTION_THRESHOLD = 30 # distance in pixels between lane end
 const LANE_CONNECTION_BASE_CURVATURE_FACTOR = 1.0
 const LANE_CONNECTION_MAX_CURVATURE_FACTOR = 2.5
 const LANE_CONNECTION_DISTANCE_THRESHOLD = 200.0 # distance in pixels at which max curvature
+
+const MIN_STOP_DISTANCE = 64.0 # minimum distance in pixels between stops on the same segment
+const MIN_STOP_BUILDING_CLEARANCE = 24.0 # minimum distance in pixels between a stop and a building on the same segment

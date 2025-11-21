@@ -3,6 +3,9 @@ class_name NetworkManager
 var nodes: Dictionary[int, RoadNode] = { }
 var segments: Dictionary[int, NetSegment] = { }
 
+# Stores segment refs by 'nodeAId-nodeBId' string keys for quick lookup
+var _n2n_segment_map: Dictionary[String, int] = { }
+
 var lane_endpoints: Dictionary[int, Dictionary] = { }
 
 var end_nodes: Variant = null
@@ -20,6 +23,12 @@ func register_segment(segment: NetSegment) -> NetSegment:
 	var new_segment_id = segments.size()
 	segment.id = new_segment_id
 	segments[new_segment_id] = segment
+
+	var ids = [segment.nodes[0].id, segment.nodes[1].id]
+	ids.sort()
+	var n2n_key = "%d-%d" % [ids[0], ids[1]]
+	_n2n_segment_map[n2n_key] = new_segment_id
+
 	return segment
 
 
@@ -101,6 +110,17 @@ func get_segment(segment_id: int) -> NetSegment:
 		return segments[segment_id]
 
 	push_error("Segment with ID %d not found." % segment_id)
+	return null
+
+
+func get_segment_between_nodes(node_a_id: int, node_b_id: int) -> NetSegment:
+	var ids = [node_a_id, node_b_id]
+	ids.sort()
+	var n2n_key = "%d-%d" % [ids[0], ids[1]]
+
+	if _n2n_segment_map.has(n2n_key):
+		var segment_id = _n2n_segment_map[n2n_key]
+		return get_segment(segment_id)
 	return null
 
 

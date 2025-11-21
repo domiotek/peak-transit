@@ -208,6 +208,13 @@ func get_lane_usage() -> float:
 	return lane_usage_ema
 
 
+func get_length() -> float:
+	if trail.curve == null:
+		return 0.0
+
+	return trail.curve.get_baked_length()
+
+
 func _update_lane_usage() -> void:
 	var stats = get_vehicles_stats()
 

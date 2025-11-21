@@ -1,6 +1,6 @@
 class_name StopPosDefinition
 
-var segment: Array[int] = []
+var segment: Array = []
 var offset: float = 0.0
 
 

@@ -486,8 +486,21 @@
 			{
 				"pos": {
 					"segment": [
-						0,
-						5
+						2,
+						1
+					],
+					"offset": 0.3
+				},
+				"name": "Stop #0",
+				"demandPreset": 0,
+				"shelter": true,
+				"canWait": true
+			},
+			{
+				"pos": {
+					"segment": [
+						1,
+						2
 					],
 					"offset": 0.3
 				},

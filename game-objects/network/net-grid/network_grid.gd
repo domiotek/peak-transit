@@ -58,6 +58,7 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 
 	game_manager.push_loading_progress("Building pathfinding graph...", 0.0)
 	path_finder.BuildGraph(network_manager.get_nodes())
+	await get_tree().process_frame
 
 
 func _create_node(node_info: NetNodeInfo, id: int) -> RoadNode:

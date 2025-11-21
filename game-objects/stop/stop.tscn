@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://b3cuovsh7npg5"]
+
+[ext_resource type="Script" uid="uid://b71ejnsy4kt47" path="res://game-objects/stop/stop.gd" id="1_lnb62"]
+
+[node name="Stop" type="Node2D"]
+script = ExtResource("1_lnb62")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+color = Color(0.805694, 0.329036, 0.434904, 1)
+polygon = PackedVector2Array(-2, -3, 3, -3, 4, 2, -3, 2)
