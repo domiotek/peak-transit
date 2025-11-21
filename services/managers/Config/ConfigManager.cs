@@ -7,6 +7,8 @@ public partial class ConfigManager : RefCounted
 {
     public int PathingWorkerCount { get; } = 2;
 
+    public bool AutoQuickLoad { get; } = false;
+
     public string BuiltInWorldDirectory { get; } = "res://assets/worlds/";
 
     public string DefaultWorldFileName { get; } = "default_world.json";
