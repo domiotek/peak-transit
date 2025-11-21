@@ -489,11 +489,10 @@
 						2,
 						1
 					],
-					"offset": 0.3
+					"offset": 60
 				},
 				"name": "Stop #0",
 				"demandPreset": 0,
-				"shelter": true,
 				"canWait": true
 			},
 			{
@@ -502,11 +501,10 @@
 						1,
 						2
 					],
-					"offset": 0.3
+					"offset": 60
 				},
 				"name": "Stop #0",
 				"demandPreset": 0,
-				"shelter": true,
 				"canWait": true
 			}
 		],

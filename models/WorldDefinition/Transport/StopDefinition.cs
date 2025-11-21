@@ -15,8 +15,8 @@ public class StopDefinition : IDefinition<StopDefinition>
     [JsonProperty("demandPreset")]
     public required int DemandPreset { get; set; } = -1;
 
-    [JsonProperty("shelter")]
-    public required bool HasShelter { get; set; } = false;
+    [JsonProperty("drawStripes")]
+    public required bool DrawStripes { get; set; } = true;
 
     [JsonProperty("canWait")]
     public required bool CanWait { get; set; } = true;
@@ -28,7 +28,7 @@ public class StopDefinition : IDefinition<StopDefinition>
             ["name"] = Name,
             ["pos"] = Position.Serialize(),
             ["demandPreset"] = DemandPreset,
-            ["shelter"] = HasShelter,
+            ["drawStripes"] = DrawStripes,
             ["canWait"] = CanWait,
         };
         return dict;
@@ -41,7 +41,7 @@ public class StopDefinition : IDefinition<StopDefinition>
             Name = data["name"].AsString() ?? string.Empty,
             Position = StopPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
             DemandPreset = data["demandPreset"].AsInt32(),
-            HasShelter = data["shelter"].AsBool(),
+            DrawStripes = data["drawStripes"].AsBool(),
             CanWait = data["canWait"].AsBool(),
         };
         return stopDefinition;

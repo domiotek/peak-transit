@@ -7,6 +7,8 @@ var id: int
 var _data: StopDefinition
 var _segment: NetSegment
 
+@onready var road_marking = $RoadMarking
+
 
 func setup(new_id: int, stop_data: StopDefinition, segment: NetSegment) -> void:
 	id = new_id
@@ -14,8 +16,8 @@ func setup(new_id: int, stop_data: StopDefinition, segment: NetSegment) -> void:
 	_segment = segment
 
 
-func update_visuals() -> void:
-	print("Updating visuals for stop: %s" % _data.name)
+func update_visuals(show_road_marking: bool) -> void:
+	road_marking.visible = _data.draw_stripes and show_road_marking
 
 
 func get_position_offset() -> float:
