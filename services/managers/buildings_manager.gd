@@ -31,11 +31,11 @@ func create_spawner_building(info: BuildingInfo) -> SpawnerBuilding:
 	var building: SpawnerBuilding = null
 
 	match info.type:
-		BuildingInfo.BuildingType.Residential:
+		BuildingInfo.BuildingType.RESIDENTIAL:
 			building = ResidentialBuildingScene.instantiate() as SpawnerBuilding
-		BuildingInfo.BuildingType.Commercial:
+		BuildingInfo.BuildingType.COMMERCIAL:
 			building = CommercialBuildingScene.instantiate() as SpawnerBuilding
-		BuildingInfo.BuildingType.Industrial:
+		BuildingInfo.BuildingType.INDUSTRIAL:
 			building = IndustrialBuildingScene.instantiate() as SpawnerBuilding
 		_:
 			push_error("Unsupported building type: %s" % str(info.type))

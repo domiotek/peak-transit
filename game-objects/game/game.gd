@@ -70,6 +70,12 @@ func load_network_grid(network_def: NetworkDefinition) -> void:
 
 
 func load_transport_systems(transport_def: TransportDefinition) -> void:
+	for i in range(transport_def.terminals.size()):
+		game_manager.push_loading_progress("Placing transport terminals...", i / float(transport_def.terminals.size()))
+		await get_tree().process_frame
+		var terminal_def = transport_def.terminals[i]
+		transport_manager.register_terminal(terminal_def)
+
 	for i in range(transport_def.stops.size()):
 		game_manager.push_loading_progress("Placing transport stops...", i / float(transport_def.stops.size()))
 		await get_tree().process_frame

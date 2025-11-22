@@ -23,6 +23,6 @@ func _get_spawn_chance(time_of_day: float) -> float:
 
 func _get_target_building_roll_weights() -> Dictionary:
 	return {
-		BuildingInfo.BuildingType.Residential: 3,
-		BuildingInfo.BuildingType.Industrial: 1,
+		BuildingInfo.BuildingType.RESIDENTIAL: 3,
+		BuildingInfo.BuildingType.INDUSTRIAL: 1,
 	}

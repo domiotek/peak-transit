@@ -491,7 +491,7 @@
 					],
 					"offset": 60
 				},
-				"name": "Stop #0",
+				"name": "Stop #0 (01)",
 				"demandPreset": 0,
 				"canWait": true
 			},
@@ -503,17 +503,70 @@
 					],
 					"offset": 60
 				},
-				"name": "Stop #0",
+				"name": "Stop #0 (02)",
 				"demandPreset": 0,
 				"canWait": true
+			}
+		],
+		"terminals": [
+			{
+				"name": "Terminal #0",
+				"pos": {
+					"segment": [
+						9,
+						11
+					],
+					"offset": 400
+				}
+			},
+			{
+				"pos": {
+					"segment": [
+						4,
+						5
+					],
+					"offset": 360
+				}
 			}
 		],
 		"lines": [
 			{
 				"routes": [
-					{},
-					{}
-				]
+					[
+						{
+							"type": 0,
+							"terminalId": 0
+						},
+						{
+							"type": 1,
+							"stopId": 1
+						},
+						{
+							"type": 0,
+							"terminalId": 1
+						}
+					],
+					[
+						{
+							"type": 0,
+							"terminalId": 1
+						},
+						{
+							"type": 1,
+							"stopId": 0
+						},
+						{
+							"type": 2,
+							"nodeId": 7
+						},
+						{
+							"type": 0,
+							"terminalId": 0
+						}
+					]
+				],
+				"displayNumber": 154,
+				"color": "#FF0000"
 			}
 		]
 	}

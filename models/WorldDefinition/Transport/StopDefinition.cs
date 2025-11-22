@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 
 namespace PT.Models.WorldDefinition.Transport;
@@ -10,7 +8,7 @@ public class StopDefinition : IDefinition<StopDefinition>
     public required string Name { get; set; } = string.Empty;
 
     [JsonProperty("pos", Required = Required.Always)]
-    public required StopPosDefinition Position { get; set; }
+    public required SegmentPosDefinition Position { get; set; }
 
     [JsonProperty("demandPreset")]
     public required int DemandPreset { get; set; } = -1;
@@ -39,40 +37,11 @@ public class StopDefinition : IDefinition<StopDefinition>
         var stopDefinition = new StopDefinition
         {
             Name = data["name"].AsString() ?? string.Empty,
-            Position = StopPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
+            Position = SegmentPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
             DemandPreset = data["demandPreset"].AsInt32(),
             DrawStripes = data["drawStripes"].AsBool(),
             CanWait = data["canWait"].AsBool(),
         };
         return stopDefinition;
-    }
-}
-
-public class StopPosDefinition : IDefinition<StopPosDefinition>
-{
-    [JsonProperty("segment", Required = Required.Always)]
-    public required List<int> Segment { get; set; }
-
-    [JsonProperty("offset", Required = Required.Always)]
-    public required float Offset { get; set; }
-
-    public Godot.Collections.Dictionary Serialize()
-    {
-        var dict = new Godot.Collections.Dictionary
-        {
-            ["segment"] = Segment.ToArray(),
-            ["offset"] = Offset,
-        };
-        return dict;
-    }
-
-    public static StopPosDefinition Deserialize(Godot.Collections.Dictionary data)
-    {
-        var stopPosDefinition = new StopPosDefinition
-        {
-            Segment = data["segment"].AsInt32Array()?.ToList() ?? [],
-            Offset = data["offset"].As<float>(),
-        };
-        return stopPosDefinition;
     }
 }

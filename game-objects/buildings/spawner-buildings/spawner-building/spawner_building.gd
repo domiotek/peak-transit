@@ -142,9 +142,9 @@ func _roll_for_vehicle_spawn() -> bool:
 
 func _get_target_building_roll_weights() -> Dictionary:
 	return {
-		BuildingInfo.BuildingType.Residential: 1,
-		BuildingInfo.BuildingType.Commercial: 1,
-		BuildingInfo.BuildingType.Industrial: 1,
+		BuildingInfo.BuildingType.RESIDENTIAL: 1,
+		BuildingInfo.BuildingType.COMMERCIAL: 1,
+		BuildingInfo.BuildingType.INDUSTRIAL: 1,
 	}
 
 

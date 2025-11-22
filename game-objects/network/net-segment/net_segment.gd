@@ -188,7 +188,7 @@ func get_relation_with_starting_node(node_id: int) -> NetRelation:
 	return null
 
 
-func try_place_stop(stop: Stop) -> bool:
+func place_stop(stop: Stop) -> void:
 	var new_stop_offset = stop.get_position_offset()
 	var relation = get_relation_with_starting_node(stop.get_incoming_node_id()) as NetRelation
 	var starts_from_end = stop.get_incoming_node_id() == nodes[1].id
@@ -202,7 +202,18 @@ func try_place_stop(stop: Stop) -> bool:
 
 	stop.update_visuals(should_show_road_marking)
 
-	return true
+
+func place_terminal(terminal: Terminal) -> void:
+	var new_terminal_offset = terminal.get_position_offset()
+	var relation = get_relation_with_starting_node(terminal.get_incoming_node_id()) as NetRelation
+	var starts_from_end = terminal.get_incoming_node_id() == nodes[1].id
+
+	relation.register_building(terminal.id, terminal.get_position_offset())
+
+	segment_helper.position_along_the_edge(self, terminal, new_terminal_offset, starts_from_end)
+	add_child(terminal)
+
+	terminal.update_visuals()
 
 
 func get_stops() -> Dictionary:

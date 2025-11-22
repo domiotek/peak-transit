@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://bbrqejogyhtn4"]
+
+[ext_resource type="PackedScene" uid="uid://baf4uogxpw50c" path="res://game-objects/buildings/base-building/base-building.tscn" id="1_wrcr3"]
+[ext_resource type="Script" uid="uid://b3kh2f1vqghp2" path="res://game-objects/buildings/terminal/terminal.gd" id="2_t1vnh"]
+
+[node name="BaseBuilding" instance=ExtResource("1_wrcr3")]
+script = ExtResource("2_t1vnh")
+
+[node name="Polygon2D" type="Polygon2D" parent="." index="1"]
+position = Vector2(-6.77626e-21, 0)
+scale = Vector2(0.231764, 0.231764)
+color = Color(0.223103, 0.223103, 0.223103, 1)
+polygon = PackedVector2Array(-319.29, -612.691, 384.011, -608.376, 396.955, -107.868, 78, -117, 75, 3, -85, 3, -77.6651, -125.127, -314.975, -116.498)

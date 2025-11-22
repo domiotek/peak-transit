@@ -11,11 +11,15 @@ public class TransportDefinition : IDefinition<TransportDefinition>
     [JsonProperty("stops")]
     public List<StopDefinition> Stops { get; set; } = [];
 
+    [JsonProperty("terminals")]
+    public List<TerminalDefinition> Terminals { get; set; } = [];
+
     public Dictionary Serialize()
     {
         var dict = new Dictionary
         {
             ["stops"] = new Array<Dictionary>(Stops.ConvertAll(n => n.Serialize())),
+            ["terminals"] = new Array<Dictionary>(Terminals.ConvertAll(n => n.Serialize())),
         };
         return dict;
     }
@@ -30,6 +34,14 @@ public class TransportDefinition : IDefinition<TransportDefinition>
                     .AsGodotArray()
                     .Select(stopData =>
                         StopDefinition.Deserialize(stopData.AsGodotDictionary() ?? [])
+                    ),
+            ],
+            Terminals =
+            [
+                .. data["terminals"]
+                    .AsGodotArray()
+                    .Select(terminalData =>
+                        TerminalDefinition.Deserialize(terminalData.AsGodotDictionary() ?? [])
                     ),
             ],
         };
