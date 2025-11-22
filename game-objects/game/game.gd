@@ -82,6 +82,12 @@ func load_transport_systems(transport_def: TransportDefinition) -> void:
 		var stop_def = transport_def.stops[i]
 		transport_manager.register_stop(stop_def)
 
+	for i in range(transport_def.lines.size()):
+		game_manager.push_loading_progress("Setting up transport lines...", i / float(transport_def.lines.size()))
+		await get_tree().process_frame
+		var line_def = transport_def.lines[i]
+		transport_manager.register_line(line_def)
+
 
 func _draw() -> void:
 	for child in debug_layer.get_children():

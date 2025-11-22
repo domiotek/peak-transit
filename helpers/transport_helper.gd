@@ -48,6 +48,36 @@ static func validate_terminal_definition(network_manager: NetworkManager, termin
 	return ""
 
 
+static func validate_line_definition(transport_manager: TransportManager, network_manager: NetworkManager, line_def: LineDefinition) -> String:
+	if line_def.routes.size() != 2:
+		return "Line must have exactly two routes"
+
+	for route in line_def.routes:
+		if route.size() < 2:
+			return "Each route must have at least two steps"
+
+		for step in route as Array[RouteStepDefinition]:
+			var target_id = step.target_id
+
+			match step.step_type:
+				Enums.TransportRouteStepType.TERMINAL:
+					var terminal_exists = transport_manager.terminal_exists(target_id)
+					if not terminal_exists:
+						return "Terminal ID not found in line '%s': %d" % [line_def.name, target_id]
+				Enums.TransportRouteStepType.STOP:
+					var stop_exists = transport_manager.stop_exists(target_id)
+					if not stop_exists:
+						return "Stop ID not found in line '%s': %d" % [line_def.name, target_id]
+				Enums.TransportRouteStepType.WAYPOINT:
+					var node = network_manager.get_node(target_id)
+					if not node:
+						return "Node ID not found in line '%s': %d" % [line_def.name, target_id]
+				_:
+					return "Unknown step type in line '%s'" % line_def.name
+
+	return ""
+
+
 static func validate_segment_object_position(network_manager: NetworkManager, pos_def: SegmentPosDefinition) -> Dictionary:
 	if pos_def.segment.size() != 2:
 		return {

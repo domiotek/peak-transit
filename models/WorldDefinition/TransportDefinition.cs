@@ -9,10 +9,13 @@ namespace PT.Models.WorldDefinition;
 public class TransportDefinition : IDefinition<TransportDefinition>
 {
     [JsonProperty("stops")]
-    public List<StopDefinition> Stops { get; set; } = [];
+    public required List<StopDefinition> Stops { get; set; } = [];
 
     [JsonProperty("terminals")]
-    public List<TerminalDefinition> Terminals { get; set; } = [];
+    public required List<TerminalDefinition> Terminals { get; set; } = [];
+
+    [JsonProperty("lines")]
+    public required List<LineDefinition> Lines { get; set; } = [];
 
     public Dictionary Serialize()
     {
@@ -20,6 +23,7 @@ public class TransportDefinition : IDefinition<TransportDefinition>
         {
             ["stops"] = new Array<Dictionary>(Stops.ConvertAll(n => n.Serialize())),
             ["terminals"] = new Array<Dictionary>(Terminals.ConvertAll(n => n.Serialize())),
+            ["lines"] = new Array<Dictionary>(Lines.ConvertAll(n => n.Serialize())),
         };
         return dict;
     }
@@ -42,6 +46,14 @@ public class TransportDefinition : IDefinition<TransportDefinition>
                     .AsGodotArray()
                     .Select(terminalData =>
                         TerminalDefinition.Deserialize(terminalData.AsGodotDictionary() ?? [])
+                    ),
+            ],
+            Lines =
+            [
+                .. data["lines"]
+                    .AsGodotArray()
+                    .Select(lineData =>
+                        LineDefinition.Deserialize(lineData.AsGodotDictionary() ?? [])
                     ),
             ],
         };

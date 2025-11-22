@@ -7,6 +7,7 @@ var _network_manager: NetworkManager
 
 var _stops: Dictionary = { }
 var _terminals: Dictionary = { }
+var _lines: Dictionary = { }
 
 
 func inject_dependencies() -> void:
@@ -48,6 +49,10 @@ func get_stop(stop_id: int) -> Stop:
 	return _stops[stop_id] as Stop
 
 
+func stop_exists(stop_id: int) -> bool:
+	return _stops.has(stop_id)
+
+
 func register_terminal(terminal_def: TerminalDefinition) -> bool:
 	var validation_error = TransportHelper.validate_terminal_definition(_network_manager, terminal_def)
 
@@ -83,6 +88,46 @@ func register_terminal(terminal_def: TerminalDefinition) -> bool:
 	_terminals[idx] = terminal_building
 
 	return true
+
+
+func get_terminal(terminal_id: int) -> Terminal:
+	if not _terminals.has(terminal_id):
+		push_error("Terminal ID not found: " + str(terminal_id))
+		return null
+	return _terminals[terminal_id] as Terminal
+
+
+func terminal_exists(terminal_id: int) -> bool:
+	return _terminals.has(terminal_id)
+
+
+func register_line(line_def: LineDefinition) -> bool:
+	var validation_error = TransportHelper.validate_line_definition(self, _network_manager, line_def)
+
+	if validation_error.length() > 0:
+		push_error("Invalid line definition: %s - %s" % [line_def.name, validation_error])
+		return false
+
+	var idx = _get_next_idx(_lines)
+
+	var line = TransportLine.new()
+
+	line.setup(idx, line_def)
+
+	_lines[idx] = line
+
+	return true
+
+
+func get_line(line_id: int) -> TransportLine:
+	if not _lines.has(line_id):
+		push_error("Line ID not found: " + str(line_id))
+		return null
+	return _lines[line_id] as TransportLine
+
+
+func line_exists(line_id: int) -> bool:
+	return _lines.has(line_id)
 
 
 func _get_next_idx(dict: Dictionary) -> int:

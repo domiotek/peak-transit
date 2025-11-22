@@ -535,33 +535,33 @@
 					[
 						{
 							"type": 0,
-							"terminalId": 0
+							"targetId": 0
 						},
 						{
 							"type": 1,
-							"stopId": 1
+							"targetId": 1
 						},
 						{
 							"type": 0,
-							"terminalId": 1
+							"targetId": 1
 						}
 					],
 					[
 						{
 							"type": 0,
-							"terminalId": 1
+							"targetId": 1
 						},
 						{
 							"type": 1,
-							"stopId": 0
+							"targetId": 0
 						},
 						{
 							"type": 2,
-							"nodeId": 7
+							"targetId": 7
 						},
 						{
 							"type": 0,
-							"terminalId": 0
+							"targetId": 0
 						}
 					]
 				],
