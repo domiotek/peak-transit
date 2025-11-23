@@ -106,6 +106,18 @@
 					800,
 					1500
 				]
+			},
+			{
+				"pos": [
+					-10,
+					410
+				]
+			},
+			{
+				"pos": [
+					-835,
+					170
+				]
 			}
 		],
 		"segments": [
@@ -328,6 +340,28 @@
 			{
 				"nodes": [
 					0,
+					13
+				],
+				"bendDir": 0,
+				"bendStrength": 0.01,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					13,
 					8
 				],
 				"bendDir": 1,
@@ -394,7 +428,7 @@
 			{
 				"nodes": [
 					9,
-					11
+					14
 				],
 				"bendDir": 1,
 				"bendStrength": 0.1,
@@ -426,6 +460,28 @@
 									]
 								}
 							}
+						]
+					}
+				]
+			},
+			{
+				"nodes": [
+					14,
+					11
+				],
+				"bendDir": 0,
+				"bendStrength": 0.1,
+				"relations": [
+					{
+						"lanes": [
+							{},
+							{}
+						]
+					},
+					{
+						"lanes": [
+							{},
+							{}
 						]
 					}
 				]
@@ -518,13 +574,25 @@
 				"pos": {
 					"segment": [
 						8,
-						0
+						13
 					],
 					"offset": 300
 				},
-				"name": "Stop #1",
+				"name": "Stop #1 (02)",
 				"demandPreset": 0,
 				"canWait": false
+			},
+			{
+				"pos": {
+					"segment": [
+						13,
+						8
+					],
+					"offset": 320
+				},
+				"name": "Stop #1 (01)",
+				"demandPreset": 0,
+				"canWait": true
 			}
 		],
 		"terminals": [
@@ -532,10 +600,10 @@
 				"name": "Terminal #0",
 				"pos": {
 					"segment": [
-						9,
+						14,
 						11
 					],
-					"offset": 400
+					"offset": 300
 				}
 			},
 			{
@@ -561,6 +629,36 @@
 							"targetId": 2
 						},
 						{
+							"type": 0,
+							"targetId": 1
+						}
+					],
+					[
+						{
+							"type": 0,
+							"targetId": 1
+						},
+						{
+							"type": 1,
+							"targetId": 3
+						},
+						{
+							"type": 0,
+							"targetId": 0
+						}
+					]
+				],
+				"displayNumber": 154,
+				"color": "#FF0000"
+			},
+			{
+				"routes": [
+					[
+						{
+							"type": 0,
+							"targetId": 0
+						},
+						{
 							"type": 1,
 							"targetId": 1
 						},
@@ -579,17 +677,13 @@
 							"targetId": 0
 						},
 						{
-							"type": 2,
-							"targetId": 7
-						},
-						{
 							"type": 0,
 							"targetId": 0
 						}
 					]
 				],
-				"displayNumber": 154,
-				"color": "#FF0000"
+				"displayNumber": 141,
+				"color": "#00FF00"
 			}
 		]
 	}

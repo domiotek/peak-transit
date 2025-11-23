@@ -26,7 +26,8 @@ func setup_one_segment_connections(node: RoadNode) -> void:
 		for out_id in node.outgoing_endpoints:
 			var out_endpoint = network_manager.get_lane_endpoint(out_id)
 			if segment.endpoints.has(out_id):
-				if in_endpoint.LaneNumber != out_endpoint.LaneNumber:
+				var lane_diff = abs(in_endpoint.LaneNumber - out_endpoint.LaneNumber)
+				if lane_diff > 1:
 					continue
 
 				in_endpoint.Connections.append(out_id)

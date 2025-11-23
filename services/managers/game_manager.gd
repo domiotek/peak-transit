@@ -79,7 +79,10 @@ func initialize_game(world_file_path: String = "") -> void:
 			MessageBoxView.VIEW_NAME,
 			{
 				"title": "Error during world load",
-				"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [world_file_path, world_def['parsingError'] if world_def.has('parsingError') else "None"],
+				"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [
+					world_file_path,
+					world_def['parsingError'] if world_def.has('parsingError') else "None",
+				],
 			},
 		)
 

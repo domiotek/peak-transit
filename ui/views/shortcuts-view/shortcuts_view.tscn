@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://17v128p3voi0"]
+
+[ext_resource type="Script" uid="uid://bg8t75b27gf3x" path="res://ui/views/shortcuts-view/shortcuts_view.gd" id="1_a2p26"]
+[ext_resource type="Texture2D" uid="uid://c62cw1l1isxtu" path="res://assets/ui_icons/lines.png" id="1_m3pox"]
+
+[node name="ShortcutsView" type="GridContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_a2p26")
+
+[node name="ToggleLinesViewButton" type="Button" parent="."]
+layout_mode = 2
+icon = ExtResource("1_m3pox")

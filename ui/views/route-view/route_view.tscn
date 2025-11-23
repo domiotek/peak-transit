@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://b8xka3ymj0rho"]
+
+[ext_resource type="Script" uid="uid://bdxyg2ji06cb1" path="res://ui/views/route-view/route_view.gd" id="1_feo8s"]
+[ext_resource type="Texture2D" uid="uid://c8tlwd3socdr0" path="res://assets/ui_icons/visibility.png" id="2_4e5j1"]
+
+[node name="RouteView" type="BoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+vertical = true
+script = ExtResource("1_feo8s")
+
+[node name="Header" type="BoxContainer" parent="."]
+layout_mode = 2
+
+[node name="RouteVisibilityButton" type="Button" parent="Header"]
+layout_mode = 2
+icon = ExtResource("2_4e5j1")
+flat = true

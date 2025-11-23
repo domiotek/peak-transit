@@ -52,6 +52,7 @@ func initialize_game(world: WorldDefinition) -> void:
 	ui_manager.hide_ui_view("WorldLoadingProgressView")
 	ui_manager.show_ui_view(GameSpeedView.VIEW_NAME)
 	ui_manager.show_ui_view(GameClockView.VIEW_NAME)
+	ui_manager.show_ui_view(ShortcutsView.VIEW_NAME)
 
 
 func init_map(world: WorldDefinition) -> void:

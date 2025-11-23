@@ -149,7 +149,6 @@ func get_end_nodes() -> Array:
 
 func get_curves_of_path(path: Array, starting_building: BaseBuilding = null, ending_building: BaseBuilding = null) -> Array:
 	var curves: Array = []
-	var final_node_id = path[path.size() - 1].ToNodeId
 
 	var first_building_connection: Dictionary
 
@@ -163,7 +162,7 @@ func get_curves_of_path(path: Array, starting_building: BaseBuilding = null, end
 		var lane = get_segment(other_endpoint.SegmentId).get_lane(other_endpoint.LaneId) as NetLane
 		curves.append(lane.trail.curve)
 
-		if step.ToNodeId != final_node_id:
+		if step_idx < path.size() - 1:
 			var node = get_node(step.ToNodeId)
 			var next_step = path[step_idx + 1]
 

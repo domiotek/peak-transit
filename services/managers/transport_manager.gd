@@ -4,14 +4,19 @@ const StopScene = preload("res://game-objects/stop/stop.tscn")
 var TerminalScene = load("res://game-objects/buildings/terminal/terminal.tscn")
 
 var _network_manager: NetworkManager
+var _game_manager: GameManager
+var _line_helper: LineHelper
 
 var _stops: Dictionary = { }
 var _terminals: Dictionary = { }
 var _lines: Dictionary = { }
+var _drawn_lines: Dictionary = { }
 
 
 func inject_dependencies() -> void:
 	_network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	_game_manager = GDInjector.inject("GameManager") as GameManager
+	_line_helper = GDInjector.inject("LineHelper") as LineHelper
 
 
 func register_stop(stop_def: StopDefinition) -> bool:
@@ -116,13 +121,11 @@ func register_line(line_def: LineDefinition) -> bool:
 
 	line.setup(idx, line_def)
 
+	_lines[idx] = line
+
 	if not await line.trace_routes():
 		push_error("Failed to trace paths for routes of line: %s" % line_def.name)
 		return false
-
-	_lines[idx] = line
-
-	line.draw_traced_routes()
 
 	return true
 
@@ -138,11 +141,129 @@ func line_exists(line_id: int) -> bool:
 	return _lines.has(line_id)
 
 
+func get_lines() -> Array:
+	return _lines.values()
+
+
+func draw_line_route(transport_line: TransportLine, route_idx: int) -> void:
+	var layer = TransportHelper.get_container_layer_for_route(_game_manager.get_map(), transport_line.id, route_idx)
+
+	if not layer:
+		return
+
+	if layer.get_child_count() > 0:
+		layer.visible = true
+		_update_drawn_lines(transport_line.id, route_idx, true)
+		return #already drawn, just show it
+
+	var path = transport_line.get_traced_path(route_idx)
+
+	if path.size() == 0:
+		push_error("No traced path to draw for route index %d in line ID %d" % [route_idx, transport_line.id])
+		return
+
+	var curves = transport_line.get_route_curves(route_idx)
+	var target_route_def = transport_line.get_route_definition(route_idx) as Array[RouteStepDefinition]
+
+	TransportHelper.draw_route(curves, layer, transport_line.color_hex, _line_helper)
+
+	TransportHelper.draw_route_step_points(
+		target_route_def,
+		layer,
+		transport_line.color_hex,
+		transport_line.get_waypoint_to_curve_map(route_idx),
+		self,
+	)
+
+	_update_drawn_lines(transport_line.id, route_idx, true)
+
+
+func hide_line_route_drawing(line: TransportLine, route_idx: int) -> void:
+	var layer = TransportHelper.get_container_layer_for_route(_game_manager.get_map(), line.id, route_idx)
+
+	if not layer:
+		return
+
+	layer.visible = false
+	_update_drawn_lines(line.id, route_idx, false)
+
+
+func draw_line_routes(line: TransportLine) -> void:
+	for route_idx in [0, 1]:
+		draw_line_route(line, route_idx)
+
+
+func hide_line_route_drawings(line: TransportLine) -> void:
+	for route_idx in [0, 1]:
+		hide_line_route_drawing(line, route_idx)
+
+
+func draw_all_lines() -> void:
+	for line in _lines.values():
+		var transport_line = line as TransportLine
+		draw_line_routes(transport_line)
+
+
+func hide_all_line_drawings() -> void:
+	for line in _lines.values():
+		var transport_line = line as TransportLine
+		hide_line_route_drawings(transport_line)
+
+
+func is_line_route_drawn(line_id: int, route_idx: int) -> bool:
+	if not _drawn_lines.has(line_id):
+		return false
+
+	var line_routes = _drawn_lines[line_id] as Array
+
+	return line_routes.has(route_idx)
+
+
+func get_drawn_lines() -> Dictionary:
+	return _drawn_lines
+
+
+func is_line_drawn(line_id: int) -> bool:
+	if not _drawn_lines.has(line_id):
+		return false
+
+	var line_routes = _drawn_lines[line_id] as Array
+	return line_routes.size() > 0
+
+
+func get_drawn_routes_for_line(line_id: int) -> Array:
+	if not _drawn_lines.has(line_id):
+		return []
+
+	return _drawn_lines[line_id] as Array
+
+
+func are_all_lines_drawn() -> bool:
+	return _lines.size() == _drawn_lines.size()
+
+
+func are_no_lines_drawn() -> bool:
+	return _drawn_lines.size() == 0
+
+
 func clear_state() -> void:
 	_stops.clear()
 	_terminals.clear()
 	_lines.clear()
+	_drawn_lines.clear()
 
 
 func _get_next_idx(dict: Dictionary) -> int:
 	return dict.size()
+
+
+func _update_drawn_lines(line_id: int, route_idx: int, drawn: bool) -> void:
+	if not _drawn_lines.has(line_id):
+		_drawn_lines[line_id] = []
+
+	if drawn:
+		_drawn_lines[line_id].append(route_idx)
+	else:
+		_drawn_lines[line_id].erase(route_idx)
+		if _drawn_lines[line_id].size() == 0:
+			_drawn_lines.erase(line_id)

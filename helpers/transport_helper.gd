@@ -312,3 +312,27 @@ static func draw_route_step_points(
 					mark.inactive_color = color.lerp(Color.WHITE, 0.7)
 					mark.redraw()
 					layer.add_child(mark)
+
+
+static func get_container_layer_for_route(map: Map, line_id: int, route_idx: int) -> Node2D:
+	var lines_layer = map.get_drawing_layer("LinesRoutesLayer") as Node2D
+	if not lines_layer:
+		return null
+
+	var line_wrapper_name = "LineRoute_%d" % line_id
+
+	var wrapper = lines_layer.find_child(line_wrapper_name, false, false) as Node2D
+
+	if not wrapper:
+		wrapper = Node2D.new()
+		wrapper.name = line_wrapper_name
+		lines_layer.add_child(wrapper)
+
+	var route_layer = wrapper.find_child("%d" % route_idx, false, false) as Node2D
+
+	if not route_layer:
+		route_layer = Node2D.new()
+		route_layer.name = "%d" % route_idx
+		wrapper.add_child(route_layer)
+
+	return route_layer

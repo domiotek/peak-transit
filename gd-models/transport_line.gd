@@ -87,69 +87,41 @@ func trace_routes() -> bool:
 	return true
 
 
-func get_traced_path(start_node_id: int) -> Array:
-	if not _start_node_to_path_map.has(start_node_id):
-		push_error("No traced path for start node ID %d in line ID %d" % [start_node_id, id])
-		return []
-
-	var path_idx = _start_node_to_path_map[start_node_id]
-	return _traced_paths[path_idx]
+func get_traced_path(route_idx: int) -> Array:
+	return _traced_paths[route_idx]
 
 
-func draw_traced_route(start_node_id: int) -> void:
-	var route_idx = _start_node_to_path_map.get(start_node_id, -1)
-	var path = get_traced_path(start_node_id)
+func get_route_curves(route_idx: int) -> Array:
+	if _route_curves.has(route_idx):
+		return _route_curves[route_idx]
 
-	if path.size() == 0:
-		push_error("No traced path to draw for start node ID %d in line ID %d" % [start_node_id, id])
-		return
+	var path = get_traced_path(route_idx)
 
-	var layer = _get_container_layer_for_route(_start_node_to_path_map[start_node_id])
-
-	if not layer:
-		return
-
-	var target_route_def = _get_route_definition(start_node_id) as Array[RouteStepDefinition]
+	var target_route_def = get_route_definition(route_idx) as Array[RouteStepDefinition]
 	var starting_terminal = transport_manager.get_terminal(target_route_def[0].target_id)
 	var ending_terminal = transport_manager.get_terminal(target_route_def[target_route_def.size() - 1].target_id)
 
-	var route_curves: Array = []
+	var route_curves = network_manager.get_curves_of_path(path, starting_terminal, ending_terminal)
+	_route_curves[route_idx] = route_curves
 
-	if _route_curves.has(route_idx):
-		route_curves = _route_curves[route_idx]
-	else:
-		route_curves = network_manager.get_curves_of_path(path, starting_terminal, ending_terminal)
-		_route_curves[route_idx] = route_curves
-
-	TransportHelper.draw_route(route_curves, layer, color_hex, line_helper)
-
-	TransportHelper.draw_route_step_points(
-		target_route_def,
-		layer,
-		color_hex,
-		_waypoint_to_curve_map[route_idx],
-		transport_manager,
-	)
+	return route_curves
 
 
-func draw_traced_routes() -> void:
-	for start_node_id in _start_node_to_path_map.keys():
-		draw_traced_route(start_node_id)
+func get_route_definition(route_idx: int) -> Array[RouteStepDefinition]:
+	if _line_def.routes.size() > route_idx:
+		return _line_def.routes[route_idx]
+
+	push_error("No route definition for route index %d in line ID %d" % [route_idx, id])
+	return []
+
+
+func get_waypoint_to_curve_map(route_idx: int) -> Dictionary:
+	return _waypoint_to_curve_map.get(route_idx, { })
 
 
 func _on_pathfinder_result(path: Variant) -> void:
 	_pathfinder_result = path
 	emit_signal("pathfinder_resolved", path)
-
-
-func _get_route_definition(starting_node_id: int) -> Array[RouteStepDefinition]:
-	var path_idx = _start_node_to_path_map[starting_node_id]
-
-	if _line_def.routes.size() > path_idx:
-		return _line_def.routes[path_idx]
-
-	push_error("No route definition for start node ID %d in line ID %d" % [starting_node_id, id])
-	return []
 
 
 func _get_container_layer_for_route(route_id: int) -> Node2D:
