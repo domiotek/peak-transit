@@ -138,6 +138,17 @@ func get_out_connection(endpoint_id: int) -> Dictionary:
 	return connections["out"].get(endpoint_id, null)
 
 
+func get_out_connection_from_in_endpoint(endpoint_id: int) -> Dictionary:
+	var in_connection = get_in_connection(endpoint_id)
+	if in_connection == null:
+		return { }
+
+	var lane = in_connection["lane"] as NetLane
+	var other_endpoint = lane.get_endpoint_by_type(false)
+
+	return get_out_connection(other_endpoint.Id)
+
+
 func toggle_debug_visuals() -> void:
 	debug_visuals_enabled = not debug_visuals_enabled
 

@@ -54,6 +54,10 @@ script = ExtResource("1_4xfga")
 z_index = 27
 z_as_relative = false
 
+[node name="LinesRoutesLayer" type="Node2D" parent="Layers"]
+z_index = 26
+z_as_relative = false
+
 [node name="DayNightCycle" type="AnimationPlayer" parent="."]
 libraries = {
 &"": SubResource("AnimationLibrary_mt08q")

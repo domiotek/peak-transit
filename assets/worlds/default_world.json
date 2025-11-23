@@ -418,7 +418,14 @@
 					{
 						"lanes": [
 							{},
-							{}
+							{
+								"direction": 3,
+								"allowedVehicles": {
+									"0": [
+										1
+									]
+								}
+							}
 						]
 					}
 				]
@@ -506,6 +513,18 @@
 				"name": "Stop #0 (02)",
 				"demandPreset": 0,
 				"canWait": true
+			},
+			{
+				"pos": {
+					"segment": [
+						8,
+						0
+					],
+					"offset": 300
+				},
+				"name": "Stop #1",
+				"demandPreset": 0,
+				"canWait": false
 			}
 		],
 		"terminals": [
@@ -536,6 +555,10 @@
 						{
 							"type": 0,
 							"targetId": 0
+						},
+						{
+							"type": 1,
+							"targetId": 2
 						},
 						{
 							"type": 1,

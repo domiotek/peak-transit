@@ -176,39 +176,12 @@ func get_trip_curves() -> Array:
 	if trip_curves_cache.size() > 0:
 		return trip_curves_cache
 
-	var curves: Array = []
+	var starting_building = trip_buildings[0] if trip_buildings.size() > 0 else null
+	var ending_building = trip_buildings[1] if trip_buildings.size() > 1 else null
 
-	var first_building_connection: Dictionary
-	var last_building_connection: Dictionary
+	trip_curves_cache = network_manager.get_curves_of_path(trip_path, starting_building, ending_building)
 
-	if trip_buildings.size() > 0:
-		var first_building = trip_buildings[0]
-		first_building_connection = first_building.get_out_connection(first_step_forced_endpoint)
-		curves.append(line_helper.convert_curve_local_to_global(first_building_connection["path"].curve, first_building))
-
-	for step_idx in range(trip_path.size()):
-		var step = trip_path[step_idx]
-		var endpoint = network_manager.get_lane_endpoint(step.ViaEndpointId)
-		var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
-		var other_endpoint = lane.get_endpoint_by_type(false)
-		curves.append(lane.trail.curve)
-
-		if step.ToNodeId != trip_points[1]:
-			var node = network_manager.get_node(step.ToNodeId)
-			var next_step = trip_path[step_idx + 1]
-			var node_path = node.get_connection_path(other_endpoint.Id, next_step.ViaEndpointId)
-			curves.append(line_helper.convert_curve_local_to_global(node_path.curve, node))
-
-	if trip_buildings.size() > 1:
-		var last_building = trip_buildings[1]
-		last_building_connection = last_building.get_in_connection(last_step_forced_endpoint)
-		curves.append(line_helper.convert_curve_local_to_global(last_building_connection["path"].curve, last_building))
-
-		curves[1] = segment_helper.trim_curve_to_building_connection(curves[1], first_building_connection["lane_point"], true)
-		curves[curves.size() - 2] = segment_helper.trim_curve_to_building_connection(curves[curves.size() - 2], last_building_connection["lane_point"], false)
-
-	trip_curves_cache = curves
-	return curves
+	return trip_curves_cache
 
 
 func get_next_path(ref_path: Path2D) -> Path2D:

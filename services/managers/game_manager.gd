@@ -144,6 +144,10 @@ func push_loading_progress(action: String, progress: float) -> void:
 	world_loading_progress.emit(action, progress)
 
 
+func get_map() -> Map:
+	return game_controller.get_map()
+
+
 func set_game_speed(speed: Enums.GameSpeed) -> void:
 	game_speed = speed
 

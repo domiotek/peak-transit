@@ -10,6 +10,9 @@ var lane_endpoints: Dictionary[int, Dictionary] = { }
 
 var end_nodes: Variant = null
 
+var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
+var segment_helper: SegmentHelper = GDInjector.inject("SegmentHelper") as SegmentHelper
+
 
 func register_node(node: RoadNode):
 	nodes[node.id] = node
@@ -82,6 +85,19 @@ func get_lane_endpoint(endpoint_id: int) -> Variant:
 	return null
 
 
+func get_opposite_lane_endpoint(endpoint_id: int) -> Variant:
+	var endpoint = get_lane_endpoint(endpoint_id)
+	var segment = get_segment(endpoint.SegmentId)
+	var lane = segment.get_lane(endpoint.LaneId) as NetLane
+
+	var opposite_endpoint = lane.get_endpoint_by_type(not endpoint.IsOutgoing)
+	if opposite_endpoint:
+		return opposite_endpoint
+
+	push_error("Opposite lane endpoint not found for endpoint ID %d." % endpoint_id)
+	return null
+
+
 func get_node_endpoints(node_id: int) -> Array:
 	var node = nodes[node_id]
 	if not node:
@@ -131,8 +147,46 @@ func get_end_nodes() -> Array:
 	return end_nodes
 
 
+func get_curves_of_path(path: Array, starting_building: BaseBuilding = null, ending_building: BaseBuilding = null) -> Array:
+	var curves: Array = []
+	var final_node_id = path[path.size() - 1].ToNodeId
+
+	var first_building_connection: Dictionary
+
+	if starting_building != null:
+		first_building_connection = starting_building.get_out_connection_from_in_endpoint(path[0].ViaEndpointId)
+		curves.append(line_helper.convert_curve_local_to_global(first_building_connection["path"].curve, starting_building))
+
+	for step_idx in range(path.size()):
+		var step = path[step_idx]
+		var other_endpoint = get_opposite_lane_endpoint(step.ViaEndpointId)
+		var lane = get_segment(other_endpoint.SegmentId).get_lane(other_endpoint.LaneId) as NetLane
+		curves.append(lane.trail.curve)
+
+		if step.ToNodeId != final_node_id:
+			var node = get_node(step.ToNodeId)
+			var next_step = path[step_idx + 1]
+
+			var node_path = node.get_connection_path(other_endpoint.Id, next_step.ViaEndpointId)
+			curves.append(line_helper.convert_curve_local_to_global(node_path.curve, node))
+
+	if ending_building != null:
+		var last_building_connection: Dictionary
+
+		last_building_connection = ending_building.get_in_connection(path[path.size() - 1].ViaEndpointId)
+		curves.append(line_helper.convert_curve_local_to_global(last_building_connection["path"].curve, ending_building))
+
+		curves[curves.size() - 2] = segment_helper.trim_curve_to_building_connection(curves[curves.size() - 2], last_building_connection["lane_point"], false)
+
+	if starting_building != null:
+		curves[1] = segment_helper.trim_curve_to_building_connection(curves[1], first_building_connection["lane_point"], true)
+
+	return curves
+
+
 func clear_state() -> void:
 	nodes.clear()
 	segments.clear()
 	lane_endpoints.clear()
 	end_nodes = null
+	_n2n_segment_map.clear()

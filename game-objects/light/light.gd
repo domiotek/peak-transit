@@ -21,13 +21,7 @@ func _ready() -> void:
 	polygon = Polygon2D.new()
 	add_child(polygon)
 
-	var points: PackedVector2Array = []
-	for i in range(segments):
-		var angle = i * 2.0 * PI / segments
-		points.append(Vector2(cos(angle) * radius, sin(angle) * radius))
-
-	polygon.polygon = points
-	polygon.color = inactive_color
+	redraw()
 	light.color = active_color
 	light.texture_scale = ilumination_scale
 	var simulation_manager = GDInjector.inject("SimulationManager")
@@ -43,6 +37,17 @@ func set_active(active: bool) -> void:
 		if polygon:
 			polygon.color = active_color if is_active else inactive_color
 		_configure_illumination()
+
+
+func redraw() -> void:
+	if polygon:
+		var points: PackedVector2Array = []
+		for i in range(segments):
+			var angle = i * 2.0 * PI / segments
+			points.append(Vector2(cos(angle) * radius, sin(angle) * radius))
+
+		polygon.polygon = points
+		polygon.color = inactive_color
 
 
 func _on_desired_world_lights_state_changed(new_state: bool) -> void:

@@ -33,7 +33,9 @@ func register_stop(stop_def: StopDefinition) -> bool:
 		stop_def.position.segment[1],
 	)
 
-	stop.setup(idx, stop_def, target_segment)
+	var target_relation = target_segment.get_relation_with_starting_node(stop_def.position.segment[0]) as NetRelation
+
+	stop.setup(idx, stop_def, target_segment, target_relation.id)
 
 	target_segment.place_stop(stop)
 
@@ -110,11 +112,17 @@ func register_line(line_def: LineDefinition) -> bool:
 
 	var idx = _get_next_idx(_lines)
 
-	var line = TransportLine.new()
+	var line = TransportLine.new() as TransportLine
 
 	line.setup(idx, line_def)
 
+	if not await line.trace_routes():
+		push_error("Failed to trace paths for routes of line: %s" % line_def.name)
+		return false
+
 	_lines[idx] = line
+
+	line.draw_traced_routes()
 
 	return true
 
