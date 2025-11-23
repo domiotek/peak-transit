@@ -138,5 +138,11 @@ func line_exists(line_id: int) -> bool:
 	return _lines.has(line_id)
 
 
+func clear_state() -> void:
+	_stops.clear()
+	_terminals.clear()
+	_lines.clear()
+
+
 func _get_next_idx(dict: Dictionary) -> int:
 	return dict.size()

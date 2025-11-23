@@ -25,6 +25,7 @@ var network_manager: NetworkManager
 var buildings_manager: BuildingsManager
 var pathing_manager: PathingManager
 var world_manager: WorldManager
+var transport_manager: TransportManager
 
 var game_controller: GameController
 
@@ -50,6 +51,7 @@ func setup(_game_controller: GameController) -> void:
 	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
 	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
 	world_manager = GDInjector.inject("WorldManager") as WorldManager
+	transport_manager = GDInjector.inject("TransportManager") as TransportManager
 
 	vehicle_manager.set_vehicles_layer(game_controller.get_map().get_drawing_layer("VehiclesLayer"))
 
@@ -105,9 +107,7 @@ func dispose_game() -> void:
 	ui_manager.hide_all_ui_views()
 
 	var map = game_controller.get_map()
-	map.clear_drawing_layer("VehiclesLayer")
-	map.clear_drawing_layer("VehicleRouteLayer")
-	map.clear_drawing_layer("RoadGrid")
+	map.clear_layers()
 
 	hide_game_menu()
 	clear_state()
@@ -321,3 +321,4 @@ func clear_state() -> void:
 	vehicle_manager.clear_state()
 	network_manager.clear_state()
 	buildings_manager.clear_state()
+	transport_manager.clear_state()
