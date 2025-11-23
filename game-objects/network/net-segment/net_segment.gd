@@ -198,7 +198,7 @@ func place_stop(stop: Stop) -> void:
 	segment_helper.position_along_the_edge(self, stop, new_stop_offset, starts_from_end)
 	add_child(stop)
 
-	var should_show_road_marking = main_layer_curve.get_baked_length() < NetworkConstants.MIN_SEGMENT_LENGTH_FOR_ROAD_MARKINGS
+	var should_show_road_marking = main_layer_curve.get_baked_length() >= NetworkConstants.MIN_SEGMENT_LENGTH_FOR_ROAD_MARKINGS
 
 	stop.update_visuals(should_show_road_marking)
 
