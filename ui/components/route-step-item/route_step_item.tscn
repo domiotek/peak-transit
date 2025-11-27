@@ -1,8 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://1q7gfj18r2cu"]
+[gd_scene load_steps=6 format=3 uid="uid://1q7gfj18r2cu"]
 
 [ext_resource type="Script" uid="uid://dbj7qtu176q3c" path="res://ui/components/route-step-item/route_step_item.gd" id="1_8svgu"]
 [ext_resource type="Texture2D" uid="uid://clymidp3vykjo" path="res://assets/ui_icons/route_arrow.png" id="1_yomij"]
 [ext_resource type="Texture2D" uid="uid://of0uwr8c8oea" path="res://assets/ui_icons/jump_to_element.png" id="2_8svgu"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_8svgu"]
+font_size = 9
 
 [sub_resource type="LabelSettings" id="LabelSettings_lh3v0"]
 font_size = 13
@@ -27,6 +30,15 @@ texture = ExtResource("1_yomij")
 [node name="Spacer" type="Control" parent="."]
 custom_minimum_size = Vector2(25, 0)
 layout_mode = 2
+
+[node name="TripPropertiesLabel" type="Label" parent="Spacer"]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 1.0
+grow_vertical = 2
+label_settings = SubResource("LabelSettings_8svgu")
+vertical_alignment = 1
 
 [node name="BoxContainer" type="BoxContainer" parent="."]
 layout_mode = 2

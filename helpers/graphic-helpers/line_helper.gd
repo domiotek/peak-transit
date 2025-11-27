@@ -551,3 +551,13 @@ func get_polygon_chunks(poly: Polygon2D, chunk_size: float = 100.0) -> Array[Pol
 		y += chunk_size
 
 	return chunks
+
+
+func get_curves_total_length(curves: Array) -> float:
+	var total_length: float = 0.0
+
+	for curve in curves:
+		if curve:
+			total_length += curve.get_baked_length()
+
+	return total_length

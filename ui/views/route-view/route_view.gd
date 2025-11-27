@@ -52,12 +52,25 @@ func _load_route_steps() -> void:
 
 	var route_steps = _line.get_route_steps(route_index)
 	var should_include_waypoints = include_waypoints.button_pressed
+	var accumulated_length: float = 0.0
+	var accumulated_time: float = 0.0
 
 	for i in range(route_steps.size()):
-		var step = route_steps[i]
+		var step = route_steps[i] as RouteStep
 
 		if step.step_type == Enums.TransportRouteStepType.WAYPOINT and not should_include_waypoints:
+			accumulated_length += step.length
+			accumulated_time += step.time_for_step
 			continue
+
+		if i > 0:
+			var spacer_item = RouteStepItemScene.instantiate() as RouteStepItem
+			spacer_item.setup_as_spacer(
+				_line.color_hex,
+				accumulated_length + step.length,
+				accumulated_time + step.time_for_step,
+			)
+			steps_container.add_child(spacer_item)
 
 		var step_item = RouteStepItemScene.instantiate() as RouteStepItem
 		step_item.setup(step.step_type, step.target_name, step.target_id, _line.color_hex)
@@ -65,10 +78,9 @@ func _load_route_steps() -> void:
 
 		steps_container.add_child(step_item)
 
-		if i < route_steps.size() - 1:
-			var spacer_item = RouteStepItemScene.instantiate() as RouteStepItem
-			spacer_item.setup_as_spacer(_line.color_hex)
-			steps_container.add_child(spacer_item)
+		if step.step_type != Enums.TransportRouteStepType.WAYPOINT:
+			accumulated_length = 0.0
+			accumulated_time = 0.0
 
 
 func _on_jump_to_button_pressed(target_id: int, step_type: Enums.TransportRouteStepType) -> void:

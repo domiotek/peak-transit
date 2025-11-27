@@ -34,6 +34,7 @@ func trace_routes() -> bool:
 
 		_route_steps[route_idx] = []
 		var path = []
+		var route_curves = []
 		var start_out_options = TransportHelper.resolve_starting_node_from_line_step(transport_manager, route_def[0])
 
 		var last_step = null
@@ -42,9 +43,9 @@ func trace_routes() -> bool:
 
 		for i in range(route_def.size()):
 			var step_def = route_def[i]
-			_route_steps[route_idx].append(TransportHelper.resolve_route_step_data(step_def))
 
-			if step_def == route_def[0]:
+			if i == 0:
+				_route_steps[route_idx].append(TransportHelper.resolve_route_step_data(step_def, 0.0))
 				continue
 
 			var next_dest_options = TransportHelper.resolve_ending_node_from_line_step(step_def)
@@ -68,11 +69,16 @@ func trace_routes() -> bool:
 				push_error("Failed to trace path for route step in line ID %d" % id)
 				return false
 
-			last_step = _pathfinder_result.Path.pop_back()
+			last_step = _pathfinder_result.Path[_pathfinder_result.Path.size() - 1]
 
-			path += _pathfinder_result.Path
+			path += _pathfinder_result.Path.slice(0, _pathfinder_result.Path.size() - 1)
 
 			_step_def_to_path_map[i] = path.size()
+
+			var curves = _get_curves_of_step(route_def, i)
+			route_curves.append_array(curves)
+
+			_route_steps[route_idx].append(TransportHelper.resolve_route_step_data(step_def, line_helper.get_curves_total_length(curves)))
 
 			start_out_options = [
 				{
@@ -85,6 +91,7 @@ func trace_routes() -> bool:
 		_step_def_to_path_map[route_def.size() - 1] = path.size() - 1
 
 		_traced_paths.append(path)
+		_route_curves[route_idx] = route_curves
 		_start_node_to_path_map[path[0]["FromNodeId"]] = _traced_paths.size() - 1
 		var waypoint_to_curve_map = _get_waypoints_to_curve_map(route_def, path)
 		_waypoint_to_curve_map[_traced_paths.size() - 1] = waypoint_to_curve_map
@@ -100,16 +107,8 @@ func get_route_curves(route_idx: int) -> Array:
 	if _route_curves.has(route_idx):
 		return _route_curves[route_idx]
 
-	var path = get_traced_path(route_idx)
-
-	var target_route_def = get_route_definition(route_idx) as Array[RouteStepDefinition]
-	var starting_terminal = transport_manager.get_terminal(target_route_def[0].target_id)
-	var ending_terminal = transport_manager.get_terminal(target_route_def[target_route_def.size() - 1].target_id)
-
-	var route_curves = network_manager.get_curves_of_path(path, starting_terminal, ending_terminal)
-	_route_curves[route_idx] = route_curves
-
-	return route_curves
+	push_error("No route curves for route index %d in line ID %d" % [route_idx, id])
+	return []
 
 
 func get_route_definition(route_idx: int) -> Array[RouteStepDefinition]:
@@ -178,3 +177,41 @@ func _get_waypoints_to_curve_map(steps: Array, path: Array) -> Dictionary:
 		result[i] = global_curve
 
 	return result
+
+
+func _get_curves_of_step(steps: Array, step_idx: int) -> Array:
+	var starting_building = null
+	var ending_building = null
+	var last_step_idx = steps.size() - 1
+
+	var prev_step_def = steps[step_idx - 1]
+	var step_def = steps[step_idx]
+
+	match step_idx:
+		1:
+			starting_building = transport_manager.get_terminal(steps[0].target_id)
+		last_step_idx:
+			ending_building = transport_manager.get_terminal(steps[last_step_idx].target_id)
+
+	var step_curves = network_manager.get_curves_of_path(_pathfinder_result.Path, starting_building, ending_building)
+
+	match prev_step_def.step_type:
+		Enums.TransportRouteStepType.WAYPOINT:
+			step_curves = step_curves.slice(1, step_curves.size())
+		Enums.TransportRouteStepType.STOP:
+			var stop_curve = step_curves[0]
+			var stop = transport_manager.get_stop(prev_step_def.target_id)
+			var stop_position = stop.get_global_position()
+
+			var curve_point = stop_curve.get_closest_point(stop_position)
+			step_curves[0] = line_helper.trim_curve(stop_curve, curve_point, stop_curve.sample_baked(stop_curve.get_baked_length()))
+
+	if step_def.step_type == Enums.TransportRouteStepType.STOP:
+		var stop_curve = step_curves[step_curves.size() - 1]
+		var stop = transport_manager.get_stop(step_def.target_id)
+		var stop_position = stop.get_global_position()
+
+		var curve_point = stop_curve.get_closest_point(stop_position)
+		step_curves[step_curves.size() - 1] = line_helper.trim_curve(stop_curve, stop_curve.sample_baked(0), curve_point)
+
+	return step_curves

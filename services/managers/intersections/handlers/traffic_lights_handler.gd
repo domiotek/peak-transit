@@ -9,21 +9,15 @@ var traffic_light_pole = preload("res://game-objects/network/net-node/traffic-li
 enum TrafficLightConfiguration {
 	SINGLE,
 	SINGLE_WITH_LEFT,
-	SINGLE_WITH_RIGHT
+	SINGLE_WITH_RIGHT,
 }
 
 enum TrafficLightPosition {
 	POLE,
-	ROAD_SIDE
+	ROAD_SIDE,
 }
 
-var CLASS_NAME: String = "TrafficLightsIntersection"
-
-var MIN_PHASE_DURATION_SCALER: float = 0.1
-var LONG_PHASE_DURATION: float = 90.0
-var SHORT_PHASE_DURATION: float = 60.0
-var LOW_FLOW_THRESHOLD: int = 10
-var FLOW_SCAN_DISTANCE: float = 250.0
+const CLASS_NAME: String = "TrafficLightsIntersection"
 
 var game_manager: GameManager
 var segment_helper: SegmentHelper
@@ -42,6 +36,7 @@ var current_flow_ratio: float = 100.0
 
 var node: RoadNode
 
+
 func setup(_node: RoadNode, _stoppers: Array) -> void:
 	node = _node
 	stoppers = _stoppers
@@ -56,6 +51,7 @@ func setup(_node: RoadNode, _stoppers: Array) -> void:
 	_create_phases(flows)
 	_create_traffic_light_visuals()
 
+
 func process_tick(_delta: float) -> void:
 	if phases.size() == 0:
 		return
@@ -65,17 +61,17 @@ func process_tick(_delta: float) -> void:
 
 	var flow_ratio = 100.0
 
-	var min_phase_duration = active_phase.duration * MIN_PHASE_DURATION_SCALER
+	var min_phase_duration = active_phase.duration * NetworkConstants.TRAFFIC_LIGHTS_MIN_PHASE_DURATION_SCALER
 
 	if phase_timer >= min_phase_duration:
 		flow_ratio = _measure_current_flow_ratio()
 		current_flow_ratio = flow_ratio
-	else: 
+	else:
 		current_flow_ratio = -1.0
 
 	var first_cycle_after_change = false
 
-	if is_first_cycle || phase_timer >= active_phase.duration || flow_ratio < LOW_FLOW_THRESHOLD:
+	if is_first_cycle || phase_timer >= active_phase.duration || flow_ratio < NetworkConstants.TRAFFIC_LIGHTS_LOW_FLOW_THRESHOLD:
 		is_first_cycle = false
 		current_phase_index = (current_phase_index + 1) % phases.size()
 		phase_timer = 0.0
@@ -96,6 +92,7 @@ func process_tick(_delta: float) -> void:
 	handle_stoppers.call(active_phase.stoppers, active_phase["directions"])
 	handle_stoppers.call(active_phase.exception_stoppers, [Enums.Direction.RIGHT])
 
+
 func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
 	if game_manager.try_hit_debug_pick(stopper):
 		breakpoint
@@ -107,9 +104,9 @@ func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
 		return false
 
 	var vehicle_current_step = approaching_vehicle.navigator.get_current_step()
-	
+
 	var step_type = vehicle_current_step["type"]
-	if  step_type == Navigator.StepType.NODE or step_type == Navigator.StepType.BUILDING:
+	if step_type == Navigator.StepType.NODE or step_type == Navigator.StepType.BUILDING:
 		return false
 
 	var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
@@ -127,13 +124,14 @@ func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
 
 	return false
 
+
 func get_custom_data() -> Dictionary:
 	var data = {
 		"phases": [],
 		"current_phase_index": current_phase_index,
 		"phase_timer": phase_timer,
 		"segments_with_dedicated_left_turn": segments_with_dedicated_left_turn,
-		"current_flow_ratio": current_flow_ratio
+		"current_flow_ratio": current_flow_ratio,
 	}
 
 	for phase in phases:
@@ -142,7 +140,7 @@ func get_custom_data() -> Dictionary:
 			"exception_stoppers": [],
 			"directions": phase.directions,
 			"duration": phase.duration,
-			"min_duration": phase.duration * MIN_PHASE_DURATION_SCALER
+			"min_duration": phase.duration * NetworkConstants.TRAFFIC_LIGHTS_MIN_PHASE_DURATION_SCALER,
 		}
 
 		for stopper in phase.stoppers:
@@ -166,6 +164,7 @@ func _find_flows() -> Array:
 
 	return flows
 
+
 func _find_flows_by_priority() -> Array:
 	var priority_segments: Array = []
 	var other_segments: Array = []
@@ -178,11 +177,12 @@ func _find_flows_by_priority() -> Array:
 
 	return [priority_segments, other_segments]
 
+
 func _find_flows_by_geometry() -> Array:
 	var segment = node.connected_segments[0]
-	var directions = node.segment_directions.get(segment.id, {})
+	var directions = node.segment_directions.get(segment.id, { })
 	var forward_segment = directions.get("forward", null)
-	var other_segments = node.connected_segments.filter(func (s): return s != segment and s != forward_segment)
+	var other_segments = node.connected_segments.filter(func(s): return s != segment and s != forward_segment)
 
 	var flow0 = [segment]
 
@@ -190,6 +190,7 @@ func _find_flows_by_geometry() -> Array:
 		flow0.append(forward_segment)
 
 	return [flow0, other_segments]
+
 
 func _create_phases(flows: Array) -> Array:
 	for flow in flows:
@@ -206,17 +207,18 @@ func _create_phases(flows: Array) -> Array:
 					_create_phase(
 						_merge_stoppers(forward_stoppers, right_stoppers),
 						right_most_stoppers_from_other,
-						[Enums.Direction.FORWARD, Enums.Direction.RIGHT], LONG_PHASE_DURATION
-					)
+						[Enums.Direction.FORWARD, Enums.Direction.RIGHT],
+						NetworkConstants.TRAFFIC_LIGHTS_LONG_PHASE_DURATION,
+					),
 				)
 
 				phases.append(
 					_create_phase(
 						left_combined_stoppers,
 						right_most_stoppers_from_other,
-						[Enums.Direction.LEFT], 
-						SHORT_PHASE_DURATION
-					)
+						[Enums.Direction.LEFT],
+						NetworkConstants.TRAFFIC_LIGHTS_SHORT_PHASE_DURATION,
+					),
 				)
 			else:
 				var left_right_stoppers = _merge_stoppers(left_combined_stoppers, right_stoppers)
@@ -224,9 +226,9 @@ func _create_phases(flows: Array) -> Array:
 					_create_phase(
 						left_right_stoppers,
 						right_most_stoppers_from_other,
-						[Enums.Direction.LEFT, Enums.Direction.RIGHT], 
-						LONG_PHASE_DURATION
-					)
+						[Enums.Direction.LEFT, Enums.Direction.RIGHT],
+						NetworkConstants.TRAFFIC_LIGHTS_LONG_PHASE_DURATION,
+					),
 				)
 
 			_update_segments_with_dedicated_left_turn(left_direct_stoppers)
@@ -236,11 +238,12 @@ func _create_phases(flows: Array) -> Array:
 					_merge_stoppers(forward_stoppers, left_combined_stoppers, right_stoppers),
 					right_most_stoppers_from_other,
 					[Enums.Direction.FORWARD, Enums.Direction.LEFT, Enums.Direction.RIGHT],
-					LONG_PHASE_DURATION
-				)
+					NetworkConstants.TRAFFIC_LIGHTS_LONG_PHASE_DURATION,
+				),
 			)
 
 	return phases
+
 
 func _get_right_most_stoppers_of_other_flow(other_flow: Array) -> Array:
 	var result = []
@@ -255,6 +258,7 @@ func _get_right_most_stoppers_of_other_flow(other_flow: Array) -> Array:
 			result.append(stopper)
 
 	return result
+
 
 func _update_segments_with_dedicated_left_turn(_stoppers: Array) -> void:
 	for stopper in _stoppers:
@@ -278,11 +282,11 @@ func _get_stoppers_with_direction(target_direction: Enums.Direction, segments: A
 				result.append(stopper)
 			elif allow_combined and connections_helper.is_in_combined_direction(lane_direction, target_direction):
 				result.append(stopper)
-			
 
 	return result
 
-func _merge_stoppers(stoppers_a: Array, stoppers_b: Array, stoppers_c: Array=[]) -> Array:
+
+func _merge_stoppers(stoppers_a: Array, stoppers_b: Array, stoppers_c: Array = []) -> Array:
 	var merged: Array = stoppers_a.duplicate()
 	for stopper in stoppers_b:
 		if stopper not in merged:
@@ -293,18 +297,21 @@ func _merge_stoppers(stoppers_a: Array, stoppers_b: Array, stoppers_c: Array=[])
 			merged.append(stopper)
 	return merged
 
+
 func _create_phase(_stoppers: Array, _exception_stoppers: Array, _directions: Array, duration: float) -> Dictionary:
 	var phase = {
 		"stoppers": _stoppers,
 		"exception_stoppers": _exception_stoppers,
 		"directions": _directions,
-		"duration": duration
+		"duration": duration,
 	}
 	return phase
+
 
 func _set_stoppers_active(_stoppers: Array, _active: bool, _directions: Array) -> void:
 	for stopper in _stoppers:
 		stopper.set_active_with_light(_active, _directions)
+
 
 func _measure_current_flow_ratio() -> float:
 	var total_waiting = 0
@@ -312,19 +319,18 @@ func _measure_current_flow_ratio() -> float:
 
 	for stopper in stoppers:
 		var lane = stopper.get_lane()
-		var vehicle_count = lane.count_vehicles_within_distance(node.id, FLOW_SCAN_DISTANCE)
+		var vehicle_count = lane.count_vehicles_within_distance(node.id, NetworkConstants.TRAFFIC_LIGHTS_FLOW_SCAN_DISTANCE)
 		total_waiting += vehicle_count
 
 		if not stopper.is_active():
 			waiting_on_open_lanes += vehicle_count
 
-
 	var vehicles_crossing = node.intersection_manager.get_vehicles_crossing_count()
 
 	return (float(vehicles_crossing) + float(waiting_on_open_lanes)) / float(total_waiting) * 100 if total_waiting > 0 else 100.0
 
-func _create_traffic_light_visuals() -> void:
 
+func _create_traffic_light_visuals() -> void:
 	for segment in node.connected_segments:
 		var segment_stoppers = stoppers.filter(func(s): return s.get_lane().segment == segment)
 
@@ -333,7 +339,7 @@ func _create_traffic_light_visuals() -> void:
 
 		for stopper in segment_stoppers:
 			var lane = stopper.get_lane()
-			var lanes_count = segment.get_relation_of_lane(lane.id).relation_info.lanes.size();
+			var lanes_count = segment.get_relation_of_lane(lane.id).relation_info.lanes.size()
 
 			if stopper.endpoint.LaneNumber == 0:
 				left_most_stopper = stopper
@@ -346,7 +352,10 @@ func _create_traffic_light_visuals() -> void:
 
 			if lane.direction == Enums.Direction.LEFT_FORWARD:
 				configuration = TrafficLightConfiguration.SINGLE_WITH_LEFT
-			elif connections_helper.is_in_combined_direction(lane.direction, Enums.Direction.RIGHT) and lane.direction != Enums.Direction.RIGHT and right_most_stopper == stopper:
+			elif connections_helper.is_in_combined_direction(
+				lane.direction,
+				Enums.Direction.RIGHT,
+			) and lane.direction != Enums.Direction.RIGHT and right_most_stopper == stopper:
 				configuration = TrafficLightConfiguration.SINGLE_WITH_RIGHT
 
 			_create_traffic_light_assembly(stopper, configuration, position)
@@ -368,8 +377,8 @@ func _create_pole(road_curve: Curve2D, right_most_stopper: LaneStopper, left_mos
 
 	node.top_layer.add_child(light_pole_instance)
 
-func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: TrafficLightConfiguration, position_mode: TrafficLightPosition ) -> void:
 
+func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: TrafficLightConfiguration, position_mode: TrafficLightPosition) -> void:
 	var assembly = Node2D.new()
 	assembly.position = node.to_local(ref_stopper.endpoint.Position)
 	assembly.rotation_degrees = ref_stopper.rotation_degrees + 90.0
@@ -386,7 +395,6 @@ func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: Tra
 	var light_instance = full_traffic_light.instantiate() as TrafficLight
 	assembly.add_child(light_instance)
 	ref_stopper.traffic_lights[Enums.Direction.ALL_DIRECTIONS] = light_instance
-
 
 	if configuration == TrafficLightConfiguration.SINGLE:
 		return

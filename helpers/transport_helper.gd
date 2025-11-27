@@ -219,7 +219,7 @@ static func resolve_ending_node_from_line_step(step_def: RouteStepDefinition) ->
 	return []
 
 
-static func resolve_route_step_data(step_def: RouteStepDefinition) -> RouteStep:
+static func resolve_route_step_data(step_def: RouteStepDefinition, length: float) -> RouteStep:
 	var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 	var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 
@@ -231,6 +231,8 @@ static func resolve_route_step_data(step_def: RouteStepDefinition) -> RouteStep:
 					step_def.step_type,
 					terminal.get_terminal_name(),
 					step_def.target_id,
+					length,
+					estimate_travel_time(length),
 				)
 		Enums.TransportRouteStepType.STOP:
 			var stop = transport_manager.get_stop(step_def.target_id)
@@ -239,6 +241,8 @@ static func resolve_route_step_data(step_def: RouteStepDefinition) -> RouteStep:
 					step_def.step_type,
 					stop.get_stop_name(),
 					step_def.target_id,
+					length,
+					estimate_travel_time(length),
 				)
 		Enums.TransportRouteStepType.WAYPOINT:
 			var node = network_manager.get_node(step_def.target_id)
@@ -247,9 +251,20 @@ static func resolve_route_step_data(step_def: RouteStepDefinition) -> RouteStep:
 					step_def.step_type,
 					"Node %d" % node.id,
 					step_def.target_id,
+					length,
+					estimate_travel_time(length),
 				)
 
 	return null
+
+
+static func estimate_travel_time(length: float, average_speed: float = SimulationConstants.AVERAGE_BUS_SPEED) -> float:
+	if average_speed <= 0.0:
+		return 0.0
+
+	length = length * SimulationConstants.SIMULATION_WORLD_TO_GAME_UNITS_RATIO
+
+	return length / average_speed * SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE
 
 
 static func draw_route(

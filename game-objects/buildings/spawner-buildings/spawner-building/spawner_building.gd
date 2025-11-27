@@ -50,7 +50,6 @@ func spawn_vehicle() -> void:
 		return
 
 	if target_building.segment == self.segment:
-		push_warning("Target building ID %d is on the same segment as spawner building ID %d. Skipping." % [target_building.id, id])
 		return
 
 	var vehicle = vehicle_manager.create_vehicle(VehicleManager.VehicleType.CAR)
