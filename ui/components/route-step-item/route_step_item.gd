@@ -18,6 +18,8 @@ var _color: Color = Color.WHITE
 @onready var _element_type: Label = $BoxContainer/Type
 @onready var _jump_to_button: Button = $JumpToButton
 
+signal jump_to_target(target_id: int, step_type: Enums.TransportRouteStepType)
+
 
 func _ready() -> void:
 	if not _set:
@@ -45,7 +47,7 @@ func setup_as_spacer(color: Color) -> void:
 
 
 func _on_jump_to_button_pressed() -> void:
-	pass
+	emit_signal("jump_to_target", _target_id, _step_type)
 
 
 func _select_icon_texture(step_type: int) -> Resource:

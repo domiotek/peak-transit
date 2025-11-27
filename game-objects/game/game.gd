@@ -36,6 +36,10 @@ func get_map() -> Map:
 	return map
 
 
+func get_camera() -> Camera:
+	return camera
+
+
 func get_camera_bounds() -> Rect2:
 	return camera_bounds
 

@@ -14,6 +14,8 @@ var _line: TransportLine
 @onready var include_waypoints: CheckButton = $Header/IncludeWaypoints
 
 @onready var _transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
+@onready var _game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
+@onready var _network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 
 signal route_visibility_toggled(route_idx: int, is_visible: bool)
 
@@ -59,6 +61,7 @@ func _load_route_steps() -> void:
 
 		var step_item = RouteStepItemScene.instantiate() as RouteStepItem
 		step_item.setup(step.step_type, step.target_name, step.target_id, _line.color_hex)
+		step_item.jump_to_target.connect(Callable(self, "_on_jump_to_button_pressed"))
 
 		steps_container.add_child(step_item)
 
@@ -66,3 +69,28 @@ func _load_route_steps() -> void:
 			var spacer_item = RouteStepItemScene.instantiate() as RouteStepItem
 			spacer_item.setup_as_spacer(_line.color_hex)
 			steps_container.add_child(spacer_item)
+
+
+func _on_jump_to_button_pressed(target_id: int, step_type: Enums.TransportRouteStepType) -> void:
+	var selection_type = GameManager.SelectionType.NONE
+	var selected_object: Object = null
+
+	match step_type:
+		Enums.TransportRouteStepType.STOP:
+			var stop = _transport_manager.get_stop(target_id)
+			if stop:
+				selected_object = stop
+				selection_type = GameManager.SelectionType.TRANSPORT_STOP
+		Enums.TransportRouteStepType.TERMINAL:
+			var terminal = _transport_manager.get_terminal(target_id)
+			if terminal:
+				selected_object = terminal
+				selection_type = GameManager.SelectionType.TERMINAL
+		Enums.TransportRouteStepType.WAYPOINT:
+			var node = _network_manager.get_node(target_id)
+			if node:
+				selected_object = node
+				selection_type = GameManager.SelectionType.NODE
+
+	_game_manager.set_selection(selected_object, selection_type)
+	_game_manager.jump_to_selection()

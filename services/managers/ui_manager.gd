@@ -7,13 +7,14 @@ enum AnchorPoint {
 	BOTTOM_RIGHT,
 }
 
-var ui_views: Dictionary[String, Control] = {}
+var ui_views: Dictionary[String, Control] = { }
 
 var visible_views: Array[String] = []
 var loaded_views: Array[String] = []
 
 var main_menu: Control
 var game_viewport: GameController
+
 
 func initialize(_main_menu: Control, _game_viewport: GameController) -> void:
 	main_menu = _main_menu
@@ -27,9 +28,11 @@ func show_main_menu() -> void:
 	for view in visible_views:
 		hide_ui_view(view)
 
+
 func hide_main_menu() -> void:
 	main_menu.visible = false
 	game_viewport.visible = true
+
 
 func register_ui_view(name: String, node: Control):
 	if ui_views.has(name):
@@ -48,11 +51,12 @@ func register_ui_view(name: String, node: Control):
 func get_ui_view(name: String) -> Control:
 	if ui_views.has(name):
 		return ui_views[name]
-	else:
-		push_error("UI View with name '%s' not found." % name)
-		return null
 
-func show_ui_view(name: String, data: Dictionary = {}) -> void:
+	push_error("UI View with name '%s' not found." % name)
+	return null
+
+
+func show_ui_view(name: String, data: Dictionary = { }) -> void:
 	if ui_views.has(name):
 		var view = ui_views[name]
 		view.visible = true
@@ -62,6 +66,7 @@ func show_ui_view(name: String, data: Dictionary = {}) -> void:
 	else:
 		push_error("UI View with name '%s' not found." % name)
 
+
 func hide_ui_view(name: String):
 	if ui_views.has(name):
 		var view = ui_views[name]
@@ -69,6 +74,7 @@ func hide_ui_view(name: String):
 		visible_views.erase(name)
 	else:
 		push_error("UI View with name '%s' not found." % name)
+
 
 func toggle_ui_view(name: String):
 	if ui_views.has(name):
@@ -80,9 +86,11 @@ func toggle_ui_view(name: String):
 	else:
 		push_error("UI View with name '%s' not found." % name)
 
+
 func hide_all_ui_views() -> void:
 	for ui_view_id in visible_views.duplicate():
 		hide_ui_view(ui_view_id)
+
 
 func is_mouse_over_ui(mouse_position: Vector2) -> bool:
 	for ui_view_id in visible_views:
@@ -94,6 +102,7 @@ func is_mouse_over_ui(mouse_position: Vector2) -> bool:
 
 	return false
 
+
 func get_anchor_point_to_world_object(viewport: Viewport, object: Object) -> Vector2:
 	var vehicle_world_pos = object.global_position
 	var camera = viewport.get_camera_2d()
@@ -104,10 +113,11 @@ func get_anchor_point_to_world_object(viewport: Viewport, object: Object) -> Vec
 	var viewport_size = viewport.get_visible_rect().size
 	var camera_pos = camera.global_position
 	var camera_zoom = camera.zoom
-	
+
 	var relative_pos = (vehicle_world_pos - camera_pos) * camera_zoom
 	var screen_pos = viewport_size * 0.5 + relative_pos
 	return screen_pos
+
 
 func reanchor_to_world_object(control: Control, target_object: Node2D, anchor: AnchorPoint, clamp_to_screen: bool) -> void:
 	var viewport = control.get_viewport()
@@ -132,6 +142,7 @@ func reanchor_to_world_object(control: Control, target_object: Node2D, anchor: A
 
 	control.position = position
 
+
 func _render_view(view: Control, data: Dictionary) -> void:
 	if loaded_views.has(view.name):
 		_call_on_view(view, "update", data)
@@ -140,16 +151,15 @@ func _render_view(view: Control, data: Dictionary) -> void:
 		_call_on_view(view, "load")
 		_call_on_view(view, "update", data)
 
-func _call_on_view(view: Control, event: String, data: Dictionary = {}) -> void:
+
+func _call_on_view(view: Control, event: String, data: Dictionary = { }) -> void:
 	match event:
 		"init":
 			if view.has_method("init"):
 				view.init()
-
 		"load":
 			if view.has_method("load"):
 				view.load()
-
 		"update":
 			if view.has_method("update"):
 				view.update(data)

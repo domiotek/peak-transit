@@ -8,6 +8,8 @@ enum SelectionType {
 	NODE,
 	STOPPER,
 	SPAWNER_BUILDING,
+	TERMINAL,
+	TRANSPORT_STOP,
 }
 
 var selected_object: Object = null
@@ -176,13 +178,13 @@ func get_game_speed() -> Enums.GameSpeed:
 
 
 func set_selection(object: Object, type: SelectionType) -> void:
-	selection_type = type
-	selected_object = object
-
 	if selection_type != type:
 		if selection_popup_id:
-			ui_manager.hide_ui_view_by_id(selection_popup_id)
+			ui_manager.hide_ui_view(selection_popup_id)
 			selection_popup_id = null
+
+	selection_type = type
+	selected_object = object
 
 	match type:
 		SelectionType.NONE:
@@ -191,7 +193,7 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selection_popup_id = "VehiclePopupView"
 		SelectionType.SPAWNER_BUILDING:
 			selection_popup_id = "SpawnerBuildingPopupView"
-		SelectionType.NODE, SelectionType.STOPPER:
+		SelectionType.NODE, SelectionType.STOPPER, SelectionType.TRANSPORT_STOP, SelectionType.TERMINAL:
 			pass
 		_:
 			push_error("Unknown selection type: %s" % str(type))
@@ -246,6 +248,37 @@ func try_hit_debug_pick(object: Object) -> bool:
 		return true
 
 	return false
+
+
+func jump_to_selection() -> void:
+	if not selected_object:
+		return
+
+	var global_position: Vector2
+
+	match selection_type:
+		SelectionType.VEHICLE:
+			var vehicle = selected_object as Vehicle
+			global_position = vehicle.global_position
+		SelectionType.NODE:
+			var node = selected_object as RoadNode
+			global_position = node.position
+		SelectionType.STOPPER:
+			var stopper = selected_object as LaneStopper
+			global_position = stopper.global_position
+		SelectionType.SPAWNER_BUILDING:
+			var spawner = selected_object as SpawnerBuilding
+			global_position = spawner.global_position
+		SelectionType.TRANSPORT_STOP:
+			var stop = selected_object as Stop
+			global_position = stop.global_position
+		SelectionType.TERMINAL:
+			var terminal = selected_object as Terminal
+			global_position = terminal.global_position
+		_:
+			return
+
+	game_controller.get_camera().set_camera_position(global_position)
 
 
 func draw_vehicle_route(vehicle: Vehicle) -> void:
