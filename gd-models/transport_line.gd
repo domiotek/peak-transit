@@ -12,6 +12,7 @@ var _start_node_to_path_map: Dictionary = { }
 var _route_curves: Dictionary = { }
 var _waypoint_to_curve_map: Dictionary = { }
 var _step_def_to_path_map: Dictionary = { }
+var _route_steps: Dictionary = { }
 
 var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
@@ -28,7 +29,10 @@ func setup(new_id: int, line_def: LineDefinition) -> void:
 
 
 func trace_routes() -> bool:
-	for route_def in _line_def.routes:
+	for route_idx in range(_line_def.routes.size()):
+		var route_def = _line_def.routes[route_idx] as Array[RouteStepDefinition]
+
+		_route_steps[route_idx] = []
 		var path = []
 		var start_out_options = TransportHelper.resolve_starting_node_from_line_step(transport_manager, route_def[0])
 
@@ -38,6 +42,7 @@ func trace_routes() -> bool:
 
 		for i in range(route_def.size()):
 			var step_def = route_def[i]
+			_route_steps[route_idx].append(TransportHelper.resolve_route_step_data(step_def))
 
 			if step_def == route_def[0]:
 				continue
@@ -117,6 +122,10 @@ func get_route_definition(route_idx: int) -> Array[RouteStepDefinition]:
 
 func get_waypoint_to_curve_map(route_idx: int) -> Dictionary:
 	return _waypoint_to_curve_map.get(route_idx, { })
+
+
+func get_route_steps(route_idx: int) -> Array:
+	return _route_steps.get(route_idx, [])
 
 
 func _on_pathfinder_result(path: Variant) -> void:

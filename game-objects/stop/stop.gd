@@ -22,6 +22,10 @@ func update_visuals(show_road_marking: bool) -> void:
 	road_marking.visible = _data.draw_stripes and show_road_marking
 
 
+func get_stop_name() -> String:
+	return _data.name
+
+
 func get_position_offset() -> float:
 	return _data.position.offset
 

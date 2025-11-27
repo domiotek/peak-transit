@@ -17,6 +17,10 @@ func update_visuals() -> void:
 	pass
 
 
+func get_terminal_name() -> String:
+	return _terminal_data.name
+
+
 func get_position_offset() -> float:
 	return _terminal_data.position.offset
 

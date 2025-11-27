@@ -219,6 +219,39 @@ static func resolve_ending_node_from_line_step(step_def: RouteStepDefinition) ->
 	return []
 
 
+static func resolve_route_step_data(step_def: RouteStepDefinition) -> RouteStep:
+	var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
+	var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
+
+	match step_def.step_type:
+		Enums.TransportRouteStepType.TERMINAL:
+			var terminal = transport_manager.get_terminal(step_def.target_id)
+			if terminal:
+				return RouteStep.new(
+					step_def.step_type,
+					terminal.get_terminal_name(),
+					step_def.target_id,
+				)
+		Enums.TransportRouteStepType.STOP:
+			var stop = transport_manager.get_stop(step_def.target_id)
+			if stop:
+				return RouteStep.new(
+					step_def.step_type,
+					stop.get_stop_name(),
+					step_def.target_id,
+				)
+		Enums.TransportRouteStepType.WAYPOINT:
+			var node = network_manager.get_node(step_def.target_id)
+			if node:
+				return RouteStep.new(
+					step_def.step_type,
+					"Node %d" % node.id,
+					step_def.target_id,
+				)
+
+	return null
+
+
 static func draw_route(
 		route_curves: Array,
 		layer: Node2D,
