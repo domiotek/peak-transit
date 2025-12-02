@@ -1,0 +1,79 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3eicbrciics1"]
+
+[ext_resource type="Script" uid="uid://da22l4w3nnx4s" path="res://ui/views/trip-view/trip_view.gd" id="1_pv0i6"]
+[ext_resource type="PackedScene" uid="uid://c04rhuwgif41s" path="res://ui/components/value_list_item/value_list_item.tscn" id="1_rk8q0"]
+
+[node name="TripView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -787.0
+offset_bottom = -157.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pv0i6")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="MainWrapper" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Header" type="BoxContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TripIdxLabel" type="Label" parent="MarginContainer/MainWrapper/Header"]
+layout_mode = 2
+text = "# 1"
+
+[node name="RelationLabel" type="Label" parent="MarginContainer/MainWrapper/Header"]
+layout_mode = 2
+text = "Terminal 0 -> Terminal 1"
+
+[node name="TripDetailsMargin" type="MarginContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 10
+
+[node name="TripDetailsContent" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 15
+vertical = true
+
+[node name="PropsContainer" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical = true
+
+[node name="BrigadeIdProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Brigade:"
+
+[node name="ServiceTimeProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Service time:"
+
+[node name="TotalTimeProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Total time:"
+
+[node name="TotalStepsProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Total stops:"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="StepsList" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical = true

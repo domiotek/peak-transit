@@ -91,7 +91,14 @@ func load_transport_systems(transport_def: TransportDefinition) -> void:
 		game_manager.push_loading_progress("Setting up transport lines...", i / float(transport_def.lines.size()))
 		await get_tree().process_frame
 		var line_def = transport_def.lines[i]
-		transport_manager.register_line(line_def)
+		await transport_manager.register_line(line_def)
+
+	var lines = transport_manager.get_lines()
+	for line_id in range(lines.size()):
+		var transport_line = lines[line_id] as TransportLine
+		game_manager.push_loading_progress("Generating schedules...", line_id / float(lines.size()))
+		await get_tree().process_frame
+		transport_manager.generate_line_schedule(transport_line)
 
 
 func _draw() -> void:

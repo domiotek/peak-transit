@@ -1,0 +1,74 @@
+[gd_scene load_steps=3 format=3 uid="uid://x2n25hp86bkr"]
+
+[ext_resource type="Script" uid="uid://dlop0wy3wrf88" path="res://ui/views/brigade-view/brigade_view.gd" id="1_wwmjm"]
+[ext_resource type="PackedScene" uid="uid://c04rhuwgif41s" path="res://ui/components/value_list_item/value_list_item.tscn" id="2_mhibq"]
+
+[node name="BrigadeView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -792.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wwmjm")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="MainWrapper" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Header" type="BoxContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="BrigadeIdentifierLabel" type="Label" parent="MarginContainer/MainWrapper/Header"]
+layout_mode = 2
+text = "01-14"
+
+[node name="BrigadeDetailsMargin" type="MarginContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 20
+
+[node name="BrigadeDetailsContent" type="BoxContainer" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin"]
+layout_mode = 2
+vertical = true
+
+[node name="PropsContainer" type="BoxContainer" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin/BrigadeDetailsContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical = true
+
+[node name="ServiceTimeProp" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin/BrigadeDetailsContent/PropsContainer" instance=ExtResource("2_mhibq")]
+layout_mode = 2
+init_label_text = "Service time:"
+
+[node name="FrequencyProp" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin/BrigadeDetailsContent/PropsContainer" instance=ExtResource("2_mhibq")]
+layout_mode = 2
+init_label_text = "Frequency:"
+
+[node name="MinLayoverProp" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin/BrigadeDetailsContent/PropsContainer" instance=ExtResource("2_mhibq")]
+layout_mode = 2
+init_label_text = "Minimum break:"
+
+[node name="TotalTripsProp" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin/BrigadeDetailsContent/PropsContainer" instance=ExtResource("2_mhibq")]
+layout_mode = 2
+init_label_text = "Total trips:"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin/BrigadeDetailsContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TripsList" type="BoxContainer" parent="MarginContainer/MainWrapper/BrigadeDetailsMargin/BrigadeDetailsContent/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical = true

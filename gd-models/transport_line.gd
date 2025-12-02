@@ -14,6 +14,8 @@ var _waypoint_to_curve_map: Dictionary = { }
 var _step_def_to_path_map: Dictionary = { }
 var _route_steps: Dictionary = { }
 
+var _brigade_ids: Array = []
+
 var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 var path_manager: PathingManager = GDInjector.inject("PathingManager") as PathingManager
@@ -125,6 +127,49 @@ func get_waypoint_to_curve_map(route_idx: int) -> Dictionary:
 
 func get_route_steps(route_idx: int) -> Array:
 	return _route_steps.get(route_idx, [])
+
+
+func get_routes() -> Dictionary:
+	return _route_steps
+
+
+func assign_brigades(ids: Array) -> void:
+	_brigade_ids = ids
+
+
+func get_brigade_count() -> int:
+	return _brigade_ids.size()
+
+
+func get_brigade_ids() -> Array:
+	return _brigade_ids
+
+
+func get_brigades() -> Array:
+	var result: Array = []
+
+	var full_brigades = transport_manager.brigades.get_all()
+
+	for brigade_id in _brigade_ids:
+		result.append(full_brigades[brigade_id])
+
+	return result
+
+
+func get_start_time() -> TimeOfDay:
+	return _line_def.start_time
+
+
+func get_end_time() -> TimeOfDay:
+	return _line_def.end_time
+
+
+func get_frequency_minutes() -> int:
+	return _line_def.frequency_minutes
+
+
+func get_min_layover_minutes() -> int:
+	return _line_def.min_layover_minutes
 
 
 func _on_pathfinder_result(path: Variant) -> void:

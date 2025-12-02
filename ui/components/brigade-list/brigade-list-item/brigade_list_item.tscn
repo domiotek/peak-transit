@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://c6m8gg28uearh"]
+
+[ext_resource type="PackedScene" uid="uid://igt0cl0wc7uu" path="res://ui/components/list_item/list_item.tscn" id="1_uuhmx"]
+[ext_resource type="Script" uid="uid://dxsiqae23tdn4" path="res://ui/components/brigade-list/brigade-list-item/brigade_list_item.gd" id="2_n7gw8"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_n7gw8"]
+font_size = 10
+
+[node name="ListItem" instance=ExtResource("1_uuhmx")]
+script = ExtResource("2_n7gw8")
+
+[node name="ServiceTimeLabel" type="Label" parent="." index="0"]
+layout_mode = 2
+text = "14:00 - 14:05"
+label_settings = SubResource("LabelSettings_n7gw8")
+
+[node name="Spacer" type="Control" parent="." index="1"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="MainLabel" parent="BoxContainer" index="0"]
+text = ""
+
+[node name="SupportLabel" parent="BoxContainer" index="1"]
+text = ""

@@ -21,16 +21,16 @@ var selected_view: String = ""
 var ui_manager: UIManager
 var network_manager: NetworkManager
 
+
 func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
-	
+
 	visible = false
 	ui_manager.register_ui_view(VIEW_NAME, self)
-	
+
 	go_back_button.pressed.connect(_on_go_back_button_pressed)
 	close_button.pressed.connect(_on_close_button_pressed)
-
 
 
 func load() -> void:
@@ -40,9 +40,16 @@ func load() -> void:
 		var item = item_scene.instantiate() as ListItem
 		item.init_item("Node #%d" % node.id, "Intersection Type: %s; Connected Segments: %d" % [node.intersection_manager.get_used_intersection_type(), node.connected_segments.size()])
 		item.show_button(CHEVRON_RIGHT_ICON)
-		item.set_data({"node": node})
+		item.set_data({ "node": node })
 		item.button_pressed.connect(Callable(self, "_on_item_button_pressed"))
 		content_container.add_child(item)
+
+
+func reset() -> void:
+	for child in content_container.get_children():
+		child.queue_free()
+	selected_node = null
+	selected_view = ""
 
 
 func _on_item_button_pressed(_sender: ListItem, data: Dictionary) -> void:
@@ -57,6 +64,7 @@ func _on_item_button_pressed(_sender: ListItem, data: Dictionary) -> void:
 		view.bind(selected_node)
 		selected_view = intersection_type
 
+
 func _on_go_back_button_pressed() -> void:
 	if selected_view == "":
 		return
@@ -70,8 +78,10 @@ func _on_go_back_button_pressed() -> void:
 		selected_view = ""
 		selected_node = null
 
+
 func _on_close_button_pressed() -> void:
 	ui_manager.hide_ui_view(VIEW_NAME)
+
 
 func _get_view(view_name: String) -> Control:
 	match view_name:

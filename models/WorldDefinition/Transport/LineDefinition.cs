@@ -12,6 +12,19 @@ public class LineDefinition : IDefinition<LineDefinition>
     [JsonProperty("color")]
     public required string ColorHex { get; set; } = "#FFFFFF";
 
+    [JsonProperty("frequency", Required = Required.Always)]
+    public required int FrequencyMinutes { get; set; }
+
+    [JsonProperty("minLayover", Required = Required.Always)]
+    public required int MinLayoverMinutes { get; set; }
+
+    [JsonProperty("startTime")]
+    public required string StartTime { get; set; }
+
+    [JsonProperty("endTime")]
+    public required string EndTime { get; set; }
+
+    [JsonProperty("routes")]
     public required List<List<RouteStepDefinition>> Routes { get; set; } = [];
 
     public Godot.Collections.Dictionary Serialize()
@@ -20,6 +33,10 @@ public class LineDefinition : IDefinition<LineDefinition>
         {
             ["displayNumber"] = DisplayNumber,
             ["color"] = ColorHex,
+            ["frequency"] = FrequencyMinutes,
+            ["minLayover"] = MinLayoverMinutes,
+            ["startTime"] = StartTime,
+            ["endTime"] = EndTime,
             ["routes"] =
                 new Godot.Collections.Array<Godot.Collections.Array<Godot.Collections.Dictionary>>(
                     Routes.ConvertAll(
@@ -38,6 +55,10 @@ public class LineDefinition : IDefinition<LineDefinition>
         {
             DisplayNumber = data["displayNumber"].AsInt32(),
             ColorHex = data["color"].AsString() ?? "#FFFFFF",
+            FrequencyMinutes = data["frequency"].AsInt32(),
+            MinLayoverMinutes = data["minLayover"].AsInt32(),
+            StartTime = data["startTime"].AsString(),
+            EndTime = data["endTime"].AsString(),
             Routes =
             [
                 .. data["routes"]

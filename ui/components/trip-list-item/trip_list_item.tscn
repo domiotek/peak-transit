@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://qk00mk6lr1by"]
+
+[ext_resource type="PackedScene" uid="uid://igt0cl0wc7uu" path="res://ui/components/list_item/list_item.tscn" id="1_7nh5r"]
+[ext_resource type="Script" uid="uid://dmj134gbp5km2" path="res://ui/components/trip-list-item/trip_list_item.gd" id="2_7ma63"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_7ma63"]
+font_size = 12
+
+[node name="ListItem" instance=ExtResource("1_7nh5r")]
+script = ExtResource("2_7ma63")
+
+[node name="IdxLabel" type="Label" parent="." index="0"]
+layout_mode = 2
+text = "#1"
+label_settings = SubResource("LabelSettings_7ma63")
+
+[node name="FrontSpacer" type="Control" parent="." index="1"]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+
+[node name="ServiceTimeLabel" type="Label" parent="." index="2"]
+layout_mode = 2
+text = "14:00 - 14:45 (45min)"
+
+[node name="Spacer" type="Control" parent="." index="3"]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+
+[node name="MainLabel" parent="BoxContainer" index="0"]
+text = "Terminal 0 ➡️ Terminal 1"
+
+[node name="SupportLabel" parent="BoxContainer" index="1"]
+text = "BR403"

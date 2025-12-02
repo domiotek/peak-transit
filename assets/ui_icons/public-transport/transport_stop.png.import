@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c62cw1l1isxtu"
-path="res://.godot/imported/lines.png-9e6191a215663a99024bbd4986f295db.ctex"
+uid="uid://b0soyf2m5s2pu"
+path="res://.godot/imported/transport_stop.png-07ef931f1047beb835fe4b330d325924.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui_icons/lines.png"
-dest_files=["res://.godot/imported/lines.png-9e6191a215663a99024bbd4986f295db.ctex"]
+source_file="res://assets/ui_icons/public-transport/transport_stop.png"
+dest_files=["res://.godot/imported/transport_stop.png-07ef931f1047beb835fe4b330d325924.ctex"]
 
 [params]
 

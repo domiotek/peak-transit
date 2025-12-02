@@ -1,0 +1,60 @@
+[gd_scene load_steps=8 format=3 uid="uid://c5jn0klrj2752"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_jg1i7"]
+[ext_resource type="Script" uid="uid://duu1atn61ll03" path="res://ui/views/brigades-view/brigades_view.gd" id="2_7afem"]
+[ext_resource type="Texture2D" uid="uid://ddqijih7rynj2" path="res://assets/ui_icons/chevron_left.png" id="3_8rlvg"]
+[ext_resource type="PackedScene" uid="uid://ctdn72yyfyi6x" path="res://ui/components/brigade-list/brigade_list.tscn" id="4_7afem"]
+[ext_resource type="PackedScene" uid="uid://x2n25hp86bkr" path="res://ui/views/brigade-view/brigade_view.tscn" id="4_jmhjk"]
+[ext_resource type="PackedScene" uid="uid://d3eicbrciics1" path="res://ui/views/trip-view/trip_view.tscn" id="6_jn662"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_exb6c"]
+
+[node name="BrigadesView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -894.0
+offset_bottom = -285.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_jg1i7")
+script = ExtResource("2_7afem")
+
+[node name="MainWrapper" type="VBoxContainer" parent="."]
+material = SubResource("CanvasItemMaterial_exb6c")
+layout_mode = 2
+
+[node name="HeaderMargins" type="MarginContainer" parent="MainWrapper"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 10
+
+[node name="HeaderFlex" type="HBoxContainer" parent="MainWrapper/HeaderMargins"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="GoBackButton" type="Button" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+visible = false
+layout_mode = 2
+icon = ExtResource("3_8rlvg")
+flat = true
+
+[node name="HeaderTitle" type="Label" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Brigades"
+
+[node name="BrigadeList" parent="MainWrapper" instance=ExtResource("4_7afem")]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BrigadeView" parent="MainWrapper" instance=ExtResource("4_jmhjk")]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TripView" parent="MainWrapper" instance=ExtResource("6_jn662")]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3

@@ -649,6 +649,10 @@
 					]
 				],
 				"displayNumber": 154,
+				"frequency": 60,
+				"minLayover": 2,
+				"startTime": "04:45",
+				"endTime": "23:45",
 				"color": "#FF0000"
 			},
 			{
@@ -683,6 +687,8 @@
 					]
 				],
 				"displayNumber": 141,
+				"frequency": 10,
+				"minLayover": 3,
 				"color": "#00FF00"
 			}
 		]

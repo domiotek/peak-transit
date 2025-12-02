@@ -3,11 +3,13 @@ extends GridContainer
 class_name ShortcutsView
 
 const VIEW_NAME = "ShortcutsView"
+const SHORTCUTS_VIEW_GROUP = "shortcuts"
 
 var ui_manager: UIManager
 var game_manager: GameManager
 
 @onready var toggle_lines_view_button: Button = $ToggleLinesViewButton
+@onready var toggle_brigades_view_button: Button = $ToggleBrigadesViewButton
 
 
 func _ready() -> void:
@@ -17,7 +19,12 @@ func _ready() -> void:
 	ui_manager.register_ui_view(VIEW_NAME, self)
 
 	toggle_lines_view_button.pressed.connect(Callable(self, "_on_toggle_lines_view_button_pressed"))
+	toggle_brigades_view_button.pressed.connect(Callable(self, "_on_toggle_brigades_view_button_pressed"))
 
 
 func _on_toggle_lines_view_button_pressed() -> void:
-	ui_manager.toggle_ui_view(LinesView.VIEW_NAME)
+	ui_manager.toggle_ui_view_exclusively(SHORTCUTS_VIEW_GROUP, LinesView.VIEW_NAME)
+
+
+func _on_toggle_brigades_view_button_pressed() -> void:
+	ui_manager.toggle_ui_view_exclusively(SHORTCUTS_VIEW_GROUP, BrigadesView.VIEW_NAME)

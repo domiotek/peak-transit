@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3 uid="uid://kyo6r6kln7jt"]
+
+[ext_resource type="PackedScene" uid="uid://igt0cl0wc7uu" path="res://ui/components/list_item/list_item.tscn" id="1_mcsh7"]
+[ext_resource type="Script" uid="uid://cvf8fdvtmatlv" path="res://ui/views/trip-view/trip-step-list-item/trip_step_list_item.gd" id="2_l3fjv"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_l3fjv"]
+font_size = 14
+
+[sub_resource type="LabelSettings" id="LabelSettings_mcsh7"]
+font_size = 14
+
+[node name="ListItem" instance=ExtResource("1_mcsh7")]
+script = ExtResource("2_l3fjv")
+
+[node name="DepartureTimeLabel" type="Label" parent="." index="0"]
+layout_mode = 2
+text = "15:00"
+label_settings = SubResource("LabelSettings_l3fjv")
+
+[node name="Spacer" type="Control" parent="." index="1"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+
+[node name="StepIdxLabel" type="Label" parent="." index="2"]
+layout_mode = 2
+text = "1."
+label_settings = SubResource("LabelSettings_mcsh7")
+
+[node name="MainLabel" parent="BoxContainer" index="0"]
+text = "Stop #0"
+
+[node name="SupportLabel" parent="BoxContainer" index="1"]
+visible = false
+text = ""

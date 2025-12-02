@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0soyf2m5s2pu"
-path="res://.godot/imported/transport_stop.png-1dae4a484a19750b9534fae263c05db1.ctex"
+uid="uid://dxo7cporg6h2d"
+path="res://.godot/imported/timeline.png-962b8354af58ab0f88036aa4686e7383.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui_icons/transport_stop.png"
-dest_files=["res://.godot/imported/transport_stop.png-1dae4a484a19750b9534fae263c05db1.ctex"]
+source_file="res://assets/ui_icons/public-transport/timeline.png"
+dest_files=["res://.godot/imported/timeline.png-962b8354af58ab0f88036aa4686e7383.ctex"]
 
 [params]
 

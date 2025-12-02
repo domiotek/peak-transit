@@ -12,6 +12,10 @@ var ui_views: Dictionary[String, Control] = { }
 var visible_views: Array[String] = []
 var loaded_views: Array[String] = []
 
+# Ensure only one view in an exclusivity group is shown at a time
+# Key: exclusivity group name, Value: currently shown view name
+var _exclusivity_groups: Dictionary[String, String] = { }
+
 var main_menu: Control
 var game_viewport: GameController
 
@@ -72,6 +76,10 @@ func hide_ui_view(name: String):
 		var view = ui_views[name]
 		view.visible = false
 		visible_views.erase(name)
+
+		for group_name in _exclusivity_groups.keys():
+			if _exclusivity_groups[group_name] == name:
+				_exclusivity_groups.erase(group_name)
 	else:
 		push_error("UI View with name '%s' not found." % name)
 
@@ -101,6 +109,29 @@ func is_mouse_over_ui(mouse_position: Vector2) -> bool:
 			return true
 
 	return false
+
+
+func show_ui_view_exclusively(group: String, view_name: String, data: Dictionary = { }) -> void:
+	if _exclusivity_groups.has(group):
+		var current_view_name = _exclusivity_groups[group]
+		if current_view_name != view_name:
+			hide_ui_view(current_view_name)
+
+	_exclusivity_groups[group] = view_name
+	show_ui_view(view_name, data)
+
+
+func toggle_ui_view_exclusively(group: String, view_name: String, data: Dictionary = { }) -> void:
+	if _exclusivity_groups.has(group):
+		var current_view_name = _exclusivity_groups[group]
+		if current_view_name == view_name:
+			hide_ui_view(current_view_name)
+			_exclusivity_groups.erase(group)
+			return
+		hide_ui_view(current_view_name)
+
+	_exclusivity_groups[group] = view_name
+	show_ui_view(view_name, data)
 
 
 func get_anchor_point_to_world_object(viewport: Viewport, object: Object) -> Vector2:
@@ -143,6 +174,13 @@ func reanchor_to_world_object(control: Control, target_object: Node2D, anchor: A
 	control.position = position
 
 
+func reset_ui_views() -> void:
+	for view_name in ui_views.keys():
+		_call_on_view(ui_views[view_name], "reset")
+
+	loaded_views.clear()
+
+
 func _render_view(view: Control, data: Dictionary) -> void:
 	if loaded_views.has(view.name):
 		_call_on_view(view, "update", data)
@@ -163,5 +201,8 @@ func _call_on_view(view: Control, event: String, data: Dictionary = { }) -> void
 		"update":
 			if view.has_method("update"):
 				view.update(data)
+		"reset":
+			if view.has_method("reset"):
+				view.reset()
 		_:
 			push_error("Unknown event '%s' for UI View." % event)

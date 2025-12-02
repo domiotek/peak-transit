@@ -6,17 +6,22 @@ var TerminalScene = load("res://game-objects/buildings/terminal/terminal.tscn")
 var _network_manager: NetworkManager
 var _game_manager: GameManager
 var _line_helper: LineHelper
+var _schedule_generator: ScheduleGenerator
 
 var _stops: Dictionary = { }
 var _terminals: Dictionary = { }
 var _lines: Dictionary = { }
 var _drawn_lines: Dictionary = { }
 
+var brigades: BrigadeManager
+
 
 func inject_dependencies() -> void:
 	_network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	_game_manager = GDInjector.inject("GameManager") as GameManager
 	_line_helper = GDInjector.inject("LineHelper") as LineHelper
+	_schedule_generator = GDInjector.inject("ScheduleGenerator") as ScheduleGenerator
+	brigades = BrigadeManager.new()
 
 
 func register_stop(stop_def: StopDefinition) -> bool:
@@ -145,6 +150,59 @@ func get_lines() -> Array:
 	return _lines.values()
 
 
+func generate_line_schedule(line: TransportLine) -> void:
+	var routes = line.get_routes()
+
+	var serialized_routes = { }
+
+	for route_idx in routes.keys():
+		serialized_routes[route_idx] = []
+
+		var route_steps = routes[route_idx] as Array[RouteStep]
+
+		var accumulated_time = 0
+		for idx in range(route_steps.size()):
+			var step = route_steps[idx] as RouteStep
+
+			accumulated_time += TransportHelper.estimate_travel_time(step.length)
+
+			if step.step_type == Enums.TransportRouteStepType.WAYPOINT:
+				continue
+
+			var trip_step = TripStep.new()
+			trip_step.step_id = idx
+			trip_step.travel_time = accumulated_time
+
+			serialized_routes[route_idx].append(trip_step.serialize())
+			accumulated_time = 0
+
+	var start_time_dict = null
+	var start_time = line.get_start_time()
+	if start_time:
+		start_time_dict = start_time.serialize()
+
+	var end_time_dict = null
+	var end_time = line.get_end_time()
+	if end_time:
+		end_time_dict = end_time.serialize()
+
+	var schedule_data = _schedule_generator.GenerateSchedule(
+		serialized_routes,
+		line.get_frequency_minutes(),
+		line.get_min_layover_minutes(),
+		start_time_dict,
+		end_time_dict,
+	)
+
+	var brigades_ids: Array = []
+
+	for schedule_dict in schedule_data:
+		var brigade_schedule = BrigadeSchedule.deserialize(schedule_dict as Dictionary)
+		brigades_ids.append(brigades.register(brigade_schedule, line.id, line.display_number, brigades_ids.size()))
+
+	line.assign_brigades(brigades_ids)
+
+
 func draw_line_route(transport_line: TransportLine, route_idx: int) -> void:
 	var layer = TransportHelper.get_container_layer_for_route(_game_manager.get_map(), transport_line.id, route_idx)
 
@@ -251,6 +309,7 @@ func clear_state() -> void:
 	_terminals.clear()
 	_lines.clear()
 	_drawn_lines.clear()
+	brigades.clear_state()
 
 
 func _get_next_idx(dict: Dictionary) -> int:

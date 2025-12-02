@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://ccncdb455yrno"]
+[gd_scene load_steps=15 format=3 uid="uid://ccncdb455yrno"]
 
 [ext_resource type="Script" uid="uid://dhdi35g0oovy8" path="res://game-objects/game/game.gd" id="1_lbhrr"]
 [ext_resource type="Script" uid="uid://dop8vfgf1q1ae" path="res://game-objects/camera/camera.gd" id="2_iywne"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://b2tu0r5oy2hba" path="res://ui/views/game-menu-view/game_menu_view.tscn" id="10_qsgkn"]
 [ext_resource type="PackedScene" uid="uid://17v128p3voi0" path="res://ui/views/shortcuts-view/shortcuts_view.tscn" id="11_hsmas"]
 [ext_resource type="PackedScene" uid="uid://c7qjs6bf61f2l" path="res://ui/views/lines-view/lines_view.tscn" id="12_a61bv"]
+[ext_resource type="PackedScene" uid="uid://c5jn0klrj2752" path="res://ui/views/brigades-view/brigades_view.tscn" id="13_tmeba"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_lbhrr")
@@ -126,10 +127,19 @@ anchor_right = 0.0
 anchor_bottom = 0.0
 offset_left = 40.0
 offset_top = 5.0
-offset_right = 391.0
-offset_bottom = 476.0
+offset_right = 390.0
+offset_bottom = 505.0
 grow_horizontal = 1
 grow_vertical = 1
+
+[node name="BrigadesView" parent="UI" instance=ExtResource("13_tmeba")]
+anchors_preset = 9
+anchor_right = 0.0
+offset_left = 40.0
+offset_top = 5.0
+offset_right = 540.0
+offset_bottom = -43.0
+grow_horizontal = 1
 
 [node name="GameMenuView" parent="UI" instance=ExtResource("10_qsgkn")]
 visible = false

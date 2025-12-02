@@ -49,6 +49,12 @@ static func validate_terminal_definition(network_manager: NetworkManager, termin
 
 
 static func validate_line_definition(transport_manager: TransportManager, network_manager: NetworkManager, line_def: LineDefinition) -> String:
+	if line_def.frequency_minutes <= 0:
+		return "Frequency must be greater than zero"
+
+	if line_def.min_layover_minutes < 0:
+		return "Minimum layover cannot be negative"
+
 	if line_def.routes.size() != 2:
 		return "Line must have exactly two routes"
 

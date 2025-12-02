@@ -110,6 +110,7 @@ func dispose_game() -> void:
 	simulation_manager.stop_simulation()
 
 	ui_manager.hide_all_ui_views()
+	ui_manager.reset_ui_views()
 
 	var map = game_controller.get_map()
 	map.clear_layers()

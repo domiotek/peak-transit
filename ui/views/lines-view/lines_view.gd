@@ -10,6 +10,7 @@ const HIDDEN_ICON: Resource = preload("res://assets/ui_icons/visibility_off.png"
 const VIEW_NAME = "LinesView"
 
 var _selected_line_id: int = -1
+var _is_resetting = false
 
 var ui_manager: UIManager
 var transport_manager: TransportManager
@@ -47,6 +48,13 @@ func load() -> void:
 
 
 func update(_data) -> void:
+	if _is_resetting:
+		return
+
+	_is_resetting = true
+	_on_go_back_button_pressed()
+	_is_resetting = false
+
 	if transport_manager.are_no_lines_drawn():
 		toggle_all_visibility_button.icon = HIDDEN_ICON
 	else:
@@ -57,6 +65,12 @@ func update(_data) -> void:
 			var line = item.get_data().get("line", null) as TransportLine
 			if line:
 				item.set_line_visibility(transport_manager.is_line_drawn(line.id))
+
+
+func reset() -> void:
+	for child in main_item_list.get_children():
+		child.queue_free()
+	_selected_line_id = -1
 
 
 func _on_item_button_pressed(_sender: ListItem, data: Dictionary) -> void:
