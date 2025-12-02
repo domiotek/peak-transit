@@ -79,15 +79,11 @@ public partial class ScheduleGenerator : RefCounted
         }
 
         var gridA = BuildDepartureGrid(startMinutes, endMinutes, headwayMinutes);
-        double gridBOffsetFromA = forwardDuration + minLayoverMinutes;
-        var gridB = BuildDepartureGrid(
-            startMinutes + gridBOffsetFromA,
-            endMinutes,
-            headwayMinutes,
-            snapToHeadway: false
-        );
 
-        var gridBInitial = BuildDepartureGrid(startMinutes, endMinutes, headwayMinutes);
+        double gridBOffsetFromA = forwardDuration + minLayoverMinutes;
+        var gridB = BuildDepartureGrid(startMinutes + gridBOffsetFromA, endMinutes, headwayMinutes);
+
+        var gridBInitial = gridA;
 
         var forwardStopTimes = GenerateStopTimes(forwardRoute);
         var returnStopTimes = GenerateStopTimes(returnRoute);
@@ -124,26 +120,11 @@ public partial class ScheduleGenerator : RefCounted
         return [.. result.Select(bs => bs.Serialize())];
     }
 
-    private static List<double> BuildDepartureGrid(
-        double startMin,
-        double endMin,
-        double headway,
-        bool snapToHeadway = true
-    )
+    private static List<double> BuildDepartureGrid(double startMin, double endMin, double headway)
     {
         var grid = new List<double>();
 
-        double t;
-        if (snapToHeadway)
-        {
-            t = Math.Floor(startMin / headway) * headway;
-            if (t < startMin)
-                t += headway;
-        }
-        else
-        {
-            t = startMin;
-        }
+        double t = startMin;
 
         while (t <= endMin)
         {
