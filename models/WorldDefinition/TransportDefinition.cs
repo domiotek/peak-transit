@@ -14,6 +14,9 @@ public class TransportDefinition : IDefinition<TransportDefinition>
     [JsonProperty("terminals")]
     public required List<TerminalDefinition> Terminals { get; set; } = [];
 
+    [JsonProperty("depots")]
+    public required List<DepotDefinition> Depots { get; set; } = [];
+
     [JsonProperty("lines")]
     public required List<LineDefinition> Lines { get; set; } = [];
 
@@ -23,6 +26,7 @@ public class TransportDefinition : IDefinition<TransportDefinition>
         {
             ["stops"] = new Array<Dictionary>(Stops.ConvertAll(n => n.Serialize())),
             ["terminals"] = new Array<Dictionary>(Terminals.ConvertAll(n => n.Serialize())),
+            ["depots"] = new Array<Dictionary>(Depots.ConvertAll(n => n.Serialize())),
             ["lines"] = new Array<Dictionary>(Lines.ConvertAll(n => n.Serialize())),
         };
         return dict;
@@ -46,6 +50,14 @@ public class TransportDefinition : IDefinition<TransportDefinition>
                     .AsGodotArray()
                     .Select(terminalData =>
                         TerminalDefinition.Deserialize(terminalData.AsGodotDictionary() ?? [])
+                    ),
+            ],
+            Depots =
+            [
+                .. data["depots"]
+                    .AsGodotArray()
+                    .Select(depotData =>
+                        DepotDefinition.Deserialize(depotData.AsGodotDictionary() ?? [])
                     ),
             ],
             Lines =

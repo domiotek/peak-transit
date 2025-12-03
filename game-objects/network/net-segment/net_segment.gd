@@ -216,6 +216,19 @@ func place_terminal(terminal: Terminal) -> void:
 	terminal.update_visuals()
 
 
+func place_depot(depot: Depot) -> void:
+	var new_depot_offset = depot.get_position_offset()
+	var relation = get_relation_with_starting_node(depot.get_incoming_node_id()) as NetRelation
+	var starts_from_end = depot.get_incoming_node_id() == nodes[1].id
+
+	relation.register_building(depot.id, depot.get_position_offset())
+
+	segment_helper.position_along_the_edge(self, depot, new_depot_offset, starts_from_end)
+	add_child(depot)
+
+	depot.update_visuals()
+
+
 func get_stops() -> Dictionary:
 	var stops_dict: Dictionary = { }
 	for relation in relations:

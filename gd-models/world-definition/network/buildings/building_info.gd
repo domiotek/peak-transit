@@ -5,6 +5,7 @@ enum BuildingType {
 	COMMERCIAL,
 	INDUSTRIAL,
 	TERMINAL,
+	DEPOT,
 }
 
 var type: BuildingType

@@ -2,6 +2,7 @@ class_name TransportManager
 
 const StopScene = preload("res://game-objects/stop/stop.tscn")
 var TerminalScene = load("res://game-objects/buildings/terminal/terminal.tscn")
+var DepotScene = load("res://game-objects/buildings/depot/depot.tscn")
 
 var _network_manager: NetworkManager
 var _game_manager: GameManager
@@ -10,6 +11,7 @@ var _schedule_generator: ScheduleGenerator
 
 var _stops: Dictionary = { }
 var _terminals: Dictionary = { }
+var _depots: Dictionary = { }
 var _lines: Dictionary = { }
 var _drawn_lines: Dictionary = { }
 
@@ -111,6 +113,53 @@ func get_terminal(terminal_id: int) -> Terminal:
 
 func terminal_exists(terminal_id: int) -> bool:
 	return _terminals.has(terminal_id)
+
+
+func register_depot(depot_def: DepotDefinition) -> bool:
+	var validation_error = TransportHelper.validate_depot_definition(_network_manager, depot_def)
+
+	if validation_error.length() > 0:
+		push_error("Invalid depot definition: %s - %s" % [depot_def.name, validation_error])
+		return false
+
+	var idx = _get_next_idx(_depots)
+
+	if not depot_def.name or depot_def.name == "":
+		depot_def.name = "Depot %d" % idx
+
+	var depot_building = DepotScene.instantiate() as Depot
+
+	var target_segment = _network_manager.get_segment_between_nodes(
+		depot_def.position.segment[0],
+		depot_def.position.segment[1],
+	)
+
+	var target_relation = target_segment.get_relation_with_starting_node(depot_def.position.segment[0]) as NetRelation
+	var building_info = BuildingInfo.new()
+	building_info.type = BuildingInfo.BuildingType.DEPOT
+	building_info.offset_position = depot_def.position.offset
+
+	depot_building.setup(target_relation.id, target_segment, building_info)
+	depot_building.setup_depot(idx, depot_def)
+
+	target_segment.place_depot(depot_building)
+
+	depot_building.setup_connections()
+
+	_depots[idx] = depot_building
+
+	return true
+
+
+func get_depot(depot_id: int) -> Depot:
+	if not _depots.has(depot_id):
+		push_error("Depot ID not found: " + str(depot_id))
+		return null
+	return _depots[depot_id] as Depot
+
+
+func depot_exists(depot_id: int) -> bool:
+	return _depots.has(depot_id)
 
 
 func register_line(line_def: LineDefinition) -> bool:
@@ -307,6 +356,7 @@ func are_no_lines_drawn() -> bool:
 func clear_state() -> void:
 	_stops.clear()
 	_terminals.clear()
+	_depots.clear()
 	_lines.clear()
 	_drawn_lines.clear()
 	brigades.clear_state()

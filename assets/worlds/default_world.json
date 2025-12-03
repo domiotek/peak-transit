@@ -616,6 +616,18 @@
 				}
 			}
 		],
+		"depots": [
+			{
+				"name": "Depot South",
+				"pos": {
+					"segment": [
+						8,
+						12
+					],
+					"offset": 300
+				}
+			}
+		],
 		"lines": [
 			{
 				"routes": [
@@ -652,7 +664,7 @@
 				"frequency": 60,
 				"minLayover": 2,
 				"startTime": "04:45",
-				"endTime": "23:45",
+				"endTime": "01:45",
 				"color": "#FF0000"
 			},
 			{
