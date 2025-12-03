@@ -48,6 +48,24 @@ static func validate_terminal_definition(network_manager: NetworkManager, termin
 	return ""
 
 
+static func validate_depot_definition(network_manager: NetworkManager, depot_def: DepotDefinition) -> String:
+	var validation_result = validate_segment_object_position(network_manager, depot_def.position)
+
+	if validation_result.has("error"):
+		return validation_result["error"] as String
+
+	var target_relation: NetRelation = validation_result["relation"]
+	var offset: float = validation_result["offset"] as float
+
+	for building_struct in target_relation.get_buildings().values():
+		var building_offset = building_struct.offset
+
+		if abs(building_offset - offset) < NetworkConstants.MIN_DEPOT_BUILDING_CLEARANCE:
+			return "Too close to existing building"
+
+	return ""
+
+
 static func validate_line_definition(transport_manager: TransportManager, network_manager: NetworkManager, line_def: LineDefinition) -> String:
 	if line_def.frequency_minutes <= 0:
 		return "Frequency must be greater than zero"

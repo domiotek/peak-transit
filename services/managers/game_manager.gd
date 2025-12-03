@@ -10,6 +10,7 @@ enum SelectionType {
 	SPAWNER_BUILDING,
 	TERMINAL,
 	TRANSPORT_STOP,
+	DEPOT,
 }
 
 var selected_object: Object = null
@@ -194,6 +195,8 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selection_popup_id = "VehiclePopupView"
 		SelectionType.SPAWNER_BUILDING:
 			selection_popup_id = "SpawnerBuildingPopupView"
+		SelectionType.DEPOT:
+			selection_popup_id = DepotPopupView.VIEW_NAME
 		SelectionType.NODE, SelectionType.STOPPER, SelectionType.TRANSPORT_STOP, SelectionType.TERMINAL:
 			pass
 		_:

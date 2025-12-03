@@ -23,6 +23,7 @@ const LANE_CONNECTION_DISTANCE_THRESHOLD = 200.0 # distance in pixels at which m
 const MIN_STOP_DISTANCE = 64.0 # minimum distance in pixels between stops on the same segment
 const MIN_STOP_BUILDING_CLEARANCE = 24.0 # minimum distance in pixels between a stop and a building on the same segment
 const MIN_TERMINAL_BUILDING_CLEARANCE = 64.0 # minimum distance in pixels between a terminal and a building on the same segment
+const MIN_DEPOT_BUILDING_CLEARANCE = 96.0 # minimum distance in pixels between a depot and a building on the same segment
 const MIN_SEGMENT_LENGTH_FOR_ROAD_MARKINGS = 120.0 # minimum segment length in pixels to show road markings
 
 const PATH_DIRECTION_INDICATORS_OFFSET = 50.0 # offset in pixels for direction indicators along the path
