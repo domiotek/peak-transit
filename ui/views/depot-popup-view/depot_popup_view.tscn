@@ -1,0 +1,173 @@
+[gd_scene load_steps=10 format=3 uid="uid://brwd6nhl0me2h"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_y1l0g"]
+[ext_resource type="Script" uid="uid://bu68138j5mygw" path="res://ui/views/depot-popup-view/depot_popup_view.gd" id="2_qva0d"]
+[ext_resource type="Texture2D" uid="uid://ch7h2yiicuahf" path="res://assets/ui_icons/keep_off.png" id="3_qlh08"]
+[ext_resource type="Texture2D" uid="uid://colv4c8bi5jc0" path="res://assets/ui_icons/close.png" id="4_wkano"]
+[ext_resource type="Texture2D" uid="uid://c8tlwd3socdr0" path="res://assets/ui_icons/visibility.png" id="5_pg56n"]
+[ext_resource type="Texture2D" uid="uid://m03a5n4kx1gl" path="res://assets/ui_icons/arrow_outward.png" id="5_qva0d"]
+[ext_resource type="Texture2D" uid="uid://b2ucwghxcyr4r" path="res://assets/ui_icons/debugger.png" id="6_jh62l"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_qva0d"]
+font_size = 11
+
+[sub_resource type="LabelSettings" id="LabelSettings_y305s"]
+font_size = 11
+
+[node name="DepotPopupView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 1.0
+offset_right = -752.0
+offset_bottom = -407.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_y1l0g")
+script = ExtResource("2_qva0d")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="MainFlowContainer" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="HeaderBoxContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="IdLabel" type="Label" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Depot"
+
+[node name="PinButton" type="Button" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("3_qlh08")
+flat = true
+
+[node name="CloseButton" type="Button" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("4_wkano")
+flat = true
+
+[node name="MainContentContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="ContentWrapper" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+vertical = true
+
+[node name="CountersWrapper" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper"]
+layout_mode = 2
+theme_override_constants/separation = 11
+vertical = true
+
+[node name="BusCounterWrapper" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper"]
+layout_mode = 2
+vertical = true
+
+[node name="TopLine" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/BusCounterWrapper"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/BusCounterWrapper/TopLine"]
+layout_mode = 2
+text = "Regular buses:"
+label_settings = SubResource("LabelSettings_qva0d")
+
+[node name="Value" type="Label" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/BusCounterWrapper/TopLine"]
+layout_mode = 2
+text = "0/5"
+label_settings = SubResource("LabelSettings_y305s")
+
+[node name="Spacer" type="Control" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/BusCounterWrapper/TopLine"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SpawnButton" type="Button" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/BusCounterWrapper/TopLine"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+icon = ExtResource("5_qva0d")
+flat = true
+expand_icon = true
+
+[node name="BusesCounter" type="ProgressBar" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/BusCounterWrapper"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+show_percentage = false
+
+[node name="ArticulatedBusCounterWrapper" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper"]
+layout_mode = 2
+vertical = true
+
+[node name="TopLine" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/ArticulatedBusCounterWrapper"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/ArticulatedBusCounterWrapper/TopLine"]
+layout_mode = 2
+text = "Articulated buses:"
+label_settings = SubResource("LabelSettings_qva0d")
+
+[node name="Value" type="Label" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/ArticulatedBusCounterWrapper/TopLine"]
+layout_mode = 2
+text = "0/5"
+label_settings = SubResource("LabelSettings_y305s")
+
+[node name="Spacer" type="Control" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/ArticulatedBusCounterWrapper/TopLine"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SpawnButton" type="Button" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/ArticulatedBusCounterWrapper/TopLine"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+icon = ExtResource("5_qva0d")
+flat = true
+expand_icon = true
+
+[node name="ArticulatedBusesCounter" type="ProgressBar" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/CountersWrapper/ArticulatedBusCounterWrapper"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+max_value = 6.0
+step = 1.0
+value = 3.0
+show_percentage = false
+
+[node name="PropertiesContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical = true
+
+[node name="ToolBoxPanel" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+
+[node name="ToggleDebugButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("5_pg56n")
+flat = true
+
+[node name="DebuggerButton" type="Button" parent="MarginContainer/MainFlowContainer/ToolBoxPanel"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("6_jh62l")
+flat = true

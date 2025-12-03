@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://ewvo6ju3iblb"]
+[gd_scene load_steps=4 format=3 uid="uid://ewvo6ju3iblb"]
 
 [ext_resource type="PackedScene" uid="uid://baf4uogxpw50c" path="res://game-objects/buildings/base-building/base-building.tscn" id="1_q76uy"]
 [ext_resource type="Script" uid="uid://cqcnqp7yju10o" path="res://game-objects/buildings/depot/depot.gd" id="2_5mj2m"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_q76uy"]
+size = Vector2(100, 141)
 
 [node name="BaseBuilding" instance=ExtResource("1_q76uy")]
 script = ExtResource("2_5mj2m")
@@ -23,3 +26,9 @@ position = Vector2(-63, -33)
 scale = Vector2(0.0537146, 0.0537146)
 color = Color(0.291364, 0.206397, 0.0484127, 1)
 polygon = PackedVector2Array(-1787.22, -2103.71, 93.0847, -2103.71, 81.9799, -116.498, 18.617, 130.319, -186.169, 372.339, -428.189, 484.04, -819.145, 521.274, -1787.22, 521.274)
+
+[node name="ClickerArea" type="Area2D" parent="." index="4"]
+
+[node name="CollisionShape" type="CollisionShape2D" parent="ClickerArea" index="0"]
+position = Vector2(-109, -75.5)
+shape = SubResource("RectangleShape2D_q76uy")
