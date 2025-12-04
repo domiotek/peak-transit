@@ -8,6 +8,7 @@ var _network_manager: NetworkManager
 var _game_manager: GameManager
 var _line_helper: LineHelper
 var _schedule_generator: ScheduleGenerator
+var _buildings_manager: BuildingsManager
 
 var _stops: Dictionary = { }
 var _terminals: Dictionary = { }
@@ -23,6 +24,7 @@ func inject_dependencies() -> void:
 	_game_manager = GDInjector.inject("GameManager") as GameManager
 	_line_helper = GDInjector.inject("LineHelper") as LineHelper
 	_schedule_generator = GDInjector.inject("ScheduleGenerator") as ScheduleGenerator
+	_buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
 	brigades = BrigadeManager.new()
 
 
@@ -92,6 +94,12 @@ func register_terminal(terminal_def: TerminalDefinition) -> bool:
 	building_info.type = BuildingInfo.BuildingType.TERMINAL
 	building_info.offset_position = terminal_def.position.offset
 
+	var building_id = _buildings_manager.register_building(terminal_building)
+	if building_id == -1:
+		push_error("Failed to register terminal building for terminal: %s" % terminal_def.name)
+		return false
+
+	terminal_building.id = building_id
 	terminal_building.setup(target_relation.id, target_segment, building_info)
 	terminal_building.setup_terminal(idx, terminal_def)
 
@@ -139,6 +147,12 @@ func register_depot(depot_def: DepotDefinition) -> bool:
 	building_info.type = BuildingInfo.BuildingType.DEPOT
 	building_info.offset_position = depot_def.position.offset
 
+	var building_id = _buildings_manager.register_building(depot_building)
+	if building_id == -1:
+		push_error("Failed to register depot building for depot: %s" % depot_def.name)
+		return false
+
+	depot_building.id = building_id
 	depot_building.setup(target_relation.id, target_segment, building_info)
 	depot_building.setup_depot(idx, depot_def)
 

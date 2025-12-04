@@ -561,3 +561,11 @@ func get_curves_total_length(curves: Array) -> float:
 			total_length += curve.get_baked_length()
 
 	return total_length
+
+
+func approximate_curve_from_line(line: Line2D) -> Curve2D:
+	var curve = Curve2D.new()
+	for i in range(line.get_point_count()):
+		var point = line.get_point_position(i)
+		curve.add_point(point)
+	return curve

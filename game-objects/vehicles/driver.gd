@@ -10,9 +10,9 @@ enum VehicleState {
 	BLOCKED,
 }
 
-var CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
-var BLOCKING_CASTERS = ["close", "left", "right"]
-var MAX_BLOCK_TIME = 5.0
+const CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
+const BLOCKING_CASTERS = ["close", "left", "right"]
+const MAX_BLOCK_TIME = 5.0
 
 var line_helper: LineHelper
 var vehicle_manager: VehicleManager
@@ -152,6 +152,13 @@ func set_headlights_enabled(enabled: bool, set_instant: bool) -> void:
 		beam_light.set_enabled(enabled)
 
 
+func set_idle() -> void:
+	current_speed = 0.0
+	target_speed = 0.0
+	current_brake_force = constants["DEFAULT_BRAKING"]
+	_update_state(VehicleState.IDLE)
+
+
 func tick_speed(delta: float) -> float:
 	target_speed = get_max_allowed_speed()
 
@@ -257,7 +264,7 @@ func check_blockade_cleared(delta: float) -> bool:
 func _apply_slowdown_intersection() -> void:
 	var current_step = navigator.get_current_step()
 
-	if not current_step or current_step.type == Navigator.StepType.NODE or current_step["next_node"] == null:
+	if not current_step or current_step.type != Navigator.StepType.SEGMENT or current_step["next_node"] == null:
 		return
 
 	var distance_to_node = current_step["length"] - current_step["progress"]
@@ -372,9 +379,9 @@ func _check_caster_colliding(caster_id: String) -> bool:
 	match caster_id:
 		"close", "medium", "long":
 			if casters[caster_id].is_colliding():
-				var laneStopper = casters[caster_id].get_collider() as LaneStopper
-				if laneStopper:
-					return check_if_my_blockade.call(laneStopper)
+				var lane_stopper = casters[caster_id].get_collider() as LaneStopper
+				if lane_stopper:
+					return check_if_my_blockade.call(lane_stopper)
 
 				var other_vehicle = vehicle_manager.get_vehicle_from_area(casters[caster_id].get_collider())
 				if other_vehicle:
@@ -391,8 +398,8 @@ func _check_caster_colliding(caster_id: String) -> bool:
 						if _check_if_is_leaving_target_building(other_vehicle):
 							return false
 
-				var buildingStopper = casters[caster_id].get_collider() as BuildingStopper
-				if buildingStopper:
+				var building_stopper = casters[caster_id].get_collider() as BuildingStopper
+				if building_stopper:
 					if current_step['type'] != Navigator.StepType.BUILDING or not current_step["is_leaving"]:
 						return false
 
@@ -423,7 +430,9 @@ func _apply_caster_colliding(caster_id: String, colliding_casters: Dictionary) -
 	match caster_id:
 		"close":
 			target_speed = 0.0
-			current_brake_force = constants["CLOSE_BRAKING"] if current_speed < constants["CLOSE_BRAKING_LOW_SPEED_THRESHOLD"] else constants["EMERGENCY_BRAKING"]
+			current_brake_force = (constants["CLOSE_BRAKING"]
+				if current_speed < constants["CLOSE_BRAKING_LOW_SPEED_THRESHOLD"]
+				else constants["EMERGENCY_BRAKING"] )
 		"medium":
 			target_speed = max(constants["MEDIUM_CASTER_MIN_SPEED"], target_speed * constants["MEDIUM_CASTER_SPEED_MODIFIER"])
 			current_brake_force = constants["MEDIUM_BRAKING"]

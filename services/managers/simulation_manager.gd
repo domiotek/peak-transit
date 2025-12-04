@@ -6,12 +6,13 @@ var vehicle_manager: VehicleManager
 var network_manager: NetworkManager
 var game_manager: GameManager
 var config_manager: ConfigManager
+var transport_manager: TransportManager
 
 var simulation_running: bool = false
 
 var end_node_ids: Array = []
 var vehicles_count = 0
-var max_vehicles = 4
+var max_vehicles = 1
 var _visual_day_night_cycle_enabled = false
 
 var game_controller: GameController
@@ -25,6 +26,7 @@ func inject_dependencies() -> void:
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	game_manager = GDInjector.inject("GameManager") as GameManager
 	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+	transport_manager = GDInjector.inject("TransportManager") as TransportManager
 
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
@@ -100,11 +102,14 @@ func _get_random_nodes() -> Array:
 func _spawn_bus() -> void:
 	if not simulation_running:
 		return
+	var depot_building = transport_manager.get_depot(0)
 
-	var bus = vehicle_manager.create_vehicle(VehicleManager.VehicleType.ARTICULATED_BUS if randf() < 0.5 else VehicleManager.VehicleType.BUS)
+	var bus = vehicle_manager.create_vehicle(VehicleManager.VehicleType.ARTICULATED_BUS if randf() < 1 else VehicleManager.VehicleType.BUS)
 	var nodes = _get_random_nodes()
 
 	await bus.get_tree().create_timer(bus.id).timeout
+
+	bus.ai.set_origin_depot(depot_building)
 
 	bus.init_simple_trip(nodes[0], nodes[1])
 

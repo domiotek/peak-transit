@@ -50,12 +50,10 @@ func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
 			return null
 
 	vehicle.id = _generate_vehicle_id()
+	vehicle.type = vehicle_type
 
 	vehicles[vehicle.id] = vehicle
 	vehicles_layer.add_child(vehicle)
-
-	vehicle.connect("trip_abandoned", Callable(self, "_on_vehicle_cleanup"))
-	vehicle.connect("trip_completed", Callable(self, "_on_vehicle_cleanup"))
 	return vehicle
 
 
@@ -122,7 +120,3 @@ func _generate_vehicle_id() -> int:
 
 	next_fresh_id += 1
 	return next_fresh_id - 1
-
-
-func _on_vehicle_cleanup(vehicle_id: int) -> void:
-	remove_vehicle(vehicle_id)

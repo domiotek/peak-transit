@@ -3,13 +3,16 @@ extends Node2D
 class_name Vehicle
 
 var id: int
+var type: VehicleManager.VehicleType
 
+var ai
 var driver = Driver.new()
 var navigator = Navigator.new()
 
 signal trip_started(vehicle_id)
 signal trip_completed(vehicle_id)
 signal trip_abandoned(vehicle_id)
+signal trip_ended(vehicle_id, completed: bool)
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 @onready var simulation_manager: SimulationManager = GDInjector.inject("SimulationManager") as SimulationManager
@@ -20,6 +23,7 @@ signal trip_abandoned(vehicle_id)
 var config: VehicleConfig
 
 var main_path_follower: PathFollow2D
+var _follower_to_end_offset: Dictionary[int, Array] = { }
 
 
 func _ready():
@@ -34,7 +38,7 @@ func _ready():
 
 	main_path_follower = config["path_followers"][0]["follower"]
 
-	driver.set_ai(config["ai"])
+	config["ai"].bind(self)
 	driver.set_navigator(navigator)
 	driver.set_lights(config.head_lights, config.brake_lights)
 	driver.set_casters(config["casters"])
@@ -50,6 +54,9 @@ func _ready():
 
 	simulation_manager.desired_world_lights_state_changed.connect(Callable(self, "_on_lights_state_change"))
 
+	for i in range(config["path_followers"].size()):
+		_follower_to_end_offset[i] = []
+
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 	if from_building == to_building:
@@ -57,6 +64,14 @@ func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 		return
 
 	navigator.setup_trip_between_buildings(from_building, to_building)
+
+
+func init_trip_to_building(from_node_id: int, to_building: BaseBuilding, forced_start_endpoint: int = -1) -> void:
+	navigator.setup_trip_mixed(from_node_id, to_building.id, false, forced_start_endpoint)
+
+
+func init_trip_from_building(to_node_id: int, from_building: BaseBuilding, forced_end_endpoint: int = -1) -> void:
+	navigator.setup_trip_mixed(from_building.id, to_node_id, true, forced_end_endpoint)
 
 
 func init_simple_trip(from_node_id: int, to_node_id: int) -> void:
@@ -68,14 +83,24 @@ func init_simple_trip(from_node_id: int, to_node_id: int) -> void:
 
 
 func get_popup_data() -> Dictionary:
+	var from_node = "N/A"
+	var to_node = "N/A"
+	var step_type = "N/A"
+
+	if navigator.has_trip():
+		from_node = navigator.trip_points[0]
+		to_node = navigator.trip_points[-1]
+		step_type = Navigator.StepType.keys()[navigator.get_current_step().get("type")]
+
 	var data = {
 		"speed": driver.get_current_speed(),
 		"target_speed": driver.get_target_speed(),
 		"max_speed": driver.get_max_allowed_speed(),
+		"ai_state": ai.get_state_name(),
 		"state": Driver.VehicleState.keys()[driver.state],
-		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
-		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,
-		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")],
+		"from_node": from_node,
+		"to_node": to_node,
+		"step_type": step_type,
 		"time_blocked": int(driver.get_time_blocked()),
 	}
 
@@ -91,6 +116,12 @@ func get_all_trip_curves() -> Array:
 
 
 func assign_to_path(path: Path2D, progress: float) -> void:
+	for i in range(config["path_followers"].size()):
+		if i == 0:
+			continue
+
+		_follower_to_end_offset[i].append(main_path_follower.progress_ratio)
+
 	main_path_follower.reparent(path, true)
 	main_path_follower.progress = progress
 
@@ -106,7 +137,10 @@ func _process(delta: float) -> void:
 		print("Debug pick triggered for vehicle ID %d" % id)
 		breakpoint
 
+	ai.process()
+
 	if not navigator.can_advance(delta):
+		driver.set_idle()
 		return
 
 	driver.tick_lights(delta)
@@ -125,7 +159,9 @@ func _process(delta: float) -> void:
 	main_path_follower.progress_ratio += delta * current_speed / trail_length
 	self.global_transform = main_path_follower.global_transform
 
-	for path_follower_def in config["path_followers"]:
+	for i in range(config["path_followers"].size()):
+		var path_follower_def = config["path_followers"][i]
+
 		var path_follower = path_follower_def["follower"]
 		if path_follower == main_path_follower:
 			continue
@@ -137,7 +173,10 @@ func _process(delta: float) -> void:
 		if not is_initialized and main_path_follower.progress < path_follower_def["offset"]:
 			continue
 
-		if not is_initialized or path_follower.progress_ratio == 1.0:
+		var path_end_ratio = _follower_to_end_offset[i][0] if _follower_to_end_offset[i].size() > 0 else 1.0
+
+		if not is_initialized or path_follower.progress_ratio >= path_end_ratio:
+			_follower_to_end_offset[i].erase(path_end_ratio)
 			var next_path = navigator.get_next_path(path_follower.get_parent() as Path2D)
 			if not next_path:
 				next_path = main_path_follower.get_parent() as Path2D
@@ -195,11 +234,15 @@ func _on_trip_started() -> void:
 	config["id_label"].text = str(id)
 
 
-func _on_trip_ended(completed: bool) -> void:
+func _on_trip_ended(completed: bool, trip_data: Dictionary) -> void:
+	driver.ai.on_trip_finished(completed, trip_data)
+
 	if completed:
 		emit_signal("trip_completed", id)
 	else:
 		emit_signal("trip_abandoned", id)
+
+	emit_signal("trip_ended", id, completed)
 
 
 func _on_input_event(_viewport, event, _shape_idx) -> void:
