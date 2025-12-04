@@ -15,7 +15,8 @@ var _stop_tracks = []
 var _vehicles_on_tracks: Dictionary = { }
 
 @onready var click_area: Area2D = $ClickerArea
-@onready var stop_tracks_wrapper: Node2D = $StopTracks
+@onready var in_stop_tracks_wrapper: Node2D = $StopInTracks
+@onready var out_stop_tracks_wrapper: Node2D = $StopOutTracks
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 @onready var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
@@ -69,10 +70,14 @@ func get_current_bus_count(is_articulated: bool = false) -> int:
 
 
 func try_spawn(is_articulated: bool, ignore_constraints: bool = false) -> bool:
-	if not ignore_constraints and _check_spawn_constraints(is_articulated):
+	if not ignore_constraints and not _check_spawn_constraints(is_articulated):
 		return false
 
-	_do_spawn(is_articulated)
+	var track_id = _get_free_track()
+	if track_id == -1:
+		return false
+
+	_do_spawn(track_id, is_articulated)
 
 	_current_articulated_bus_count = clamp(_current_articulated_bus_count - (1 if is_articulated else 0), 0, INF)
 	_current_bus_count = clamp(_current_bus_count - (1 if not is_articulated else 0), 0, INF)
@@ -90,21 +95,37 @@ func try_enter(vehicle: Vehicle) -> Path2D:
 
 	_vehicles_on_tracks[track_id] = vehicle.id
 
-	vehicle.trip_ended.connect(Callable(self, "_on_vehicle_entered"), ConnectFlags.CONNECT_ONE_SHOT)
+	vehicle.trip_ended.connect(Callable(self, "_on_vehicle_left"), ConnectFlags.CONNECT_ONE_SHOT)
 
 	var path = _stop_tracks[track_id]["in"]
 
 	return path
 
 
-func _do_spawn(is_articulated: bool) -> void:
+func insta_return_bus(vehicle_id: int) -> void:
+	if not vehicle_id in _buses:
+		push_warning("Vehicle ID %d is not registered as belonging to depot ID %d." % [vehicle_id, depot_id])
+		return
+
+	_on_vehicle_entered(vehicle_id, true)
+
+
+func _do_spawn(track_id: int, is_articulated: bool) -> void:
 	var veh_type = VehicleManager.VehicleType.ARTICULATED_BUS if is_articulated else VehicleManager.VehicleType.BUS
 
 	var vehicle = vehicle_manager.create_vehicle(veh_type)
 
 	_buses.append(vehicle.id)
 
-	vehicle.navigator.abandon_trip()
+	vehicle.ai.set_origin_depot(self)
+
+	var path = _stop_tracks[track_id]["out"]
+
+	vehicle.navigator.set_custom_step(path, 0.0)
+
+	_vehicles_on_tracks[track_id] = vehicle.id
+
+	vehicle.trip_ended.connect(Callable(self, "_on_vehicle_left"), ConnectFlags.CONNECT_ONE_SHOT)
 
 
 func _check_spawn_constraints(is_articulated: bool) -> bool:
@@ -132,24 +153,26 @@ func _on_input_event(_viewport, event, _shape_idx) -> void:
 
 
 func _process_tracks() -> void:
-	var children = stop_tracks_wrapper.get_children()
+	var children = in_stop_tracks_wrapper.get_children()
 
 	for child in children:
 		var path = child as Path2D
-
-		var reverse_curve = line_helper.reverse_curve(path.curve)
-		var reverse_path = Path2D.new()
-		reverse_path.curve = reverse_curve
-
-		stop_tracks_wrapper.add_child(reverse_path)
-
 		_stop_tracks.append(
 			{
 				"in": path,
-				"out": reverse_path,
 			},
 		)
 		_vehicles_on_tracks[_stop_tracks.size() - 1] = -1
+
+	for i in range(_stop_tracks.size()):
+		var out_path = out_stop_tracks_wrapper.get_child(i) as Path2D
+
+		if not out_path:
+			_stop_tracks.erase(_stop_tracks[i])
+			push_error("Depot stop track %d is misconfigured: missing out path." % i)
+			break
+
+		_stop_tracks[i]["out"] = out_path
 
 
 func _get_free_track() -> int:
@@ -160,8 +183,27 @@ func _get_free_track() -> int:
 	return -1
 
 
+func _on_vehicle_left(vehicle_id: int, _completed: bool) -> void:
+	_clear_vehicle_from_tracks(vehicle_id)
+
+
 func _on_vehicle_entered(vehicle_id: int, _completed: bool) -> void:
+	var vehicle = vehicle_manager.get_vehicle(vehicle_id)
+
+	_increase_bus_count(vehicle.type == VehicleManager.VehicleType.ARTICULATED_BUS)
+	_clear_vehicle_from_tracks(vehicle_id)
+	_buses.erase(vehicle_id)
+
+
+func _clear_vehicle_from_tracks(vehicle_id: int) -> void:
 	for track_id in _vehicles_on_tracks.keys():
 		if _vehicles_on_tracks[track_id] == vehicle_id:
 			_vehicles_on_tracks[track_id] = -1
 			return
+
+
+func _increase_bus_count(is_articulated: bool) -> void:
+	if is_articulated:
+		_current_articulated_bus_count = clamp(_current_articulated_bus_count + 1, 0, _depot_data.articulated_bus_capacity)
+	else:
+		_current_bus_count = clamp(_current_bus_count + 1, 0, _depot_data.regular_bus_capacity)

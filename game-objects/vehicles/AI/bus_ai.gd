@@ -10,10 +10,13 @@ enum BusState {
 
 var _vehicle: Vehicle
 var _vehicle_manager: VehicleManager
+var _transport_manager: TransportManager
 var _state: BusState = BusState.IDLE
+var _is_at_depot: bool = true
 
 var _origin_depot: Depot = null
 
+var _is_leaving_building: bool = false
 var _is_entering_building: bool = false
 var _has_trip: bool = true
 
@@ -23,7 +26,7 @@ func bind(vehicle: Vehicle) -> void:
 	vehicle.ai = self
 	_vehicle = vehicle
 	_vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
-	_state = BusState.EN_ROUTE
+	_transport_manager = GDInjector.inject("TransportManager") as TransportManager
 
 
 func get_constants() -> Dictionary:
@@ -68,7 +71,7 @@ func set_origin_depot(depot: Depot) -> void:
 
 func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
 	if not completed:
-		_vehicle_manager.remove_vehicle(_vehicle.id)
+		_remove_vehicle()
 		return
 	_has_trip = false
 
@@ -77,8 +80,8 @@ func return_to_depot() -> void:
 	if _state == BusState.RETURNING_TO_DEPOT:
 		return
 
-	if not _origin_depot:
-		_vehicle_manager.remove_vehicle(_vehicle.id)
+	if not _origin_depot or _is_at_depot:
+		_remove_vehicle()
 		return
 
 	match _state:
@@ -93,7 +96,7 @@ func return_to_depot() -> void:
 			var start_endpoint = start_node_data[1]
 
 			if start_node == -1:
-				_vehicle_manager.remove_vehicle(_vehicle.id)
+				_remove_vehicle()
 				return
 
 			_vehicle.init_trip_to_building(start_node, _origin_depot, start_endpoint)
@@ -102,6 +105,15 @@ func return_to_depot() -> void:
 
 	_state = BusState.RETURNING_TO_DEPOT
 	_is_entering_building = false
+
+
+func drive_to_terminal() -> void:
+	if _state != BusState.IDLE:
+		return
+
+	_state = BusState.EN_ROUTE
+	_is_entering_building = false
+	_is_leaving_building = true
 
 
 func process() -> void:
@@ -118,7 +130,27 @@ func process() -> void:
 					_has_trip = true
 				return
 
-			_vehicle_manager.remove_vehicle(_vehicle.id)
+			_remove_vehicle()
+		BusState.EN_ROUTE:
+			if _has_trip:
+				return
+
+			if _is_leaving_building:
+				_is_leaving_building = false
+				var terminal_building = _transport_manager.get_terminal(0)
+				if not terminal_building:
+					return
+
+				_vehicle.init_trip(_origin_depot, terminal_building)
+				_has_trip = true
+				_is_at_depot = false
+				return
+
+			_remove_vehicle()
+
+
+func can_drive() -> bool:
+	return _state != BusState.IDLE
 
 
 func _get_start_node_of_location(step: Dictionary) -> Array:
@@ -129,3 +161,8 @@ func _get_start_node_of_location(step: Dictionary) -> Array:
 			return [step["prev_node"], step["from_endpoint"]]
 		_:
 			return [-1, -1]
+
+
+func _remove_vehicle() -> void:
+	_origin_depot.insta_return_bus(_vehicle.id)
+	_vehicle_manager.remove_vehicle(_vehicle.id)

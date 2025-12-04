@@ -42,6 +42,10 @@ func process() -> void:
 	pass
 
 
+func can_drive() -> bool:
+	return true
+
+
 func get_state_name() -> String:
 	return "Driving"
 

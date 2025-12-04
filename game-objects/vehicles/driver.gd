@@ -95,7 +95,7 @@ func get_max_allowed_speed() -> float:
 	if current_step and current_step.has("max_speed") and current_step["max_speed"] != INF:
 		return current_step["max_speed"]
 
-	return constants["MAX_SPEED"]
+	return constants["MAX_SPEED"] if ai.can_drive() else 0.0
 
 
 func get_state() -> VehicleState:
@@ -176,7 +176,7 @@ func tick_speed(delta: float) -> float:
 	_update_speed(delta)
 
 	if current_speed == 0 and target_speed == 0:
-		_update_state(VehicleState.BLOCKED)
+		_update_state(VehicleState.BLOCKED if ai.can_drive() else VehicleState.IDLE)
 	else:
 		_on_blockade_area_exited(null)
 

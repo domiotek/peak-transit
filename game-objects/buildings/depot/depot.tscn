@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://ewvo6ju3iblb"]
+[gd_scene load_steps=10 format=3 uid="uid://ewvo6ju3iblb"]
 
 [ext_resource type="PackedScene" uid="uid://baf4uogxpw50c" path="res://game-objects/buildings/base-building/base-building.tscn" id="1_q76uy"]
 [ext_resource type="Script" uid="uid://cqcnqp7yju10o" path="res://game-objects/buildings/depot/depot.gd" id="2_5mj2m"]
@@ -6,11 +6,43 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q76uy"]
 size = Vector2(100, 141)
 
-[sub_resource type="Curve2D" id="Curve2D_q76uy"]
+[sub_resource type="Curve2D" id="Curve2D_5mj2m"]
+bake_interval = 50.0
 _data = {
-"points": PackedVector2Array(0, 0, 0, 0, -1, -22, 0, 0, 0, 0, -3, -26, 0, 0, 0, 0, -1, -28, 0, 0, 0, 0, -1, -31, 0, 0, 0, 0, 0, -34, 0, 0, 0, 0, 2, -37, 0, 0, 0, 0, 5, -40, 0, 0, 0, 0, 9, -42, 0, 0, 0, 0, 14, -41, 0, 0, 0, 0, 21, -37, 0, 0, 0, 0, 31, -36, 0, 0, 0, 0, 40, -36, 0, 0, 0, 0, 123, -36)
+"points": PackedVector2Array(0, 0, 0, 0, 10, -25, 0, 0, 0, 0, 9, -34, 0, 0, 0, 0, 12, -43, 0, 0, 0, 0, 23, -51, 0, 0, 0, 0, 33, -45, 0, 0, 0, 0, 43, -38, 0, 0, 0, 0, 51, -35, 0, 0, 0, 0, 63, -34, 0, 0, 0, 0, 84, -34, 0, 0, 0, 0, 115, -34, 0, 0, 0, 0, 124, -34)
 }
-point_count = 13
+point_count = 11
+
+[sub_resource type="Curve2D" id="Curve2D_bsqdu"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 10, -25, 0, 0, 0, 0, 10, -66, 0, 0, 0, 0, 14, -73, 0, 0, 0, 0, 24, -76, 0, 0, 0, 0, 36, -78, 0, 0, 0, 0, 60, -77, 0, 0, 0, 0, 78, -78, 0, 0, 0, 0, 91, -78, 0, 0, 0, 0, 121, -79)
+}
+point_count = 9
+
+[sub_resource type="Curve2D" id="Curve2D_txohi"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 10, -25, 0, 0, 0, 0, 10, -70, 0, 0, 0, 0, 10, -100, 0, 0, 0, 0, 30, -108, 0, 0, 0, 0, 57, -110, 0, 0, 0, 0, 87, -109, 0, 0, 0, 0, 109, -109, 0, 0, 0, 0, 121, -109)
+}
+point_count = 8
+
+[sub_resource type="Curve2D" id="Curve2D_q76uy"]
+bake_interval = 50.0
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 86, -34, 0, 0, 0, 0, 57, -34, 0, 0, 0, 0, 44, -34, 0.156296, 0.104198, -0.156296, -0.104198, 33, -35, 0, 0, 0, 0, 23, -39, 0, 0, 0, 0, 14, -46, 0, 0, 0, 0, 4, -46, 0, 0, 0, 0, -7, -42, 0, 0, 0, 0, -10, -36, 0, 0, 0, 0, -10, -25)
+}
+point_count = 10
+
+[sub_resource type="Curve2D" id="Curve2D_7lk5o"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 86, -79, 0, 0, 0, 0, 49, -79, 0, 0, 0, 0, 19, -78, 0, 0, 0, 0, -1, -77, 0, 0, 0, 0, -11, -61, 0, 0, 0, 0, -11, -42, 0, 0, 0, 0, -10, -26)
+}
+point_count = 7
+
+[sub_resource type="Curve2D" id="Curve2D_jwde0"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 87, -110, 0, 0, 0, 0, 45, -111, 0, 0, 0, 0, 19, -111, 0, 0, 0, 0, 4, -106, 0, 0, 0, 0, -7, -92, 0, 0, 0, 0, -10, -81, 0, 0, 0, 0, -11, -55, 0, 0, 0, 0, -11, -35, 0, 0, 0, 0, -10, -25)
+}
+point_count = 9
 
 [node name="BaseBuilding" instance=ExtResource("1_q76uy")]
 script = ExtResource("2_5mj2m")
@@ -39,7 +71,24 @@ polygon = PackedVector2Array(-1787.22, -2103.71, 93.0847, -2103.71, 81.9799, -11
 position = Vector2(-109, -75.5)
 shape = SubResource("RectangleShape2D_q76uy")
 
-[node name="StopTracks" type="Node2D" parent="." index="5"]
+[node name="StopInTracks" type="Node2D" parent="." index="5"]
 
-[node name="Track0" type="Path2D" parent="StopTracks" index="0"]
+[node name="Track0" type="Path2D" parent="StopInTracks" index="0"]
+curve = SubResource("Curve2D_5mj2m")
+
+[node name="Track1" type="Path2D" parent="StopInTracks" index="1"]
+curve = SubResource("Curve2D_bsqdu")
+
+[node name="Track2" type="Path2D" parent="StopInTracks" index="2"]
+curve = SubResource("Curve2D_txohi")
+
+[node name="StopOutTracks" type="Node2D" parent="." index="6"]
+
+[node name="Track0" type="Path2D" parent="StopOutTracks" index="0"]
 curve = SubResource("Curve2D_q76uy")
+
+[node name="Track1" type="Path2D" parent="StopOutTracks" index="1"]
+curve = SubResource("Curve2D_7lk5o")
+
+[node name="Track2" type="Path2D" parent="StopOutTracks" index="2"]
+curve = SubResource("Curve2D_jwde0")

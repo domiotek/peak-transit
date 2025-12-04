@@ -10,9 +10,6 @@ var transport_manager: TransportManager
 
 var simulation_running: bool = false
 
-var end_node_ids: Array = []
-var vehicles_count = 0
-var max_vehicles = 1
 var _visual_day_night_cycle_enabled = false
 
 var game_controller: GameController
@@ -40,8 +37,6 @@ func setup(_game_controller: GameController) -> void:
 
 
 func start_simulation() -> void:
-	end_node_ids = network_manager.get_end_nodes().map(func(node): return node.id)
-
 	var map = game_controller.get_map()
 	map.process_mode = Node.PROCESS_MODE_INHERIT
 
@@ -51,9 +46,6 @@ func start_simulation() -> void:
 	print("Simulation started")
 
 	simulation_running = true
-
-	for i in max_vehicles:
-		_spawn_bus()
 
 
 func stop_simulation() -> void:
@@ -87,38 +79,6 @@ func is_day_night_cycle_enabled() -> bool:
 
 func get_desired_world_lights_state() -> bool:
 	return _visual_day_night_cycle_enabled and game_controller.get_map().should_world_lights_be_on(game_manager.clock.get_day_progress_percentage())
-
-
-func _get_random_nodes() -> Array:
-	var start_node_id = end_node_ids[randi() % end_node_ids.size()]
-	var end_node_id = end_node_ids[randi() % end_node_ids.size()]
-
-	while start_node_id == end_node_id:
-		end_node_id = end_node_ids[randi() % end_node_ids.size()]
-
-	return [start_node_id, end_node_id]
-
-
-func _spawn_bus() -> void:
-	if not simulation_running:
-		return
-	var depot_building = transport_manager.get_depot(0)
-
-	var bus = vehicle_manager.create_vehicle(VehicleManager.VehicleType.ARTICULATED_BUS if randf() < 1 else VehicleManager.VehicleType.BUS)
-	var nodes = _get_random_nodes()
-
-	await bus.get_tree().create_timer(bus.id).timeout
-
-	bus.ai.set_origin_depot(depot_building)
-
-	bus.init_simple_trip(nodes[0], nodes[1])
-
-	bus.connect("trip_completed", Callable(self, "_on_vehicle_trip_completed"))
-
-
-func _on_vehicle_trip_completed(_id) -> void:
-	if simulation_running:
-		_spawn_bus()
 
 
 func _on_debug_toggles_changed(toggle_name: String, value: bool) -> void:

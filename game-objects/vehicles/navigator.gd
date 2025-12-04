@@ -262,7 +262,7 @@ func set_custom_step(path: Path2D, max_speed: float = 0.0) -> void:
 
 	current_step = {
 		"type": StepType.CUSTOM,
-		"path": path,
+		"path": path.curve,
 		"length": path.curve.get_baked_length(),
 		"progress": 0.0,
 	}
@@ -273,6 +273,7 @@ func set_custom_step(path: Path2D, max_speed: float = 0.0) -> void:
 	step_ready = true
 	vehicle.assign_to_path(path, 0.0)
 	used_paths.append(path)
+	emit_signal("trip_started")
 
 
 func _on_pathfinder_result(path: Variant) -> void:

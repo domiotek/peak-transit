@@ -24,6 +24,7 @@ var config: VehicleConfig
 
 var main_path_follower: PathFollow2D
 var _follower_to_end_offset: Dictionary[int, Array] = { }
+var _follower_from_start_offset: Dictionary[int, Array] = { }
 
 
 func _ready():
@@ -54,8 +55,15 @@ func _ready():
 
 	simulation_manager.desired_world_lights_state_changed.connect(Callable(self, "_on_lights_state_change"))
 
+	for body_area in config["body_areas"]:
+		body_area.connect("input_event", Callable(self, "_on_input_event"))
+
+	for collision_area in config["collision_areas"]:
+		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
+
 	for i in range(config["path_followers"].size()):
 		_follower_to_end_offset[i] = []
+		_follower_from_start_offset[i] = []
 
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
@@ -121,6 +129,7 @@ func assign_to_path(path: Path2D, progress: float) -> void:
 			continue
 
 		_follower_to_end_offset[i].append(main_path_follower.progress_ratio)
+		_follower_from_start_offset[i].append(progress)
 
 	main_path_follower.reparent(path, true)
 	main_path_follower.progress = progress
@@ -182,7 +191,8 @@ func _process(delta: float) -> void:
 				next_path = main_path_follower.get_parent() as Path2D
 
 			path_follower.reparent(next_path, true)
-			path_follower.progress = 0
+			path_follower.progress = _follower_from_start_offset[i][0] if _follower_from_start_offset[i].size() > 0 else 0.0
+			_follower_from_start_offset[i].pop_front()
 
 		var trailer_path = (path_follower.get_parent() as Path2D).curve
 
@@ -207,12 +217,6 @@ func _process(delta: float) -> void:
 
 
 func _on_trip_started() -> void:
-	for body_area in config["body_areas"]:
-		body_area.connect("input_event", Callable(self, "_on_input_event"))
-
-	for collision_area in config["collision_areas"]:
-		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
-
 	var starts_at_building = navigator.current_step["type"] == Navigator.StepType.BUILDING
 
 	if starts_at_building:
