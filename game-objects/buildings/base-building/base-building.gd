@@ -376,6 +376,5 @@ func _get_connection_endpoints() -> Dictionary:
 	}
 
 
-func _on_debug_toggles_changed(toggle_name: String, _value: bool) -> void:
-	if toggle_name == "DrawBuildingConnections":
-		_update_debug_visuals()
+func _on_debug_toggles_changed(_toggle_name: String, _value: bool) -> void:
+	_update_debug_visuals()

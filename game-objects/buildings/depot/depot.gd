@@ -27,6 +27,9 @@ func _ready() -> void:
 	click_area.connect("input_event", Callable(self, "_on_input_event"))
 	_process_tracks()
 
+	if config_manager.AutoFillDepotStopsOnLoad:
+		_fill_bus_stops()
+
 
 func setup_depot(new_id: int, depot_data: DepotDefinition) -> void:
 	depot_id = new_id
@@ -207,3 +210,9 @@ func _increase_bus_count(is_articulated: bool) -> void:
 		_current_articulated_bus_count = clamp(_current_articulated_bus_count + 1, 0, _depot_data.articulated_bus_capacity)
 	else:
 		_current_bus_count = clamp(_current_bus_count + 1, 0, _depot_data.regular_bus_capacity)
+
+
+func _fill_bus_stops() -> void:
+	var next_bus_is_articulated = false
+	while try_spawn(next_bus_is_articulated, true):
+		next_bus_is_articulated = not next_bus_is_articulated

@@ -25,7 +25,7 @@ script = ExtResource("2_8bm15")
 [node name="Body" type="Polygon2D" parent="." index="0"]
 z_index = 5
 z_as_relative = false
-position = Vector2(86, -44)
+position = Vector2(74, -44)
 color = Color(1, 0.501961, 0.309804, 1)
 polygon = PackedVector2Array(-108, 33, -40, 33, -40, 55, -108, 55)
 uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
@@ -100,6 +100,7 @@ label_settings = SubResource("LabelSettings_8bm15")
 horizontal_alignment = 1
 
 [node name="CollisionArea" type="Area2D" parent="." index="1"]
+position = Vector2(-12, 0)
 collision_layer = 6
 collision_mask = 2
 monitoring = false
@@ -111,7 +112,7 @@ shape = SubResource("RectangleShape2D_insyj")
 disabled = true
 
 [node name="CloseRayCaster" type="RayCast2D" parent="." index="2"]
-position = Vector2(46, 0)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(11, 0)
@@ -121,7 +122,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="MediumRayCaster" type="RayCast2D" parent="." index="3"]
-position = Vector2(46, 0)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(36, 0)
@@ -131,7 +132,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="LongRayCaster" type="RayCast2D" parent="." index="4"]
-position = Vector2(46, 0)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(71, 0)
@@ -141,7 +142,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="LeftRayCaster" type="RayCast2D" parent="." index="5"]
-position = Vector2(46, 0)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(45, -13)
@@ -151,7 +152,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="RightRayCaster" type="RayCast2D" parent="." index="6"]
-position = Vector2(46, 0)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(44, 15)
@@ -161,6 +162,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="BodyArea" type="Area2D" parent="." index="7"]
+position = Vector2(-12, 0)
 monitoring = false
 monitorable = false
 
@@ -169,7 +171,7 @@ position = Vector2(12, 0)
 shape = SubResource("RectangleShape2D_0l3b4")
 
 [node name="ForwardBlockadeObserver" type="Area2D" parent="." index="8"]
-position = Vector2(30, 0)
+position = Vector2(18, 0)
 collision_layer = 4
 collision_mask = 4
 input_pickable = false

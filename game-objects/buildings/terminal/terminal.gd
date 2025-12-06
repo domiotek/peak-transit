@@ -6,6 +6,35 @@ var terminal_id: int
 
 var _terminal_data: TerminalDefinition
 
+var _tracks = { }
+var _vehicles_on_tracks: Dictionary = { }
+var _tracks_in_use: Dictionary = { }
+
+@onready var in_track: Path2D = $InTrack
+@onready var in_line_track: Path2D = $InLineTrack
+@onready var in_wait_track: Path2D = $InWaitTrack
+
+@onready var bypass_track: Path2D = $BypassTrack
+@onready var bypass_around_track: Path2D = $BypassAroundTrack
+@onready var bypass_out_track: Path2D = $BypassOutTrack
+
+@onready var wait_in_tracks: Node2D = $WaitTracks/InTracks
+@onready var wait_out_tracks: Node2D = $WaitTracks/OutTracks
+
+@onready var peron_in_tracks: Node2D = $PeronTracks/InTracks
+@onready var peron_out_tracks: Node2D = $PeronTracks/OutTracks
+@onready var peron_around_tracks: Node2D = $PeronTracks/AroundTracks
+
+
+func _ready() -> void:
+	super._ready()
+	_tracks["wait"] = []
+	_tracks["peron"] = []
+
+	_process_tracks(wait_in_tracks, wait_out_tracks, _tracks["wait"])
+	_process_tracks(peron_in_tracks, peron_out_tracks, _tracks["peron"], peron_around_tracks)
+	_smooth_tracks()
+
 
 func setup_terminal(new_id: int, terminal_data: TerminalDefinition) -> void:
 	terminal_id = new_id
@@ -33,8 +62,300 @@ func get_outgoing_node_id() -> int:
 	return _terminal_data.position.segment[1]
 
 
+func try_enter(vehicle_id: int) -> Path2D:
+	if _tracks_in_use.has("in"):
+		return null
+
+	_tracks_in_use["in"] = true
+	_vehicles_on_tracks[vehicle_id] = "in"
+
+	return in_track
+
+
+func navigate_to_peron(vehicle_id: int, peron: int) -> Dictionary:
+	var search_callback = func(current_track_id: String, track_id_parts: Array) -> Dictionary:
+		var next_track_id: String
+		if current_track_id == "in_line":
+			next_track_id = "peron_%d_in" % peron
+		elif current_track_id == "in_wait":
+			var free_wait_index = _get_next_free_wait_track()
+			if free_wait_index == -1:
+				return {
+					"path": null,
+					"error": TerminalTrackState.TrackSearchError.NO_FREE_WAIT_TRACK,
+				}
+
+			next_track_id = "wait_%d_in" % free_wait_index
+		elif current_track_id.begins_with("peron_"):
+			var current_peron_index = int(track_id_parts[1])
+			var track_type = track_id_parts[2]
+
+			if current_peron_index == peron and track_type == "in":
+				return {
+					"path": null,
+					"error": TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET,
+				}
+
+			match track_type:
+				"in":
+					next_track_id = "peron_%d_around" % current_peron_index
+				"around":
+					next_track_id = "in_line"
+		elif current_track_id.begins_with("wait_"):
+			next_track_id = "wait_%s_out" % track_id_parts[1] if track_id_parts[2] == "in" else "peron_%d_in" % peron
+
+		return {
+			"path": next_track_id,
+		}
+
+	return _find_next_track(vehicle_id, TerminalTrackState.navigate_to_peron_map, search_callback)
+
+
+func leave_terminal(vehicle_id: int) -> Dictionary:
+	var search_callback = func(current_track_id: String, track_id_parts: Array) -> Dictionary:
+		var next_track_id: String
+		if current_track_id == "in_wait":
+			var free_wait_index = _get_next_free_wait_track()
+			if free_wait_index == -1:
+				return {
+					"path": null,
+					"error": TerminalTrackState.TrackSearchError.NO_FREE_WAIT_TRACK,
+				}
+
+			next_track_id = "wait_%d_in" % free_wait_index
+		elif current_track_id.begins_with("peron_"):
+			var current_peron_index = int(track_id_parts[1])
+			var track_type = track_id_parts[2]
+
+			match track_type:
+				"in":
+					next_track_id = "peron_%d_out" % current_peron_index
+				"around":
+					next_track_id = "in_line"
+				"out":
+					return {
+						"path": null,
+						"error": TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET,
+					}
+
+		elif current_track_id.begins_with("wait_"):
+			next_track_id = "wait_%s_out" % track_id_parts[1] if track_id_parts[2] == "in" else "bypass"
+		elif current_track_id == "bypass_out":
+			return {
+				"path": null,
+				"error": TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET,
+			}
+
+		return {
+			"path": next_track_id,
+		}
+
+	return _find_next_track(vehicle_id, TerminalTrackState.leave_terminal_map, search_callback)
+
+
+func wait_at_terminal(vehicle_id: int) -> Dictionary:
+	var search_callback = func(current_track_id: String, track_id_parts: Array) -> Dictionary:
+		var next_track_id: String
+		if current_track_id == "in_wait":
+			var free_wait_index = _get_next_free_wait_track()
+			if free_wait_index == -1:
+				return {
+					"path": null,
+					"error": TerminalTrackState.TrackSearchError.NO_FREE_WAIT_TRACK,
+				}
+
+			next_track_id = "wait_%d_in" % free_wait_index
+		elif current_track_id.begins_with("peron_"):
+			var current_peron_index = int(current_track_id.split("_")[1])
+			next_track_id = "peron_%d_around" % current_peron_index
+
+		elif current_track_id.begins_with("wait_"):
+			if track_id_parts[2] == "in":
+				return {
+					"path": null,
+					"error": TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET,
+				}
+
+			next_track_id = "bypass"
+
+		return {
+			"path": next_track_id,
+		}
+
+	return _find_next_track(vehicle_id, TerminalTrackState.wait_at_terminal_map, search_callback)
+
+
+func notify_vehicle_left_terminal(vehicle_id: int) -> void:
+	var current_track_id = _vehicles_on_tracks.get(vehicle_id, "")
+	if current_track_id != "":
+		_tracks_in_use.erase(current_track_id)
+		_vehicles_on_tracks.erase(vehicle_id)
+
+
+func _find_next_track(vehicle_id: int, state_map: Dictionary, custom_track_search_callback) -> Dictionary:
+	if _vehicles_on_tracks.get(vehicle_id, "") == "":
+		push_error("Vehicle ID %d is not registered as being at terminal ID %d." % [vehicle_id, terminal_id])
+		return {
+			"path": null,
+			"error": TerminalTrackState.TrackSearchError.VEH_NOT_REGISTERED,
+		}
+
+	var current_track_id = _vehicles_on_tracks[vehicle_id]
+	var next_track_id = state_map.get(current_track_id, null)
+	var track_id_parts = current_track_id.split("_")
+
+	if not next_track_id:
+		var search_result = custom_track_search_callback.call(current_track_id, track_id_parts)
+
+		if search_result.has("error"):
+			return search_result
+
+		next_track_id = search_result["path"]
+
+	return _switch_to_track(current_track_id, next_track_id, vehicle_id)
+
+
+func _process_tracks(in_tracks: Node2D, out_tracks: Node2D, target_array: Array, around_tracks: Node2D = null) -> void:
+	var children = in_tracks.get_children()
+
+	for i in range(children.size()):
+		var child = children[i]
+
+		var path = child as Path2D
+		var around_path = around_tracks.get_child(i) as Path2D if around_tracks != null else null
+		var out_path = out_tracks.get_child(i) as Path2D
+
+		if not out_path:
+			target_array.erase(target_array[i])
+			push_error("Terminal track %d is misconfigured: missing out path." % i)
+			continue
+
+		if around_tracks and not around_path:
+			target_array.erase(target_array[i])
+			push_error("Terminal track %d is misconfigured: missing around path." % i)
+			continue
+
+		target_array.append(
+			{
+				"in": path,
+				"out": out_path,
+				"around": around_path,
+			},
+		)
+
+
+func _get_track_by_id(track_id: String) -> Path2D:
+	match track_id:
+		"in":
+			return in_track
+		"in_line":
+			return in_line_track
+		"in_wait":
+			return in_wait_track
+		"bypass":
+			return bypass_track
+		"bypass_around":
+			return bypass_around_track
+		"bypass_out":
+			return bypass_out_track
+
+	var parts = track_id.split("_")
+
+	if parts.size() != 3:
+		push_error("Invalid track ID format: '%s'." % track_id)
+		return null
+
+	var tracks_array = _tracks.get(parts[0], null)
+
+	if tracks_array == null:
+		push_error("Unknown track category: '%s'." % parts[0])
+		return null
+
+	var index = int(parts[1])
+	if index >= 0 and index < tracks_array.size():
+		return tracks_array[index][parts[2]]
+
+	push_error("Peron track index out of range: %d." % index)
+	return null
+
+
+func _get_next_free_wait_track() -> int:
+	for i in range(_tracks["wait"].size()):
+		var track_id = "wait_%d" % i
+		if not _tracks_in_use.has(track_id):
+			return i
+
+	return -1
+
+
+func _switch_to_track(current_track_id: String, next_track_id: String, vehicle_id: int) -> Dictionary:
+	if not next_track_id:
+		push_error("Vehicle ID %d is on an invalid track '%s' at terminal ID %d." % [vehicle_id, current_track_id, terminal_id])
+		return {
+			"path": null,
+			"error": TerminalTrackState.TrackSearchError.INVALID_POSITION,
+		}
+
+	if _tracks_in_use.has(next_track_id):
+		return {
+			"path": null,
+			"error": TerminalTrackState.TrackSearchError.TRACK_IN_USE,
+		}
+
+	_tracks_in_use.erase(current_track_id)
+	_tracks_in_use[next_track_id] = true
+	_vehicles_on_tracks[vehicle_id] = next_track_id
+
+	return {
+		"path": _get_track_by_id(next_track_id),
+		"error": null,
+	}
+
+
+func _smooth_tracks() -> void:
+	in_track.curve = line_helper.smooth_curve(in_track.curve)
+	in_line_track.curve = line_helper.smooth_curve(in_line_track.curve)
+	in_wait_track.curve = line_helper.smooth_curve(in_wait_track.curve)
+	bypass_track.curve = line_helper.smooth_curve(bypass_track.curve)
+	bypass_around_track.curve = line_helper.smooth_curve(bypass_around_track.curve)
+	bypass_out_track.curve = line_helper.smooth_curve(bypass_out_track.curve)
+
+	for track_dict in _tracks["wait"]:
+		track_dict["in"].curve = line_helper.smooth_curve(track_dict["in"].curve)
+		track_dict["out"].curve = line_helper.smooth_curve(track_dict["out"].curve)
+
+	for track_dict in _tracks["peron"]:
+		track_dict["in"].curve = line_helper.smooth_curve(track_dict["in"].curve)
+		if track_dict["around"]:
+			track_dict["around"].curve = line_helper.smooth_curve(track_dict["around"].curve)
+		track_dict["out"].curve = line_helper.smooth_curve(track_dict["out"].curve)
+
+
+func _update_debug_visuals() -> void:
+	super._update_debug_visuals()
+
+	if config_manager.DebugToggles.DrawTerminalPaths:
+		for track_dict in _tracks["wait"]:
+			line_helper.draw_solid_line(track_dict["in"].curve, debug_layer, 2.0, Color.GREEN)
+			line_helper.draw_solid_line(track_dict["out"].curve, debug_layer, 2.0, Color.GREEN)
+
+		for track_dict in _tracks["peron"]:
+			line_helper.draw_solid_line(track_dict["in"].curve, debug_layer, 2.0, Color.BLUE)
+			if track_dict["around"]:
+				line_helper.draw_solid_line(track_dict["around"].curve, debug_layer, 2.0, Color.YELLOW)
+			line_helper.draw_solid_line(track_dict["out"].curve, debug_layer, 2.0, Color.BLUE)
+
+		line_helper.draw_solid_line(in_track.curve, debug_layer, 2.0, Color.RED)
+		line_helper.draw_solid_line(in_line_track.curve, debug_layer, 2.0, Color.RED)
+		line_helper.draw_solid_line(in_wait_track.curve, debug_layer, 2.0, Color.RED)
+
+		line_helper.draw_solid_line(bypass_track.curve, debug_layer, 2.0, Color.ORANGE)
+		line_helper.draw_solid_line(bypass_around_track.curve, debug_layer, 2.0, Color.ORANGE)
+		line_helper.draw_solid_line(bypass_out_track.curve, debug_layer, 2.0, Color.ORANGE)
+
+
 func _get_connection_endpoints() -> Dictionary:
 	return {
-		"in": to_global(Vector2(10, -25)),
-		"out": to_global(Vector2(-10, -25)),
+		"in": to_global(Vector2(10, -15)),
+		"out": to_global(Vector2(-10, -15)),
 	}
