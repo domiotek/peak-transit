@@ -74,6 +74,7 @@ func get_outgoing_node_id() -> int:
 func register_line(line_id) -> int:
 	var peron_index = _get_next_peron_index()
 	_line_id_to_peron[line_id] = peron_index
+	_peron_lines.get_or_add(peron_index, []).append(line_id)
 	return peron_index
 
 
