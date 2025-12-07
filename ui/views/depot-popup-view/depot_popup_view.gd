@@ -89,7 +89,7 @@ func update(_data: Dictionary) -> void:
 func _process(_delta: float) -> void:
 	if visible and _selected_depot:
 		var data = _selected_depot.get_popup_data()
-		_ui_manager.reanchor_to_world_object(self, _selected_depot, UIManager.AnchorPoint.BOTTOM_LEFT, _is_pinned)
+		_ui_manager.reanchor_to_world_object(self, _selected_depot.get_anchor(), UIManager.AnchorPoint.BOTTOM_LEFT, _is_pinned)
 
 		if _constraints_enabled:
 			var current_bus_count = _selected_depot.get_current_bus_count()

@@ -243,19 +243,13 @@ public partial class ScheduleGenerator : RefCounted
         double duration
     )
     {
-        double departHour = Math.Floor(minutes / 60 % 24);
-        double departMinute = Math.Floor(minutes % 60);
-
-        double arriveHour = Math.Floor((minutes + duration) / 60 % 24);
-        double arriveMinute = Math.Floor((minutes + duration) % 60);
-
-        var departTime = new TimeOfDay { Hour = (int)departHour, Minute = (int)departMinute };
+        var departTime = new TimeOfDay((int)minutes);
 
         return new Trip
         {
             RouteId = routeId,
             DepartureTime = departTime,
-            ArrivalTime = new TimeOfDay { Hour = (int)arriveHour, Minute = (int)arriveMinute },
+            ArrivalTime = new TimeOfDay((int)(minutes + duration)),
             StopTimes = stopTimes
                 .Select(kvp => new KeyValuePair<int, TimeOfDay>(
                     kvp.Key,

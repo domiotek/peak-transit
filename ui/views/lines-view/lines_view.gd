@@ -47,13 +47,18 @@ func load() -> void:
 		main_item_list.add_child(item)
 
 
-func update(_data) -> void:
+func update(data: Dictionary) -> void:
 	if _is_resetting:
 		return
 
 	_is_resetting = true
 	_on_go_back_button_pressed()
 	_is_resetting = false
+
+	if data.has("line"):
+		var line = data["line"] as TransportLine
+		_show_line_view(line)
+		return
 
 	if transport_manager.are_no_lines_drawn():
 		toggle_all_visibility_button.icon = HIDDEN_ICON
@@ -73,15 +78,19 @@ func reset() -> void:
 	_selected_line_id = -1
 
 
+func _show_line_view(line: TransportLine) -> void:
+	_selected_line_id = line.id
+	line_view.visible = true
+	main_list_wrapper.visible = false
+	go_back_button.visible = true
+	toggle_all_visibility_button.visible = false
+	line_view.setup(line)
+
+
 func _on_item_button_pressed(_sender: ListItem, data: Dictionary) -> void:
 	var line = data.get("line", null) as TransportLine
 	if line:
-		_selected_line_id = line.id
-		line_view.visible = true
-		main_list_wrapper.visible = false
-		go_back_button.visible = true
-		toggle_all_visibility_button.visible = false
-		line_view.setup(line)
+		_show_line_view(line)
 
 
 func _on_go_back_button_pressed() -> void:
@@ -90,7 +99,7 @@ func _on_go_back_button_pressed() -> void:
 	go_back_button.visible = false
 	toggle_all_visibility_button.visible = true
 	_selected_line_id = -1
-	update(null)
+	update({ })
 
 
 func _on_toggle_all_visibility_button_pressed() -> void:

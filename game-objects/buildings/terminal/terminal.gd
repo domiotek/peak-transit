@@ -6,6 +6,11 @@ var terminal_id: int
 
 var _terminal_data: TerminalDefinition
 
+var _line_id_to_peron: Dictionary[int, int] = { }
+var _peron_lines: Dictionary[int, Array] = { }
+var _peron_count: int
+var _peron_anchors: Array = []
+
 var _tracks = { }
 var _vehicles_on_tracks: Dictionary = { }
 var _tracks_in_use: Dictionary = { }
@@ -26,14 +31,18 @@ var _tracks_in_use: Dictionary = { }
 @onready var peron_around_tracks: Node2D = $PeronTracks/AroundTracks
 
 
+@onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
+
+
 func _ready() -> void:
 	super._ready()
 	_tracks["wait"] = []
 	_tracks["peron"] = []
 
 	_process_tracks(wait_in_tracks, wait_out_tracks, _tracks["wait"])
-	_process_tracks(peron_in_tracks, peron_out_tracks, _tracks["peron"], peron_around_tracks)
+	_peron_count = _process_tracks(peron_in_tracks, peron_out_tracks, _tracks["peron"], peron_around_tracks)
 	_smooth_tracks()
+	_setup_perons()
 
 
 func setup_terminal(new_id: int, terminal_data: TerminalDefinition) -> void:
@@ -60,6 +69,49 @@ func get_incoming_node_id() -> int:
 
 func get_outgoing_node_id() -> int:
 	return _terminal_data.position.segment[1]
+
+
+func register_line(line_id) -> int:
+	var peron_index = _get_next_peron_index()
+	_line_id_to_peron[line_id] = peron_index
+	return peron_index
+
+
+func get_peron_for_line(line_id) -> int:
+	return _line_id_to_peron.get(line_id, -1)
+
+
+func get_line_curves(line_id: int, is_out: bool) -> Array:
+	var peron_index = _line_id_to_peron.get(line_id, -1)
+	if peron_index == -1:
+		return []
+
+	var result = []
+	if not is_out:
+		result.append_array([in_track.curve, in_line_track.curve])
+
+	var track_dict = _tracks["peron"][peron_index]
+
+	if is_out:
+		result.append(track_dict["out"].curve)
+	else:
+		result.append(track_dict["in"].curve)
+
+	for i in range(result.size()):
+		result[i] = line_helper.convert_curve_local_to_global(result[i], self)
+
+	return result
+
+
+func get_peron_anchor(peron_index: int) -> Node2D:
+	return _peron_anchors[peron_index]
+
+func get_lines_at_peron(peron_index: int) -> Array:
+	var lines = []
+	for line_id in _line_id_to_peron.keys():
+		if _line_id_to_peron[line_id] == peron_index:
+			lines.append(line_id)
+	return lines
 
 
 func try_enter(vehicle_id: int) -> Path2D:
@@ -215,7 +267,7 @@ func _find_next_track(vehicle_id: int, state_map: Dictionary, custom_track_searc
 	return _switch_to_track(current_track_id, next_track_id, vehicle_id)
 
 
-func _process_tracks(in_tracks: Node2D, out_tracks: Node2D, target_array: Array, around_tracks: Node2D = null) -> void:
+func _process_tracks(in_tracks: Node2D, out_tracks: Node2D, target_array: Array, around_tracks: Node2D = null) -> int:
 	var children = in_tracks.get_children()
 
 	for i in range(children.size()):
@@ -242,6 +294,8 @@ func _process_tracks(in_tracks: Node2D, out_tracks: Node2D, target_array: Array,
 				"around": around_path,
 			},
 		)
+
+	return children.size()
 
 
 func _get_track_by_id(track_id: String) -> Path2D:
@@ -281,7 +335,7 @@ func _get_track_by_id(track_id: String) -> Path2D:
 
 func _get_next_free_wait_track() -> int:
 	for i in range(_tracks["wait"].size()):
-		var track_id = "wait_%d" % i
+		var track_id = "wait_%d_in" % i
 		if not _tracks_in_use.has(track_id):
 			return i
 
@@ -359,3 +413,38 @@ func _get_connection_endpoints() -> Dictionary:
 		"in": to_global(Vector2(10, -15)),
 		"out": to_global(Vector2(-10, -15)),
 	}
+
+
+func _get_next_peron_index() -> int:
+	var curr_min_lines = INF
+	var curr_min_idx = -1
+
+	for i in range(_peron_count):
+		var assigned_lines = _peron_lines.get(i, [])
+		var line_count = assigned_lines.size()
+
+		if line_count < curr_min_lines:
+			curr_min_lines = line_count
+			curr_min_idx = i
+
+	return curr_min_idx
+
+
+func _setup_perons() -> void:
+	for i in range(_peron_count):
+		var peron_node = get_node("Peron%d/ClickArea" % i) as Area2D
+		peron_node.input_event.connect(_on_peron_clicked_event.bind(peron_node))
+		peron_node.set_meta("peron_index", i)
+		
+		var anchor_point = peron_node.get_parent()
+		_peron_anchors.append(anchor_point)
+
+
+
+
+func _on_peron_clicked_event(_viewport, event: InputEvent, _shape_idx, area: Area2D) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var peron_index = area.get_meta("peron_index") as int
+		var pointer = TerminalPeron.new(self, peron_index)
+		var selection = StopSelection.new(StopSelection.StopSelectionType.TERMINAL_PERON, pointer)
+		game_manager.set_selection(selection, GameManager.SelectionType.TRANSPORT_STOP)

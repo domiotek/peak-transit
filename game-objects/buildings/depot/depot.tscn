@@ -60,15 +60,15 @@ color = Color(0.223103, 0.223103, 0.223103, 1)
 polygon = PackedVector2Array(686.043, -802.541, 686.043, -608.378, 686.043, -94.9241, 81.9799, -94.9241, 81.9799, 4.31473, -85, 3, -86.2947, -86.2947, -133.757, -90.6094, -181.219, -99.2389, -215.737, -112.183, -250.255, -133.757, -276.143, -163.96, -284.772, -798.226)
 
 [node name="Building" type="Polygon2D" parent="." index="3"]
-position = Vector2(-63, -33)
+position = Vector2(-108, -74)
 scale = Vector2(0.0537146, 0.0537146)
 color = Color(0.291364, 0.206397, 0.0484127, 1)
-polygon = PackedVector2Array(-1787.22, -2103.71, 93.0847, -2103.71, 81.9799, -116.498, 18.617, 130.319, -186.169, 372.339, -428.189, 484.04, -819.145, 521.274, -1787.22, 521.274)
+polygon = PackedVector2Array(-972.378, -1306.78, 907.927, -1306.78, 896.822, 680.435, 833.459, 927.252, 628.673, 1169.27, 386.653, 1280.97, -4.30292, 1318.21, -972.378, 1318.21)
 
 [node name="ClickerArea" type="Area2D" parent="." index="4"]
 
 [node name="CollisionShape" type="CollisionShape2D" parent="ClickerArea" index="0"]
-position = Vector2(-109, -75.5)
+position = Vector2(-110, -73.5)
 shape = SubResource("RectangleShape2D_q76uy")
 
 [node name="StopInTracks" type="Node2D" parent="." index="5"]

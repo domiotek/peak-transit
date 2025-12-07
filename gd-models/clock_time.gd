@@ -21,6 +21,10 @@ func get_formatted() -> String:
 	return "%s, %02d:%02d" % [day_to_string(day), hour, minute]
 
 
+func to_time_of_day() -> TimeOfDay:
+	return TimeOfDay.new(hour, minute)
+
+
 static func day_to_string(_day: Enums.Day) -> String:
 	match _day:
 		Enums.Day.MONDAY:

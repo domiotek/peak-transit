@@ -15,6 +15,7 @@ var _stop_tracks = []
 var _vehicles_on_tracks: Dictionary = { }
 
 @onready var click_area: Area2D = $ClickerArea
+@onready var building: Node2D = $Building
 @onready var in_stop_tracks_wrapper: Node2D = $StopInTracks
 @onready var out_stop_tracks_wrapper: Node2D = $StopOutTracks
 
@@ -70,6 +71,10 @@ func get_max_bus_capacity(is_articulated: bool = false) -> int:
 
 func get_current_bus_count(is_articulated: bool = false) -> int:
 	return _current_articulated_bus_count if is_articulated else _current_bus_count
+
+
+func get_anchor() -> Node2D:
+	return building
 
 
 func try_spawn(is_articulated: bool, ignore_constraints: bool = false) -> bool:

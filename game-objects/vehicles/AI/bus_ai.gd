@@ -20,7 +20,7 @@ var _is_at_terminal: bool = false
 var _origin_depot: Depot = null
 var _current_terminal: Terminal = null
 var _target_terminal: Terminal = null
-var _brigade_id: int = -1
+var _brigade: Brigade = null
 
 var _is_leaving_building: bool = false
 var _is_entering_building: bool = false
@@ -149,7 +149,7 @@ func process() -> void:
 
 					match result["error"]:
 						null:
-							_vehicle.navigator.set_custom_step(result["path"], 30.0)
+							_vehicle.navigator.set_custom_step(result["path"], SimulationConstants.MAX_INSIDE_BUILDING_SPEED)
 							_has_trip = true
 							return
 						TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET:
@@ -167,7 +167,7 @@ func process() -> void:
 			if _is_entering_building:
 				var path = _origin_depot.try_enter(_vehicle)
 				if path:
-					_vehicle.navigator.set_custom_step(path, 30.0)
+					_vehicle.navigator.set_custom_step(path, SimulationConstants.MAX_INSIDE_BUILDING_SPEED)
 					_has_trip = true
 					_is_at_depot = true
 					_is_entering_building = false
@@ -182,19 +182,20 @@ func process() -> void:
 			if _is_leaving_building:
 				if _is_at_terminal:
 					var result = _current_terminal.leave_terminal(_vehicle.id)
-					if result["error"] == null:
-						_vehicle.navigator.set_custom_step(result["path"], 30.0)
-						_has_trip = true
-						return
 
-					if result["error"] == TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET:
-						_drive_to_terminal()
-						_current_terminal.notify_vehicle_left_terminal(_vehicle.id)
-						_current_terminal = null
-						_is_at_terminal = false
-						_is_leaving_building = false
-						_has_trip = true
-						return
+					match result["error"]:
+						null:
+							_vehicle.navigator.set_custom_step(result["path"], SimulationConstants.MAX_INSIDE_BUILDING_SPEED)
+							_has_trip = true
+							return
+						TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET:
+							_drive_to_terminal()
+							_current_terminal.notify_vehicle_left_terminal(_vehicle.id)
+							_current_terminal = null
+							_is_at_terminal = false
+							_is_leaving_building = false
+							_has_trip = true
+							return
 
 				if _is_at_depot:
 					_drive_to_terminal()
@@ -206,7 +207,7 @@ func process() -> void:
 			if _is_entering_building:
 				var path = _target_terminal.try_enter(_vehicle.id)
 				if path:
-					_vehicle.navigator.set_custom_step(path, 30.0)
+					_vehicle.navigator.set_custom_step(path, SimulationConstants.MAX_INSIDE_BUILDING_SPEED)
 					_has_trip = true
 					_is_at_terminal = true
 					_current_terminal = _target_terminal
@@ -218,15 +219,23 @@ func process() -> void:
 				if _current_terminal != _target_terminal:
 					_is_leaving_building = true
 
-				result = _current_terminal.navigate_to_peron(_vehicle.id, 0)
-				if result["error"] == null:
-					_vehicle.navigator.set_custom_step(result["path"], 30.0)
-					_has_trip = true
-					return
+				if _brigade != null:
+					var peron_index = _current_terminal.get_peron_for_line(_brigade.line_id)
+					result = _current_terminal.navigate_to_peron(_vehicle.id, peron_index)
+				else:
+					result = _current_terminal.wait_at_terminal(_vehicle.id)
 
-				if result["error"] == TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET:
-					_state = BusState.IDLE
-					return
+				match result["error"]:
+					null:
+						_vehicle.navigator.set_custom_step(result["path"], SimulationConstants.MAX_INSIDE_BUILDING_SPEED)
+						_has_trip = true
+						return
+					TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET:
+						_state = BusState.IDLE
+						return
+					TerminalTrackState.TrackSearchError.NO_FREE_WAIT_TRACK, TerminalTrackState.TrackSearchError.TRACK_IN_USE:
+						# Wait and try again next frame
+						return
 
 	_state = BusState.CONFUSED
 

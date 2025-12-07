@@ -40,7 +40,11 @@ func load() -> void:
 func update(_data) -> void:
 	if _data.has("brigade"):
 		var brigade = _data["brigade"] as Brigade
-		_show_brigade_view(brigade)
+		var trip_idx = _data.get("trip_id", -1)
+		if trip_idx != -1:
+			_show_trip_view(brigade, trip_idx)
+		else:
+			_show_brigade_view(brigade)
 	else:
 		_on_go_back_button_pressed()
 

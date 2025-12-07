@@ -13,6 +13,7 @@ var _route_curves: Dictionary = { }
 var _waypoint_to_curve_map: Dictionary = { }
 var _step_def_to_path_map: Dictionary = { }
 var _route_steps: Dictionary = { }
+var _terminals: Array = []
 
 var _brigade_ids: Array = []
 
@@ -47,6 +48,9 @@ func trace_routes() -> bool:
 			var step_def = route_def[i]
 
 			if i == 0:
+				var terminal = transport_manager.get_terminal(step_def.target_id)
+				_terminals.append(terminal)
+
 				_route_steps[route_idx].append(TransportHelper.resolve_route_step_data(step_def, 0.0))
 				continue
 
@@ -89,6 +93,10 @@ func trace_routes() -> bool:
 				},
 			]
 
+			if step_def.step_type == Enums.TransportRouteStepType.STOP:
+				var stop = transport_manager.get_stop(step_def.target_id)
+				stop.register_line(self.id)
+
 		path.append(last_step)
 		_step_def_to_path_map[route_def.size() - 1] = path.size() - 1
 
@@ -97,6 +105,20 @@ func trace_routes() -> bool:
 		_start_node_to_path_map[path[0]["FromNodeId"]] = _traced_paths.size() - 1
 		var waypoint_to_curve_map = _get_waypoints_to_curve_map(route_def, path)
 		_waypoint_to_curve_map[_traced_paths.size() - 1] = waypoint_to_curve_map
+
+	for i in range(_terminals.size()):
+		var terminal = _terminals[i]
+
+		terminal.register_line(self.id)
+		var in_curves = terminal.get_line_curves(self.id, false)
+		var out_curves = terminal.get_line_curves(self.id, true)
+
+		if i == 0:
+			_route_curves[0] = out_curves + _route_curves[0]
+			_route_curves[1] = _route_curves[1] + in_curves
+		else:
+			_route_curves[0] = _route_curves[0] + in_curves
+			_route_curves[1] = out_curves + _route_curves[1]
 
 	return true
 
@@ -170,6 +192,110 @@ func get_frequency_minutes() -> int:
 
 func get_min_layover_minutes() -> int:
 	return _line_def.min_layover_minutes
+
+
+func get_departures_at_terminal(terminal_id: int, after: TimeOfDay = null, limit: int = -1, sort: bool = true) -> Array:
+	var route_idx = _terminals.find_custom(
+		func(t) -> bool:
+			return t.terminal_id == terminal_id
+	)
+
+	if route_idx == -1:
+		push_error("Terminal ID %d not found in line ID %d" % [terminal_id, id])
+		return []
+
+	return _find_departure_times_with_step(route_idx, Enums.TransportRouteStepType.TERMINAL, terminal_id, after, limit, sort)
+
+
+func get_departures_at_stop(stop_id: int, after: TimeOfDay = null, limit: int = -1, sort: bool = true) -> Array:
+	var route_idx = _find_route_idx_of_stop(stop_id)
+
+	if route_idx == -1:
+		push_error("Stop ID %d not found in line ID %d" % [stop_id, id])
+		return []
+
+	return _find_departure_times_with_step(route_idx, Enums.TransportRouteStepType.STOP, stop_id, after, limit, sort)
+
+
+func get_route_destination_name(route_idx: int) -> String:
+	if route_idx < 0 or route_idx >= _terminals.size():
+		return ""
+
+	var other_route_idx = (route_idx + 1) % _terminals.size()
+
+	var terminal = _terminals[other_route_idx]
+	return terminal.get_terminal_name()
+
+
+func _find_route_idx_of_stop(stop_id: int) -> int:
+	for route_idx in _route_steps.keys():
+		var steps = _route_steps[route_idx] as Array
+
+		for step in steps:
+			if step.step_type == Enums.TransportRouteStepType.STOP and step.target_id == stop_id:
+				return route_idx
+
+	return -1
+
+
+func _find_departure_times_with_step(
+		route_idx: int,
+		step_type: Enums.TransportRouteStepType,
+		target_id: int,
+		after: TimeOfDay = null,
+		limit: int = -1,
+		sort: bool = true,
+) -> Array:
+	var step_idx = 0
+
+	for idx in range(_route_steps[route_idx].size()):
+		var step = _route_steps[route_idx][idx] as RouteStep
+
+		if step.step_type == step_type and step.target_id == target_id:
+			step_idx = idx
+			break
+
+	var brigades = get_brigades()
+	var target_dep_times: Array = []
+
+	for brigade in brigades as Array[Brigade]:
+		var trips = brigade.get_schedule().trips
+
+		var trips_taken = 0
+
+		for trip_idx in range(trips.size()):
+			var trip = trips[trip_idx] as Trip
+			if trip.route_id != route_idx:
+				continue
+
+			var time = trip.stop_times[step_idx]
+
+			if after != null and time.to_minutes() < after.to_minutes():
+				continue
+
+			if limit != -1 and trips_taken >= limit:
+				break
+
+			target_dep_times.append(
+				{
+					"line_id": id,
+					"line_display_number": display_number,
+					"line_color_hex": color_hex,
+					"trip_idx": trip_idx,
+					"direction": get_route_destination_name(route_idx),
+					"brigade_id": brigade.id,
+					"departure_time": time,
+				},
+			)
+			trips_taken += 1
+
+	if sort:
+		target_dep_times.sort_custom(
+			func(a: TimeOfDay, b: TimeOfDay) -> bool:
+				return a.to_minutes() < b.to_minutes()
+		)
+
+	return target_dep_times
 
 
 func _on_pathfinder_result(path: Variant) -> void:

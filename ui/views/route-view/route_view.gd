@@ -91,13 +91,16 @@ func _on_jump_to_button_pressed(target_id: int, step_type: Enums.TransportRouteS
 		Enums.TransportRouteStepType.STOP:
 			var stop = _transport_manager.get_stop(target_id)
 			if stop:
-				selected_object = stop
+				var stop_selection = StopSelection.new(StopSelection.StopSelectionType.STOP, stop)
+				selected_object = stop_selection
 				selection_type = GameManager.SelectionType.TRANSPORT_STOP
 		Enums.TransportRouteStepType.TERMINAL:
 			var terminal = _transport_manager.get_terminal(target_id)
 			if terminal:
-				selected_object = terminal
-				selection_type = GameManager.SelectionType.TERMINAL
+				var terminal_peron = TerminalPeron.new(terminal, terminal.get_peron_for_line(_line.id))
+				var stop_selection = StopSelection.new(StopSelection.StopSelectionType.TERMINAL_PERON, terminal_peron)
+				selected_object = stop_selection
+				selection_type = GameManager.SelectionType.TRANSPORT_STOP
 		Enums.TransportRouteStepType.WAYPOINT:
 			var node = _network_manager.get_node(target_id)
 			if node:

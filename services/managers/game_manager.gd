@@ -197,7 +197,9 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selection_popup_id = "SpawnerBuildingPopupView"
 		SelectionType.DEPOT:
 			selection_popup_id = DepotPopupView.VIEW_NAME
-		SelectionType.NODE, SelectionType.STOPPER, SelectionType.TRANSPORT_STOP, SelectionType.TERMINAL:
+		SelectionType.TRANSPORT_STOP:
+			selection_popup_id = StopPopupView.VIEW_NAME
+		SelectionType.NODE, SelectionType.STOPPER, SelectionType.TERMINAL:
 			pass
 		_:
 			push_error("Unknown selection type: %s" % str(type))
@@ -274,11 +276,14 @@ func jump_to_selection() -> void:
 			var spawner = selected_object as SpawnerBuilding
 			global_position = spawner.global_position
 		SelectionType.TRANSPORT_STOP:
-			var stop = selected_object as Stop
-			global_position = stop.global_position
+			var stop = selected_object as StopSelection
+			global_position = stop.get_anchor().global_position
 		SelectionType.TERMINAL:
-			var terminal = selected_object as Terminal
-			global_position = terminal.global_position
+			var terminal = selected_object as StopSelection
+			global_position = terminal.get_anchor().global_position
+		SelectionType.DEPOT:
+			var depot = selected_object as Depot
+			global_position = depot.global_position
 		_:
 			return
 
@@ -356,7 +361,6 @@ func clear_state() -> void:
 	debug_selection = false
 	vehicle_with_path_drawn = null
 
-	simulation_manager.vehicles_count = 0
 	pathing_manager.clear_state()
 	vehicle_manager.clear_state()
 	network_manager.clear_state()
