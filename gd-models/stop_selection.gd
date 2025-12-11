@@ -52,7 +52,7 @@ func get_lines() -> Array:
 func get_departures(line: TransportLine, current_time_of_day: TimeOfDay) -> Array:
 	match selection_type:
 		StopSelectionType.TERMINAL_PERON:
-			return line.get_departures_at_terminal(terminal_peron.peron_index, current_time_of_day, 10, false)
+			return line.get_departures_at_terminal(terminal_peron.terminal.terminal_id, current_time_of_day, 10, false)
 		StopSelectionType.STOP:
 			return line.get_departures_at_stop(stop.id, current_time_of_day, 10, false)
 
