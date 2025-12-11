@@ -3,7 +3,6 @@ extends Vehicle
 class_name ArticulatedBus
 
 @onready var front_path_follower: PathFollow2D = $FrontBody/PathFollower
-@onready var trailer_path_follower: PathFollow2D = $Trailer/PathFollower
 @onready var main_body_area = $FrontBody/BodyArea
 @onready var trailer_body_area = $Trailer/BodyArea
 @onready var main_collision_area = $FrontBody/CollisionArea
@@ -34,15 +33,10 @@ func _get_vehicle_config() -> Variant:
 		$FrontBody/RightRayIndicator,
 	)
 	_config.id_label = $FrontBody/Label
-	_config.path_followers = [
+	_config.path_follower = front_path_follower
+	_config.trailers = [
 		{
-			"follower": front_path_follower,
-			"offset": 0.0,
-			"body": $FrontBody,
-		},
-		{
-			"follower": trailer_path_follower,
-			"offset": 28.0,
+			"offset": 60.0,
 			"body": $Trailer,
 		},
 	] as Array[Dictionary]

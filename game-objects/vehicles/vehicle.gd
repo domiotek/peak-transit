@@ -23,8 +23,11 @@ signal trip_ended(vehicle_id, completed: bool)
 var config: VehicleConfig
 
 var main_path_follower: PathFollow2D
-var _follower_to_end_offset: Dictionary[int, Array] = { }
-var _follower_from_start_offset: Dictionary[int, Array] = { }
+
+var _trailer_states: Array[Dictionary] = []
+var _previous_front_rotation: float = 0.0
+var _previous_front_position: Vector2 = Vector2.ZERO
+var _smoothed_curvature: float = 0.0
 
 
 func _ready():
@@ -37,7 +40,7 @@ func _ready():
 		return
 	config = vehicle_config
 
-	main_path_follower = config["path_followers"][0]["follower"]
+	main_path_follower = config.path_follower
 
 	config["ai"].bind(self)
 	driver.set_navigator(navigator)
@@ -61,9 +64,16 @@ func _ready():
 	for collision_area in config["collision_areas"]:
 		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
 
-	for i in range(config["path_followers"].size()):
-		_follower_to_end_offset[i] = []
-		_follower_from_start_offset[i] = []
+	for trailer_def in config.trailers:
+		var trailer_body = trailer_def["body"]
+
+		_trailer_states.append(
+			{
+				"body": trailer_body,
+				"offset": trailer_def.get("offset"),
+				"articulation_angle": 0.0,
+			},
+		)
 
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
@@ -124,13 +134,6 @@ func get_all_trip_curves() -> Array:
 
 
 func assign_to_path(path: Path2D, progress: float) -> void:
-	for i in range(config["path_followers"].size()):
-		if i == 0:
-			continue
-
-		_follower_to_end_offset[i].append(main_path_follower.progress_ratio)
-		_follower_from_start_offset[i].append(progress)
-
 	main_path_follower.reparent(path, true)
 	main_path_follower.progress = progress
 
@@ -148,11 +151,11 @@ func _process(delta: float) -> void:
 
 	ai.process()
 
+	driver.tick_lights(delta)
+
 	if not navigator.can_advance(delta):
 		driver.set_idle()
 		return
-
-	driver.tick_lights(delta)
 
 	if driver.state == Driver.VehicleState.BLOCKED:
 		if driver.just_enabled_casters:
@@ -161,59 +164,62 @@ func _process(delta: float) -> void:
 		driver.check_blockade_cleared(delta)
 		return
 
-	var trail_length = navigator.get_current_step()["length"]
-
 	var current_speed = driver.tick_speed(delta)
+
+	_update_position(delta, current_speed)
+
+	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
+		navigator.complete_current_step()
+
+
+func _update_position(delta: float, current_speed: float) -> void:
+	var trail_length = navigator.get_current_step()["length"]
 
 	main_path_follower.progress_ratio += delta * current_speed / trail_length
 	self.global_transform = main_path_follower.global_transform
 
-	for i in range(config["path_followers"].size()):
-		var path_follower_def = config["path_followers"][i]
+	var front_pos: Vector2 = self.global_position
+	var front_rot: float = self.global_rotation
 
-		var path_follower = path_follower_def["follower"]
-		if path_follower == main_path_follower:
-			continue
+	var rotation_change = front_rot - _previous_front_rotation
+	while rotation_change > PI:
+		rotation_change -= 2 * PI
+	while rotation_change < -PI:
+		rotation_change += 2 * PI
 
-		var target_body = path_follower_def["body"]
+	var instant_curvature = rotation_change / delta if delta > 0 else 0.0
 
-		var is_initialized = path_follower.get_parent() != target_body
+	var smoothing_factor = 0.2
+	_smoothed_curvature = lerp(_smoothed_curvature, instant_curvature, smoothing_factor)
 
-		if not is_initialized and main_path_follower.progress < path_follower_def["offset"]:
-			continue
+	var curvature_deadzone = 0.05
+	var effective_curvature = _smoothed_curvature if abs(_smoothed_curvature) > curvature_deadzone else 0.0
+	var max_articulation_speed: float = 2.0
 
-		var path_end_ratio = _follower_to_end_offset[i][0] if _follower_to_end_offset[i].size() > 0 else 1.0
+	for trailer_state in _trailer_states:
+		var trailer_body: Node2D = trailer_state["body"]
+		var offset: float = trailer_state["offset"]
 
-		if not is_initialized or path_follower.progress_ratio >= path_end_ratio:
-			_follower_to_end_offset[i].erase(path_end_ratio)
-			var next_path = navigator.get_next_path(path_follower.get_parent() as Path2D)
-			if not next_path:
-				next_path = main_path_follower.get_parent() as Path2D
+		var target_phi: float = -effective_curvature * 0.3
 
-			path_follower.reparent(next_path, true)
-			path_follower.progress = _follower_from_start_offset[i][0] if _follower_from_start_offset[i].size() > 0 else 0.0
-			_follower_from_start_offset[i].pop_front()
+		var max_target_phi = deg_to_rad(45.0)
+		target_phi = clamp(target_phi, -max_target_phi, max_target_phi)
 
-		var trailer_path = (path_follower.get_parent() as Path2D).curve
+		var dphi: float = target_phi - trailer_state["articulation_angle"]
+		var max_step: float = max_articulation_speed * delta
+		dphi = clamp(dphi, -max_step, max_step)
+		trailer_state["articulation_angle"] += dphi
 
-		path_follower.progress_ratio += delta * current_speed / trailer_path.get_baked_length()
-		var trailer_direction = path_follower.global_rotation
+		var trailer_rot: float = front_rot + trailer_state["articulation_angle"]
+		var trailer_pos: Vector2 = front_pos - Vector2.RIGHT.rotated(trailer_rot) * offset
 
-		var vehicle_direction = self.global_rotation
-		var desired_trailer_rotation = trailer_direction - vehicle_direction
+		trailer_body.global_rotation = trailer_rot
 
-		while desired_trailer_rotation > PI:
-			desired_trailer_rotation -= 2 * PI
-		while desired_trailer_rotation < -PI:
-			desired_trailer_rotation += 2 * PI
+		front_pos = trailer_pos
+		front_rot = trailer_rot
 
-		var max_articulation = deg_to_rad(90.0)
-		var articulation_angle = clamp(desired_trailer_rotation, -max_articulation, max_articulation)
-
-		target_body.rotation = articulation_angle
-
-	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
-		navigator.complete_current_step()
+	_previous_front_rotation = self.global_rotation
+	_previous_front_position = self.global_position
 
 
 func _on_trip_started() -> void:

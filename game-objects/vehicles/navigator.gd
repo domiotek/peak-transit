@@ -40,7 +40,6 @@ var total_trip_distance: float = 0.0
 var reroute_cooldown: float = 0.0
 
 var trip_curves_cache: Array = []
-var used_paths: Array = []
 
 signal trip_started()
 signal trip_ended(completed: bool, trip_data: Dictionary)
@@ -244,17 +243,6 @@ func get_trip_curves() -> Array:
 	return trip_curves_cache
 
 
-func get_next_path(ref_path: Path2D) -> Path2D:
-	for i in range(used_paths.size()):
-		if used_paths[i] == ref_path and i + 1 < used_paths.size():
-			return used_paths[i + 1]
-
-	if used_paths.size() > 0:
-		return used_paths[0]
-
-	return null
-
-
 func set_custom_step(path: Path2D, max_speed: float = 0.0) -> void:
 	if current_step["type"] != StepType.NONE:
 		push_error("Navigator: Cannot set custom step while another trip is in progress.")
@@ -272,7 +260,6 @@ func set_custom_step(path: Path2D, max_speed: float = 0.0) -> void:
 
 	step_ready = true
 	vehicle.assign_to_path(path, 0.0)
-	used_paths.append(path)
 	emit_signal("trip_started")
 
 
@@ -390,7 +377,6 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 	if not leave_progress:
 		lane.assign_vehicle(vehicle)
-		used_paths.append(lane.trail)
 		vehicle.assign_to_path(lane.trail, 0.0)
 
 	current_step = _create_segment_step(lane)
@@ -431,7 +417,6 @@ func _pass_node(leave_progress: bool = false) -> void:
 	}
 
 	if not leave_progress:
-		used_paths.append(new_path)
 		vehicle.assign_to_path(new_path, 0.0)
 
 	step_ready = true
@@ -454,7 +439,6 @@ func _create_building_step(building: BaseBuilding, connection: Dictionary) -> Di
 
 
 func _assign_to_building_step(step: Dictionary) -> void:
-	used_paths.append(step["connection"]["path"])
 	vehicle.assign_to_path(step["connection"]["path"], 0.0)
 
 	current_step = step
@@ -468,7 +452,6 @@ func _leave_building() -> void:
 	if building_step["target_building"].has_method("notify_vehicle_left"):
 		building_step["target_building"].notify_vehicle_left()
 
-	used_paths.append(lane.trail)
 	vehicle.assign_to_path(lane.trail, line_helper.get_distance_from_point(lane.trail.curve, building_step["lane_point"]))
 	current_step = _create_segment_step(lane)
 
@@ -547,4 +530,3 @@ func _reset_state() -> void:
 	reroute_cooldown = 0.0
 
 	trip_curves_cache = []
-	used_paths = []
