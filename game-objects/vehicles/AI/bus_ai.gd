@@ -21,10 +21,13 @@ var _origin_depot: Depot = null
 var _current_terminal: Terminal = null
 var _target_terminal: Terminal = null
 var _brigade: Brigade = null
+var _brigade_trip_idx: int = -1
 
 var _is_leaving_building: bool = false
 var _is_entering_building: bool = false
 var _has_trip: bool = true
+var _current_passengers: int = 0
+var _max_passengers: int = 0
 
 
 func bind(vehicle: Vehicle) -> void:
@@ -75,18 +78,75 @@ func get_state_name() -> String:
 			return "Unknown"
 
 
+func get_passenger_counts() -> Dictionary:
+	return {
+		"current_passengers": _current_passengers,
+		"max_passengers": _max_passengers,
+	}
+
+
+func get_brigade() -> Brigade:
+	return _brigade
+
+
+func get_current_trip() -> BrigadeTrip:
+	if _brigade == null or _brigade_trip_idx == -1:
+		return null
+
+	return _brigade.get_trip(_brigade_trip_idx)
+
+
+func get_next_stop() -> StopSelection:
+	var current_trip = get_current_trip()
+	if current_trip == null:
+		return null
+
+	return null
+
+
+func get_current_terminal() -> Terminal:
+	return _current_terminal
+
+
+func assign_brigade(brigade_id: int) -> void:
+	var brigade: Brigade = _transport_manager.brigades.get_by_id(brigade_id)
+
+	if _brigade != null:
+		_brigade.unassign_vehicle(_vehicle.id)
+
+	_brigade = brigade
+	var trip_index = brigade.assign_vehicle(_vehicle.id)
+	_brigade_trip_idx = trip_index
+
+	var current_trip = brigade.get_trip(trip_index)
+	drive_to_terminal(current_trip.get_departure_terminal().terminal_id)
+
+
+func unassign_brigade() -> void:
+	if _brigade:
+		_brigade.unassign_vehicle(_vehicle.id)
+		_brigade = null
+		return
+
+
+func set_current_trip(trip_idx: int) -> void:
+	if _brigade == null:
+		return
+
+	if trip_idx < 0 or _brigade.get_trip_count() <= trip_idx:
+		return
+
+	if not _brigade.switch_trip(_vehicle.id, trip_idx):
+		return
+
+	_brigade_trip_idx = trip_idx
+
+	var current_trip = _brigade.get_trip(trip_idx)
+	drive_to_terminal(current_trip.get_departure_terminal().terminal_id)
+
+
 func set_origin_depot(depot: Depot) -> void:
 	_origin_depot = depot
-
-
-func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
-	if not completed:
-		_remove_vehicle()
-		return
-	_has_trip = false
-
-	if not _is_at_depot and not _is_at_terminal:
-		_is_entering_building = true
 
 
 func mark_leaving_terminal() -> void:
@@ -112,6 +172,7 @@ func return_to_depot() -> void:
 				_drive_to_depot()
 
 	_state = BusState.RETURNING_TO_DEPOT
+	unassign_brigade()
 
 
 func drive_to_terminal(id: int) -> void:
@@ -128,10 +189,6 @@ func drive_to_terminal(id: int) -> void:
 		_drive_to_terminal()
 
 	_state = BusState.TRANSFERING_TO_TERMINAL
-
-
-func get_current_terminal() -> Terminal:
-	return _current_terminal
 
 
 func process() -> void:
@@ -238,6 +295,16 @@ func process() -> void:
 						return
 
 	_state = BusState.CONFUSED
+
+
+func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
+	if not completed:
+		_remove_vehicle()
+		return
+	_has_trip = false
+
+	if not _is_at_depot and not _is_at_terminal:
+		_is_entering_building = true
 
 
 func can_drive() -> bool:

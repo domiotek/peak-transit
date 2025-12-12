@@ -114,7 +114,6 @@ func get_popup_data() -> Dictionary:
 		"speed": driver.get_current_speed(),
 		"target_speed": driver.get_target_speed(),
 		"max_speed": driver.get_max_allowed_speed(),
-		"ai_state": ai.get_state_name(),
 		"state": Driver.VehicleState.keys()[driver.state],
 		"from_node": from_node,
 		"to_node": to_node,

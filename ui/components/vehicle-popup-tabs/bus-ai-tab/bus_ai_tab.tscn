@@ -1,0 +1,118 @@
+[gd_scene load_steps=5 format=3 uid="uid://cve66ac3k400f"]
+
+[ext_resource type="Script" uid="uid://bwlcy7wqcqfoa" path="res://ui/components/vehicle-popup-tabs/bus-ai-tab/bus_ai_tab.gd" id="1_c72ya"]
+[ext_resource type="PackedScene" uid="uid://c04rhuwgif41s" path="res://ui/components/value_list_item/value_list_item.tscn" id="2_jxj42"]
+[ext_resource type="Texture2D" uid="uid://of0uwr8c8oea" path="res://assets/ui_icons/jump_to_element.png" id="3_hiam4"]
+[ext_resource type="Texture2D" uid="uid://udjifobt8ee1" path="res://assets/ui_icons/depot.png" id="4_hiam4"]
+
+[node name="BusAiTab" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+script = ExtResource("1_c72ya")
+
+[node name="Wrapper" type="BoxContainer" parent="."]
+layout_mode = 2
+
+[node name="PropsContainer" type="BoxContainer" parent="Wrapper"]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical = true
+
+[node name="DirectionProp" type="Label" parent="Wrapper/PropsContainer"]
+layout_mode = 2
+text = "Terminal 0"
+
+[node name="StateProp" type="Label" parent="Wrapper/PropsContainer"]
+layout_mode = 2
+text = "Driving to terminal"
+
+[node name="Line" type="BoxContainer" parent="Wrapper/PropsContainer"]
+layout_mode = 2
+
+[node name="LineProp" parent="Wrapper/PropsContainer/Line" instance=ExtResource("2_jxj42")]
+layout_mode = 2
+init_label_text = "Line:"
+
+[node name="GoToLineButton" type="Button" parent="Wrapper/PropsContainer/Line"]
+custom_minimum_size = Vector2(17, 0)
+layout_mode = 2
+icon = ExtResource("3_hiam4")
+flat = true
+expand_icon = true
+
+[node name="RouteProp" parent="Wrapper/PropsContainer" instance=ExtResource("2_jxj42")]
+layout_mode = 2
+init_label_text = "Route"
+
+[node name="NextStop" type="BoxContainer" parent="Wrapper/PropsContainer"]
+layout_mode = 2
+
+[node name="NextStopProp" parent="Wrapper/PropsContainer/NextStop" instance=ExtResource("2_jxj42")]
+layout_mode = 2
+init_label_text = "Next stop:"
+
+[node name="GoToStopButton" type="Button" parent="Wrapper/PropsContainer/NextStop"]
+custom_minimum_size = Vector2(17, 0)
+layout_mode = 2
+icon = ExtResource("3_hiam4")
+flat = true
+expand_icon = true
+
+[node name="Capacity" parent="Wrapper/PropsContainer" instance=ExtResource("2_jxj42")]
+layout_mode = 2
+init_label_text = "Passengers:"
+
+[node name="ButtonsBar" type="BoxContainer" parent="Wrapper/PropsContainer"]
+layout_mode = 2
+
+[node name="ReturnToDepotButton" type="Button" parent="Wrapper/PropsContainer/ButtonsBar"]
+layout_mode = 2
+tooltip_text = "Return to depot"
+icon = ExtResource("4_hiam4")
+
+[node name="BrigadeView" type="BoxContainer" parent="Wrapper"]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical = true
+
+[node name="BrigadeSelect" type="BoxContainer" parent="Wrapper/BrigadeView"]
+layout_mode = 2
+alignment = 2
+
+[node name="Label" type="Label" parent="Wrapper/BrigadeView/BrigadeSelect"]
+layout_mode = 2
+text = "Brigade:"
+
+[node name="BrigadeSelector" type="OptionButton" parent="Wrapper/BrigadeView/BrigadeSelect"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+focus_mode = 0
+
+[node name="TripSelect" type="BoxContainer" parent="Wrapper/BrigadeView"]
+layout_mode = 2
+alignment = 2
+
+[node name="Label" type="Label" parent="Wrapper/BrigadeView/TripSelect"]
+layout_mode = 2
+text = "Trip:"
+
+[node name="TripSelector" type="OptionButton" parent="Wrapper/BrigadeView/TripSelect"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+focus_mode = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Wrapper/BrigadeView"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TripStepList" type="BoxContainer" parent="Wrapper/BrigadeView/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical = true

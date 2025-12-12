@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://c0y2ihbntdkuc"]
+[gd_scene load_steps=10 format=3 uid="uid://c0y2ihbntdkuc"]
 
 [ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_fak0m"]
 [ext_resource type="Script" uid="uid://h0yu44vvrsrk" path="res://ui/views/vehicle_popup_view/vehicle_popup_view.gd" id="2_2jm7u"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://ch7h2yiicuahf" path="res://assets/ui_icons/keep_off.png" id="3_2i1xd"]
 [ext_resource type="Texture2D" uid="uid://ciu6pqreygc85" path="res://assets/ui_icons/delete.png" id="3_kk4e6"]
 [ext_resource type="Texture2D" uid="uid://co787ad4651pi" path="res://assets/ui_icons/route.png" id="4_qwaqe"]
+[ext_resource type="PackedScene" uid="uid://cve66ac3k400f" path="res://ui/components/vehicle-popup-tabs/bus-ai-tab/bus_ai_tab.tscn" id="5_we26r"]
 [ext_resource type="Texture2D" uid="uid://b2ucwghxcyr4r" path="res://assets/ui_icons/debugger.png" id="7_2i1xd"]
 [ext_resource type="Texture2D" uid="uid://c8bgvih6mwax4" path="res://assets/ui_icons/reroute.png" id="8_8kfou"]
 
@@ -13,9 +14,8 @@
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 1.0
-offset_right = -752.0
-offset_bottom = -407.0
+offset_right = -652.0
+offset_bottom = -318.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = ExtResource("1_fak0m")
@@ -68,10 +68,36 @@ size_flags_vertical = 3
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_right = 5
 
-[node name="PropertiesContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer"]
+[node name="TabsWrapper" type="TabContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_font_sizes/font_size = 9
+current_tab = 1
+tab_focus_mode = 0
+
+[node name="General" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/TabsWrapper"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/TabsWrapper/General"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="PropsContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/TabsWrapper/General/MarginContainer"]
+layout_mode = 2
 vertical = true
+
+[node name="AI" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/TabsWrapper"]
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="BusAiTab" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/TabsWrapper/AI" instance=ExtResource("5_we26r")]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="TripProgressBar" type="ProgressBar" parent="MarginContainer/MainFlowContainer/MainContentContainer"]
 layout_mode = 2

@@ -194,6 +194,22 @@ func get_min_layover_minutes() -> int:
 	return _line_def.min_layover_minutes
 
 
+func get_departure_terminal_of_route(route_idx: int) -> Terminal:
+	if route_idx < 0 or route_idx >= _terminals.size():
+		return null
+
+	return _terminals[route_idx]
+
+
+func get_arrival_terminal_of_route(route_idx: int) -> Terminal:
+	var other_route_idx = (route_idx + 1) % _terminals.size()
+
+	if other_route_idx < 0 or other_route_idx >= _terminals.size():
+		return null
+
+	return _terminals[other_route_idx]
+
+
 func get_departures_at_terminal(terminal_id: int, after: TimeOfDay = null, limit: int = -1, sort: bool = true) -> Array:
 	var route_idx = _terminals.find_custom(
 		func(t) -> bool:
