@@ -219,8 +219,12 @@ func wait_at_terminal(vehicle_id: int) -> Dictionary:
 
 			next_track_id = "wait_%d_in" % free_wait_index
 		elif current_track_id.begins_with("peron_"):
-			var current_peron_index = int(current_track_id.split("_")[1])
-			next_track_id = "peron_%d_around" % current_peron_index
+			var current_peron_index = int(track_id_parts[1])
+
+			if track_id_parts[2] == "around":
+				next_track_id = "in_wait"
+			else:
+				next_track_id = "peron_%d_around" % current_peron_index
 
 		elif current_track_id.begins_with("wait_"):
 			if track_id_parts[2] == "in":
