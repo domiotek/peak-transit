@@ -42,6 +42,10 @@ var time_blocked: float = 0.0
 var _headlights_state = false
 var _headlights_state_change_ticks_counter: float = 0
 
+var _stop_at_distance: float = 0.0
+var _slow_down_threshold: float = 0.0
+var _stop_at_callback: Callable
+
 signal caster_state_changed(caster_id: String, is_colliding: bool)
 signal state_changed(new_state: VehicleState)
 
@@ -131,6 +135,25 @@ func emergency_stop() -> void:
 	current_brake_force = constants["EMERGENCY_BRAKING"]
 
 
+func stop_after_distance(distance: float, callback: Callable) -> void:
+	_stop_at_distance = distance
+
+	var max_speed = get_max_allowed_speed()
+
+	var braking_distance = (max_speed * max_speed) / (2.0 * constants["DEFAULT_BRAKING"])
+	_slow_down_threshold = distance - braking_distance
+	if _slow_down_threshold < 0.0:
+		_slow_down_threshold = distance
+
+	_stop_at_callback = callback
+
+
+func resume_driving() -> void:
+	_stop_at_distance = 0.0
+	_slow_down_threshold = 0.0
+	_stop_at_callback = Callable()
+
+
 func grant_no_caster_allowance(time_seconds: float) -> void:
 	no_caster_allowance_time = time_seconds
 	_set_casters_enabled(false)
@@ -159,11 +182,12 @@ func set_idle() -> void:
 	_update_state(VehicleState.IDLE)
 
 
-func tick_speed(delta: float) -> float:
+func tick_speed(delta: float, current_distance: float) -> float:
 	target_speed = get_max_allowed_speed()
 
 	_apply_slowdown_intersection()
 	_apply_slowdown_building()
+	_apply_slowdown_to_distance(current_distance)
 
 	if no_caster_allowance_time > 0.0:
 		no_caster_allowance_time -= delta
@@ -282,6 +306,23 @@ func _apply_slowdown_building() -> void:
 
 	if current_step["is_entering"]:
 		target_speed = constants["BUILDING_ENTRY_SPEED"]
+
+
+func _apply_slowdown_to_distance(current_distance: float) -> void:
+	if _stop_at_distance <= 0.0:
+		return
+
+	var distance_remaining = _stop_at_distance - current_distance
+
+	if distance_remaining <= 0.0:
+		target_speed = 0.0
+		if _stop_at_callback:
+			_stop_at_callback.call_deferred()
+			_stop_at_callback = Callable()
+	elif distance_remaining <= _slow_down_threshold:
+		var max_speed = get_max_allowed_speed()
+		var required_speed = sqrt(2.0 * constants["DEFAULT_BRAKING"] * distance_remaining)
+		target_speed = min(required_speed, max_speed)
 
 
 func _update_speed(delta: float) -> void:

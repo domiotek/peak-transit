@@ -163,7 +163,7 @@ func _process(delta: float) -> void:
 		driver.check_blockade_cleared(delta)
 		return
 
-	var current_speed = driver.tick_speed(delta)
+	var current_speed = driver.tick_speed(delta, main_path_follower.progress)
 
 	_update_position(delta, current_speed)
 
