@@ -40,6 +40,10 @@ var total_trip_distance: float = 0.0
 var reroute_cooldown: float = 0.0
 
 var trip_curves_cache: Array = []
+var _location_triggers: Dictionary = {
+	"segment": [],
+	"node": [],
+}
 var _progress_offset: float = 0.0
 
 signal trip_started()
@@ -131,6 +135,8 @@ func can_advance(delta: float) -> bool:
 	if reroute_cooldown > 0.0:
 		reroute_cooldown = max(reroute_cooldown - delta, 0.0)
 
+	_tick_segment_triggers()
+
 	return step_ready
 
 
@@ -142,6 +148,14 @@ func complete_current_step() -> void:
 
 	_progress_offset = 0.0
 	traveled_distance_till_current_step += current_step["progress"]
+
+	if current_step["type"] == StepType.NODE:
+		for trigger in _location_triggers["node"]:
+			if current_step["node"].id == trigger["node_id"]:
+				if current_step["to_endpoint"] == trigger["endpoint_id"] or trigger["endpoint_id"] == -1:
+					var callable = trigger["callback"] as Callable
+					callable.call_deferred(vehicle, current_step["node"].id, current_step["to_endpoint"])
+					_location_triggers["node"].erase(trigger)
 
 	if trip_step_index + 1 >= trip_path.size():
 		if current_step.has("building_to_enter"):
@@ -171,6 +185,8 @@ func complete_current_step() -> void:
 
 
 func clean_up() -> void:
+	_location_triggers.clear()
+
 	if current_step and current_step["type"] == StepType.SEGMENT:
 		var step = trip_path[trip_step_index]
 		var endpoint_id = step.ViaEndpointId
@@ -263,6 +279,44 @@ func set_custom_step(path: Path2D, max_speed: float = 0.0) -> void:
 	step_ready = true
 	vehicle.assign_to_path(path, 0.0)
 	emit_signal("trip_started")
+
+
+func set_node_location_trigger(node_id: int, endpoint_id: int, callback: Callable) -> void:
+	_location_triggers["node"].append(
+		{
+			"node_id": node_id,
+			"endpoint_id": endpoint_id,
+			"callback": callback,
+		},
+	)
+
+
+func set_segment_location_trigger(segment_id: int, lane_id: int, distance: float, callback: Callable) -> void:
+	_location_triggers["segment"].append(
+		{
+			"segment_id": segment_id,
+			"lane_id": lane_id,
+			"distance": distance,
+			"callback": callback,
+		},
+	)
+
+
+func _tick_segment_triggers() -> void:
+	if _location_triggers["segment"].size() == 0:
+		return
+
+	if current_step["type"] == StepType.SEGMENT:
+		var segment_id = current_step["segment_id"]
+		var lane_id = current_step["lane_id"]
+		var progress = current_step["progress"]
+
+		for trigger in _location_triggers["segment"]:
+			if trigger["segment_id"] == segment_id and (trigger["lane_id"] == lane_id or trigger["lane_id"] == -1):
+				if progress >= trigger["distance"]:
+					var callable = trigger["callback"] as Callable
+					callable.call_deferred(vehicle, segment_id, lane_id)
+					_location_triggers["segment"].erase(trigger)
 
 
 func _on_pathfinder_result(path: Variant) -> void:
@@ -536,3 +590,4 @@ func _reset_state() -> void:
 	reroute_cooldown = 0.0
 
 	trip_curves_cache = []
+	_location_triggers = { "segment": [], "node": [] }
