@@ -233,14 +233,9 @@ func trim_curve_to_building_connection(curve: Curve2D, building_point: Vector2, 
 	return line_helper.trim_curve(curve, new_start, new_end)
 
 
-func position_along_the_edge(segment: NetSegment, target_node: Node2D, curve_offset: float, start_from_end: bool, horizontal_offset: float = 0.0) -> void:
-	var relation = segment.get_relation_with_starting_node(segment.nodes[0].id)
-
-	horizontal_offset = horizontal_offset + relation.get_road_edge_offset()
-
-	if start_from_end:
-		horizontal_offset = -horizontal_offset
-		curve_offset = segment.curve_shape.get_baked_length() - curve_offset
+func position_along_the_edge(segment: NetSegment, target_node: Node2D, curve_offset: float, relation_idx: int, horizontal_offset: float = 0.0) -> void:
+	var target_horizontal_offset = horizontal_offset + NetworkConstants.LANE_WIDTH / 2.0
+	var target_curve = segment.get_lane(segment.relations[relation_idx].get_rightmost_lane_id()).get_curve()
 
 	var point = line_helper.get_point_along_curve(segment.curve_shape, curve_offset, horizontal_offset)
 

@@ -93,16 +93,6 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, relation_info: 
 		lanes.append(lane)
 		relation.lanes.append(lane.id)
 
-	for i in range(relation.relation_info.buildings.size()):
-		var building_info = relation.relation_info.buildings[i]
-		var building = buildings_manager.create_spawner_building(building_info)
-		building.setup(relation_id, self, building_info)
-
-		segment_helper.position_along_the_edge(self, building, building_info.offset_position, starts_from_end, BuildingConstants.BUILDING_ROAD_OFFSET)
-
-		relation.register_building(building.id, building_info.offset_position)
-		add_child(building)
-
 
 func update_visuals() -> void:
 	if not curve_shape:
@@ -143,6 +133,19 @@ func update_visuals() -> void:
 
 func late_update_visuals() -> void:
 	_update_lanes_pathing_shape()
+
+	for relation_idx in range(relations.size()):
+		var relation = relations[relation_idx]
+
+		for i in range(relation.relation_info.buildings.size()):
+			var building_info = relation.relation_info.buildings[i]
+			var building = buildings_manager.create_spawner_building(building_info)
+			building.setup(relation_idx, self, building_info)
+
+			segment_helper.position_along_the_edge(self, building, building_info.offset_position, relation_idx, BuildingConstants.BUILDING_ROAD_OFFSET)
+
+			relation.register_building(building.id, building_info.offset_position)
+			add_child(building)
 
 
 func get_lane(lane_id: int) -> NetLane:

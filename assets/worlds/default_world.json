@@ -248,7 +248,7 @@
 						"buildings": [
 							{
 								"type": 1,
-								"offset": 150
+								"offset": 125
 							}
 						]
 					},
@@ -259,27 +259,27 @@
 						"buildings": [
 							{
 								"type": 0,
-								"offset": 30
+								"offset": 15
 							},
 							{
 								"type": 0,
-								"offset": 90
+								"offset": 75
 							},
 							{
 								"type": 0,
-								"offset": 150
+								"offset": 135
 							},
 							{
 								"type": 0,
-								"offset": 210
+								"offset": 195
 							},
 							{
 								"type": 0,
-								"offset": 270
+								"offset": 255
 							},
 							{
 								"type": 0,
-								"offset": 330
+								"offset": 315
 							}
 						]
 					}
@@ -441,7 +441,7 @@
 						"buildings": [
 							{
 								"type": 2,
-								"offset": 150
+								"offset": 120
 							},
 							{
 								"type": 2,
@@ -552,7 +552,7 @@
 						2,
 						1
 					],
-					"offset": 60
+					"offset": 35
 				},
 				"name": "Stop #0 (01)",
 				"demandPreset": 0,
@@ -564,7 +564,7 @@
 						1,
 						2
 					],
-					"offset": 60
+					"offset": 35
 				},
 				"name": "Stop #0 (02)",
 				"demandPreset": 0,
