@@ -237,10 +237,9 @@ func position_along_the_edge(segment: NetSegment, target_node: Node2D, curve_off
 	var target_horizontal_offset = horizontal_offset + NetworkConstants.LANE_WIDTH / 2.0
 	var target_curve = segment.get_lane(segment.relations[relation_idx].get_rightmost_lane_id()).get_curve()
 
-	var point = line_helper.get_point_along_curve(segment.curve_shape, curve_offset, horizontal_offset)
+	var point = line_helper.get_point_along_curve(target_curve, curve_offset, target_horizontal_offset)
 
 	target_node.position = point
-	target_node.rotation = line_helper.rotate_along_curve(segment.curve_shape, point)
+	target_node.rotation = line_helper.rotate_along_curve(target_curve, point)
 
-	if not start_from_end:
-		target_node.rotation += PI
+	target_node.rotation += PI

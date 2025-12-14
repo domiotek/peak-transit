@@ -40,6 +40,7 @@ var total_trip_distance: float = 0.0
 var reroute_cooldown: float = 0.0
 
 var trip_curves_cache: Array = []
+var _progress_offset: float = 0.0
 
 signal trip_started()
 signal trip_ended(completed: bool, trip_data: Dictionary)
@@ -117,7 +118,7 @@ func has_trip() -> bool:
 
 
 func get_current_step() -> Dictionary:
-	current_step["progress"] = path_follower.progress
+	current_step["progress"] = path_follower.progress - _progress_offset
 
 	return current_step
 
@@ -139,7 +140,8 @@ func complete_current_step() -> void:
 
 	step_ready = false
 
-	traveled_distance_till_current_step += current_step["length"]
+	_progress_offset = 0.0
+	traveled_distance_till_current_step += current_step["progress"]
 
 	if trip_step_index + 1 >= trip_path.size():
 		if current_step.has("building_to_enter"):
@@ -356,6 +358,7 @@ func _calc_trip_distance() -> void:
 
 
 func _start_trip() -> void:
+	traveled_distance_till_current_step = 0.0
 	var start_step = trip_path[0]
 
 	if trip_buildings.size() > 0 and trip_buildings[0] != null:
@@ -379,7 +382,7 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 		lane.assign_vehicle(vehicle)
 		vehicle.assign_to_path(lane.trail, 0.0)
 
-	current_step = _create_segment_step(lane)
+	current_step = _create_segment_step(lane, 0.0)
 
 	if trip_step_index == trip_path.size() - 1 and trip_buildings.size() > 1:
 		var building_in_connection = trip_buildings[1].get_in_connection(last_step_forced_endpoint)
@@ -452,8 +455,10 @@ func _leave_building() -> void:
 	if building_step["target_building"].has_method("notify_vehicle_left"):
 		building_step["target_building"].notify_vehicle_left()
 
-	vehicle.assign_to_path(lane.trail, line_helper.get_distance_from_point(lane.trail.curve, building_step["lane_point"]))
-	current_step = _create_segment_step(lane)
+	var offset = line_helper.get_distance_from_point(lane.trail.curve, building_step["lane_point"])
+
+	vehicle.assign_to_path(lane.trail, offset)
+	current_step = _create_segment_step(lane, offset)
 
 	lane.assign_vehicle(vehicle)
 
@@ -478,7 +483,7 @@ func _enter_building() -> void:
 	_assign_to_building_step(next_step)
 
 
-func _create_segment_step(lane: NetLane) -> Dictionary:
+func _create_segment_step(lane: NetLane, progress_offset: float) -> Dictionary:
 	var finish_endpoint = lane.get_endpoint_by_type(false)
 
 	var prev_node_id = lane.segment.get_other_node_id(finish_endpoint.NodeId)
@@ -495,6 +500,7 @@ func _create_segment_step(lane: NetLane) -> Dictionary:
 		"from_endpoint": lane.from_endpoint,
 		"to_endpoint": finish_endpoint.Id,
 	}
+	_progress_offset = progress_offset
 
 	var node = network_manager.get_node(finish_endpoint.NodeId)
 
