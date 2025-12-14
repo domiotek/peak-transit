@@ -137,6 +137,7 @@ func assign_brigade(brigade_id: int) -> void:
 	var trip_index = brigade.assign_vehicle(_vehicle.id)
 	_brigade_trip_idx = trip_index
 	_join_trip()
+	_vehicle.navigator.block_reroutes()
 
 
 func unassign_brigade() -> void:
@@ -144,6 +145,7 @@ func unassign_brigade() -> void:
 		_brigade.unassign_vehicle(_vehicle.id)
 		_brigade = null
 		return
+	_vehicle.navigator.unblock_reroutes()
 
 
 func set_current_trip(trip_idx: int) -> void:

@@ -38,6 +38,7 @@ var traveled_distance_till_current_step: float = 0.0
 var total_trip_distance: float = 0.0
 
 var reroute_cooldown: float = 0.0
+var _is_rerouting_enabled: bool = true
 
 var trip_curves_cache: Array = []
 var _location_triggers: Dictionary = {
@@ -236,6 +237,9 @@ func abandon_trip() -> void:
 
 
 func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
+	if not _is_rerouting_enabled:
+		return
+
 	if current_step["type"] != StepType.SEGMENT and current_step["type"] != StepType.NODE:
 		return
 
@@ -257,6 +261,14 @@ func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
 		current_step["from_endpoint"],
 		finish_endpoint.Id if finish_endpoint else -1,
 	)
+
+
+func block_reroutes() -> void:
+	_is_rerouting_enabled = false
+
+
+func unblock_reroutes() -> void:
+	_is_rerouting_enabled = true
 
 
 func get_total_progress() -> float:
