@@ -141,6 +141,11 @@ func assign_to_path(path: Path2D, progress: float) -> void:
 	main_path_follower.progress = progress
 
 
+func recolor(new_color: Color) -> void:
+	for body in config.body_segments:
+		body.color = new_color
+
+
 func _physics_process(_delta: float) -> void:
 	if driver.just_enabled_casters:
 		driver.just_enabled_casters = false

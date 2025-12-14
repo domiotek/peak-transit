@@ -3,9 +3,9 @@ class_name BrigadeManager
 var _brigades: Array = [] # Array of Brigade
 
 
-func register(schedule: BrigadeSchedule, line_id: int, line_tag: int, index_in_line: int) -> int:
+func register(schedule: BrigadeSchedule, line_id: int, line_tag: int, index_in_line: int, line_color: Color) -> int:
 	var new_id = _brigades.size()
-	var brigade = Brigade.new(new_id, line_id, schedule, line_tag, index_in_line)
+	var brigade = Brigade.new(new_id, line_id, schedule, line_tag, index_in_line, line_color)
 	_brigades.append(brigade)
 
 	return new_id

@@ -26,7 +26,7 @@ script = ExtResource("2_8bm15")
 z_index = 5
 z_as_relative = false
 position = Vector2(74, -44)
-color = Color(1, 0.501961, 0.309804, 1)
+color = Color(0.105, 0.514, 0.833, 1)
 polygon = PackedVector2Array(-108, 33, -40, 33, -40, 55, -108, 55)
 uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
 

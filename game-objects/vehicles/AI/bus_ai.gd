@@ -138,14 +138,17 @@ func assign_brigade(brigade_id: int) -> void:
 	_brigade_trip_idx = trip_index
 	_join_trip()
 	_vehicle.navigator.block_reroutes()
+	_vehicle.recolor(brigade.line_color)
 
 
 func unassign_brigade() -> void:
-	if _brigade:
-		_brigade.unassign_vehicle(_vehicle.id)
-		_brigade = null
+	if not _brigade:
 		return
+
+	_brigade.unassign_vehicle(_vehicle.id)
+	_brigade = null
 	_vehicle.navigator.unblock_reroutes()
+	_vehicle.recolor(SimulationConstants.BUS_DEFAULT_COLOR)
 
 
 func set_current_trip(trip_idx: int) -> void:

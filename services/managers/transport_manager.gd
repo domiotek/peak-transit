@@ -261,7 +261,7 @@ func generate_line_schedule(line: TransportLine) -> void:
 
 	for schedule_dict in schedule_data:
 		var brigade_schedule = BrigadeSchedule.deserialize(schedule_dict as Dictionary)
-		brigades_ids.append(brigades.register(brigade_schedule, line.id, line.display_number, brigades_ids.size()))
+		brigades_ids.append(brigades.register(brigade_schedule, line.id, line.display_number, brigades_ids.size(), line.color_hex))
 
 	line.assign_brigades(brigades_ids)
 

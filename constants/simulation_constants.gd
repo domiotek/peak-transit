@@ -10,3 +10,4 @@ const BUS_OCCUPY_PERON_THRESHOLD = 3 # in-game minutes
 const BUS_BOARDING_TIME_PER_PASSENGER = 0.1 # real seconds
 const BUS_MAX_BOARDING_TIME = 10.0 # real seconds
 const SIMULATION_WORLD_TO_GAME_UNITS_RATIO = 0.05
+const BUS_DEFAULT_COLOR = Color(0.105, 0.514, 0.833)

@@ -3,6 +3,7 @@ class_name Brigade
 var id: int
 var line_id: int
 var line_tag: int
+var line_color: Color
 var _schedule: BrigadeSchedule
 var _index: int
 var _start_time: TimeOfDay
@@ -18,10 +19,11 @@ var _trips: Array = []
 var clock_manager: ClockManager
 
 
-func _init(_id: int, _transport_line_id: int, schedule: BrigadeSchedule, _line_tag: int, index: int) -> void:
+func _init(_id: int, _transport_line_id: int, schedule: BrigadeSchedule, _line_tag: int, index: int, _line_color: Color) -> void:
 	id = _id
 	line_id = _transport_line_id
 	line_tag = _line_tag
+	line_color = _line_color
 	_schedule = schedule
 	_index = index
 
