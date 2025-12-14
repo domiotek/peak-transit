@@ -14,8 +14,10 @@ script = ExtResource("1_a2p26")
 
 [node name="ToggleLinesViewButton" type="Button" parent="."]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("2_a2p26")
 
 [node name="ToggleBrigadesViewButton" type="Button" parent="."]
 layout_mode = 2
+focus_mode = 0
 icon = ExtResource("3_a2p26")

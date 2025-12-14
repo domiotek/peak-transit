@@ -117,6 +117,23 @@ func setup_trip_mixed(from_id: int, to_id: int, is_from_building: bool, forced_n
 	pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
 
 
+func setup_trip_with_path(path: Array, from_building: BaseBuilding = null, to_building: BaseBuilding = null) -> void:
+	trip_path = path.duplicate()
+
+	if trip_path.size() == 0:
+		push_error("Navigator: Cannot setup trip with empty path.")
+		return
+
+	trip_points = [trip_path[0].FromNodeId, trip_path[-1].ToNodeId]
+	trip_buildings = [from_building, to_building]
+
+	first_step_forced_endpoint = segment_helper.get_other_endpoint_in_lane(trip_path[0].ViaEndpointId).Id
+	last_step_forced_endpoint = trip_path[-1].ViaEndpointId
+
+	call_deferred("_start_trip")
+	call_deferred("_calc_trip_distance")
+
+
 func has_trip() -> bool:
 	return trip_path.size() > 0
 

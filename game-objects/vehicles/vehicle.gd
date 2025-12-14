@@ -100,6 +100,10 @@ func init_simple_trip(from_node_id: int, to_node_id: int) -> void:
 	navigator.setup_trip(from_node_id, to_node_id)
 
 
+func init_trip_with_path(path: Array, from_building: BaseBuilding = null, to_building: BaseBuilding = null) -> void:
+	navigator.setup_trip_with_path(path, from_building, to_building)
+
+
 func get_popup_data() -> Dictionary:
 	var from_node = "N/A"
 	var to_node = "N/A"
@@ -148,7 +152,7 @@ func _process(delta: float) -> void:
 		print("Debug pick triggered for vehicle ID %d" % id)
 		breakpoint
 
-	ai.process()
+	ai.process(delta)
 
 	driver.tick_lights(delta)
 

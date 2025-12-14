@@ -115,6 +115,18 @@ func switch_trip(vehicle_id: int, new_trip_idx: int) -> bool:
 	return true
 
 
+func assign_next_trip(vehicle_id: int, current_index: int) -> int:
+	var next_index = _get_next_trip_index(current_index)
+
+	if next_index < current_index:
+		return -1
+
+	_vehicles.set(vehicle_id, next_index)
+	_last_assigned_trip_index = next_index
+
+	return next_index
+
+
 func _get_next_trip_index(current_index: int) -> int:
 	var next_index = current_index + 1
 	if next_index >= get_trip_count():

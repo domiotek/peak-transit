@@ -46,6 +46,10 @@ func get_outgoing_node_id() -> int:
 	return _data.position.segment[1]
 
 
+func can_vehicle_wait() -> bool:
+	return _data.can_wait
+
+
 func get_lane() -> NetLane:
 	return _segment.get_lane(_segment.relations[_relation_id].get_rightmost_lane_id())
 

@@ -32,6 +32,7 @@ func _ready() -> void:
 	trip_selector.item_selected.connect(_on_trip_selected)
 	return_to_depot_button.pressed.connect(_on_return_to_depot_button_pressed)
 	go_to_line_button.pressed.connect(_on_go_to_line_button_pressed)
+	go_to_stop_button.pressed.connect(_on_go_to_stop_button_pressed)
 
 
 func bind(vehicle: Vehicle) -> void:
@@ -90,7 +91,7 @@ func update_data() -> void:
 	route_prop.set_value("Forward" if current_trip.is_forward() else "Return")
 	var next_stop = ai.get_next_stop()
 	if next_stop != null:
-		next_stop_prop.set_value(next_stop.get_stop_name())
+		next_stop_prop.set_value(next_stop.target_name, true)
 
 	_populate_trip_selector(brigade, current_trip.idx)
 	var idx = trip_selector.get_item_index(current_trip.idx)
@@ -153,21 +154,15 @@ func _populate_trip_view(trip: BrigadeTrip) -> void:
 	for child in steps_list.get_children():
 		child.queue_free()
 
-	var actual_idx = 0
-	var route = trip.get_route_steps()
+	var route = trip.get_stops()
 	var stop_times = trip.get_stop_times()
 
 	for step_idx in range(route.size()):
-		var route_step = route[step_idx] as RouteStep
-
-		if route_step.step_type == Enums.TransportRouteStepType.WAYPOINT:
-			continue
-
-		actual_idx += 1
+		var route_step = route[step_idx] as LineStop
 
 		var step_item = list_item.instantiate() as TripStepListItem
 		step_item.init_item(route_step.target_name)
-		step_item.set_step_idx(actual_idx)
+		step_item.set_step_idx(route_step.stop_idx)
 		step_item.set_departure_time(stop_times[step_idx])
 
 		steps_list.add_child(step_item)
@@ -185,3 +180,26 @@ func _on_go_to_line_button_pressed() -> void:
 		if brigade:
 			var line = transport_manager.get_line(brigade.line_id)
 			ui_manager.show_ui_view_exclusively(ShortcutsView.SHORTCUTS_VIEW_GROUP, LinesView.VIEW_NAME, { "line": line })
+
+
+func _on_go_to_stop_button_pressed() -> void:
+	var next_stop = (_vehicle.ai as BusAI).get_next_stop()
+	var brigade = (_vehicle.ai as BusAI).get_brigade()
+
+	var selected_object: Object = null
+	var selection_type = GameManager.SelectionType.NONE
+
+	if next_stop.is_terminal:
+		var terminal = transport_manager.get_terminal(next_stop.target_id)
+		var terminal_peron = TerminalPeron.new(terminal, terminal.get_peron_for_line(brigade.line_id))
+		var stop_selection = StopSelection.new(StopSelection.StopSelectionType.TERMINAL_PERON, terminal_peron)
+		selected_object = stop_selection
+		selection_type = GameManager.SelectionType.TRANSPORT_STOP
+	else:
+		var stop = transport_manager.get_stop(next_stop.target_id)
+		var stop_selection = StopSelection.new(StopSelection.StopSelectionType.STOP, stop)
+		selected_object = stop_selection
+		selection_type = GameManager.SelectionType.TRANSPORT_STOP
+
+	game_manager.set_selection(selected_object, selection_type)
+	game_manager.jump_to_selection()

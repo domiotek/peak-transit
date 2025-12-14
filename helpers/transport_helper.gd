@@ -257,6 +257,7 @@ static func resolve_route_step_data(step_def: RouteStepDefinition, length: float
 					step_def.target_id,
 					length,
 					estimate_travel_time(length),
+					true,
 				)
 		Enums.TransportRouteStepType.STOP:
 			var stop = transport_manager.get_stop(step_def.target_id)
@@ -267,6 +268,7 @@ static func resolve_route_step_data(step_def: RouteStepDefinition, length: float
 					step_def.target_id,
 					length,
 					estimate_travel_time(length),
+					stop.can_vehicle_wait(),
 				)
 		Enums.TransportRouteStepType.WAYPOINT:
 			var node = network_manager.get_node(step_def.target_id)
@@ -277,6 +279,7 @@ static func resolve_route_step_data(step_def: RouteStepDefinition, length: float
 					step_def.target_id,
 					length,
 					estimate_travel_time(length),
+					false,
 				)
 
 	return null
@@ -288,7 +291,7 @@ static func estimate_travel_time(length: float, average_speed: float = Simulatio
 
 	length = length * SimulationConstants.SIMULATION_WORLD_TO_GAME_UNITS_RATIO
 
-	return length / average_speed * SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE
+	return max(1, length / average_speed) #* SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE * 0.25
 
 
 static func draw_route(

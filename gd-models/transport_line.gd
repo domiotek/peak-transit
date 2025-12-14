@@ -14,6 +14,7 @@ var _waypoint_to_curve_map: Dictionary = { }
 var _step_def_to_path_map: Dictionary = { }
 var _route_steps: Dictionary = { }
 var _terminals: Array = []
+var _route_stops: Dictionary = { }
 
 var _brigade_ids: Array = []
 
@@ -36,6 +37,7 @@ func trace_routes() -> bool:
 		var route_def = _line_def.routes[route_idx] as Array[RouteStepDefinition]
 
 		_route_steps[route_idx] = []
+		_route_stops[route_idx] = []
 		var path = []
 		var route_curves = []
 		var start_out_options = TransportHelper.resolve_starting_node_from_line_step(transport_manager, route_def[0])
@@ -106,6 +108,34 @@ func trace_routes() -> bool:
 		var waypoint_to_curve_map = _get_waypoints_to_curve_map(route_def, path)
 		_waypoint_to_curve_map[_traced_paths.size() - 1] = waypoint_to_curve_map
 
+		var actual_idx = 0
+		var accumulated_length: float = 0.0
+		var accumulated_time: float = 0.0
+		for step_idx in range(_route_steps[route_idx].size()):
+			var route_step = _route_steps[route_idx][step_idx] as RouteStep
+
+			if route_step.step_type == Enums.TransportRouteStepType.WAYPOINT:
+				accumulated_length += route_step.length
+				accumulated_time += route_step.time_for_step
+				continue
+
+			actual_idx += 1
+			_route_stops[route_idx].append(
+				LineStop.new(
+					self,
+					actual_idx,
+					route_step.step_type == Enums.TransportRouteStepType.TERMINAL,
+					route_step.target_id,
+					route_step.target_name,
+					accumulated_length,
+					accumulated_time,
+					route_step.can_wait,
+				),
+			)
+
+			accumulated_length = 0.0
+			accumulated_time = 0.0
+
 	for i in range(_terminals.size()):
 		var terminal = _terminals[i]
 
@@ -151,8 +181,16 @@ func get_route_steps(route_idx: int) -> Array:
 	return _route_steps.get(route_idx, [])
 
 
+func get_route_stops(route_idx: int) -> Array:
+	return _route_stops.get(route_idx, [])
+
+
 func get_routes() -> Dictionary:
 	return _route_steps
+
+
+func get_route_path(route_idx: int) -> Array:
+	return _traced_paths[route_idx]
 
 
 func assign_brigades(ids: Array) -> void:
