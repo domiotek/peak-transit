@@ -326,6 +326,7 @@ func _drive_to_depot() -> void:
 			return
 
 		_vehicle.init_trip_to_building(start_node, _origin_depot, start_endpoint)
+		return
 
 	_vehicle.init_trip(_target_terminal, _origin_depot)
 
