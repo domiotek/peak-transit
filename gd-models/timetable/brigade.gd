@@ -123,6 +123,9 @@ func assign_next_trip(vehicle_id: int, current_index: int) -> int:
 	if next_index < current_index:
 		return -1
 
+	if _vehicles.values().has(next_index):
+		return -1
+
 	_vehicles.set(vehicle_id, next_index)
 	_last_assigned_trip_index = next_index
 

@@ -8,6 +8,7 @@ var _vehicle: Vehicle = null
 var _brigades: Array = []
 var _trip_selector_population_lock = -1
 var _trip_steps_population_lock = -1
+var _prev_stop_time_left: float = -1.0
 
 @onready var direction_prop: Label = $Wrapper/PropsContainer/DirectionProp
 @onready var line_prop: ValueListItem = $Wrapper/PropsContainer/Line/LineProp
@@ -33,6 +34,7 @@ func _ready() -> void:
 	return_to_depot_button.pressed.connect(_on_return_to_depot_button_pressed)
 	go_to_line_button.pressed.connect(_on_go_to_line_button_pressed)
 	go_to_stop_button.pressed.connect(_on_go_to_stop_button_pressed)
+	game_manager.clock.time_changed.connect(_on_current_time_changed)
 
 
 func bind(vehicle: Vehicle) -> void:
@@ -77,7 +79,9 @@ func update_data() -> void:
 		go_to_line_button.disabled = true
 		go_to_stop_button.disabled = true
 		trip_selector.clear()
+		brigade_selector.select(0)
 		_trip_selector_population_lock = -1
+		_trip_steps_population_lock = -1
 
 		for child in steps_list.get_children():
 			child.queue_free()
@@ -90,8 +94,20 @@ func update_data() -> void:
 	direction_prop.text = "→ " + current_trip.get_destination_name()
 	route_prop.set_value("Forward" if current_trip.is_forward() else "Return")
 	var next_stop = ai.get_next_stop()
+
 	if next_stop != null:
-		next_stop_prop.set_value(next_stop.target_name, true)
+		var next_stop_time = int(ceil(_vehicle.ai.estimate_time_to_next_destination()))
+
+		var next_stop_text = next_stop.target_name
+
+		if next_stop_time >= 1:
+			next_stop_text += " (" + str(next_stop_time) + "min)"
+
+		if _prev_stop_time_left == -1 or next_stop_time != _prev_stop_time_left:
+			_on_current_time_changed(game_manager.clock.get_time())
+			_prev_stop_time_left = next_stop_time
+
+		next_stop_prop.set_value(next_stop_text, true)
 
 	_populate_trip_selector(brigade, current_trip.idx)
 	var idx = trip_selector.get_item_index(current_trip.idx)
@@ -151,6 +167,8 @@ func _populate_trip_view(trip: BrigadeTrip) -> void:
 	if trip.idx == _trip_steps_population_lock:
 		return
 
+	_trip_steps_population_lock = trip.idx
+
 	for child in steps_list.get_children():
 		child.queue_free()
 
@@ -166,6 +184,8 @@ func _populate_trip_view(trip: BrigadeTrip) -> void:
 		step_item.set_departure_time(stop_times[step_idx])
 
 		steps_list.add_child(step_item)
+
+	_on_current_time_changed(game_manager.clock.get_time())
 
 
 func _on_return_to_depot_button_pressed() -> void:
@@ -203,3 +223,23 @@ func _on_go_to_stop_button_pressed() -> void:
 
 	game_manager.set_selection(selected_object, selection_type)
 	game_manager.jump_to_selection()
+
+
+func _on_current_time_changed(new_time: ClockTime) -> void:
+	if not _vehicle or _vehicle.ai.get_current_trip() == null:
+		return
+
+	var current_time = new_time.to_time_of_day()
+
+	var vehicle_diff = (_vehicle.ai as BusAI).get_time_difference_to_schedule(current_time)
+	var current_stop_idx = _vehicle.ai.get_next_stop().stop_idx - 1
+
+	for stop_idx in range(steps_list.get_child_count()):
+		var child = steps_list.get_child(stop_idx)
+		var step_item = child as TripStepListItem
+
+		if stop_idx < current_stop_idx:
+			step_item.mark_departed()
+			continue
+
+		step_item.update_schedule_diff(vehicle_diff, current_time)

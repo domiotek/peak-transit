@@ -291,7 +291,7 @@ static func estimate_travel_time(length: float, average_speed: float = Simulatio
 
 	length = length * SimulationConstants.SIMULATION_WORLD_TO_GAME_UNITS_RATIO
 
-	return max(1, length / average_speed) #* SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE * 0.25
+	return max(1, length / average_speed)
 
 
 static func draw_route(

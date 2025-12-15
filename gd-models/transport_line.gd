@@ -111,12 +111,15 @@ func trace_routes() -> bool:
 		var actual_idx = 0
 		var accumulated_length: float = 0.0
 		var accumulated_time: float = 0.0
+		var total_length = 0.0
 		for step_idx in range(_route_steps[route_idx].size()):
 			var route_step = _route_steps[route_idx][step_idx] as RouteStep
 
+			accumulated_length += route_step.length
+			accumulated_time += route_step.time_for_step
+			total_length += accumulated_length
+
 			if route_step.step_type == Enums.TransportRouteStepType.WAYPOINT:
-				accumulated_length += route_step.length
-				accumulated_time += route_step.time_for_step
 				continue
 
 			actual_idx += 1
@@ -127,6 +130,7 @@ func trace_routes() -> bool:
 					route_step.step_type == Enums.TransportRouteStepType.TERMINAL,
 					route_step.target_id,
 					route_step.target_name,
+					total_length,
 					accumulated_length,
 					accumulated_time,
 					route_step.can_wait,

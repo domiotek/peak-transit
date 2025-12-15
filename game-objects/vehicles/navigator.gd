@@ -31,6 +31,7 @@ var last_step_forced_endpoint: int = -1
 
 var current_step: Dictionary = {
 	"type": StepType.NONE,
+	"progress": 0.0,
 }
 var step_ready: bool = false
 
@@ -222,8 +223,16 @@ func get_current_step() -> Dictionary:
 	return current_step
 
 
-func get_distance_left() -> float:
+func get_step_distance_left() -> float:
 	return current_step["length"] - current_step["progress"]
+
+
+func get_distance_left() -> float:
+	return total_trip_distance - (traveled_distance_till_current_step + current_step["progress"])
+
+
+func get_distance_traveled() -> float:
+	return traveled_distance_till_current_step + current_step["progress"]
 
 
 func can_advance(delta: float) -> bool:
@@ -711,6 +720,7 @@ func _reset_state() -> void:
 
 	current_step = {
 		"type": StepType.NONE,
+		"progress": 0.0,
 	}
 	step_ready = false
 

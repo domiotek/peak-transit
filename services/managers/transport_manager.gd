@@ -234,7 +234,7 @@ func generate_line_schedule(line: TransportLine) -> void:
 
 			var trip_step = TripStep.new()
 			trip_step.step_id = idx
-			trip_step.travel_time = accumulated_time
+			trip_step.travel_time = ceil(accumulated_time)
 
 			serialized_routes[route_idx].append(trip_step.serialize())
 			accumulated_time = 0

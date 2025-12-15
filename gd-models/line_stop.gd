@@ -7,6 +7,7 @@ var target_name: String
 
 var is_terminal: bool
 
+var route_offset_length: float = 0.0
 var length: float = 0.0
 var time_for_step: float = 0.0
 
@@ -19,6 +20,7 @@ func _init(
 		_is_terminal: bool,
 		_target_id: int,
 		_target_name: String,
+		_route_offset_length: float,
 		_length: float,
 		_time_for_step: float,
 		_can_wait: bool,
@@ -28,6 +30,7 @@ func _init(
 	is_terminal = _is_terminal
 	target_id = _target_id
 	target_name = _target_name
+	route_offset_length = _route_offset_length
 	length = _length
 	can_wait = _can_wait
 	time_for_step = _time_for_step

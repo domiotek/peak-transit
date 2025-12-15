@@ -94,7 +94,7 @@ func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: Dictionary, t
 		var other_vehicle = other_lane.get_first_vehicle()
 
 		if other_vehicle:
-			var distance_left = other_vehicle.navigator.get_distance_left()
+			var distance_left = other_vehicle.navigator.get_step_distance_left()
 			var is_driving_to_the_same_endpoint = _get_next_endpoint(other_vehicle) == to_endpoint.Id
 
 			if is_driving_to_the_same_endpoint and (distance_left < CONFLICT_ZONE_OFFSET or other_vehicle.driver.state == Driver.VehicleState.BLOCKED):

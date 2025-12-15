@@ -126,6 +126,47 @@ func get_next_stop() -> LineStop:
 	return current_trip.get_stop(_brigade_trip_current_stop_idx)
 
 
+func get_distance_to_next_destination() -> float:
+	if _is_leaving_building or _is_entering_building or _is_at_terminal:
+		return 0.0
+
+	match _state:
+		BusState.EN_ROUTE:
+			var next_stop_route_offset = get_next_stop().route_offset_length
+			var travelled_distance = _vehicle.navigator.get_distance_traveled()
+
+			return next_stop_route_offset - travelled_distance
+		BusState.TRANSFERING_TO_STOP, BusState.TRANSFERING_TO_TERMINAL:
+			return _vehicle.navigator.get_distance_left()
+
+	return 0.0
+
+
+func estimate_time_to_next_destination() -> float:
+	var distance = get_distance_to_next_destination()
+
+	if distance <= 0.0:
+		return 0.0
+
+	var average_speed = SimulationConstants.AVERAGE_BUS_SPEED if _state == BusState.EN_ROUTE else get_constants().get("MAX_SPEED")
+
+	return TransportHelper.estimate_travel_time(distance, average_speed)
+
+
+func get_time_difference_to_schedule(current_time: TimeOfDay) -> int:
+	var current_trip = get_current_trip()
+	if current_trip == null:
+		return 0
+
+	var next_stop = get_next_stop()
+	if next_stop == null:
+		return 0
+
+	var scheduled_departure_time = current_trip.get_departure_time_at_stop(_brigade_trip_current_stop_idx)
+	var estimated_arrival_time = current_time.add_minutes(int(ceil(estimate_time_to_next_destination())))
+	return estimated_arrival_time.to_minutes() - scheduled_departure_time.to_minutes()
+
+
 func get_current_terminal() -> Terminal:
 	return _current_terminal
 
@@ -387,7 +428,11 @@ func _join_trip() -> void:
 		return
 
 	var current_time = _game_manager.clock.get_time().to_time_of_day()
-	var stop_idx = current_trip.find_next_stop_after_time(current_time)
+
+	var stop_idx = 0
+
+	if not current_trip.is_past_trip():
+		stop_idx = current_trip.find_next_stop_after_time(current_time)
 
 	var line_stop = current_trip.get_stop(stop_idx)
 	if line_stop.is_terminal:
@@ -413,6 +458,8 @@ func _drive_to_next_stop() -> void:
 			_state = BusState.TRANSFERING_TO_TERMINAL
 			_brigade = null
 			_vehicle.recolor(SimulationConstants.BUS_DEFAULT_COLOR)
+			_brigade_trip_idx = -1
+			_brigade_trip_current_stop_idx = -1
 			_drive_to_terminal()
 			return
 		_brigade_trip_idx = trip_idx
