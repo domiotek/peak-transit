@@ -92,12 +92,12 @@ func init_trip_from_building(to_node_id: int, from_building: BaseBuilding, force
 	navigator.setup_trip_mixed(from_building.id, to_node_id, true, forced_end_endpoint)
 
 
-func init_simple_trip(from_node_id: int, to_node_id: int) -> void:
+func init_simple_trip(from_node_id: int, to_node_id: int, from_endpoint: int = -1, to_endpoint: int = -1) -> void:
 	if from_node_id == to_node_id:
 		push_error("Invalid trip: Start and end nodes are the same for vehicle ID %d" % id)
 		return
 
-	navigator.setup_trip(from_node_id, to_node_id)
+	navigator.setup_trip(from_node_id, to_node_id, from_endpoint, to_endpoint)
 
 
 func init_trip_with_path(path: Array, from_building: BaseBuilding = null, to_building: BaseBuilding = null) -> void:

@@ -75,6 +75,15 @@ func is_future_trip() -> bool:
 	return _data.departure_time.to_minutes() > current_time.to_minutes()
 
 
+func is_past_trip() -> bool:
+	var current_time = _clock_manager.get_time().to_time_of_day()
+	return _data.arrival_time.to_minutes() < current_time.to_minutes()
+
+
+func is_ongoing_trip() -> bool:
+	return not is_future_trip() and not is_past_trip()
+
+
 func get_time_till_departure() -> int:
 	var current_time = _clock_manager.get_time().to_time_of_day()
 	var departure_minutes = _data.departure_time.to_minutes()
@@ -92,3 +101,15 @@ func check_if_can_wait_at_stop(stop_id: int) -> bool:
 	var target_line_stop = line_stops[stop_id] as LineStop
 
 	return target_line_stop.can_wait
+
+
+func find_next_stop_after_time(time: TimeOfDay) -> int:
+	var stop_ids = _data.stop_times.keys()
+	stop_ids.sort()
+
+	for stop_id in stop_ids:
+		var stop_time = _data.stop_times[stop_id] as TimeOfDay
+		if stop_time.to_minutes() > time.to_minutes():
+			return stop_id
+
+	return -1

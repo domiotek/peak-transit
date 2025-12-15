@@ -38,7 +38,7 @@ func get_constants() -> Dictionary:
 	}
 
 
-func process() -> void:
+func process(_delta: float) -> void:
 	pass
 
 

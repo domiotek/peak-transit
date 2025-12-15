@@ -62,10 +62,10 @@ func setup(owner: Vehicle) -> void:
 	segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 
 
-func setup_trip(from_node_id: int, to_node_id: int) -> void:
+func setup_trip(from_node_id: int, to_node_id: int, from_endpoint: int = -1, to_endpoint: int = -1) -> void:
 	trip_points = [from_node_id, to_node_id]
 
-	pathing_manager.find_path(from_node_id, to_node_id, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+	pathing_manager.find_path(from_node_id, to_node_id, Callable(self, "_on_pathfinder_result"), vehicle.config.category, from_endpoint, to_endpoint)
 
 
 func setup_trip_between_buildings(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
@@ -133,6 +133,83 @@ func setup_trip_with_path(path: Array, from_building: BaseBuilding = null, to_bu
 
 	call_deferred("_start_trip")
 	call_deferred("_calc_trip_distance")
+
+
+func reroute_to_node(node_id: int, to_endpoint_id: int = -1, path: Array = []) -> void:
+	if trip_points.size() == 0:
+		push_error("Navigator: Cannot change destination on a trip that hasn't started.")
+		return
+
+	trip_points[1] = node_id
+	last_step_forced_endpoint = to_endpoint_id
+
+	if path.size() > 0:
+		var synced_path = _fast_forward_path_to_current_step(path)
+
+		if synced_path.size() == 0:
+			push_error("Navigator: Provided reroute path does not sync with current trip state.")
+			return
+
+		_handle_reroute(
+			{
+				"State": 1,
+				"Path": synced_path,
+				"ForcedStartEndpointId": -1,
+				"ForcedEndEndpointId": to_endpoint_id,
+			},
+		)
+	else:
+		pathing_manager.find_path(
+			trip_points[0],
+			node_id,
+			Callable(self, "_on_pathfinder_result"),
+			vehicle.config.category,
+			current_step["from_endpoint"],
+			to_endpoint_id,
+		)
+
+
+func reroute_to_building(building: BaseBuilding, path: Array = []) -> void:
+	if trip_points.size() == 0:
+		push_error("Navigator: Cannot change destination on a trip that hasn't started.")
+		return
+
+	trip_buildings[1] = building
+
+	if path.size() > 0:
+		var synced_path = _fast_forward_path_to_current_step(path)
+
+		if synced_path.size() == 0:
+			push_error("Navigator: Provided reroute path does not sync with current trip state.")
+			return
+
+		_handle_reroute(
+			{
+				"State": 1,
+				"Path": synced_path,
+				"ForcedStartEndpointId": current_step["from_endpoint"],
+				"ForcedEndEndpointId": network_manager.get_opposite_lane_endpoint(synced_path[-1].ViaEndpointId).Id,
+			},
+		)
+	else:
+		var building_connections = building.get_in_connections()
+
+		var combinations = []
+		for conn in building_connections:
+			var endpoint = conn["lane"].get_endpoint_by_type(false)
+
+			var current_node = current_step["prev_node"] if current_step["type"] == StepType.SEGMENT else current_step["node"].id
+
+			combinations.append(
+				{
+					"from_node": current_node,
+					"to_node": endpoint.NodeId,
+					"from_endpoint": current_step["from_endpoint"],
+					"to_endpoint": endpoint.Id,
+				},
+			)
+
+		pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
 
 
 func has_trip() -> bool:
@@ -250,7 +327,8 @@ func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
 
 	step_ready = false
 
-	var new_trip = [current_step["prev_node"], trip_points[1] if to_endpoint_id == -1 else to_endpoint_id]
+	var current_node = current_step["prev_node"] if current_step["type"] == StepType.SEGMENT else current_step["node"].id
+	var new_trip = [current_node, trip_points[1] if to_endpoint_id == -1 else to_endpoint_id]
 	var finish_endpoint = segment_helper.get_other_endpoint_in_lane(last_step_forced_endpoint) if last_step_forced_endpoint != -1 else null
 
 	pathing_manager.find_path(
@@ -329,6 +407,11 @@ func set_segment_location_trigger(segment_id: int, lane_id: int, distance: float
 			"callback": callback,
 		},
 	)
+
+
+func clear_location_triggers() -> void:
+	_location_triggers["node"].clear()
+	_location_triggers["segment"].clear()
 
 
 func _tick_segment_triggers() -> void:
@@ -467,7 +550,7 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 
 	current_step = _create_segment_step(lane, 0.0)
 
-	if trip_step_index == trip_path.size() - 1 and trip_buildings.size() > 1:
+	if trip_step_index == trip_path.size() - 1 and trip_buildings[1] != null:
 		var building_in_connection = trip_buildings[1].get_in_connection(last_step_forced_endpoint)
 		current_step["building_to_enter"] = {
 			"building": trip_buildings[1],
@@ -597,6 +680,24 @@ func _create_segment_step(lane: NetLane, progress_offset: float) -> Dictionary:
 		}
 
 	return step
+
+
+func _fast_forward_path_to_current_step(path: Array) -> Array:
+	var advanced_path = []
+	var found_current_step = false
+
+	var current_node = current_step["prev_node"] if current_step["type"] == StepType.SEGMENT else current_step["node"].id
+	var current_endpoint = current_step["from_endpoint"]
+
+	for step in path:
+		if not found_current_step:
+			if step.FromNodeId == current_node and step.ViaEndpointId == current_endpoint:
+				found_current_step = true
+				advanced_path.append(step)
+		else:
+			advanced_path.append(step)
+
+	return advanced_path
 
 
 func _reset_state() -> void:
