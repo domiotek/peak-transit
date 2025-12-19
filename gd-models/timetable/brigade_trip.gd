@@ -72,7 +72,7 @@ func get_stop_times() -> Dictionary:
 
 func is_future_trip() -> bool:
 	var current_time = _clock_manager.get_time().to_time_of_day()
-	return _data.departure_time.to_minutes() > current_time.to_minutes()
+	return _data.departure_time.to_minutes() > current_time.to_minutes() || is_past_trip()
 
 
 func is_past_trip() -> bool:
@@ -106,10 +106,11 @@ func check_if_can_wait_at_stop(stop_id: int) -> bool:
 func find_next_stop_after_time(time: TimeOfDay) -> int:
 	var stop_ids = _data.stop_times.keys()
 	stop_ids.sort()
+	var last_stop_id = stop_ids[stop_ids.size() - 1]
 
 	for stop_id in stop_ids:
 		var stop_time = _data.stop_times[stop_id] as TimeOfDay
-		if stop_time.to_minutes() > time.to_minutes():
+		if stop_time.to_minutes() > time.to_minutes() and stop_id != last_stop_id:
 			return stop_id
 
 	return -1

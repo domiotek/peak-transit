@@ -95,6 +95,7 @@ func initialize_game(world_file_path: String = "") -> void:
 
 	self.world_definition = parsed_def
 
+	clock.reset()
 	initialized = true
 	ui_manager.hide_main_menu()
 	set_game_speed(Enums.GameSpeed.PAUSE)

@@ -30,6 +30,7 @@ func find_path(
 	active_requests[request_id] = {
 		"results": [null],
 		"completed_count": 0,
+		"executing_stack": get_stack(),
 		"total_count": 1,
 		"callback": callback,
 		"is_finished": false,

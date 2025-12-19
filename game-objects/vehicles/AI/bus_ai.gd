@@ -14,11 +14,6 @@ enum BusState {
 	WAIT_BETWEEN_TRIPS,
 }
 
-enum ActionBusState {
-	EN_ROUTE,
-	RELOCATING,
-}
-
 var _vehicle: Vehicle
 var _vehicle_manager: VehicleManager
 var _transport_manager: TransportManager
@@ -41,6 +36,8 @@ var _current_passengers: int = 0
 var _max_passengers: int = 0
 
 var _boarding_timer: float = 0.0
+
+var _finalizing_previous_step: Dictionary = { }
 
 
 func bind(vehicle: Vehicle) -> void:
@@ -163,6 +160,10 @@ func get_time_difference_to_schedule(current_time: TimeOfDay) -> int:
 		return 0
 
 	var scheduled_departure_time = current_trip.get_departure_time_at_stop(_brigade_trip_current_stop_idx)
+
+	if scheduled_departure_time.to_minutes() < current_time.to_minutes() and current_trip.is_future_trip() and _brigade_trip_current_stop_idx == 0:
+		scheduled_departure_time = scheduled_departure_time.as_next_day()
+
 	var estimated_arrival_time = current_time.add_minutes(int(ceil(estimate_time_to_next_destination())))
 	return estimated_arrival_time.to_minutes() - scheduled_departure_time.to_minutes()
 
@@ -180,7 +181,7 @@ func assign_brigade(brigade_id: int) -> void:
 	_brigade = brigade
 	var trip_index = brigade.assign_vehicle(_vehicle.id)
 	_brigade_trip_idx = trip_index
-	_join_trip()
+	_join_trip(true)
 	_vehicle.navigator.block_reroutes()
 	_vehicle.recolor(brigade.line_color)
 
@@ -207,7 +208,7 @@ func set_current_trip(trip_idx: int) -> void:
 
 	_brigade_trip_idx = trip_idx
 
-	_join_trip()
+	_join_trip(true)
 
 
 func set_origin_depot(depot: Depot) -> void:
@@ -304,6 +305,11 @@ func process(delta: float) -> void:
 					_is_entering_building = false
 					return
 
+			if _finalizing_previous_step.is_empty() == false:
+				_drive_to_depot()
+				_finalizing_previous_step = { }
+				return
+
 			_remove_vehicle()
 			return
 		BusState.TRANSFERING_TO_TERMINAL:
@@ -318,6 +324,11 @@ func process(delta: float) -> void:
 
 			if _is_at_terminal and _handle_at_terminal(current_trip, delta):
 				return
+
+			if _finalizing_previous_step.is_empty() == false:
+				_drive_to_terminal()
+				_finalizing_previous_step = { }
+				return
 		BusState.TRANSFERING_TO_STOP:
 			if _has_navigation_set:
 				return
@@ -327,6 +338,9 @@ func process(delta: float) -> void:
 
 			if _is_at_terminal and _handle_at_terminal(current_trip, delta):
 				return
+
+			_trace_route_to_next_stop()
+			return
 		BusState.EN_ROUTE:
 			if _is_at_terminal and _has_navigation_set:
 				return
@@ -358,7 +372,7 @@ func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
 	if _state == BusState.TRANSFERING_TO_STOP:
 		return
 
-	if not _is_at_depot and not _is_at_terminal:
+	if not _is_at_depot and not _is_at_terminal and _finalizing_previous_step.is_empty():
 		_is_entering_building = true
 
 
@@ -370,7 +384,9 @@ func _drive_to_depot() -> void:
 	var current_step = _vehicle.navigator.get_current_step()
 
 	if current_step["type"] == Navigator.StepType.BUILDING:
-		return # TODO try to resolve while going in or out of building
+		_finalizing_previous_step = current_step
+		_vehicle.navigator.end_after_next_step()
+		return
 
 	if not _is_at_terminal:
 		var start_node_data = _get_start_node_of_network_location(current_step)
@@ -392,10 +408,19 @@ func _drive_to_terminal() -> void:
 	var current_trip = get_current_trip()
 
 	if current_step["type"] == Navigator.StepType.BUILDING:
-		return # TODO try to resolve while going in or out of building
+		_finalizing_previous_step = current_step
+		_vehicle.navigator.end_after_next_step()
+		return
 
 	if not _is_at_depot and not _is_at_terminal:
-		var start_node_data = _get_start_node_of_network_location(current_step)
+		var start_node_data: Array
+
+		if _finalizing_previous_step.is_empty() == false:
+			start_node_data = _get_start_node_of_network_location(_finalizing_previous_step)
+
+		else:
+			start_node_data = _get_start_node_of_network_location(current_step)
+
 		var start_node = start_node_data[0]
 		var start_endpoint = start_node_data[1]
 
@@ -404,23 +429,28 @@ func _drive_to_terminal() -> void:
 			return
 
 		_vehicle.init_trip_to_building(start_node, _target_terminal, start_endpoint)
+		_has_navigation_set = true
 		return
 
 	var source_building = _origin_depot as BaseBuilding if _is_at_depot else _current_terminal as BaseBuilding
 
 	if current_trip and _state == BusState.EN_ROUTE:
 		_init_line_path_trip()
+		_has_navigation_set = true
 
-	else:
+	elif _target_terminal != source_building:
+		_is_leaving_building = true
 		_vehicle.init_trip(source_building, _target_terminal)
+		_has_navigation_set = true
 
 
-func _join_trip() -> void:
+func _join_trip(hot_join: bool) -> void:
 	var current_trip = get_current_trip()
 	if not current_trip:
 		return
 
 	_vehicle.navigator.clear_location_triggers()
+	_vehicle.driver.resume_driving()
 
 	if current_trip.is_future_trip():
 		drive_to_terminal(current_trip.get_departure_terminal().terminal_id)
@@ -431,12 +461,13 @@ func _join_trip() -> void:
 
 	var stop_idx = 0
 
-	if not current_trip.is_past_trip():
+	if hot_join and not current_trip.is_past_trip():
 		stop_idx = current_trip.find_next_stop_after_time(current_time)
 
 	var line_stop = current_trip.get_stop(stop_idx)
 	if line_stop.is_terminal:
-		_target_terminal = current_trip.get_arrival_terminal()
+		_target_terminal = current_trip.get_departure_terminal()
+		_brigade_trip_current_stop_idx = stop_idx
 		_drive_to_terminal()
 		return
 
@@ -445,6 +476,7 @@ func _join_trip() -> void:
 	_brigade_trip_current_stop_idx = stop_idx
 	_state = BusState.TRANSFERING_TO_STOP
 	_target_terminal = null
+	_has_navigation_set = false
 
 
 func _drive_to_next_stop() -> void:
@@ -464,7 +496,7 @@ func _drive_to_next_stop() -> void:
 			return
 		_brigade_trip_idx = trip_idx
 		_brigade_trip_current_stop_idx = -1
-		_join_trip()
+		_join_trip(false)
 		return
 
 	if not _has_navigation_set and _brigade_trip_current_stop_idx != 0:
@@ -481,6 +513,9 @@ func _drive_to_next_stop() -> void:
 
 
 func _trace_route_to_next_stop() -> void:
+	if _has_navigation_set:
+		return
+
 	var current_trip = get_current_trip()
 
 	var line_stop = current_trip.get_stop(_brigade_trip_current_stop_idx)
@@ -505,6 +540,7 @@ func _trace_route_to_next_stop() -> void:
 
 		_vehicle.init_simple_trip(start_node, target_node, start_endpoint, target_endpoint)
 
+	_has_navigation_set = true
 	_vehicle.navigator.set_node_location_trigger(stop.get_incoming_node_id(), stop_source_endpoint, Callable(self, "_on_location_trigger_reached"))
 
 
@@ -541,6 +577,13 @@ func _get_start_node_of_network_location(step: Dictionary) -> Array:
 			return [step["node"].id, step["to_endpoint"]]
 		Navigator.StepType.SEGMENT:
 			return [step["prev_node"], step["from_endpoint"]]
+		Navigator.StepType.BUILDING:
+			if step["is_leaving"]:
+				var lane = step["connection"]["lane"] as NetLane
+				var endpoint = lane.get_endpoint_by_type(true)
+				return [endpoint.NodeId, endpoint.Id]
+
+			return [-1, -1]
 		_:
 			return [-1, -1]
 

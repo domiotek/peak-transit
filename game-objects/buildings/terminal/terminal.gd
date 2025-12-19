@@ -249,6 +249,9 @@ func notify_vehicle_left_terminal(vehicle_id: int) -> void:
 		_vehicles_on_tracks.erase(vehicle_id)
 
 
+func supports_routed_leaving() -> bool:
+	return true
+
 func _find_next_track(vehicle_id: int, state_map: Dictionary, custom_track_search_callback) -> Dictionary:
 	if _vehicles_on_tracks.get(vehicle_id, "") == "":
 		push_error("Vehicle ID %d is not registered as being at terminal ID %d." % [vehicle_id, terminal_id])

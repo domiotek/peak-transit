@@ -164,10 +164,12 @@ func _populate_trip_view(trip: BrigadeTrip) -> void:
 	if not trip:
 		return
 
-	if trip.idx == _trip_steps_population_lock:
+	var predicate = str(_vehicle.ai.get_brigade().id) + "-" + str(trip.idx)
+
+	if predicate == str(_trip_steps_population_lock):
 		return
 
-	_trip_steps_population_lock = trip.idx
+	_trip_steps_population_lock = predicate
 
 	for child in steps_list.get_children():
 		child.queue_free()

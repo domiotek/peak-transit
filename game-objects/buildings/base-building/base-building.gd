@@ -165,6 +165,10 @@ func are_debug_visuals_enabled() -> bool:
 	return debug_visuals_enabled
 
 
+func supports_routed_leaving() -> bool:
+	return false
+
+
 func _check_stopper() -> void:
 	if vehicle_leaving == null or not vehicle_leaving.navigator.step_ready:
 		out_stopper.set_active(false)

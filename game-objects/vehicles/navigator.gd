@@ -65,6 +65,7 @@ func setup(owner: Vehicle) -> void:
 
 func setup_trip(from_node_id: int, to_node_id: int, from_endpoint: int = -1, to_endpoint: int = -1) -> void:
 	trip_points = [from_node_id, to_node_id]
+	trip_buildings = [null, null]
 
 	pathing_manager.find_path(from_node_id, to_node_id, Callable(self, "_on_pathfinder_result"), vehicle.config.category, from_endpoint, to_endpoint)
 
@@ -356,6 +357,19 @@ func block_reroutes() -> void:
 
 func unblock_reroutes() -> void:
 	_is_rerouting_enabled = true
+
+
+func end_after_next_step() -> void:
+	if trip_step_index + 1 >= trip_path.size():
+		return
+
+	trip_path = trip_path.slice(0, trip_step_index + 1)
+	trip_points = [trip_points[0], trip_path[-1].ToNodeId]
+	last_step_forced_endpoint = trip_path[-1].ViaEndpointId
+	trip_buildings[1] = null
+
+	_calc_trip_distance()
+	emit_signal("trip_rerouted")
 
 
 func get_total_progress() -> float:

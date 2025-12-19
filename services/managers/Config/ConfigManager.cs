@@ -15,5 +15,7 @@ public partial class ConfigManager : RefCounted
 
     public string WorldDirectory { get; } = "user://worlds/";
 
+    public bool AutoFillDepotStopsOnLoad { get; } = true;
+
     public DebugToggles DebugToggles { get; } = new DebugToggles();
 }

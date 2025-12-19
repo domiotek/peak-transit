@@ -10,6 +10,10 @@ signal day_night_changed(is_day: bool)
 
 
 func _init() -> void:
+	reset()
+
+
+func reset() -> void:
 	current_hour = 0
 	current_minute = 0
 	current_day = Enums.Day.MONDAY

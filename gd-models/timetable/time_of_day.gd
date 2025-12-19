@@ -70,3 +70,7 @@ func subtract_minutes(minutes_to_subtract: int) -> TimeOfDay:
 
 func difference_in_minutes(other: TimeOfDay) -> int:
 	return total_minutes - other.total_minutes
+
+
+func as_next_day() -> TimeOfDay:
+	return TimeOfDay.new(hour, minute, total_minutes + 1440)

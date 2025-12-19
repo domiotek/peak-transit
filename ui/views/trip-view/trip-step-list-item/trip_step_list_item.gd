@@ -34,6 +34,11 @@ func update_schedule_diff(time_diff: int, current_time: TimeOfDay) -> void:
 
 	var time_left = new_departure_time.to_minutes() - current_time.to_minutes()
 
+	var crosses_midnight = current_time.add_minutes(time_diff).to_minutes() < current_time.to_minutes()
+
+	if crosses_midnight and time_left < 0:
+		time_left += 1440
+
 	time_label.text = "%smin" % time_left
 
 	if time_diff > 0:
