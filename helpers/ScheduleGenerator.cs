@@ -11,6 +11,28 @@ namespace PT.Helpers;
 [GlobalClass]
 public partial class ScheduleGenerator : RefCounted
 {
+    private readonly struct DepartureEvent
+    {
+        public DepartureEvent(double time, int terminalId, int routeId)
+        {
+            Time = time;
+            TerminalId = terminalId;
+            RouteId = routeId;
+        }
+
+        public double Time { get; }
+        public int TerminalId { get; }
+        public int RouteId { get; }
+    }
+
+    private sealed class BrigadeState
+    {
+        public int BrigadeId { get; init; }
+        public int TerminalId { get; set; }
+        public double AvailableAt { get; set; }
+        public List<Trip> Trips { get; } = new();
+    }
+
     public Array<Dictionary> GenerateSchedule(
         Dictionary routeData,
         double headwayMinutes,
@@ -60,18 +82,26 @@ public partial class ScheduleGenerator : RefCounted
         double forwardDuration = forwardRoute.Sum(s => s.TravelTime);
         double returnDuration = returnRoute.Sum(s => s.TravelTime);
 
-        double naturalCycleMin = forwardDuration + returnDuration + minLayoverMinutes;
+        double naturalCycleMin = forwardDuration + returnDuration + 2 * minLayoverMinutes;
         int numBrigades = (int)Math.Ceiling(naturalCycleMin / headwayMinutes);
+
+        int minInitialAtA = (int)
+            Math.Ceiling((returnDuration + minLayoverMinutes) / headwayMinutes);
+        int minInitialAtB = (int)
+            Math.Ceiling((forwardDuration + minLayoverMinutes) / headwayMinutes);
+        int minInitialTotal = minInitialAtA + minInitialAtB;
+        if (numBrigades < minInitialTotal)
+            numBrigades = minInitialTotal;
 
         double effectiveCycle = numBrigades * headwayMinutes;
         double requiredLayoverTotal = effectiveCycle - (forwardDuration + returnDuration);
 
-        if (requiredLayoverTotal < minLayoverMinutes)
+        if (requiredLayoverTotal < 2 * minLayoverMinutes)
         {
             throw new ArgumentException(
                 $"Strict headway infeasible with current parameters:\n"
                     + $"- Required total layover: {requiredLayoverTotal:F1} min\n"
-                    + $"- Your minimum layover:  {minLayoverMinutes:F1} min\n\n"
+                    + $"- Your minimum layover:  {2 * minLayoverMinutes:F1} min (2 turn-arounds)\n\n"
                     + $"Fix by:\n"
                     + $"- Increasing frequency\n"
                     + $"- Reducing minimum layover"
@@ -80,44 +110,173 @@ public partial class ScheduleGenerator : RefCounted
 
         var gridA = BuildDepartureGrid(startMinutes, endMinutes, headwayMinutes);
 
-        double gridBOffsetFromA = forwardDuration + minLayoverMinutes;
-        var gridB = BuildDepartureGrid(startMinutes + gridBOffsetFromA, endMinutes, headwayMinutes);
+        var gridB = BuildDepartureGrid(startMinutes, endMinutes, headwayMinutes);
 
-        var gridBInitial = gridA;
+        var events = BuildDepartureEvents(gridA, gridB, endMinutes);
 
         var forwardStopTimes = GenerateStopTimes(forwardRoute);
         var returnStopTimes = GenerateStopTimes(returnRoute);
 
-        var result = new List<BrigadeSchedule>(numBrigades);
+        var brigadeStates = InitializeBrigades(
+            numBrigades,
+            startMinutes,
+            minInitialAtA,
+            minInitialAtB
+        );
+        AssignDeparturesToBrigades(
+            events,
+            brigadeStates,
+            forwardStopTimes,
+            returnStopTimes,
+            forwardDuration,
+            returnDuration,
+            minLayoverMinutes
+        );
+
+        var result = brigadeStates
+            .OrderBy(b => b.BrigadeId)
+            .Select(b => new BrigadeSchedule
+            {
+                BrigadeId = b.BrigadeId,
+                Trips = b.Trips,
+                TotalCycleTime = (int)Math.Round(effectiveCycle),
+            })
+            .ToList();
+
+        return [.. result.Select(bs => bs.Serialize())];
+    }
+
+    private static List<DepartureEvent> BuildDepartureEvents(
+        List<double> gridA,
+        List<double> gridB,
+        double endMinutes
+    )
+    {
+        var events = new List<DepartureEvent>(gridA.Count + gridB.Count);
+
+        foreach (var t in gridA)
+        {
+            if (t >= endMinutes)
+                break;
+            events.Add(new DepartureEvent(t, terminalId: 0, routeId: 0));
+        }
+
+        foreach (var t in gridB)
+        {
+            if (t >= endMinutes)
+                break;
+            events.Add(new DepartureEvent(t, terminalId: 1, routeId: 1));
+        }
+
+        events.Sort(
+            (a, b) =>
+            {
+                var cmp = a.Time.CompareTo(b.Time);
+                if (cmp != 0)
+                    return cmp;
+                cmp = a.TerminalId.CompareTo(b.TerminalId);
+                if (cmp != 0)
+                    return cmp;
+                return a.RouteId.CompareTo(b.RouteId);
+            }
+        );
+
+        return events;
+    }
+
+    private static List<BrigadeState> InitializeBrigades(
+        int numBrigades,
+        double startMinutes,
+        int minInitialAtA,
+        int minInitialAtB
+    )
+    {
+        var brigades = new List<BrigadeState>(numBrigades);
+
+        var seedTerminalIds = new List<int>(numBrigades);
+        for (int i = 0; i < minInitialAtA; i++)
+            seedTerminalIds.Add(0);
+        for (int i = 0; i < minInitialAtB; i++)
+            seedTerminalIds.Add(1);
+
+        int remainder = numBrigades - seedTerminalIds.Count;
+        for (int i = 0; i < remainder; i++)
+            seedTerminalIds.Add(i % 2 == 0 ? 0 : 1);
+
         for (int brigadeId = 0; brigadeId < numBrigades; brigadeId++)
         {
-            bool startFromB = brigadeId % 2 == 1;
-
-            var trips = GenerateBrigadeTrips(
-                brigadeId,
-                gridA,
-                gridB,
-                gridBInitial,
-                forwardStopTimes,
-                returnStopTimes,
-                forwardDuration,
-                returnDuration,
-                minLayoverMinutes,
-                endMinutes,
-                startFromB
-            );
-
-            result.Add(
-                new BrigadeSchedule
+            brigades.Add(
+                new BrigadeState
                 {
                     BrigadeId = brigadeId,
-                    Trips = trips,
-                    TotalCycleTime = (int)Math.Round(effectiveCycle),
+                    TerminalId = seedTerminalIds[brigadeId],
+                    AvailableAt = startMinutes,
                 }
             );
         }
+        return brigades;
+    }
 
-        return [.. result.Select(bs => bs.Serialize())];
+    private static void AssignDeparturesToBrigades(
+        List<DepartureEvent> events,
+        List<BrigadeState> brigades,
+        System.Collections.Generic.Dictionary<int, int> forwardStopTimes,
+        System.Collections.Generic.Dictionary<int, int> returnStopTimes,
+        double forwardDuration,
+        double returnDuration,
+        double minLayoverMinutes
+    )
+    {
+        foreach (var ev in events)
+        {
+            BrigadeState? selected = null;
+
+            for (int i = 0; i < brigades.Count; i++)
+            {
+                var candidate = brigades[i];
+                if (candidate.TerminalId != ev.TerminalId)
+                    continue;
+                if (candidate.AvailableAt > ev.Time)
+                    continue;
+
+                if (selected == null)
+                {
+                    selected = candidate;
+                    continue;
+                }
+
+                if (candidate.AvailableAt < selected.AvailableAt)
+                    selected = candidate;
+                else if (
+                    Math.Abs(candidate.AvailableAt - selected.AvailableAt) < 1e-9
+                    && candidate.BrigadeId < selected.BrigadeId
+                )
+                    selected = candidate;
+            }
+
+            if (selected == null)
+            {
+                var terminalName = ev.TerminalId == 0 ? "A" : "B";
+                throw new ArgumentException(
+                    $"Strict headway infeasible during assignment: no brigade available for "
+                        + $"terminal {terminalName} at t={ev.Time:F1} min. "
+                        + $"Try increasing headway or reducing layover/travel times."
+                );
+            }
+
+            if (ev.RouteId == 0)
+            {
+                selected.Trips.Add(CreateTrip(0, ev.Time, forwardStopTimes, forwardDuration));
+                selected.TerminalId = 1;
+                selected.AvailableAt = ev.Time + forwardDuration + minLayoverMinutes;
+            }
+            else
+            {
+                selected.Trips.Add(CreateTrip(1, ev.Time, returnStopTimes, returnDuration));
+                selected.TerminalId = 0;
+                selected.AvailableAt = ev.Time + returnDuration + minLayoverMinutes;
+            }
+        }
     }
 
     private static List<double> BuildDepartureGrid(double startMin, double endMin, double headway)
@@ -132,108 +291,6 @@ public partial class ScheduleGenerator : RefCounted
             t += headway;
         }
         return grid;
-    }
-
-    private static List<Trip> GenerateBrigadeTrips(
-        int brigadeId,
-        List<double> gridA,
-        List<double> gridB,
-        List<double> gridBInitial,
-        System.Collections.Generic.Dictionary<int, int> forwardStopTimes,
-        System.Collections.Generic.Dictionary<int, int> returnStopTimes,
-        double forwardDuration,
-        double returnDuration,
-        double minLayover,
-        double endMinutes,
-        bool startFromB
-    )
-    {
-        var trips = new List<Trip>();
-
-        int nextGridAIndex = brigadeId;
-        int nextGridBIndex = brigadeId;
-
-        if (startFromB)
-        {
-            if (gridBInitial.Count == 0)
-                return trips;
-
-            double firstBDeparture = gridBInitial[0];
-
-            double currentTime = firstBDeparture;
-            nextGridAIndex = brigadeId;
-            while (currentTime < endMinutes)
-            {
-                double depB = currentTime;
-                trips.Add(CreateTrip(1, depB, returnStopTimes, returnDuration));
-                double arriveA = depB + returnDuration;
-
-                double earliestDepA = arriveA + minLayover;
-                double? depA = FindNextGridSlot(gridA, ref nextGridAIndex, earliestDepA);
-
-                if (depA == null || depA >= endMinutes)
-                    break;
-
-                trips.Add(CreateTrip(0, depA.Value, forwardStopTimes, forwardDuration));
-                double arriveB = depA.Value + forwardDuration;
-
-                double earliestDepB = arriveB + minLayover;
-                double? nextDepB = FindNextGridSlot(gridB, ref nextGridBIndex, earliestDepB);
-                if (nextDepB == null || nextDepB >= endMinutes)
-                    break;
-
-                currentTime = nextDepB.Value;
-            }
-        }
-        else
-        {
-            if (brigadeId >= gridA.Count)
-                return trips;
-
-            double currentTime = gridA[brigadeId];
-            nextGridAIndex = brigadeId + 1;
-
-            while (currentTime < endMinutes)
-            {
-                double depA = currentTime;
-                trips.Add(CreateTrip(0, depA, forwardStopTimes, forwardDuration));
-                double arriveB = depA + forwardDuration;
-
-                double earliestDepB = arriveB + minLayover;
-                double? depB = FindNextGridSlot(gridB, ref nextGridBIndex, earliestDepB);
-                if (depB == null || depB >= endMinutes)
-                    break;
-
-                trips.Add(CreateTrip(1, depB.Value, returnStopTimes, returnDuration));
-                double arriveA = depB.Value + returnDuration;
-
-                double earliestDepA = arriveA + minLayover;
-                double? nextDepA = FindNextGridSlot(gridA, ref nextGridAIndex, earliestDepA);
-                if (nextDepA == null || nextDepA >= endMinutes)
-                    break;
-
-                currentTime = nextDepA.Value;
-            }
-        }
-
-        return trips;
-    }
-
-    private static double? FindNextGridSlot(List<double> grid, ref int currentIndex, double minTime)
-    {
-        while (currentIndex < grid.Count && grid[currentIndex] < minTime)
-        {
-            currentIndex++;
-        }
-
-        if (currentIndex < grid.Count)
-        {
-            double slot = grid[currentIndex];
-            currentIndex++;
-            return slot;
-        }
-
-        return null;
     }
 
     private static Trip CreateTrip(
