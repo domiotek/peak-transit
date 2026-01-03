@@ -15,7 +15,8 @@ var _has_departed: bool = false
 func _ready() -> void:
 	super._ready()
 	step_idx_label.text = "%d." % _step_idx
-	departure_time_label.text = _departure_time.format()
+	if not _has_departed:
+		departure_time_label.text = _departure_time.format()
 
 
 func set_step_idx(step_idx: int) -> void:

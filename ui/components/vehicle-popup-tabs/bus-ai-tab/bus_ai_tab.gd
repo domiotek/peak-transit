@@ -174,6 +174,8 @@ func _populate_trip_view(trip: BrigadeTrip) -> void:
 	for child in steps_list.get_children():
 		child.queue_free()
 
+	await self.get_tree().process_frame
+
 	var route = trip.get_stops()
 	var stop_times = trip.get_stop_times()
 
