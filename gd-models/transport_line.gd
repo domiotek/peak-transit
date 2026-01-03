@@ -342,6 +342,7 @@ func _find_departure_times_with_step(
 					"trip_idx": trip_idx,
 					"direction": get_route_destination_name(route_idx),
 					"brigade_id": brigade.id,
+					"brigade_identifier": brigade.get_identifier(),
 					"departure_time": time,
 				},
 			)

@@ -36,10 +36,6 @@ vertical = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HeaderTitle" type="Label" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
-layout_mode = 2
-text = "Vehicle"
-
 [node name="IdLabel" type="Label" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3

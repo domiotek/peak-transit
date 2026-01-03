@@ -50,5 +50,9 @@ func get_state_name() -> String:
 	return "Driving"
 
 
+func get_custom_identifier() -> String:
+	return ""
+
+
 func on_trip_finished(_completed: bool, _trip_data: Dictionary) -> void:
 	_vehicle_manager.remove_vehicle(_vehicle.id)

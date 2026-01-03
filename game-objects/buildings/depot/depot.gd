@@ -14,6 +14,12 @@ var _buses: Array[int] = []
 var _stop_tracks = []
 var _vehicles_on_tracks: Dictionary = { }
 
+var _known_bus_ids: Dictionary = {
+	"regular": [],
+	"articulated": [],
+}
+var _next_bus_number: int = 1
+
 @onready var click_area: Area2D = $ClickerArea
 @onready var building: Node2D = $Building
 @onready var in_stop_tracks_wrapper: Node2D = $StopInTracks
@@ -51,6 +57,10 @@ func get_popup_data() -> Dictionary:
 
 func get_depot_name() -> String:
 	return _depot_data.name
+
+
+func get_bus_prefix() -> String:
+	return _depot_data.bus_id_prefix if _depot_data.bus_id_prefix != "" else get_depot_name().substr(0, 2).to_upper()
 
 
 func get_position_offset() -> float:
@@ -126,6 +136,7 @@ func _do_spawn(track_id: int, is_articulated: bool) -> void:
 	_buses.append(vehicle.id)
 
 	vehicle.ai.set_origin_depot(self)
+	vehicle.ai.set_custom_identifier(_get_next_bus_identifier(is_articulated))
 
 	var path = _stop_tracks[track_id]["out"]
 
@@ -197,8 +208,13 @@ func _on_vehicle_left(vehicle_id: int, _completed: bool) -> void:
 
 func _on_vehicle_entered(vehicle_id: int, _completed: bool) -> void:
 	var vehicle = vehicle_manager.get_vehicle(vehicle_id)
+	var is_articulated = vehicle.type == VehicleManager.VehicleType.ARTICULATED_BUS
+	var custom_id = vehicle.ai.get_custom_identifier()
 
-	_increase_bus_count(vehicle.type == VehicleManager.VehicleType.ARTICULATED_BUS)
+	_increase_bus_count(is_articulated)
+
+	_known_bus_ids["articulated" if is_articulated else "regular"].append(custom_id)
+
 	_clear_vehicle_from_tracks(vehicle_id)
 	_buses.erase(vehicle_id)
 
@@ -221,3 +237,19 @@ func _fill_bus_stops() -> void:
 	var next_bus_is_articulated = false
 	while try_spawn(next_bus_is_articulated, true):
 		next_bus_is_articulated = not next_bus_is_articulated
+
+
+func _get_next_bus_identifier(is_articulated: bool) -> String:
+	var vehicle_type_key = "articulated" if is_articulated else "regular"
+	var known_ids = _known_bus_ids[vehicle_type_key]
+
+	if known_ids.size() > 0:
+		var reused_id = known_ids.pop_front()
+		return reused_id
+
+	var prefix = get_bus_prefix()
+	var bus_id = "%s-%03d" % [prefix, _next_bus_number]
+
+	_next_bus_number += 1
+
+	return bus_id

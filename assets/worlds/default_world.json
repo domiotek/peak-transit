@@ -619,6 +619,7 @@
 		"depots": [
 			{
 				"name": "Depot South",
+				"busIdPrefix": "DS",
 				"pos": {
 					"segment": [
 						8,

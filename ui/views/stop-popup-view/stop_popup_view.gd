@@ -32,6 +32,7 @@ var data_items: Array = []
 													ContentWrapper/DeparturesWrapper/NoDeparturesLabel
 
 @onready var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
+@onready var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
 
 
 func _ready() -> void:
@@ -93,7 +94,7 @@ func update(_data: Dictionary) -> void:
 
 	for dep in departures:
 		var item_scene = ListItemScene.instantiate() as DepartureListItem
-		item_scene.init_item(dep["direction"])
+		item_scene.init_item(dep["direction"], "Brigade " + str(dep["brigade_identifier"]))
 		item_scene.setup(
 			dep["line_id"],
 			dep["line_display_number"],
@@ -114,8 +115,32 @@ func update(_data: Dictionary) -> void:
 
 
 func _process(_delta: float) -> void:
-	if visible and selected_step:
-		ui_manager.reanchor_to_world_object(self, selected_step.get_anchor(), UIManager.AnchorPoint.BOTTOM_LEFT, is_pinned)
+	if not visible or not selected_step:
+		return
+
+	ui_manager.reanchor_to_world_object(self, selected_step.get_anchor(), UIManager.AnchorPoint.BOTTOM_LEFT, is_pinned)
+
+	var current_clock = game_manager.clock.get_time()
+	var current_time_of_day = TimeOfDay.new(current_clock.hour, current_clock.minute)
+
+	for child in departures_container.get_children():
+		var dep = child.get_data()
+		var brigade = transport_manager.brigades.get_by_id(dep["brigade_id"])
+		if not brigade:
+			continue
+
+		var vehicle_id = brigade.get_vehicle_of_trip(dep["trip_id"])
+		var vehicle = vehicle_manager.get_vehicle(vehicle_id) if vehicle_id != -1 else null
+
+		var delay_minutes = 0
+
+		if vehicle and vehicle.ai.has_started_trip():
+			delay_minutes = vehicle.ai.get_time_difference_to_schedule(current_time_of_day)
+
+			if vehicle.ai.get_next_stop() == null:
+				delay_minutes = 0
+
+		child.update_delay(delay_minutes)
 
 
 func _on_close_button_pressed() -> void:

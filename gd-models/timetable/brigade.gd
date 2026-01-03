@@ -18,6 +18,9 @@ var _trips: Array = []
 
 var clock_manager: ClockManager
 
+signal vehicle_assigned(vehicle_id: int, trip_idx: int)
+signal vehicle_unassigned(vehicle_id: int)
+
 
 func _init(_id: int, _transport_line_id: int, schedule: BrigadeSchedule, _line_tag: int, index: int, _line_color: Color) -> void:
 	id = _id
@@ -96,12 +99,16 @@ func assign_vehicle(vehicle_id: int) -> int:
 	_vehicles.set(vehicle_id, trip_idx)
 	_last_assigned_trip_index = trip_idx
 
+	emit_signal("vehicle_assigned", vehicle_id, trip_idx)
+
 	return trip_idx
 
 
 func unassign_vehicle(vehicle_id: int) -> void:
 	_vehicles.erase(vehicle_id)
 	_last_assigned_trip_index = -1
+
+	emit_signal("vehicle_unassigned", vehicle_id)
 
 
 func switch_trip(vehicle_id: int, new_trip_idx: int) -> bool:
@@ -113,6 +120,8 @@ func switch_trip(vehicle_id: int, new_trip_idx: int) -> bool:
 
 	_vehicles[vehicle_id] = new_trip_idx
 	_last_assigned_trip_index = new_trip_idx
+
+	emit_signal("vehicle_assigned", vehicle_id, new_trip_idx)
 
 	return true
 
@@ -129,7 +138,16 @@ func assign_next_trip(vehicle_id: int, current_index: int) -> int:
 	_vehicles.set(vehicle_id, next_index)
 	_last_assigned_trip_index = next_index
 
+	emit_signal("vehicle_assigned", vehicle_id, next_index)
 	return next_index
+
+
+func get_vehicle_of_trip(trip_idx: int) -> int:
+	for vehicle_id in _vehicles.keys():
+		if _vehicles[vehicle_id] == trip_idx:
+			return vehicle_id
+
+	return -1
 
 
 func _get_next_trip_index(current_index: int) -> int:

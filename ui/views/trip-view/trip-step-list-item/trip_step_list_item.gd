@@ -10,6 +10,7 @@ class_name TripStepListItem
 var _step_idx: int = -1
 var _departure_time: TimeOfDay = null
 var _has_departed: bool = false
+var _disabled_diff: bool = false
 
 
 func _ready() -> void:
@@ -40,7 +41,11 @@ func update_schedule_diff(time_diff: int, current_time: TimeOfDay) -> void:
 	if crosses_midnight and time_left < 0:
 		time_left += 1440
 
-	time_label.text = "%smin" % time_left
+	if _disabled_diff and time_left < 0:
+		mark_departed()
+		return
+
+	time_label.text = "%smin" % max(time_left, 0)
 
 	if time_diff > 0:
 		diff_label.text = "+%dmin" % time_diff
@@ -48,6 +53,11 @@ func update_schedule_diff(time_diff: int, current_time: TimeOfDay) -> void:
 		diff_label.text = "%dmin" % time_diff
 	else:
 		diff_label.text = "OK"
+
+
+func disable_diff() -> void:
+	diff_label.text = ""
+	_disabled_diff = true
 
 
 func mark_departed() -> void:

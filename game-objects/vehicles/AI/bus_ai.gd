@@ -14,6 +14,8 @@ enum BusState {
 	WAIT_BETWEEN_TRIPS,
 }
 
+var _bus_identifier: String = ""
+
 var _vehicle: Vehicle
 var _vehicle_manager: VehicleManager
 var _transport_manager: TransportManager
@@ -115,6 +117,10 @@ func get_current_trip() -> BrigadeTrip:
 	return _brigade.get_trip(_brigade_trip_idx)
 
 
+func has_started_trip() -> bool:
+	return _brigade_trip_current_stop_idx > 0
+
+
 func get_next_stop() -> LineStop:
 	var current_trip = get_current_trip()
 	if current_trip == null:
@@ -213,6 +219,14 @@ func set_current_trip(trip_idx: int) -> void:
 
 func set_origin_depot(depot: Depot) -> void:
 	_origin_depot = depot
+
+
+func set_custom_identifier(identifier: String) -> void:
+	_bus_identifier = identifier
+
+
+func get_custom_identifier() -> String:
+	return _bus_identifier
 
 
 func mark_leaving_terminal() -> void:

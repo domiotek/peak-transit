@@ -26,14 +26,8 @@ func _ready() -> void:
 
 	departure_time_label.text = _departure_time.format()
 
-	if _delay_minutes > 0:
-		delay_label.text = "+%d min" % _delay_minutes
-		delay_label.visible = true
-	else:
-		delay_label.visible = false
-
+	update_delay(_delay_minutes)
 	game_manager.clock.time_changed.connect(_on_time_changed)
-	_on_time_changed(game_manager.clock.get_time())
 
 
 func setup(line_id: int, line_number: int, line_color: Color, departure_time: TimeOfDay, delay_minutes: int) -> void:
@@ -44,17 +38,35 @@ func setup(line_id: int, line_number: int, line_color: Color, departure_time: Ti
 	_delay_minutes = delay_minutes
 
 
+func update_delay(delay_minutes: int) -> void:
+	_delay_minutes = delay_minutes
+	if _delay_minutes != 0:
+		delay_label.text = "%+d min" % _delay_minutes
+		delay_label.visible = true
+	else:
+		delay_label.visible = false
+
+	_on_time_changed(game_manager.clock.get_time())
+
+func mark_departed() -> void:
+	modulate = Color(0.7, 0.7, 0.7, 0.5)
+	delay_label.visible = false
+	time_till_departure_label.text = "Departed"
+	game_manager.clock.time_changed.disconnect(_on_time_changed)
+
+
 func _on_time_changed(new_time: ClockTime) -> void:
 	var minutes_diff = new_time.to_time_of_day().difference_in_minutes(_departure_time) * -1 + _delay_minutes
 
-	if minutes_diff < 0:
+	if minutes_diff <= 0:
 		modulate = Color(0.7, 0.7, 0.7, 0.5)
+		delay_label.visible = false
 
 	time_till_departure_label.text = _format_time_diff(minutes_diff)
 
 
 func _format_time_diff(minutes_diff: int) -> String:
-	if minutes_diff < 0:
+	if minutes_diff <= 0:
 		return "Departed"
 
 	var hours = int(minutes_diff / 60.0)

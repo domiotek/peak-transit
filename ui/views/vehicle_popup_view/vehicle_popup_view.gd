@@ -77,7 +77,9 @@ func update(_data: Dictionary) -> void:
 
 	tabs_wrapper.current_tab = int(_selected_tab)
 
-	id_label.text = "#" + str(selected_vehicle.id)
+	var custom_name = selected_vehicle.ai.get_custom_identifier()
+
+	id_label.text = custom_name if custom_name != "" else "Vehicle #" + str(selected_vehicle.id)
 
 	if data_items.size() == 0:
 		var data = selected_vehicle.get_popup_data()

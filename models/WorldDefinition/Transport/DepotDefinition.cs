@@ -8,6 +8,9 @@ public class DepotDefinition : IDefinition<DepotDefinition>
     [JsonProperty("name")]
     public required string Name { get; set; } = string.Empty;
 
+    [JsonProperty("busIdPrefix")]
+    public required string BusIdPrefix { get; set; } = string.Empty;
+
     [JsonProperty("pos", Required = Required.Always)]
     public required SegmentPosDefinition Position { get; set; }
 
@@ -25,6 +28,7 @@ public class DepotDefinition : IDefinition<DepotDefinition>
             ["pos"] = Position.Serialize(),
             ["busCount"] = RegularBusCapacity,
             ["articulatedBusCount"] = ArticulatedBusCapacity,
+            ["busIdPrefix"] = BusIdPrefix,
         };
         return dict;
     }
@@ -34,6 +38,7 @@ public class DepotDefinition : IDefinition<DepotDefinition>
         var depotDefinition = new DepotDefinition
         {
             Name = data["name"].AsString() ?? string.Empty,
+            BusIdPrefix = data["busIdPrefix"].AsString() ?? string.Empty,
             Position = SegmentPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
             RegularBusCapacity = data["busCount"].AsInt32(),
             ArticulatedBusCapacity = data["articulatedBusCount"].AsInt32(),
