@@ -31,7 +31,9 @@ public partial class DebugToggles : RefCounted
 
     public bool DrawBuildingConnections { get; private set; } = false;
 
-    public bool UseDayNightCycle { get; private set; } = true;
+    public bool DrawTerminalPaths { get; private set; } = false;
+
+    public bool UseDayNightCycle { get; private set; } = false;
 
     public bool IgnoreDepotConstraints { get; private set; } = false;
 

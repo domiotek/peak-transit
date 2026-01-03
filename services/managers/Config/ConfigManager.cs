@@ -7,7 +7,7 @@ public partial class ConfigManager : RefCounted
 {
     public int PathingWorkerCount { get; } = 2;
 
-    public bool AutoQuickLoad { get; } = false;
+    public bool AutoQuickLoad { get; } = true;
 
     public string BuiltInWorldDirectory { get; } = "res://assets/worlds/";
 
