@@ -57,3 +57,13 @@ func get_departures(line: TransportLine, current_time_of_day: TimeOfDay) -> Arra
 			return line.get_departures_at_stop(stop.id, current_time_of_day, 10, false)
 
 	return []
+
+
+func get_passengers() -> StopPassengersSpawner:
+	match selection_type:
+		StopSelectionType.TERMINAL_PERON:
+			return terminal_peron.terminal.passengers()
+		StopSelectionType.STOP:
+			return stop.passengers()
+
+	return null

@@ -30,6 +30,10 @@ var data_items: Array = []
 													ContentWrapper/DeparturesWrapper/ScrollContainer/DeparturesContainer
 @onready var no_departures_label: Label = $MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/\
 													ContentWrapper/DeparturesWrapper/NoDeparturesLabel
+@onready var total_waiting_label: ValueListItem = $MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/\
+													ContentWrapper/PassengersOverview/TotalWaitingLabel
+@onready var time_till_bored_label: ValueListItem = $MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/\
+													ContentWrapper/PassengersOverview/TimeTillBoredLabel
 
 @onready var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 @onready var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
@@ -141,6 +145,16 @@ func _process(_delta: float) -> void:
 				delay_minutes = 0
 
 		child.update_delay(delay_minutes)
+
+	var passengers = selected_step.get_passengers()
+
+	var waiting_passengers = passengers.get_total_waiting()
+	total_waiting_label.set_value(str(waiting_passengers))
+
+	if waiting_passengers == 0:
+		time_till_bored_label.set_value("N/A", true)
+	else:
+		time_till_bored_label.set_value("%d min" % passengers.get_lowest_till_bored_time(game_manager.clock.get_time()), true)
 
 
 func _on_close_button_pressed() -> void:

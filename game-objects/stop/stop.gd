@@ -5,9 +5,12 @@ class_name Stop
 var id: int
 
 var _data: StopDefinition
+var _demand_preset: DemandPresetDefinition
 var _segment: NetSegment
 var _relation_id: int
 var _lines: Array[int] = []
+
+var _passengers_spawner: StopPassengersSpawner
 
 @onready var road_marking = $RoadMarking
 @onready var click_area: Area2D = $ClickArea
@@ -19,15 +22,28 @@ func _ready() -> void:
 	click_area.connect("input_event", Callable(self, "_on_input_event"))
 
 
-func setup(new_id: int, stop_data: StopDefinition, segment: NetSegment, relation_id: int) -> void:
+func _process(delta: float) -> void:
+	_passengers_spawner.process(delta)
+
+
+func setup(new_id: int, stop_data: StopDefinition, segment: NetSegment, relation_id: int, demand_preset: DemandPresetDefinition) -> void:
 	id = new_id
 	_data = stop_data
 	_segment = segment
 	_relation_id = relation_id
+	_demand_preset = demand_preset
+
+
+func passengers() -> StopPassengersSpawner:
+	return _passengers_spawner
 
 
 func update_visuals(show_road_marking: bool) -> void:
 	road_marking.visible = _data.draw_stripes and show_road_marking
+
+
+func late_setup() -> void:
+	_passengers_spawner = StopPassengersSpawner.new(id, false, _lines, _demand_preset, TransportConstants.MAX_PASSENGER_AT_STOP)
 
 
 func get_stop_name() -> String:

@@ -10,6 +10,7 @@ var _line_helper: LineHelper
 var _schedule_generator: ScheduleGenerator
 var _buildings_manager: BuildingsManager
 
+var _demand_presets: Array = []
 var _stops: Dictionary = { }
 var _terminals: Dictionary = { }
 var _depots: Dictionary = { }
@@ -28,8 +29,31 @@ func inject_dependencies() -> void:
 	brigades = BrigadeManager.new()
 
 
+func register_demand_preset(preset_def: DemandPresetDefinition) -> bool:
+	var validation_error = TransportHelper.validate_demand_preset_definition(preset_def)
+
+	if validation_error.length() > 0:
+		push_error("Invalid demand preset definition: %s - %s" % [preset_def.name, validation_error])
+		return false
+
+	_demand_presets.append(preset_def)
+	return true
+
+
+func has_demand_preset(preset_id: int) -> bool:
+	return preset_id >= 0 and preset_id < _demand_presets.size()
+
+
+func get_demand_preset(preset_id: int) -> DemandPresetDefinition:
+	if not has_demand_preset(preset_id):
+		push_error("Demand preset ID not found: " + str(preset_id))
+		return null
+
+	return _demand_presets[preset_id] as DemandPresetDefinition
+
+
 func register_stop(stop_def: StopDefinition) -> bool:
-	var validation_error = TransportHelper.validate_stop_definition(_network_manager, stop_def)
+	var validation_error = TransportHelper.validate_stop_definition(_network_manager, self, stop_def)
 
 	if validation_error.length() > 0:
 		push_error("Invalid stop definition: %s - %s" % [stop_def.name, validation_error])
@@ -48,8 +72,9 @@ func register_stop(stop_def: StopDefinition) -> bool:
 	)
 
 	var target_relation = target_segment.get_relation_with_starting_node(stop_def.position.segment[0]) as NetRelation
+	var demand_preset = get_demand_preset(stop_def.demand_preset)
 
-	stop.setup(idx, stop_def, target_segment, target_relation.id)
+	stop.setup(idx, stop_def, target_segment, target_relation.id, demand_preset)
 
 	target_segment.place_stop(stop)
 
@@ -69,8 +94,12 @@ func stop_exists(stop_id: int) -> bool:
 	return _stops.has(stop_id)
 
 
+func get_stops() -> Array:
+	return _stops.values()
+
+
 func register_terminal(terminal_def: TerminalDefinition) -> bool:
-	var validation_error = TransportHelper.validate_terminal_definition(_network_manager, terminal_def)
+	var validation_error = TransportHelper.validate_terminal_definition(_network_manager, self, terminal_def)
 
 	if validation_error.length() > 0:
 		push_error("Invalid terminal definition: %s - %s" % [terminal_def.name, validation_error])
@@ -99,9 +128,11 @@ func register_terminal(terminal_def: TerminalDefinition) -> bool:
 		push_error("Failed to register terminal building for terminal: %s" % terminal_def.name)
 		return false
 
+	var demand_preset = get_demand_preset(terminal_def.demand_preset)
+
 	terminal_building.id = building_id
 	terminal_building.setup(target_relation.id, target_segment, building_info)
-	terminal_building.setup_terminal(idx, terminal_def)
+	terminal_building.setup_terminal(idx, terminal_def, demand_preset)
 
 	target_segment.place_terminal(terminal_building)
 
@@ -121,6 +152,10 @@ func get_terminal(terminal_id: int) -> Terminal:
 
 func terminal_exists(terminal_id: int) -> bool:
 	return _terminals.has(terminal_id)
+
+
+func get_terminals() -> Array:
+	return _terminals.values()
 
 
 func register_depot(depot_def: DepotDefinition) -> bool:
@@ -368,6 +403,7 @@ func are_no_lines_drawn() -> bool:
 
 
 func clear_state() -> void:
+	_demand_presets.clear()
 	_stops.clear()
 	_terminals.clear()
 	_depots.clear()

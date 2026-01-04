@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot.Collections;
 using Newtonsoft.Json;
+using PeakTransit.Models.WorldDefinition.Transport.DemandPreset;
 using PT.Models.WorldDefinition.Transport;
 
 namespace PT.Models.WorldDefinition;
@@ -20,6 +21,9 @@ public class TransportDefinition : IDefinition<TransportDefinition>
     [JsonProperty("lines")]
     public required List<LineDefinition> Lines { get; set; } = [];
 
+    [JsonProperty("demandPresets")]
+    public required List<DemandPresetDefinition> DemandPresets { get; set; } = [];
+
     public Dictionary Serialize()
     {
         var dict = new Dictionary
@@ -28,6 +32,7 @@ public class TransportDefinition : IDefinition<TransportDefinition>
             ["terminals"] = new Array<Dictionary>(Terminals.ConvertAll(n => n.Serialize())),
             ["depots"] = new Array<Dictionary>(Depots.ConvertAll(n => n.Serialize())),
             ["lines"] = new Array<Dictionary>(Lines.ConvertAll(n => n.Serialize())),
+            ["demandPresets"] = new Array<Dictionary>(DemandPresets.ConvertAll(n => n.Serialize())),
         };
         return dict;
     }
@@ -66,6 +71,14 @@ public class TransportDefinition : IDefinition<TransportDefinition>
                     .AsGodotArray()
                     .Select(lineData =>
                         LineDefinition.Deserialize(lineData.AsGodotDictionary() ?? [])
+                    ),
+            ],
+            DemandPresets =
+            [
+                .. data["demandPresets"]
+                    .AsGodotArray()
+                    .Select(presetData =>
+                        DemandPresetDefinition.Deserialize(presetData.AsGodotDictionary() ?? [])
                     ),
             ],
         };

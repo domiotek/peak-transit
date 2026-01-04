@@ -5,6 +5,7 @@ class_name Terminal
 var terminal_id: int
 
 var _terminal_data: TerminalDefinition
+var _demand_preset: DemandPresetDefinition
 
 var _line_id_to_peron: Dictionary[int, int] = { }
 var _peron_lines: Dictionary[int, Array] = { }
@@ -14,6 +15,8 @@ var _peron_anchors: Array = []
 var _tracks = { }
 var _vehicles_on_tracks: Dictionary = { }
 var _tracks_in_use: Dictionary = { }
+
+var _passengers_spawner: StopPassengersSpawner
 
 @onready var in_track: Path2D = $InTrack
 @onready var in_line_track: Path2D = $InLineTrack
@@ -30,7 +33,6 @@ var _tracks_in_use: Dictionary = { }
 @onready var peron_out_tracks: Node2D = $PeronTracks/OutTracks
 @onready var peron_around_tracks: Node2D = $PeronTracks/AroundTracks
 
-
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
 
@@ -45,14 +47,33 @@ func _ready() -> void:
 	_setup_perons()
 
 
-func setup_terminal(new_id: int, terminal_data: TerminalDefinition) -> void:
+func _process(delta: float) -> void:
+	_passengers_spawner.process(delta)
+
+
+func setup_terminal(new_id: int, terminal_data: TerminalDefinition, demand_preset: DemandPresetDefinition) -> void:
 	terminal_id = new_id
 	_terminal_data = terminal_data
+	_demand_preset = demand_preset
+
+
+func passengers() -> StopPassengersSpawner:
+	return _passengers_spawner
 
 
 func update_visuals() -> void:
 	# Terminals might have specific visuals to update in the future
 	pass
+
+
+func late_setup() -> void:
+	_passengers_spawner = StopPassengersSpawner.new(
+		terminal_id,
+		true,
+		_line_id_to_peron.keys(),
+		_demand_preset,
+		TransportConstants.MAX_PASSENGER_AT_TERMINAL_PERON,
+	)
 
 
 func get_terminal_name() -> String:
@@ -106,6 +127,7 @@ func get_line_curves(line_id: int, is_out: bool) -> Array:
 
 func get_peron_anchor(peron_index: int) -> Node2D:
 	return _peron_anchors[peron_index]
+
 
 func get_lines_at_peron(peron_index: int) -> Array:
 	var lines = []
@@ -251,6 +273,7 @@ func notify_vehicle_left_terminal(vehicle_id: int) -> void:
 
 func supports_routed_leaving() -> bool:
 	return true
+
 
 func _find_next_track(vehicle_id: int, state_map: Dictionary, custom_track_search_callback) -> Dictionary:
 	if _vehicles_on_tracks.get(vehicle_id, "") == "":
@@ -443,11 +466,9 @@ func _setup_perons() -> void:
 		var peron_node = get_node("Peron%d/ClickArea" % i) as Area2D
 		peron_node.input_event.connect(_on_peron_clicked_event.bind(peron_node))
 		peron_node.set_meta("peron_index", i)
-		
+
 		var anchor_point = peron_node.get_parent()
 		_peron_anchors.append(anchor_point)
-
-
 
 
 func _on_peron_clicked_event(_viewport, event: InputEvent, _shape_idx, area: Area2D) -> void:

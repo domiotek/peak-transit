@@ -10,8 +10,8 @@ public class StopDefinition : IDefinition<StopDefinition>
     [JsonProperty("pos", Required = Required.Always)]
     public required SegmentPosDefinition Position { get; set; }
 
-    [JsonProperty("demandPreset")]
-    public required int DemandPreset { get; set; } = -1;
+    [JsonProperty("demandPreset", Required = Required.Always)]
+    public required int DemandPresetIndex { get; set; }
 
     [JsonProperty("drawStripes")]
     public required bool DrawStripes { get; set; } = true;
@@ -25,7 +25,7 @@ public class StopDefinition : IDefinition<StopDefinition>
         {
             ["name"] = Name,
             ["pos"] = Position.Serialize(),
-            ["demandPreset"] = DemandPreset,
+            ["demandPreset"] = DemandPresetIndex,
             ["drawStripes"] = DrawStripes,
             ["canWait"] = CanWait,
         };
@@ -38,7 +38,7 @@ public class StopDefinition : IDefinition<StopDefinition>
         {
             Name = data["name"].AsString() ?? string.Empty,
             Position = SegmentPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
-            DemandPreset = data["demandPreset"].AsInt32(),
+            DemandPresetIndex = data["demandPreset"].AsInt32(),
             DrawStripes = data["drawStripes"].AsBool(),
             CanWait = data["canWait"].AsBool(),
         };

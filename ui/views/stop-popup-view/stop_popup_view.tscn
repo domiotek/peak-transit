@@ -1,9 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://lo5teb063msv"]
+[gd_scene load_steps=9 format=3 uid="uid://lo5teb063msv"]
 
 [ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_hv0ba"]
 [ext_resource type="Script" uid="uid://bwe0nhkqvgq4s" path="res://ui/views/stop-popup-view/stop_popup_view.gd" id="2_u3muj"]
 [ext_resource type="Texture2D" uid="uid://ch7h2yiicuahf" path="res://assets/ui_icons/keep_off.png" id="3_bhyp4"]
 [ext_resource type="Texture2D" uid="uid://colv4c8bi5jc0" path="res://assets/ui_icons/close.png" id="4_dxvfw"]
+[ext_resource type="PackedScene" uid="uid://c04rhuwgif41s" path="res://ui/components/value_list_item/value_list_item.tscn" id="5_17dye"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_i6erg"]
+font_size = 12
 
 [sub_resource type="LabelSettings" id="LabelSettings_lfgir"]
 font_size = 12
@@ -75,6 +79,23 @@ vertical = true
 
 [node name="LineTagsContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper"]
 layout_mode = 2
+
+[node name="PassengersOverview" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper"]
+layout_mode = 2
+vertical = true
+
+[node name="Label" type="Label" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/PassengersOverview"]
+layout_mode = 2
+text = "Passengers"
+label_settings = SubResource("LabelSettings_i6erg")
+
+[node name="TotalWaitingLabel" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/PassengersOverview" instance=ExtResource("5_17dye")]
+layout_mode = 2
+init_label_text = "Total waiting:"
+
+[node name="TimeTillBoredLabel" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper/PassengersOverview" instance=ExtResource("5_17dye")]
+layout_mode = 2
+init_label_text = "Lowest time till bored:"
 
 [node name="DeparturesWrapper" type="BoxContainer" parent="MarginContainer/MainFlowContainer/MainContentContainer/MarginContainer/ContentWrapper"]
 layout_mode = 2

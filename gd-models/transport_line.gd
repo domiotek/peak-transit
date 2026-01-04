@@ -335,16 +335,16 @@ func _find_departure_times_with_step(
 				break
 
 			target_dep_times.append(
-				{
-					"line_id": id,
-					"line_display_number": display_number,
-					"line_color_hex": color_hex,
-					"trip_idx": trip_idx,
-					"direction": get_route_destination_name(route_idx),
-					"brigade_id": brigade.id,
-					"brigade_identifier": brigade.get_identifier(),
-					"departure_time": time,
-				},
+				StopDeparture.new(
+					id,
+					display_number,
+					color_hex,
+					trip_idx,
+					get_route_destination_name(route_idx),
+					brigade.id,
+					brigade.get_identifier(),
+					time,
+				),
 			)
 			trips_taken += 1
 

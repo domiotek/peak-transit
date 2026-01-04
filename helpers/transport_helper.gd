@@ -1,6 +1,6 @@
 class_name TransportHelper
 
-static func validate_stop_definition(network_manager: NetworkManager, stop_def: StopDefinition) -> String:
+static func validate_stop_definition(network_manager: NetworkManager, transport_manager: TransportManager, stop_def: StopDefinition) -> String:
 	var validation_result = validate_segment_object_position(network_manager, stop_def.position)
 
 	if validation_result.has("error"):
@@ -8,6 +8,9 @@ static func validate_stop_definition(network_manager: NetworkManager, stop_def: 
 
 	var target_relation: NetRelation = validation_result["relation"]
 	var offset: float = validation_result["offset"] as float
+
+	if not transport_manager.has_demand_preset(stop_def.demand_preset):
+		return "Demand preset ID not found: %d" % stop_def.demand_preset
 
 	for existing_stop_struct in target_relation.get_stops().values():
 		var existing_stop_offset = existing_stop_struct.offset
@@ -24,7 +27,7 @@ static func validate_stop_definition(network_manager: NetworkManager, stop_def: 
 	return ""
 
 
-static func validate_terminal_definition(network_manager: NetworkManager, terminal_def: TerminalDefinition) -> String:
+static func validate_terminal_definition(network_manager: NetworkManager, transport_manager: TransportManager, terminal_def: TerminalDefinition) -> String:
 	var validation_result = validate_segment_object_position(network_manager, terminal_def.position)
 
 	if validation_result.has("error"):
@@ -32,6 +35,9 @@ static func validate_terminal_definition(network_manager: NetworkManager, termin
 
 	var target_relation: NetRelation = validation_result["relation"]
 	var offset: float = validation_result["offset"] as float
+
+	if not transport_manager.has_demand_preset(terminal_def.demand_preset):
+		return "Demand preset ID not found: %d" % terminal_def.demand_preset
 
 	for existing_stop_struct in target_relation.get_stops().values():
 		var existing_stop_offset = existing_stop_struct.offset
@@ -165,6 +171,38 @@ static func validate_segment_object_position(network_manager: NetworkManager, po
 		"lane": lane,
 		"offset": offset,
 	}
+
+
+static func validate_demand_preset_definition(preset_def: DemandPresetDefinition) -> String:
+	if preset_def.frames.size() == 0:
+		return "Demand preset must have at least one frame"
+
+	if preset_def.boredom_tolerance_multiplier <= 0.0:
+		return "Boredom tolerance multiplier must be greater than zero"
+
+	if preset_def.spawn_chance_multiplier <= 0.0:
+		return "Spawn chance multiplier must be greater than zero"
+
+	var used_hours: HashSet = HashSet.new()
+
+	for frame in preset_def.frames as Array[PresetFrameDefinition]:
+		var hour_in_minutes = frame.hour.to_minutes()
+
+		if used_hours.contains(hour_in_minutes):
+			return "Duplicate hour in demand preset frames: %d" % frame.hour
+
+		used_hours.add(hour_in_minutes)
+
+		if frame.passengers_range.size() != 2:
+			return "Passenger range must have exactly two values"
+
+		if frame.passengers_range[0] < 0 or frame.passengers_range[1] < 0:
+			return "Passenger range values cannot be negative"
+
+		if frame.passengers_range[0] > frame.passengers_range[1]:
+			return "Passenger range minimum cannot be greater than maximum"
+
+	return ""
 
 
 static func resolve_starting_node_from_line_step(transport_manager: TransportManager, step_def: RouteStepDefinition) -> Array:

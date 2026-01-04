@@ -10,12 +10,16 @@ public class TerminalDefinition : IDefinition<TerminalDefinition>
     [JsonProperty("pos", Required = Required.Always)]
     public required SegmentPosDefinition Position { get; set; }
 
+    [JsonProperty("demandPreset", Required = Required.Always)]
+    public required int DemandPresetIndex { get; set; }
+
     public Godot.Collections.Dictionary Serialize()
     {
         var dict = new Godot.Collections.Dictionary
         {
             ["name"] = Name,
             ["pos"] = Position.Serialize(),
+            ["demandPreset"] = DemandPresetIndex,
         };
         return dict;
     }
@@ -26,6 +30,7 @@ public class TerminalDefinition : IDefinition<TerminalDefinition>
         {
             Name = data["name"].AsString() ?? string.Empty,
             Position = SegmentPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
+            DemandPresetIndex = data["demandPreset"].As<int>(),
         };
         return terminalDefinition;
     }

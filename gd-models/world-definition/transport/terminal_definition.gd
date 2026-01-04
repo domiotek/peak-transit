@@ -2,6 +2,7 @@ class_name TerminalDefinition
 
 var name: String = ""
 var position: SegmentPosDefinition = SegmentPosDefinition.new()
+var demand_preset: int = 0
 
 
 static func deserialize(data: Dictionary) -> TerminalDefinition:
@@ -9,5 +10,6 @@ static func deserialize(data: Dictionary) -> TerminalDefinition:
 
 	terminal_def.name = data["name"] as String
 	terminal_def.position = SegmentPosDefinition.deserialize(data["pos"] as Dictionary)
+	terminal_def.demand_preset = data["demandPreset"] as int
 
 	return terminal_def

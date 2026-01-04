@@ -534,16 +534,40 @@
 	},
 	"transport": {
 		"demandPresets": [
-			[
-				{
-					"range": [
-						0.5,
-						1.0
-					],
-					"chance": 0.7,
-					"tolerance": 0.2
-				}
-			]
+			{
+				"frames": [
+					{
+						"hour": "00:00",
+						"range": [
+							0,
+							10
+						]
+					},
+					{
+						"hour": "05:00",
+						"range": [
+							25,
+							50
+						]
+					},
+					{
+						"hour": "07:00",
+						"range": [
+							50,
+							75
+						]
+					},
+					{
+						"hour": "10:00",
+						"range": [
+							5,
+							25
+						]
+					}
+				],
+				"chance": 0.7,
+				"tolerance": 1.0
+			}
 		],
 		"stops": [
 			{
@@ -604,7 +628,8 @@
 						11
 					],
 					"offset": 300
-				}
+				},
+				"demandPreset": 0
 			},
 			{
 				"pos": {
@@ -613,7 +638,8 @@
 						5
 					],
 					"offset": 360
-				}
+				},
+				"demandPreset": 0
 			}
 		],
 		"depots": [
@@ -664,8 +690,8 @@
 				"displayNumber": 154,
 				"frequency": 60,
 				"minLayover": 2,
-				"startTime": "04:45",
-				"endTime": "01:45",
+				"startTime": "00:10",
+				"endTime": "06:00",
 				"color": "#FF0000"
 			},
 			{
@@ -702,6 +728,7 @@
 				"displayNumber": 141,
 				"frequency": 10,
 				"minLayover": 3,
+				"startTime": "04:45",
 				"color": "#00FF00"
 			}
 		]
