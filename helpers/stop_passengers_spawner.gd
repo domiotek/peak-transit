@@ -70,9 +70,9 @@ func get_effective_passenger_spawn_range(clock: ClockTime) -> Array[int]:
 	return frame_def.passengers_range
 
 
-func take_passengers_for_line(line_id: int, count: int) -> int:
+func take_passengers_for_line(line_id: int, max_count: int) -> int:
 	var total_taken: int = 0
-	var remaining_to_take: int = count
+	var remaining_to_take: int = max_count
 
 	for bucket in _buckets:
 		if remaining_to_take <= 0:
@@ -181,9 +181,9 @@ func _get_next_departure(line: TransportLine, clock: TimeOfDay) -> StopDeparture
 	var departures: Array = []
 
 	if _is_terminal:
-		departures = line.get_departures_at_terminal(_target_id, clock, 1, false)
+		departures = line.get_departures_at_terminal(_target_id, clock, 1, true)
 	else:
-		departures = line.get_departures_at_stop(_target_id, clock, 1, false)
+		departures = line.get_departures_at_stop(_target_id, clock, 1, true)
 
 	if departures.size() > 0:
 		return departures[0] as StopDeparture

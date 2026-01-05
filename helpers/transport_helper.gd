@@ -449,3 +449,13 @@ static func get_container_layer_for_route(map: Map, line_id: int, route_idx: int
 		wrapper.add_child(route_layer)
 
 	return route_layer
+
+
+static func get_bus_capacity(vehicle_type: VehicleManager.VehicleType) -> int:
+	match vehicle_type:
+		VehicleManager.VehicleType.BUS:
+			return TransportConstants.BUS_MAX_CAPACITY
+		VehicleManager.VehicleType.ARTICULATED_BUS:
+			return TransportConstants.ARTICULATED_BUS_MAX_CAPACITY
+		_:
+			return 0

@@ -65,7 +65,7 @@ func update_data() -> void:
 	state_prop.text = ai.get_state_name()
 
 	var passenger_counts = ai.get_passenger_counts()
-	capacity.set_value(str(passenger_counts["current_passengers"]) + " / " + str(passenger_counts["max_passengers"]))
+	capacity.set_value(str(passenger_counts["current_passengers"]) + " / " + str(passenger_counts["max_passengers"]), true)
 
 	var brigade = ai.get_brigade()
 

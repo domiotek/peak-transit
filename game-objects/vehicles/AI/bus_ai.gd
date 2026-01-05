@@ -34,8 +34,11 @@ var _brigade_trip_current_stop_idx: int = -1
 var _is_leaving_building: bool = false
 var _is_entering_building: bool = false
 var _has_navigation_set: bool = true
+var _arrived_at_stop: bool = false
+
 var _current_passengers: int = 0
 var _max_passengers: int = 0
+var _passenger_buckets: Array = []
 
 var _boarding_timer: float = 0.0
 
@@ -49,6 +52,7 @@ func bind(vehicle: Vehicle) -> void:
 	_vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 	_transport_manager = GDInjector.inject("TransportManager") as TransportManager
 	_game_manager = GDInjector.inject("GameManager") as GameManager
+	_max_passengers = TransportHelper.get_bus_capacity(_vehicle.type)
 
 
 func get_constants() -> Dictionary:
@@ -317,6 +321,12 @@ func process(delta: float) -> void:
 					_has_navigation_set = true
 					_is_at_depot = true
 					_is_entering_building = false
+					if _current_passengers > 0:
+						push_warning(
+							("Bus %s has leftover passengers (%d) after returning to depot %s."
+								% [_vehicle.ai.get_custom_identifier(), _current_passengers, _origin_depot.get_depot_name()] ),
+						)
+
 					return
 
 			if _finalizing_previous_step.is_empty() == false:
@@ -366,6 +376,11 @@ func process(delta: float) -> void:
 				return
 
 			if _is_at_terminal and _handle_at_terminal(current_trip, delta):
+				return
+
+			if _arrived_at_stop:
+				_arrived_at_stop = false
+				_handle_stop(current_trip, delta)
 				return
 
 			if _has_navigation_set:
@@ -469,6 +484,7 @@ func _join_trip(hot_join: bool) -> void:
 	if current_trip.is_future_trip():
 		drive_to_terminal(current_trip.get_departure_terminal().terminal_id)
 		_brigade_trip_current_stop_idx = 0
+		_prepare_passenger_buckets()
 		return
 
 	var current_time = _game_manager.clock.get_time().to_time_of_day()
@@ -483,6 +499,7 @@ func _join_trip(hot_join: bool) -> void:
 		_target_terminal = current_trip.get_departure_terminal()
 		_brigade_trip_current_stop_idx = stop_idx
 		_drive_to_terminal()
+		_prepare_passenger_buckets()
 		return
 
 	_is_entering_building = false
@@ -491,6 +508,22 @@ func _join_trip(hot_join: bool) -> void:
 	_state = BusState.TRANSFERING_TO_STOP
 	_target_terminal = null
 	_has_navigation_set = false
+	_prepare_passenger_buckets()
+
+
+func _prepare_passenger_buckets() -> void:
+	_passenger_buckets.clear()
+
+	var current_trip = get_current_trip()
+
+	if not current_trip:
+		return
+
+	for line_stop in current_trip.get_stops():
+		_passenger_buckets.append(0)
+
+	# Leftover passengers will unload on next stop. TODO: Apply fine in agent model for leftover passengers
+	_passenger_buckets[_brigade_trip_current_stop_idx] = _current_passengers
 
 
 func _drive_to_next_stop() -> void:
@@ -692,6 +725,14 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 		TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET:
 			if not is_driving_to_departure:
 				_state = BusState.WAIT_BETWEEN_TRIPS
+				var leftover_passengers = _unload_passengers()
+
+				if leftover_passengers > 0: # TODO: Apply fine in agent model for leftover passengers
+					push_warning(
+						("Bus %s has leftover passengers (%d) after arriving at terminal %s waiting spot."
+							% [_vehicle.ai.get_custom_identifier(), leftover_passengers, _current_terminal.get_terminal_name()] ),
+					)
+
 				return true
 
 			_handle_stop(current_trip, delta)
@@ -708,10 +749,22 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 	var stop_departure_time = current_trip.get_departure_time_at_stop(_brigade_trip_current_stop_idx)
 	var is_last_stop = _brigade_trip_current_stop_idx + 1 >= current_trip.get_stops().size()
 
+	var stop = current_trip.get_stop(_brigade_trip_current_stop_idx).get_stop_selection()
+	var stop_passengers = stop.get_passengers()
+
 	match _state:
 		BusState.EN_ROUTE:
 			_state = BusState.BOARDING_PASSENGERS
-			var passengers_to_move = 0 # to implement
+			var passengers_to_unload = _unload_passengers()
+
+			var passengers_to_board = 0
+
+			if not is_last_stop:
+				passengers_to_board = stop_passengers.take_passengers_for_line(_brigade.line_id, _max_passengers - _current_passengers)
+
+			var passengers_to_move = passengers_to_board + passengers_to_unload
+			_load_passengers(passengers_to_board)
+
 			_boarding_timer = min(TransportConstants.BUS_MAX_BOARDING_TIME, passengers_to_move * TransportConstants.BUS_BOARDING_TIME_PER_PASSENGER)
 		BusState.BOARDING_PASSENGERS:
 			_boarding_timer -= delta
@@ -723,6 +776,9 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 			if is_last_stop or not current_trip.check_if_can_wait_at_stop(_brigade_trip_current_stop_idx):
 				_drive_to_next_stop()
 				return
+
+			var freshly_arrived_passengers = stop_passengers.take_passengers_for_line(_brigade.line_id, _max_passengers - _current_passengers)
+			_load_passengers(freshly_arrived_passengers)
 
 			var current_time = _game_manager.clock.get_time().to_time_of_day()
 
@@ -741,11 +797,52 @@ func _on_location_trigger_reached(vehicle: Vehicle, _node_id: int, _endpoint_id:
 	var additional_offset = 15 if is_articulated else 0
 	var offset = stop_obj.get_position_offset() + additional_offset
 
-	vehicle.driver.stop_after_distance(offset, Callable(self, "_arrived_at_stop"))
+	vehicle.driver.stop_after_distance(
+		offset,
+		func():
+			if _state == BusState.TRANSFERING_TO_STOP:
+				_init_line_path_trip()
+
+			_arrived_at_stop = true
+	)
 
 
-func _arrived_at_stop() -> void:
-	if _state == BusState.TRANSFERING_TO_STOP:
-		_init_line_path_trip()
+func _unload_passengers() -> int:
+	if _passenger_buckets.size() == 0:
+		_current_passengers = 0
+		return 0
 
-	_state = BusState.BOARDING_PASSENGERS
+	var passengers_to_unload = _passenger_buckets[_brigade_trip_current_stop_idx]
+
+	_current_passengers -= passengers_to_unload
+	_passenger_buckets[_brigade_trip_current_stop_idx] = 0
+
+	return passengers_to_unload
+
+
+func _load_passengers(count: int) -> void:
+	if count <= 0:
+		return
+
+	if _passenger_buckets.size() == 0:
+		push_error(
+			("Tried to load passengers but passenger buckets are not initialized; Brigade: %s; Is forward: %d; Stop idx: %d"
+				% [_brigade.ai.get_custom_identifier(), _brigade.is_forward(), _brigade_trip_current_stop_idx] ),
+		)
+		return
+
+	var remaining_stop_count := _passenger_buckets.size() - (_brigade_trip_current_stop_idx + 1)
+
+	if remaining_stop_count <= 0:
+		push_error(
+			("Tried to load passengers on final stop; Brigade: %s; Is forward: %d; Stop idx: %d"
+				% [_brigade.ai.get_custom_identifier(), _brigade.is_forward(), _brigade_trip_current_stop_idx] ),
+		)
+		return
+
+	_current_passengers += count
+
+	for i in range(count):
+		var offset := randi_range(0, remaining_stop_count - 1)
+		var target_bucket_idx := _brigade_trip_current_stop_idx + 1 + offset
+		_passenger_buckets[target_bucket_idx] += 1

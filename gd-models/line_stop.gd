@@ -13,6 +13,8 @@ var time_for_step: float = 0.0
 
 var can_wait: bool = false
 
+var _transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
+
 
 func _init(
 		_line: TransportLine,
@@ -34,3 +36,13 @@ func _init(
 	length = _length
 	can_wait = _can_wait
 	time_for_step = _time_for_step
+
+
+func get_stop_selection() -> StopSelection:
+	if is_terminal:
+		var terminal = _transport_manager.get_terminal(target_id)
+		var terminal_peron = TerminalPeron.new(terminal, terminal.get_peron_for_line(line.id))
+		return StopSelection.new(StopSelection.StopSelectionType.TERMINAL_PERON, terminal_peron)
+
+	var stop = _transport_manager.get_stop(target_id)
+	return StopSelection.new(StopSelection.StopSelectionType.STOP, stop)

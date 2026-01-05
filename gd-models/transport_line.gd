@@ -350,8 +350,8 @@ func _find_departure_times_with_step(
 
 	if sort:
 		target_dep_times.sort_custom(
-			func(a: TimeOfDay, b: TimeOfDay) -> bool:
-				return a.to_minutes() < b.to_minutes()
+			func(a: StopDeparture, b: StopDeparture) -> bool:
+				return a.departure_time.to_minutes() < b.departure_time.to_minutes()
 		)
 
 	return target_dep_times
