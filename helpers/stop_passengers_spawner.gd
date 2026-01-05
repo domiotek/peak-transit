@@ -13,7 +13,7 @@ var _game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 var _transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 
 
-func _init(target_id: int, is_terminal: bool, lines: Array[int], demand_preset: DemandPresetDefinition, max_passenger_count: int) -> void:
+func _init(target_id: int, is_terminal: bool, lines: Array, demand_preset: DemandPresetDefinition, max_passenger_count: int) -> void:
 	_target_id = target_id
 	_is_terminal = is_terminal
 	_demand_preset = demand_preset
@@ -86,6 +86,9 @@ func take_passengers_for_line(line_id: int, count: int) -> int:
 
 
 func process(_delta: float) -> void:
+	if _lines.size() == 0:
+		return
+
 	var clock = _game_manager.clock.get_time()
 
 	_check_for_bored_passengers(clock)

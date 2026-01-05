@@ -15,3 +15,7 @@ func get_anchor() -> Node2D:
 
 func get_lines() -> Array:
 	return terminal.get_lines_at_peron(peron_index)
+
+
+func get_passengers() -> StopPassengersSpawner:
+	return terminal.passengers(peron_index)

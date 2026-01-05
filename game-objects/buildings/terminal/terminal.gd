@@ -11,12 +11,11 @@ var _line_id_to_peron: Dictionary[int, int] = { }
 var _peron_lines: Dictionary[int, Array] = { }
 var _peron_count: int
 var _peron_anchors: Array = []
+var _peron_passenger_spawners: Array = []
 
 var _tracks = { }
 var _vehicles_on_tracks: Dictionary = { }
 var _tracks_in_use: Dictionary = { }
-
-var _passengers_spawner: StopPassengersSpawner
 
 @onready var in_track: Path2D = $InTrack
 @onready var in_line_track: Path2D = $InLineTrack
@@ -48,7 +47,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	_passengers_spawner.process(delta)
+	for spawner in _peron_passenger_spawners:
+		spawner.process(delta)
 
 
 func setup_terminal(new_id: int, terminal_data: TerminalDefinition, demand_preset: DemandPresetDefinition) -> void:
@@ -57,8 +57,12 @@ func setup_terminal(new_id: int, terminal_data: TerminalDefinition, demand_prese
 	_demand_preset = demand_preset
 
 
-func passengers() -> StopPassengersSpawner:
-	return _passengers_spawner
+func passengers(for_peron: int) -> StopPassengersSpawner:
+	if for_peron < 0 or for_peron >= _peron_count:
+		push_error("Requested passengers for invalid peron index %d at terminal ID %d." % [for_peron, terminal_id])
+		return null
+
+	return _peron_passenger_spawners[for_peron]
 
 
 func update_visuals() -> void:
@@ -67,14 +71,15 @@ func update_visuals() -> void:
 
 
 func late_setup() -> void:
-	_passengers_spawner = StopPassengersSpawner.new(
-		terminal_id,
-		true,
-		_line_id_to_peron.keys(),
-		_demand_preset,
-		TransportConstants.MAX_PASSENGER_AT_TERMINAL_PERON,
-	)
-
+	for i in range(_peron_count):
+		var peron_passengers_spawner = StopPassengersSpawner.new(
+			terminal_id,
+			true,
+			_peron_lines.get(i, []),
+			_demand_preset,
+			TransportConstants.MAX_PASSENGER_AT_TERMINAL_PERON,
+		)
+		_peron_passenger_spawners.append(peron_passengers_spawner)
 
 func get_terminal_name() -> String:
 	return _terminal_data.name
