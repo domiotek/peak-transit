@@ -202,6 +202,9 @@ func unassign_brigade() -> void:
 
 	_brigade.unassign_vehicle(_vehicle.id)
 	_brigade = null
+	_brigade_trip_idx = -1
+	_brigade_trip_current_stop_idx = -1
+	_prepare_passenger_buckets()
 	_vehicle.navigator.unblock_reroutes()
 	_vehicle.recolor(TransportConstants.BUS_DEFAULT_COLOR)
 
@@ -263,11 +266,12 @@ func drive_to_terminal(id: int) -> void:
 		return
 
 	_state = BusState.TRANSFERING_TO_TERMINAL
+	_target_terminal = terminal_building
 
 	if terminal_building == _current_terminal:
+		_is_entering_building = false
+		_is_leaving_building = false
 		return
-
-	_target_terminal = terminal_building
 
 	_is_entering_building = false
 	_is_leaving_building = _is_at_depot or (_is_at_terminal and _target_terminal != _current_terminal)
@@ -478,6 +482,7 @@ func _join_trip(hot_join: bool) -> void:
 	if not current_trip:
 		return
 
+	_arrived_at_stop = false
 	_vehicle.navigator.clear_location_triggers()
 	_vehicle.driver.resume_driving()
 
