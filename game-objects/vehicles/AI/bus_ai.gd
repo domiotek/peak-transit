@@ -199,7 +199,7 @@ func unassign_brigade() -> void:
 	_brigade.unassign_vehicle(_vehicle.id)
 	_brigade = null
 	_vehicle.navigator.unblock_reroutes()
-	_vehicle.recolor(SimulationConstants.BUS_DEFAULT_COLOR)
+	_vehicle.recolor(TransportConstants.BUS_DEFAULT_COLOR)
 
 
 func set_current_trip(trip_idx: int) -> void:
@@ -503,7 +503,7 @@ func _drive_to_next_stop() -> void:
 		if trip_idx == -1:
 			_state = BusState.TRANSFERING_TO_TERMINAL
 			_brigade = null
-			_vehicle.recolor(SimulationConstants.BUS_DEFAULT_COLOR)
+			_vehicle.recolor(TransportConstants.BUS_DEFAULT_COLOR)
 			_brigade_trip_idx = -1
 			_brigade_trip_current_stop_idx = -1
 			_drive_to_terminal()
@@ -670,7 +670,7 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 
 		if current_trip.is_future_trip():
 			var time_to_dep = current_trip.get_time_till_departure()
-			if time_to_dep > SimulationConstants.BUS_OCCUPY_PERON_THRESHOLD:
+			if time_to_dep > TransportConstants.BUS_OCCUPY_PERON_THRESHOLD:
 				result = _current_terminal.wait_at_terminal(_vehicle.id)
 			else:
 				result = _current_terminal.navigate_to_peron(_vehicle.id, peron_index)
@@ -712,7 +712,7 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 		BusState.EN_ROUTE:
 			_state = BusState.BOARDING_PASSENGERS
 			var passengers_to_move = 0 # to implement
-			_boarding_timer = min(SimulationConstants.BUS_MAX_BOARDING_TIME, passengers_to_move * SimulationConstants.BUS_BOARDING_TIME_PER_PASSENGER)
+			_boarding_timer = min(TransportConstants.BUS_MAX_BOARDING_TIME, passengers_to_move * TransportConstants.BUS_BOARDING_TIME_PER_PASSENGER)
 		BusState.BOARDING_PASSENGERS:
 			_boarding_timer -= delta
 
