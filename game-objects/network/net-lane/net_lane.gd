@@ -289,7 +289,7 @@ func _on_debug_toggles_changed(_name, _state) -> void:
 	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
 
 
-func _on_vehicle_destroyed(vehicle_id: int) -> void:
+func _on_vehicle_destroyed(vehicle_id: int, _vehicle_type: VehicleManager.VehicleType) -> void:
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle) or vehicle.id == vehicle_id:
 			assigned_vehicles.erase(vehicle)

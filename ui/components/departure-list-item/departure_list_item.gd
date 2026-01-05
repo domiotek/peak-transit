@@ -21,7 +21,7 @@ signal line_tag_clicked(line_id: int)
 func _ready() -> void:
 	super._ready()
 
-	line_tag.update(_line_id, _line_number, _line_color)
+	line_tag.update(_line_id, str(_line_number), _line_color)
 	line_tag.clicked.connect(_on_line_tag_clicked)
 
 	departure_time_label.text = _departure_time.format()

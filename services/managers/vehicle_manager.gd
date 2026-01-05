@@ -26,7 +26,8 @@ var vehicles: Dictionary[int, Vehicle] = { }
 var freed_ids_pool: Array[int] = []
 var next_fresh_id: int = 0
 
-signal vehicle_destroyed(vehicle_id: int)
+signal vehicle_created(vehicle: Vehicle)
+signal vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleType)
 
 
 func set_vehicles_layer(layer: Node2D) -> void:
@@ -54,6 +55,7 @@ func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
 
 	vehicles[vehicle.id] = vehicle
 	vehicles_layer.add_child(vehicle)
+	emit_signal("vehicle_created", vehicle)
 	return vehicle
 
 
@@ -72,8 +74,6 @@ func remove_vehicle(vehicle_id: int) -> void:
 
 	var vehicle = vehicles[vehicle_id]
 
-	emit_signal("vehicle_destroyed", vehicle_id)
-
 	var selection = game_manager.get_selection()
 
 	if selection.type == GameManager.SelectionType.VEHICLE and selection.object == vehicle:
@@ -82,10 +82,21 @@ func remove_vehicle(vehicle_id: int) -> void:
 	vehicles.erase(vehicle_id)
 	vehicle.queue_free()
 	freed_ids_pool.append(vehicle_id)
+	emit_signal("vehicle_destroyed", vehicle_id, vehicle.type)
 
 
 func vehicles_count() -> int:
 	return vehicles.size()
+
+
+func get_vehicles_by_types(vehicle_types: Array[VehicleType]) -> Array[Vehicle]:
+	var result: Array[Vehicle] = []
+
+	for vehicle in vehicles.values():
+		if vehicle.type in vehicle_types:
+			result.append(vehicle)
+
+	return result
 
 
 func get_vehicle_from_area(area: Area2D) -> Vehicle:

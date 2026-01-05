@@ -72,7 +72,7 @@ func update(_data: Dictionary) -> void:
 	for line_id in selected_step.get_lines():
 		var line_tag = LineTagScene.instantiate() as LineTag
 		var line = transport_manager.get_line(line_id)
-		line_tag.init(line.id, line.display_number, line.color_hex)
+		line_tag.init(line.id, str(line.display_number), line.color_hex)
 		line_tag.clicked.connect(_on_line_tag_clicked)
 		line_tags_container.add_child(line_tag)
 		departures += selected_step.get_departures(line, current_time_of_day)

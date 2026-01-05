@@ -10,6 +10,7 @@ var game_manager: GameManager
 
 @onready var toggle_lines_view_button: Button = $ToggleLinesViewButton
 @onready var toggle_brigades_view_button: Button = $ToggleBrigadesViewButton
+@onready var toggle_buses_view_button: Button = $ToggleBusesViewButton
 
 
 func _ready() -> void:
@@ -20,6 +21,7 @@ func _ready() -> void:
 
 	toggle_lines_view_button.pressed.connect(Callable(self, "_on_toggle_lines_view_button_pressed"))
 	toggle_brigades_view_button.pressed.connect(Callable(self, "_on_toggle_brigades_view_button_pressed"))
+	toggle_buses_view_button.pressed.connect(Callable(self, "_on_toggle_buses_view_button_pressed"))
 
 
 func _on_toggle_lines_view_button_pressed() -> void:
@@ -28,3 +30,7 @@ func _on_toggle_lines_view_button_pressed() -> void:
 
 func _on_toggle_brigades_view_button_pressed() -> void:
 	ui_manager.toggle_ui_view_exclusively(SHORTCUTS_VIEW_GROUP, BrigadesView.VIEW_NAME)
+
+
+func _on_toggle_buses_view_button_pressed() -> void:
+	ui_manager.toggle_ui_view_exclusively(SHORTCUTS_VIEW_GROUP, BusesView.VIEW_NAME)

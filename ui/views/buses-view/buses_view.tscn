@@ -1,0 +1,52 @@
+[gd_scene load_steps=5 format=3 uid="uid://bwlmiyrdnnjft"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_vll2k"]
+[ext_resource type="Script" uid="uid://cd7hoyn3774uy" path="res://ui/views/buses-view/buses_view.gd" id="2_pkr3t"]
+[ext_resource type="PackedScene" uid="uid://ctdn72yyfyi6x" path="res://ui/components/brigade-list/brigade_list.tscn" id="4_xtiqi"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_exb6c"]
+
+[node name="BusesView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -894.0
+offset_bottom = -285.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_vll2k")
+script = ExtResource("2_pkr3t")
+
+[node name="MainWrapper" type="VBoxContainer" parent="."]
+material = SubResource("CanvasItemMaterial_exb6c")
+layout_mode = 2
+
+[node name="HeaderMargins" type="MarginContainer" parent="MainWrapper"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 10
+
+[node name="HeaderFlex" type="HBoxContainer" parent="MainWrapper/HeaderMargins"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="HeaderTitle" type="Label" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Buses"
+
+[node name="Scroller" parent="MainWrapper" instance=ExtResource("4_xtiqi")]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer2" type="MarginContainer" parent="MainWrapper/Scroller"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="List" type="BoxContainer" parent="MainWrapper/Scroller/MarginContainer2"]
+layout_mode = 2
+vertical = true

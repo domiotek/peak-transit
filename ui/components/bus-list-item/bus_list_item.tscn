@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3 uid="uid://c73aao5ra0diw"]
+
+[ext_resource type="PackedScene" uid="uid://igt0cl0wc7uu" path="res://ui/components/list_item/list_item.tscn" id="1_f61vo"]
+[ext_resource type="Script" uid="uid://g3lmd1od5rl0" path="res://ui/components/bus-list-item/bus_list_item.gd" id="2_jyq3i"]
+[ext_resource type="PackedScene" uid="uid://bgb605ne6fm7f" path="res://ui/components/line-tag/line_tag.tscn" id="3_sgsvm"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_n7gw8"]
+font_size = 10
+
+[node name="ListItem" instance=ExtResource("1_f61vo")]
+script = ExtResource("2_jyq3i")
+
+[node name="BrigadeTag" parent="." index="0" instance=ExtResource("3_sgsvm")]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Spacer" type="Control" parent="." index="1"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="MainLabel" parent="BoxContainer" index="0"]
+text = "DS-001"
+
+[node name="SupportLabel" parent="BoxContainer" index="1"]
+text = "En route"
+
+[node name="PassengersLabel" type="Label" parent="." index="3"]
+layout_mode = 2
+text = "0 / 96"
+label_settings = SubResource("LabelSettings_n7gw8")
+
+[node name="Spacer2" type="Control" parent="." index="4"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
