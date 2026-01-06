@@ -15,8 +15,12 @@ func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 
 	visible = false
-	ui_manager.register_ui_view(VIEW_NAME, self)
+	ui_manager.register_ui_view(VIEW_NAME, self, true)
 	confirm_button.pressed.connect(_on_confirm_button_pressed)
+
+
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view(VIEW_NAME)
 
 
 func update(data: Dictionary) -> void:
@@ -29,6 +33,7 @@ func update(data: Dictionary) -> void:
 		title.text = data["title"]
 	else:
 		title.text = "Message"
+
 
 func _on_confirm_button_pressed() -> void:
 	ui_manager.hide_ui_view(VIEW_NAME)

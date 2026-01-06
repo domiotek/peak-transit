@@ -16,34 +16,40 @@ var loaded_views: Array[String] = []
 # Key: exclusivity group name, Value: currently shown view name
 var _exclusivity_groups: Dictionary[String, String] = { }
 
+# Persistent views that should not be hidden when hiding all views
+var _persistent_views: Array[String] = []
+
 var main_menu: Control
-var game_viewport: GameController
+var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
 
-func initialize(_main_menu: Control, _game_viewport: GameController) -> void:
+func initialize(_main_menu: Control) -> void:
 	main_menu = _main_menu
-	game_viewport = _game_viewport
 
 
 func show_main_menu() -> void:
 	main_menu.visible = true
+	var game_viewport = game_manager.get_game_controller()
 	game_viewport.visible = false
 
-	for view in visible_views:
-		hide_ui_view(view)
+	hide_all_ui_views()
 
 
 func hide_main_menu() -> void:
 	main_menu.visible = false
+	var game_viewport = game_manager.get_game_controller()
 	game_viewport.visible = true
 
 
-func register_ui_view(name: String, node: Control):
+func register_ui_view(name: String, node: Control, persistent: bool = false) -> void:
 	if ui_views.has(name):
 		push_error("UI View with name '%s' is already registered." % name)
 		return
 
 	ui_views[name] = node
+
+	if persistent:
+		_persistent_views.append(name)
 
 	_call_on_view(node, "init")
 
@@ -97,7 +103,22 @@ func toggle_ui_view(name: String):
 
 func hide_all_ui_views() -> void:
 	for ui_view_id in visible_views.duplicate():
-		hide_ui_view(ui_view_id)
+		if not _persistent_views.has(ui_view_id):
+			hide_ui_view(ui_view_id)
+
+
+func unregister_ui_view(name: String) -> void:
+	if ui_views.has(name):
+		hide_ui_view(name)
+		ui_views.erase(name)
+		loaded_views.erase(name)
+		_persistent_views.erase(name)
+
+		for group_name in _exclusivity_groups.keys():
+			if _exclusivity_groups[group_name] == name:
+				_exclusivity_groups.erase(group_name)
+	else:
+		push_error("UI View with name '%s' not found." % name)
 
 
 func is_mouse_over_ui(mouse_position: Vector2) -> bool:

@@ -1,5 +1,10 @@
 class_name Enums
 
+enum GameMode {
+	MAP_EDITOR,
+	CHALLENGE,
+}
+
 enum GameSpeed {
 	PAUSE = 0,
 	LOW = 1,

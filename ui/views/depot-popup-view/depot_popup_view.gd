@@ -58,6 +58,10 @@ func _ready() -> void:
 	art_spawn_button.pressed.connect(_on_articulated_bus_spawn_button_pressed)
 
 
+func _exit_tree() -> void:
+	_ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func update(_data: Dictionary) -> void:
 	if _game_manager.get_selection_type() != GameManager.SelectionType.DEPOT:
 		_on_close_button_pressed()

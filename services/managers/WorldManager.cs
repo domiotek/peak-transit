@@ -48,6 +48,29 @@ public partial class WorldManager : RefCounted
         OS.ShellShowInFileManager(path);
     }
 
+    public Dictionary GetEmptyWorldDefinition()
+    {
+        return new WorldDefinition
+        {
+            Name = "New World",
+            Description = "A newly created, empty world.",
+            CreatedAt = DateTime.UtcNow.ToString(),
+            MapDefinition = new MapDefinition()
+            {
+                MapSize = new System.Numerics.Vector2(5000, 5000),
+            },
+            NetworkDefinition = new NetworkDefinition() { Nodes = [], Segments = [] },
+            TransportDefinition = new TransportDefinition()
+            {
+                Stops = [],
+                Lines = [],
+                Terminals = [],
+                DemandPresets = [],
+                Depots = [],
+            },
+        }.Serialize();
+    }
+
     public string GetDefaultWorldFilePath()
     {
         return Path.Combine(builtInWorldDirectory, defaultWorldFileName);

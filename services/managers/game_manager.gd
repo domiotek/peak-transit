@@ -2,6 +2,9 @@ extends RefCounted
 
 class_name GameManager
 
+var challenge_game_mode_scene: PackedScene = load("res://game-objects/game-modes/challenge-mode/challenge_mode.tscn")
+var map_editor_game_mode_scene: PackedScene = load("res://game-objects/game-modes/map-editor-mode/map_editor_mode.tscn")
+
 enum SelectionType {
 	NONE,
 	VEHICLE,
@@ -17,7 +20,6 @@ var selected_object: Object = null
 var selection_type: SelectionType = SelectionType.NONE
 var selection_popup_id: Variant = null
 var debug_selection: bool = false
-var vehicle_with_path_drawn: Vehicle = null
 
 var ui_manager: UIManager
 var config_manager: ConfigManager
@@ -30,7 +32,8 @@ var pathing_manager: PathingManager
 var world_manager: WorldManager
 var transport_manager: TransportManager
 
-var game_controller: GameController
+var _game_controller: BaseGameController
+var _game_mode: Enums.GameMode
 
 var world_definition: WorldDefinition
 
@@ -39,12 +42,13 @@ var initialized: bool = false
 var game_menu_visible: bool = false
 var clock = ClockManager.new()
 
+signal game_controller_registration(controller: BaseGameController)
 signal game_speed_changed(new_speed: Enums.GameSpeed)
 signal world_loading_progress(action: String, progress: float)
 
 
-func setup(_game_controller: GameController) -> void:
-	game_controller = _game_controller
+func setup(game_controller: BaseGameController) -> void:
+	_game_controller = game_controller
 
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager
@@ -56,66 +60,48 @@ func setup(_game_controller: GameController) -> void:
 	world_manager = GDInjector.inject("WorldManager") as WorldManager
 	transport_manager = GDInjector.inject("TransportManager") as TransportManager
 
-	vehicle_manager.set_vehicles_layer(game_controller.get_map().get_drawing_layer("VehiclesLayer"))
-
-	simulation_manager.setup(game_controller)
+	simulation_manager.setup(_game_controller)
 
 
 func get_camera_bounds() -> Rect2:
-	return game_controller.get_camera_bounds()
+	return _game_controller.get_camera_bounds()
 
 
-func initialize_game(world_file_path: String = "") -> void:
+func initialize_game(mode: Enums.GameMode, world_file_path: String = "") -> void:
 	if initialized:
 		return
 
-	if world_file_path == "":
-		world_file_path = world_manager.GetDefaultWorldFilePath()
+	_game_controller = _create_game_controller(mode)
 
-	print("Loading world from file: %s" % world_file_path)
-
-	var world_def = world_manager.LoadSerializedWorldDefinition(world_file_path)
-
-	if not world_def['definition']:
-		push_error("Failed to load world definition from file: %s" % world_file_path)
-		ui_manager.show_ui_view(
-			MessageBoxView.VIEW_NAME,
-			{
-				"title": "Error during world load",
-				"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [
-					world_file_path,
-					world_def['parsingError'] if world_def.has('parsingError') else "None",
-				],
-			},
-		)
-
+	if not _game_controller:
+		push_error("Failed to create game controller for mode: %s" % str(mode))
 		return
 
-	var parsed_def = WorldDefinition.deserialize(world_def.definition)
-
-	self.world_definition = parsed_def
-
 	clock.reset()
-	initialized = true
+
 	ui_manager.hide_main_menu()
 	set_game_speed(Enums.GameSpeed.PAUSE)
 
-	await game_controller.initialize_game(world_definition)
-	simulation_manager.start_simulation()
+	initialized = await _game_controller.initialize_game(world_file_path)
+
+	if not initialized:
+		push_error("Failed to initialize game controller")
+		dispose_game()
+		return
+
+	world_definition = _game_controller.get_world_definition()
 
 
 func dispose_game() -> void:
-	if not initialized:
-		return
-
 	initialized = false
 	simulation_manager.stop_simulation()
 
 	ui_manager.hide_all_ui_views()
 	ui_manager.reset_ui_views()
 
-	var map = game_controller.get_map()
+	var map = _game_controller.get_map()
 	map.clear_layers()
+	_game_controller.queue_free()
 
 	hide_game_menu()
 	clear_state()
@@ -152,11 +138,24 @@ func push_loading_progress(action: String, progress: float) -> void:
 	world_loading_progress.emit(action, progress)
 
 
+func get_game_mode() -> Enums.GameMode:
+	return _game_mode
+
+
+func get_game_controller() -> BaseGameController:
+	return _game_controller
+
+
 func get_map() -> Map:
-	return game_controller.get_map()
+	return _game_controller.get_map()
 
 
 func set_game_speed(speed: Enums.GameSpeed) -> void:
+	var max_speed = _game_controller.get_max_game_speed()
+
+	if speed > max_speed:
+		speed = max_speed
+
 	game_speed = speed
 
 	match game_speed:
@@ -288,71 +287,7 @@ func jump_to_selection() -> void:
 		_:
 			return
 
-	game_controller.get_camera().set_camera_position(global_position)
-
-
-func draw_vehicle_route(vehicle: Vehicle) -> void:
-	if not vehicle:
-		return
-
-	var route_layer = game_controller.get_map().get_drawing_layer("VehicleRouteLayer") as Node2D
-	if not route_layer:
-		return
-
-	var route = vehicle.get_all_trip_curves()
-
-	vehicle_with_path_drawn = vehicle
-
-	vehicle.navigator.trip_rerouted.connect(Callable(self, "redraw_route"))
-
-	for curve in route:
-		var curve2d = curve as Curve2D
-
-		line_helper.convert_curve_global_to_local(curve2d, route_layer)
-
-		var line2d = Line2D.new()
-		line2d.width = 2
-		line2d.default_color = Color.YELLOW
-
-		var curve_length = curve2d.get_baked_length()
-		if curve_length > 0:
-			var sample_distance = 5.0
-			var num_samples = int(curve_length / sample_distance) + 1
-
-			for i in range(num_samples):
-				var offset: float = 0.0
-				if num_samples > 1:
-					offset = (i * curve_length) / (num_samples - 1)
-				var point = curve2d.sample_baked(offset)
-				line2d.add_point(point)
-		else:
-			for i in range(curve2d.get_point_count()):
-				line2d.add_point(curve2d.get_point_position(i))
-
-		route_layer.add_child(line2d)
-
-
-func clear_drawn_route() -> void:
-	if not vehicle_with_path_drawn:
-		return
-
-	if vehicle_with_path_drawn.navigator.is_connected("trip_rerouted", Callable(self, "redraw_route")):
-		vehicle_with_path_drawn.navigator.trip_rerouted.disconnect(Callable(self, "redraw_route"))
-
-	var route_layer = game_controller.get_map().get_drawing_layer("VehicleRouteLayer") as Node2D
-	if not route_layer:
-		return
-
-	for curve in route_layer.get_children():
-		curve.queue_free()
-
-
-func redraw_route() -> void:
-	if not vehicle_with_path_drawn:
-		return
-
-	call_deferred("clear_drawn_route")
-	call_deferred("draw_vehicle_route", vehicle_with_path_drawn)
+	_game_controller.get_camera().set_camera_position(global_position)
 
 
 func clear_state() -> void:
@@ -360,10 +295,26 @@ func clear_state() -> void:
 	selection_type = SelectionType.NONE
 	selection_popup_id = null
 	debug_selection = false
-	vehicle_with_path_drawn = null
 
 	pathing_manager.clear_state()
 	vehicle_manager.clear_state()
 	network_manager.clear_state()
 	buildings_manager.clear_state()
 	transport_manager.clear_state()
+
+
+func _create_game_controller(mode: Enums.GameMode) -> BaseGameController:
+	var controller: BaseGameController
+
+	match mode:
+		Enums.GameMode.CHALLENGE:
+			controller = challenge_game_mode_scene.instantiate() as ChallengeGameController
+		Enums.GameMode.MAP_EDITOR:
+			controller = map_editor_game_mode_scene.instantiate() as MapEditorGameController
+		_:
+			push_error("Unknown game mode type: %s" % str(mode))
+			return null
+
+	game_controller_registration.emit(controller)
+
+	return controller

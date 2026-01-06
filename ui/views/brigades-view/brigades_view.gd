@@ -31,6 +31,10 @@ func _ready() -> void:
 	brigade_view.trip_selected.connect(Callable(self, "_on_trip_selected"))
 
 
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func load() -> void:
 	var brigades = transport_manager.brigades.get_all()
 

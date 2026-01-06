@@ -12,7 +12,7 @@ var simulation_running: bool = false
 
 var _visual_day_night_cycle_enabled = false
 
-var game_controller: GameController
+var game_controller: BaseGameController
 
 signal day_night_changed(is_day: bool)
 signal desired_world_lights_state_changed(new_state: bool)
@@ -26,13 +26,13 @@ func inject_dependencies() -> void:
 	transport_manager = GDInjector.inject("TransportManager") as TransportManager
 
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+	game_manager.clock.day_night_changed.connect(Callable(self, "_on_day_night_cycle_changed"))
 
 
-func setup(_game_controller: GameController) -> void:
+func setup(_game_controller: BaseGameController) -> void:
 	game_controller = _game_controller
 	game_controller.get_map().process_mode = Node.PROCESS_MODE_DISABLED
 
-	game_manager.clock.day_night_changed.connect(Callable(self, "_on_day_night_cycle_changed"))
 	game_controller.get_map().world_desired_lights_state_change.connect(Callable(self, "_on_desired_world_lights_state_changed"))
 
 

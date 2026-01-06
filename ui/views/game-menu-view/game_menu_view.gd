@@ -1,6 +1,5 @@
 extends Control
 
-
 var ui_manager: UIManager
 var game_manager: GameManager
 
@@ -20,11 +19,18 @@ func _ready() -> void:
 	main_menu_button.pressed.connect(_on_main_menu_button_pressed)
 	exit_button.pressed.connect(_on_exit_button_pressed)
 
+
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view("GameMenuView")
+
+
 func _on_resume_button_pressed() -> void:
 	game_manager.hide_game_menu()
 
+
 func _on_main_menu_button_pressed() -> void:
 	game_manager.dispose_game()
+
 
 func _on_exit_button_pressed() -> void:
 	get_tree().quit()

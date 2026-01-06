@@ -33,6 +33,10 @@ func _ready() -> void:
 	close_button.pressed.connect(_on_close_button_pressed)
 
 
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func load() -> void:
 	var nodes = network_manager.get_nodes()
 

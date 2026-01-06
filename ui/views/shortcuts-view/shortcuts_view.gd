@@ -24,6 +24,10 @@ func _ready() -> void:
 	toggle_buses_view_button.pressed.connect(Callable(self, "_on_toggle_buses_view_button_pressed"))
 
 
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func _on_toggle_lines_view_button_pressed() -> void:
 	ui_manager.toggle_ui_view_exclusively(SHORTCUTS_VIEW_GROUP, LinesView.VIEW_NAME)
 

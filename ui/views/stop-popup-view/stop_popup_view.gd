@@ -50,6 +50,10 @@ func _ready() -> void:
 	pin_button.pressed.connect(_on_pin_button_toggled)
 
 
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func update(_data: Dictionary) -> void:
 	if game_manager.get_selection_type() != GameManager.SelectionType.TRANSPORT_STOP:
 		_on_close_button_pressed()

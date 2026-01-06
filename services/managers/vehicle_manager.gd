@@ -37,6 +37,10 @@ func set_vehicles_layer(layer: Node2D) -> void:
 
 
 func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
+	if not vehicles_layer:
+		push_error("Vehicles layer is not set. Cannot create vehicle.")
+		return null
+
 	var vehicle: Vehicle
 
 	match vehicle_type:
@@ -123,6 +127,7 @@ func clear_state() -> void:
 	vehicles.clear()
 	freed_ids_pool.clear()
 	next_fresh_id = 0
+	vehicles_layer = null
 
 
 func _generate_vehicle_id() -> int:
