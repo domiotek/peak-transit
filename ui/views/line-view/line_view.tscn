@@ -1,0 +1,104 @@
+[gd_scene load_steps=6 format=3 uid="uid://datsdp446agfx"]
+
+[ext_resource type="Script" uid="uid://dlhfgcm226j1o" path="res://ui/views/line-view/line_view.gd" id="1_su1i1"]
+[ext_resource type="Texture2D" uid="uid://c8tlwd3socdr0" path="res://assets/ui_icons/visibility.png" id="2_rclg5"]
+[ext_resource type="PackedScene" uid="uid://c04rhuwgif41s" path="res://ui/components/value_list_item/value_list_item.tscn" id="3_83q20"]
+[ext_resource type="PackedScene" uid="uid://b8xka3ymj0rho" path="res://ui/views/route-view/route_view.tscn" id="3_uuy8m"]
+[ext_resource type="PackedScene" uid="uid://ctdn72yyfyi6x" path="res://ui/components/brigade-list/brigade_list.tscn" id="4_gpc3d"]
+
+[node name="LineView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -792.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_su1i1")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="MainWrapper" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Header" type="BoxContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="ToggleLineVisibility" type="Button" parent="MarginContainer/MainWrapper/Header"]
+layout_mode = 2
+icon = ExtResource("2_rclg5")
+flat = true
+
+[node name="LineColor" type="ColorRect" parent="MarginContainer/MainWrapper/Header"]
+custom_minimum_size = Vector2(32, 16)
+layout_mode = 2
+color = Color(0.388437, 0.184367, 0.316941, 1)
+
+[node name="LineNumber" type="Label" parent="MarginContainer/MainWrapper/Header"]
+layout_mode = 2
+text = "154"
+
+[node name="LineDetailsMargin" type="MarginContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 20
+
+[node name="LineDetailsContent" type="BoxContainer" parent="MarginContainer/MainWrapper/LineDetailsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 15
+vertical = true
+
+[node name="PropsContainer" type="BoxContainer" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent"]
+layout_mode = 2
+vertical = true
+
+[node name="ServiceTimeProp" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/PropsContainer" instance=ExtResource("3_83q20")]
+layout_mode = 2
+init_label_text = "Service time:"
+
+[node name="FrequencyProp" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/PropsContainer" instance=ExtResource("3_83q20")]
+layout_mode = 2
+init_label_text = "Frequency:"
+
+[node name="TabContainer" type="TabContainer" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Routes" type="MarginContainer" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/TabContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 25
+metadata/_tab_index = 0
+
+[node name="RouteTabs" type="TabContainer" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/TabContainer/Routes"]
+layout_mode = 2
+size_flags_horizontal = 3
+current_tab = 0
+
+[node name="Forward" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/TabContainer/Routes/RouteTabs" instance=ExtResource("3_uuy8m")]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="Return" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/TabContainer/Routes/RouteTabs" instance=ExtResource("3_uuy8m")]
+visible = false
+layout_mode = 2
+route_index = 1
+metadata/_tab_index = 1
+
+[node name="Brigades" type="MarginContainer" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_top = 25
+metadata/_tab_index = 1
+
+[node name="BrigadeList" parent="MarginContainer/MainWrapper/LineDetailsMargin/LineDetailsContent/TabContainer/Brigades" instance=ExtResource("4_gpc3d")]
+layout_mode = 2
+size_flags_horizontal = 3

@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://17v128p3voi0"]
+
+[ext_resource type="Script" uid="uid://bg8t75b27gf3x" path="res://ui/views/shortcuts-view/shortcuts_view.gd" id="1_a2p26"]
+[ext_resource type="Texture2D" uid="uid://c62cw1l1isxtu" path="res://assets/ui_icons/public-transport/lines.png" id="2_a2p26"]
+[ext_resource type="Texture2D" uid="uid://dxo7cporg6h2d" path="res://assets/ui_icons/public-transport/timeline.png" id="3_a2p26"]
+[ext_resource type="Texture2D" uid="uid://dbxf6fm10buh5" path="res://assets/ui_icons/public-transport/bus.png" id="4_b5wm2"]
+
+[node name="ShortcutsView" type="GridContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_a2p26")
+
+[node name="ToggleLinesViewButton" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "Lines"
+focus_mode = 0
+icon = ExtResource("2_a2p26")
+
+[node name="ToggleBrigadesViewButton" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "Brigades"
+focus_mode = 0
+icon = ExtResource("3_a2p26")
+
+[node name="ToggleBusesViewButton" type="Button" parent="."]
+layout_mode = 2
+tooltip_text = "Buses"
+focus_mode = 0
+icon = ExtResource("4_b5wm2")

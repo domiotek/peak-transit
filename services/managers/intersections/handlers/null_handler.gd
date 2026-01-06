@@ -23,10 +23,12 @@ func setup(_node: RoadNode, new_stoppers: Array) -> void:
 	for stopper in new_stoppers:
 		stopper.set_active(false)
 
+
 func process_tick(_delta: float) -> void:
 	for stopper in stoppers:
 		var stopper_activated = process_stopper(stopper)
 		stopper.set_active(stopper_activated)
+
 
 func process_stopper(stopper: LaneStopper) -> bool:
 	if game_manager.try_hit_debug_pick(stopper):
@@ -38,11 +40,13 @@ func process_stopper(stopper: LaneStopper) -> bool:
 
 	if approaching_vehicle:
 		var current_step = approaching_vehicle.navigator.get_current_step()
+		if not approaching_vehicle.navigator.has_trip():
+			return false
 
 		var step_type = current_step["type"]
 		if step_type == Navigator.StepType.NODE or step_type == Navigator.StepType.BUILDING:
 			return false
-		
+
 		var next_node = current_step["next_node"]
 
 		var from_endpoint_id = next_node.get("from", null)
@@ -62,18 +66,18 @@ func process_stopper(stopper: LaneStopper) -> bool:
 			if _handle_changing_lane(approaching_vehicle, from_endpoint, to_endpoint, other_endpoints, target_lane):
 				approaching_vehicle.navigator.reroute()
 				return true
-			
+
 		else:
 			return _handle_straight_lane(from_endpoint, to_endpoint, other_endpoints)
 
 	return false
+
 
 func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: Dictionary, to_endpoint: Dictionary, other_endpoints: Array, target_lane: NetLane) -> bool:
 	var crossing_vehicles = node.intersection_manager.get_vehicles_crossing(from_endpoint.Id, to_endpoint.Id)
 
 	if crossing_vehicles.size() > 0:
 		return true
-
 
 	for other_endpoint_id in other_endpoints:
 		if other_endpoint_id == from_endpoint.Id:
@@ -88,10 +92,9 @@ func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: Dictionary, t
 			return true
 
 		var other_vehicle = other_lane.get_first_vehicle()
-		
 
 		if other_vehicle:
-			var distance_left = other_vehicle.navigator.get_distance_left()
+			var distance_left = other_vehicle.navigator.get_step_distance_left()
 			var is_driving_to_the_same_endpoint = _get_next_endpoint(other_vehicle) == to_endpoint.Id
 
 			if is_driving_to_the_same_endpoint and (distance_left < CONFLICT_ZONE_OFFSET or other_vehicle.driver.state == Driver.VehicleState.BLOCKED):
@@ -100,8 +103,8 @@ func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: Dictionary, t
 				if space_ahead < SPACE_AHEAD_REQUIRED or target_vehicle.id < other_vehicle.id:
 					return true
 
-
 	return false
+
 
 func _handle_straight_lane(from_endpoint: Dictionary, to_endpoint: Dictionary, other_endpoints: Array) -> bool:
 	for other_endpoint_id in other_endpoints:
@@ -130,6 +133,5 @@ func _get_next_endpoint(vehicle: Vehicle) -> int:
 
 	if current_step["type"] == Navigator.StepType.BUILDING:
 		return -1
-
 
 	return current_step["to_endpoint"]

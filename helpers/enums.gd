@@ -19,8 +19,8 @@ enum Day {
 }
 
 enum IntersectionType {
-	Default,
-	TrafficLights,
+	DEFAULT,
+	TRAFFIC_LIGHTS,
 }
 
 enum Direction {
@@ -59,4 +59,10 @@ enum TrafficLightState {
 	RED,
 	GREEN,
 	INITIAL,
+}
+
+enum TransportRouteStepType {
+	TERMINAL,
+	STOP,
+	WAYPOINT,
 }

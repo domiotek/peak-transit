@@ -10,6 +10,9 @@ public partial class WorldDefinition : SlimWorldDefinition
     [JsonProperty("network", Required = Required.Always)]
     public required NetworkDefinition NetworkDefinition { get; init; }
 
+    [JsonProperty("transport", Required = Required.Always)]
+    public required TransportDefinition TransportDefinition { get; init; }
+
     public new Godot.Collections.Dictionary Serialize()
     {
         var dict = new Godot.Collections.Dictionary
@@ -20,6 +23,7 @@ public partial class WorldDefinition : SlimWorldDefinition
             ["builtIn"] = BuiltIn,
             ["map"] = MapDefinition.Serialize(),
             ["network"] = NetworkDefinition.Serialize(),
+            ["transport"] = TransportDefinition.Serialize(),
         };
         return dict;
     }

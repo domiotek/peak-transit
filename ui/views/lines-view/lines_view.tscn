@@ -1,0 +1,76 @@
+[gd_scene load_steps=7 format=3 uid="uid://c7qjs6bf61f2l"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_m47lp"]
+[ext_resource type="Script" uid="uid://6rmxo1ibffl" path="res://ui/views/lines-view/lines_view.gd" id="2_bo3sf"]
+[ext_resource type="Texture2D" uid="uid://ddqijih7rynj2" path="res://assets/ui_icons/chevron_left.png" id="3_xyawc"]
+[ext_resource type="Texture2D" uid="uid://c8tlwd3socdr0" path="res://assets/ui_icons/visibility.png" id="4_bo3sf"]
+[ext_resource type="PackedScene" uid="uid://datsdp446agfx" path="res://ui/views/line-view/line_view.tscn" id="4_m47lp"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_exb6c"]
+
+[node name="LinesView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -894.0
+offset_bottom = -285.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_m47lp")
+script = ExtResource("2_bo3sf")
+
+[node name="MainWrapper" type="VBoxContainer" parent="."]
+material = SubResource("CanvasItemMaterial_exb6c")
+layout_mode = 2
+
+[node name="HeaderMargins" type="MarginContainer" parent="MainWrapper"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 10
+
+[node name="HeaderFlex" type="HBoxContainer" parent="MainWrapper/HeaderMargins"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[node name="GoBackButton" type="Button" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+visible = false
+layout_mode = 2
+icon = ExtResource("3_xyawc")
+flat = true
+
+[node name="ToggleAllVisibilityButton" type="Button" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+layout_mode = 2
+icon = ExtResource("4_bo3sf")
+flat = true
+
+[node name="HeaderTitle" type="Label" parent="MainWrapper/HeaderMargins/HeaderFlex"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Lines"
+
+[node name="MainScrollContainer" type="ScrollContainer" parent="MainWrapper"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="MainWrapper/MainScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 20
+
+[node name="ItemList" type="BoxContainer" parent="MainWrapper/MainScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical = true
+
+[node name="LineView" parent="MainWrapper" instance=ExtResource("4_m47lp")]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3

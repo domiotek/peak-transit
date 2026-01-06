@@ -8,6 +8,9 @@ enum SelectionType {
 	NODE,
 	STOPPER,
 	SPAWNER_BUILDING,
+	TERMINAL,
+	TRANSPORT_STOP,
+	DEPOT,
 }
 
 var selected_object: Object = null
@@ -25,6 +28,7 @@ var network_manager: NetworkManager
 var buildings_manager: BuildingsManager
 var pathing_manager: PathingManager
 var world_manager: WorldManager
+var transport_manager: TransportManager
 
 var game_controller: GameController
 
@@ -50,6 +54,7 @@ func setup(_game_controller: GameController) -> void:
 	buildings_manager = GDInjector.inject("BuildingsManager") as BuildingsManager
 	pathing_manager = GDInjector.inject("PathingManager") as PathingManager
 	world_manager = GDInjector.inject("WorldManager") as WorldManager
+	transport_manager = GDInjector.inject("TransportManager") as TransportManager
 
 	vehicle_manager.set_vehicles_layer(game_controller.get_map().get_drawing_layer("VehiclesLayer"))
 
@@ -77,7 +82,10 @@ func initialize_game(world_file_path: String = "") -> void:
 			MessageBoxView.VIEW_NAME,
 			{
 				"title": "Error during world load",
-				"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [world_file_path, world_def['parsingError'] if world_def.has('parsingError') else "None"],
+				"message": "Failed to parse world definition from file: %s\n\nAdditional info: %s" % [
+					world_file_path,
+					world_def['parsingError'] if world_def.has('parsingError') else "None",
+				],
 			},
 		)
 
@@ -87,6 +95,7 @@ func initialize_game(world_file_path: String = "") -> void:
 
 	self.world_definition = parsed_def
 
+	clock.reset()
 	initialized = true
 	ui_manager.hide_main_menu()
 	set_game_speed(Enums.GameSpeed.PAUSE)
@@ -103,11 +112,10 @@ func dispose_game() -> void:
 	simulation_manager.stop_simulation()
 
 	ui_manager.hide_all_ui_views()
+	ui_manager.reset_ui_views()
 
 	var map = game_controller.get_map()
-	map.clear_drawing_layer("VehiclesLayer")
-	map.clear_drawing_layer("VehicleRouteLayer")
-	map.clear_drawing_layer("RoadGrid")
+	map.clear_layers()
 
 	hide_game_menu()
 	clear_state()
@@ -144,6 +152,10 @@ func push_loading_progress(action: String, progress: float) -> void:
 	world_loading_progress.emit(action, progress)
 
 
+func get_map() -> Map:
+	return game_controller.get_map()
+
+
 func set_game_speed(speed: Enums.GameSpeed) -> void:
 	game_speed = speed
 
@@ -153,13 +165,13 @@ func set_game_speed(speed: Enums.GameSpeed) -> void:
 		Enums.GameSpeed.LOW:
 			Engine.time_scale = 1.0
 		Enums.GameSpeed.MEDIUM:
-			Engine.time_scale = 2.0
+			Engine.time_scale = 5.0
 		Enums.GameSpeed.HIGH:
-			Engine.time_scale = 4.0
-			Engine.physics_ticks_per_second = 80
-		Enums.GameSpeed.TURBO:
 			Engine.time_scale = 10.0
 			Engine.physics_ticks_per_second = 120
+		Enums.GameSpeed.TURBO:
+			Engine.time_scale = 20.0
+			Engine.physics_ticks_per_second = 180
 
 	game_speed_changed.emit(game_speed)
 
@@ -169,13 +181,13 @@ func get_game_speed() -> Enums.GameSpeed:
 
 
 func set_selection(object: Object, type: SelectionType) -> void:
-	selection_type = type
-	selected_object = object
-
 	if selection_type != type:
 		if selection_popup_id:
-			ui_manager.hide_ui_view_by_id(selection_popup_id)
+			ui_manager.hide_ui_view(selection_popup_id)
 			selection_popup_id = null
+
+	selection_type = type
+	selected_object = object
 
 	match type:
 		SelectionType.NONE:
@@ -184,7 +196,11 @@ func set_selection(object: Object, type: SelectionType) -> void:
 			selection_popup_id = "VehiclePopupView"
 		SelectionType.SPAWNER_BUILDING:
 			selection_popup_id = "SpawnerBuildingPopupView"
-		SelectionType.NODE, SelectionType.STOPPER:
+		SelectionType.DEPOT:
+			selection_popup_id = DepotPopupView.VIEW_NAME
+		SelectionType.TRANSPORT_STOP:
+			selection_popup_id = StopPopupView.VIEW_NAME
+		SelectionType.NODE, SelectionType.STOPPER, SelectionType.TERMINAL:
 			pass
 		_:
 			push_error("Unknown selection type: %s" % str(type))
@@ -239,6 +255,40 @@ func try_hit_debug_pick(object: Object) -> bool:
 		return true
 
 	return false
+
+
+func jump_to_selection() -> void:
+	if not selected_object:
+		return
+
+	var global_position: Vector2
+
+	match selection_type:
+		SelectionType.VEHICLE:
+			var vehicle = selected_object as Vehicle
+			global_position = vehicle.global_position
+		SelectionType.NODE:
+			var node = selected_object as RoadNode
+			global_position = node.position
+		SelectionType.STOPPER:
+			var stopper = selected_object as LaneStopper
+			global_position = stopper.global_position
+		SelectionType.SPAWNER_BUILDING:
+			var spawner = selected_object as SpawnerBuilding
+			global_position = spawner.global_position
+		SelectionType.TRANSPORT_STOP:
+			var stop = selected_object as StopSelection
+			global_position = stop.get_anchor().global_position
+		SelectionType.TERMINAL:
+			var terminal = selected_object as StopSelection
+			global_position = terminal.get_anchor().global_position
+		SelectionType.DEPOT:
+			var depot = selected_object as Depot
+			global_position = depot.global_position
+		_:
+			return
+
+	game_controller.get_camera().set_camera_position(global_position)
 
 
 func draw_vehicle_route(vehicle: Vehicle) -> void:
@@ -312,8 +362,8 @@ func clear_state() -> void:
 	debug_selection = false
 	vehicle_with_path_drawn = null
 
-	simulation_manager.vehicles_count = 0
 	pathing_manager.clear_state()
 	vehicle_manager.clear_state()
 	network_manager.clear_state()
 	buildings_manager.clear_state()
+	transport_manager.clear_state()

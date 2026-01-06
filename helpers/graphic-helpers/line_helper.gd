@@ -551,3 +551,80 @@ func get_polygon_chunks(poly: Polygon2D, chunk_size: float = 100.0) -> Array[Pol
 		y += chunk_size
 
 	return chunks
+
+
+func get_curves_total_length(curves: Array) -> float:
+	var total_length: float = 0.0
+
+	for curve in curves:
+		if curve:
+			total_length += curve.get_baked_length()
+
+	return total_length
+
+
+func approximate_curve_from_line(line: Line2D) -> Curve2D:
+	var curve = Curve2D.new()
+	for i in range(line.get_point_count()):
+		var point = line.get_point_position(i)
+		curve.add_point(point)
+	return curve
+
+
+func smooth_curve(curve: Curve2D, smoothing_factor: float = 1, resample_interval: float = 20.0) -> Curve2D:
+	if not curve or curve.point_count < 2:
+		return curve
+
+	var length = curve.get_baked_length()
+	if length <= 0:
+		return curve
+
+	var sample_count = max(3, int(length / resample_interval))
+	var resampled_positions: Array = []
+
+	for i in range(sample_count + 1):
+		var t = float(i) / float(sample_count)
+		var distance = t * length
+		var pos = curve.sample_baked(distance)
+		resampled_positions.append(pos)
+
+	var smoothed_positions: Array = []
+	smoothed_positions.append(resampled_positions[0])
+
+	for i in range(1, resampled_positions.size() - 1):
+		var prev_point = resampled_positions[i - 1]
+		var current_point = resampled_positions[i]
+		var next_point = resampled_positions[i + 1]
+
+		var new_pos = current_point.lerp((prev_point + next_point) / 2.0, smoothing_factor)
+		smoothed_positions.append(new_pos)
+
+	smoothed_positions.append(resampled_positions[resampled_positions.size() - 1])
+
+	var smoothed_curve = Curve2D.new()
+
+	for i in range(smoothed_positions.size()):
+		var point = smoothed_positions[i]
+		var in_handle = Vector2.ZERO
+		var out_handle = Vector2.ZERO
+
+		if i > 0 and i < smoothed_positions.size() - 1:
+			var prev = smoothed_positions[i - 1]
+			var next = smoothed_positions[i + 1]
+			var tangent = (next - prev).normalized()
+			var distance = (next - prev).length() * 0.25
+
+			in_handle = -tangent * distance
+			out_handle = tangent * distance
+		elif i == 0 and smoothed_positions.size() > 1:
+			var next = smoothed_positions[i + 1]
+			var direction = (next - point).normalized()
+			out_handle = direction * (next - point).length() * 0.3
+		elif i == smoothed_positions.size() - 1 and smoothed_positions.size() > 1:
+			var prev = smoothed_positions[i - 1]
+			var direction = (point - prev).normalized()
+			in_handle = -direction * (point - prev).length() * 0.3
+
+		smoothed_curve.add_point(point, in_handle, out_handle)
+
+	return smoothed_curve

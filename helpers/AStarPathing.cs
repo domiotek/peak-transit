@@ -62,11 +62,6 @@ public class AStarPathing
             throw new ArgumentException("Start or end node not found in graph");
         }
 
-        if (startNodeId == endNodeId)
-        {
-            return (new List<PathStep>(), 0.0f);
-        }
-
         var startGraphNode = graph.GetNode(startNodeId);
         var endGraphNode = graph.GetNode(endNodeId);
 

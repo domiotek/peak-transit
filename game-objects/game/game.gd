@@ -16,6 +16,8 @@ var config_manager: ConfigManager
 var game_manager: GameManager
 var simulation_manager: SimulationManager
 var circle_helper: DebugCircleHelper
+var transport_manager: TransportManager
+
 
 func _ready() -> void:
 	game_manager = GDInjector.inject("GameManager") as GameManager
@@ -23,16 +25,24 @@ func _ready() -> void:
 	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
+	transport_manager = GDInjector.inject("TransportManager") as TransportManager
 
 	game_manager.setup(self)
 
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 
+
 func get_map() -> Map:
 	return map
 
+
+func get_camera() -> Camera:
+	return camera
+
+
 func get_camera_bounds() -> Rect2:
 	return camera_bounds
+
 
 func initialize_game(world: WorldDefinition) -> void:
 	ui_manager.show_ui_view("WorldLoadingProgressView")
@@ -41,10 +51,13 @@ func initialize_game(world: WorldDefinition) -> void:
 	await get_tree().process_frame
 
 	await load_network_grid(world.network)
+	await load_transport_systems(world.transport)
 
 	ui_manager.hide_ui_view("WorldLoadingProgressView")
 	ui_manager.show_ui_view(GameSpeedView.VIEW_NAME)
 	ui_manager.show_ui_view(GameClockView.VIEW_NAME)
+	ui_manager.show_ui_view(ShortcutsView.VIEW_NAME)
+
 
 func init_map(world: WorldDefinition) -> void:
 	map.map_size = world.map.size
@@ -54,11 +67,60 @@ func init_map(world: WorldDefinition) -> void:
 	camera.position = world.map.initial_pos
 	camera.zoom = Vector2.ONE * world.map.initial_zoom
 
+
 func load_network_grid(network_def: NetworkDefinition) -> void:
 	var network_grid = map.get_drawing_layer("RoadGrid") as NetworkGrid
 
 	await network_grid.load_network_definition(network_def)
-	
+
+
+func load_transport_systems(transport_def: TransportDefinition) -> void:
+	for i in range(transport_def.demand_presets.size()):
+		game_manager.push_loading_progress("Loading demand presets...", i / float(transport_def.demand_presets.size()))
+		await get_tree().process_frame
+		var preset_def = transport_def.demand_presets[i]
+		transport_manager.register_demand_preset(preset_def)
+
+	for i in range(transport_def.depots.size()):
+		game_manager.push_loading_progress("Placing transport depots...", i / float(transport_def.depots.size()))
+		await get_tree().process_frame
+		var depot_def = transport_def.depots[i]
+		transport_manager.register_depot(depot_def)
+
+	for i in range(transport_def.terminals.size()):
+		game_manager.push_loading_progress("Placing transport terminals...", i / float(transport_def.terminals.size()))
+		await get_tree().process_frame
+		var terminal_def = transport_def.terminals[i]
+		transport_manager.register_terminal(terminal_def)
+
+	for i in range(transport_def.stops.size()):
+		game_manager.push_loading_progress("Placing transport stops...", i / float(transport_def.stops.size()))
+		await get_tree().process_frame
+		var stop_def = transport_def.stops[i]
+		transport_manager.register_stop(stop_def)
+
+	for i in range(transport_def.lines.size()):
+		game_manager.push_loading_progress("Setting up transport lines...", i / float(transport_def.lines.size()))
+		await get_tree().process_frame
+		var line_def = transport_def.lines[i]
+		await transport_manager.register_line(line_def)
+
+	var lines = transport_manager.get_lines()
+	for line_id in range(lines.size()):
+		var transport_line = lines[line_id] as TransportLine
+		game_manager.push_loading_progress("Generating schedules...", line_id / float(lines.size()))
+		await get_tree().process_frame
+		transport_manager.generate_line_schedule(transport_line)
+
+	var registered_stops = transport_manager.get_stops()
+	var registered_terminals = transport_manager.get_terminals()
+
+	game_manager.push_loading_progress("Finalizing transport systems", 0)
+	await get_tree().process_frame
+
+	for stop_abs in registered_stops + registered_terminals:
+		stop_abs.late_setup()
+
 
 func _draw() -> void:
 	for child in debug_layer.get_children():
@@ -75,7 +137,7 @@ func _draw() -> void:
 		line.add_point(camera_bounds.position + Vector2(0, camera_bounds.size.y))
 		debug_layer.add_child(line)
 
-		circle_helper.draw_debug_circle(camera.get_screen_center_position(), Color.BLUE, debug_layer, {"size": 10.0})
+		circle_helper.draw_debug_circle(camera.get_screen_center_position(), Color.BLUE, debug_layer, { "size": 10.0 })
 
 
 func _process(delta):
@@ -87,7 +149,7 @@ func _process(delta):
 	if Input.is_action_just_pressed("toggle_game_menu"):
 		game_manager.toggle_game_menu()
 		return
-	
+
 	if game_manager.is_game_menu_visible():
 		return
 
@@ -118,6 +180,7 @@ func _process(delta):
 	if Input.is_action_just_pressed("game_speed_4"):
 		game_manager.set_game_speed(Enums.GameSpeed.TURBO)
 		return
+
 
 func _on_debug_toggles_changed(_name, _state) -> void:
 	queue_redraw()

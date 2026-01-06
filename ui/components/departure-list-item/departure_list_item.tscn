@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://d13lgdemhh4q2"]
+
+[ext_resource type="PackedScene" uid="uid://igt0cl0wc7uu" path="res://ui/components/list_item/list_item.tscn" id="1_q7yta"]
+[ext_resource type="Script" uid="uid://bcg2gthpdsh7b" path="res://ui/components/departure-list-item/departure_list_item.gd" id="2_te11k"]
+[ext_resource type="PackedScene" uid="uid://bgb605ne6fm7f" path="res://ui/components/line-tag/line_tag.tscn" id="3_8mhi6"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_xm5j2"]
+font_size = 10
+font_color = Color(0.978281, 0.644668, 1.92523e-06, 1)
+
+[node name="DepartureListItem" instance=ExtResource("1_q7yta")]
+size_flags_horizontal = 3
+script = ExtResource("2_te11k")
+
+[node name="LineTag" parent="." index="0" instance=ExtResource("3_8mhi6")]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="DepartureTimeLabel" type="Label" parent="." index="2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "19:00"
+
+[node name="TimeTillDepartureWrapper" type="BoxContainer" parent="." index="3"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="TimeTillDepartureLabel" type="Label" parent="TimeTillDepartureWrapper" index="0"]
+layout_mode = 2
+text = "4min"
+
+[node name="DelayLabel" type="Label" parent="TimeTillDepartureWrapper" index="1"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "+10min"
+label_settings = SubResource("LabelSettings_xm5j2")

@@ -1,0 +1,50 @@
+[gd_scene load_steps=4 format=3 uid="uid://b8xka3ymj0rho"]
+
+[ext_resource type="Script" uid="uid://bdxyg2ji06cb1" path="res://ui/views/route-view/route_view.gd" id="1_feo8s"]
+[ext_resource type="Texture2D" uid="uid://c8tlwd3socdr0" path="res://assets/ui_icons/visibility.png" id="2_4e5j1"]
+[ext_resource type="PackedScene" uid="uid://1q7gfj18r2cu" path="res://ui/components/route-step-item/route_step_item.tscn" id="3_4e5j1"]
+
+[node name="RouteView" type="BoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+vertical = true
+script = ExtResource("1_feo8s")
+
+[node name="Header" type="BoxContainer" parent="."]
+layout_mode = 2
+
+[node name="RouteVisibilityButton" type="Button" parent="Header"]
+layout_mode = 2
+icon = ExtResource("2_4e5j1")
+flat = true
+
+[node name="Spacer" type="Control" parent="Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="IncludeWaypoints" type="CheckButton" parent="Header"]
+layout_mode = 2
+text = "Include waypoints"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_bottom = 5
+
+[node name="StepsContainer" type="BoxContainer" parent="ScrollContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = -10
+vertical = true
+
+[node name="RouteStepItem" parent="ScrollContainer/MarginContainer/StepsContainer" instance=ExtResource("3_4e5j1")]
+layout_mode = 2

@@ -31,9 +31,10 @@ func _get_vehicle_config() -> Variant:
 		$Body/RightRayIndicator,
 	)
 	_config.id_label = $Body/Label
-	_config.path_followers = [{ "follower": path_follower, "offset": 0.0, "body": self }] as Array[Dictionary]
+	_config.path_follower = path_follower
 	_config.body_areas = [body_area] as Array[Area2D]
 	_config.collision_areas = [collision_area] as Array[Area2D]
 	_config.blockade_indicator = $Body/Line2D
+	_config.body_segments = [$Body] as Array[Polygon2D]
 
 	return _config

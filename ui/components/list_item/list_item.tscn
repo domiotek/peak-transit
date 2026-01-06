@@ -24,6 +24,7 @@ vertical = true
 
 [node name="MainLabel" type="Label" parent="BoxContainer"]
 layout_mode = 2
+size_flags_vertical = 6
 text = "Test:"
 label_settings = SubResource("LabelSettings_owr6n")
 

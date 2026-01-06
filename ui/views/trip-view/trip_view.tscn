@@ -1,0 +1,162 @@
+[gd_scene load_steps=8 format=3 uid="uid://d3eicbrciics1"]
+
+[ext_resource type="Script" uid="uid://da22l4w3nnx4s" path="res://ui/views/trip-view/trip_view.gd" id="1_pv0i6"]
+[ext_resource type="PackedScene" uid="uid://c04rhuwgif41s" path="res://ui/components/value_list_item/value_list_item.tscn" id="1_rk8q0"]
+[ext_resource type="Texture2D" uid="uid://ddqijih7rynj2" path="res://assets/ui_icons/chevron_left.png" id="2_m1ewy"]
+[ext_resource type="Texture2D" uid="uid://c1gbw82ogiamu" path="res://assets/ui_icons/chevron_right.png" id="3_0jsti"]
+[ext_resource type="Texture2D" uid="uid://of0uwr8c8oea" path="res://assets/ui_icons/jump_to_element.png" id="3_5gc13"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_t46yn"]
+font_size = 12
+
+[sub_resource type="LabelSettings" id="LabelSettings_m1ewy"]
+font_size = 10
+font_color = Color(0.505344, 0.505344, 0.505344, 1)
+
+[node name="TripView" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -787.0
+offset_bottom = -157.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pv0i6")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="MainWrapper" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Header" type="BoxContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TripIdxLabel" type="Label" parent="MarginContainer/MainWrapper/Header"]
+layout_mode = 2
+text = "# 1"
+
+[node name="RelationLabel" type="Label" parent="MarginContainer/MainWrapper/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Terminal 0 -> Terminal 1"
+
+[node name="PrevTripButton" type="Button" parent="MarginContainer/MainWrapper/Header"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Previous trip"
+focus_mode = 0
+icon = ExtResource("2_m1ewy")
+expand_icon = true
+
+[node name="NextTripButton" type="Button" parent="MarginContainer/MainWrapper/Header"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Next trip"
+focus_mode = 0
+icon = ExtResource("3_0jsti")
+expand_icon = true
+
+[node name="TripDetailsMargin" type="MarginContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 10
+
+[node name="TripDetailsContent" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 15
+vertical = true
+
+[node name="WrapperBoxContainer" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="PropsContainer" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+vertical = true
+
+[node name="BrigadeIdProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Brigade:"
+
+[node name="ServiceTimeProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Service time:"
+
+[node name="TotalTimeProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Total time:"
+
+[node name="TotalStepsProp" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/PropsContainer" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Total stops:"
+
+[node name="VehiclePanel" type="PanelContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="BusView" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Headline" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer/BusView"]
+layout_mode = 2
+
+[node name="BusIdLabel" type="Label" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer/BusView/Headline"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "DS-001"
+label_settings = SubResource("LabelSettings_t46yn")
+
+[node name="JumpToBusButton" type="Button" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer/BusView/Headline"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+tooltip_text = "Jump to bus"
+icon = ExtResource("3_5gc13")
+icon_alignment = 1
+expand_icon = true
+
+[node name="StateLabel" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer/BusView" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "State:"
+
+[node name="PassengersCountLabel" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer/BusView" instance=ExtResource("1_rk8q0")]
+layout_mode = 2
+init_label_text = "Passengers:"
+
+[node name="NoBusView" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer"]
+visible = false
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/WrapperBoxContainer/VehiclePanel/MarginContainer/NoBusView"]
+layout_mode = 2
+text = "No bus assigned"
+label_settings = SubResource("LabelSettings_m1ewy")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="StepsList" type="BoxContainer" parent="MarginContainer/MainWrapper/TripDetailsMargin/TripDetailsContent/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical = true

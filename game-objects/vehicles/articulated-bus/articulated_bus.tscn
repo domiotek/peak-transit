@@ -30,7 +30,7 @@ script = ExtResource("2_2xaxp")
 
 [node name="FrontBody" type="Polygon2D" parent="." index="0"]
 z_index = 6
-color = Color(1, 0.501961, 0.309804, 1)
+color = Color(0.105882, 0.513726, 0.831373, 1)
 polygon = PackedVector2Array(-21, -11, 30.5, -11, 30.5, 11, -21, 11)
 uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
 
@@ -187,7 +187,7 @@ position = Vector2(-28, 0)
 z_index = 5
 z_as_relative = false
 position = Vector2(-23, 0)
-color = Color(1, 0.501961, 0.309804, 1)
+color = Color(0.105882, 0.513726, 0.831373, 1)
 polygon = PackedVector2Array(-24, -11, 18, -11, 18, 11, -24, 11)
 uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
 
@@ -231,7 +231,3 @@ monitorable = false
 [node name="BodyShape" type="CollisionShape2D" parent="Trailer/BodyArea" index="0"]
 position = Vector2(-3, 0)
 shape = SubResource("RectangleShape2D_xwv6l")
-
-[node name="PathFollower" type="PathFollow2D" parent="Trailer" index="3"]
-position = Vector2(-45, 0)
-loop = false

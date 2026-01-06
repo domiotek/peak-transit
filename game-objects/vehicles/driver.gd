@@ -10,9 +10,9 @@ enum VehicleState {
 	BLOCKED,
 }
 
-var CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
-var BLOCKING_CASTERS = ["close", "left", "right"]
-var MAX_BLOCK_TIME = 5.0
+const CASTERS_CHECK_ORDER = ["close", "left", "right", "medium", "long"]
+const BLOCKING_CASTERS = ["close", "left", "right"]
+const MAX_BLOCK_TIME = 5.0
 
 var line_helper: LineHelper
 var vehicle_manager: VehicleManager
@@ -41,6 +41,10 @@ var time_blocked: float = 0.0
 
 var _headlights_state = false
 var _headlights_state_change_ticks_counter: float = 0
+
+var _stop_at_distance: float = 0.0
+var _slow_down_threshold: float = 0.0
+var _stop_at_callback: Callable
 
 signal caster_state_changed(caster_id: String, is_colliding: bool)
 signal state_changed(new_state: VehicleState)
@@ -95,7 +99,7 @@ func get_max_allowed_speed() -> float:
 	if current_step and current_step.has("max_speed") and current_step["max_speed"] != INF:
 		return current_step["max_speed"]
 
-	return constants["MAX_SPEED"]
+	return constants["MAX_SPEED"] if ai.can_drive() else 0.0
 
 
 func get_state() -> VehicleState:
@@ -131,6 +135,25 @@ func emergency_stop() -> void:
 	current_brake_force = constants["EMERGENCY_BRAKING"]
 
 
+func stop_after_distance(distance: float, callback: Callable) -> void:
+	_stop_at_distance = distance
+
+	var max_speed = get_max_allowed_speed()
+
+	var braking_distance = (max_speed * max_speed) / (2.0 * constants["DEFAULT_BRAKING"])
+	_slow_down_threshold = distance - braking_distance
+	if _slow_down_threshold < 0.0:
+		_slow_down_threshold = distance
+
+	_stop_at_callback = callback
+
+
+func resume_driving() -> void:
+	_stop_at_distance = 0.0
+	_slow_down_threshold = 0.0
+	_stop_at_callback = Callable()
+
+
 func grant_no_caster_allowance(time_seconds: float) -> void:
 	no_caster_allowance_time = time_seconds
 	_set_casters_enabled(false)
@@ -152,11 +175,19 @@ func set_headlights_enabled(enabled: bool, set_instant: bool) -> void:
 		beam_light.set_enabled(enabled)
 
 
-func tick_speed(delta: float) -> float:
+func set_idle() -> void:
+	current_speed = 0.0
+	target_speed = 0.0
+	current_brake_force = constants["DEFAULT_BRAKING"]
+	_update_state(VehicleState.IDLE)
+
+
+func tick_speed(delta: float, current_distance: float) -> float:
 	target_speed = get_max_allowed_speed()
 
 	_apply_slowdown_intersection()
 	_apply_slowdown_building()
+	_apply_slowdown_to_distance(current_distance)
 
 	if no_caster_allowance_time > 0.0:
 		no_caster_allowance_time -= delta
@@ -169,7 +200,7 @@ func tick_speed(delta: float) -> float:
 	_update_speed(delta)
 
 	if current_speed == 0 and target_speed == 0:
-		_update_state(VehicleState.BLOCKED)
+		_update_state(VehicleState.BLOCKED if ai.can_drive() else VehicleState.IDLE)
 	else:
 		_on_blockade_area_exited(null)
 
@@ -257,7 +288,7 @@ func check_blockade_cleared(delta: float) -> bool:
 func _apply_slowdown_intersection() -> void:
 	var current_step = navigator.get_current_step()
 
-	if not current_step or current_step.type == Navigator.StepType.NODE or current_step["next_node"] == null:
+	if not current_step or current_step.type != Navigator.StepType.SEGMENT or current_step["next_node"] == null:
 		return
 
 	var distance_to_node = current_step["length"] - current_step["progress"]
@@ -275,6 +306,23 @@ func _apply_slowdown_building() -> void:
 
 	if current_step["is_entering"]:
 		target_speed = constants["BUILDING_ENTRY_SPEED"]
+
+
+func _apply_slowdown_to_distance(current_distance: float) -> void:
+	if _stop_at_distance <= 0.0:
+		return
+
+	var distance_remaining = _stop_at_distance - current_distance
+
+	if distance_remaining <= 0.0:
+		target_speed = 0.0
+		if _stop_at_callback:
+			_stop_at_callback.call_deferred()
+			_stop_at_callback = Callable()
+	elif distance_remaining <= _slow_down_threshold:
+		var max_speed = get_max_allowed_speed()
+		var required_speed = sqrt(2.0 * constants["DEFAULT_BRAKING"] * distance_remaining)
+		target_speed = min(required_speed, max_speed)
 
 
 func _update_speed(delta: float) -> void:
@@ -372,9 +420,9 @@ func _check_caster_colliding(caster_id: String) -> bool:
 	match caster_id:
 		"close", "medium", "long":
 			if casters[caster_id].is_colliding():
-				var laneStopper = casters[caster_id].get_collider() as LaneStopper
-				if laneStopper:
-					return check_if_my_blockade.call(laneStopper)
+				var lane_stopper = casters[caster_id].get_collider() as LaneStopper
+				if lane_stopper:
+					return check_if_my_blockade.call(lane_stopper)
 
 				var other_vehicle = vehicle_manager.get_vehicle_from_area(casters[caster_id].get_collider())
 				if other_vehicle:
@@ -391,8 +439,8 @@ func _check_caster_colliding(caster_id: String) -> bool:
 						if _check_if_is_leaving_target_building(other_vehicle):
 							return false
 
-				var buildingStopper = casters[caster_id].get_collider() as BuildingStopper
-				if buildingStopper:
+				var building_stopper = casters[caster_id].get_collider() as BuildingStopper
+				if building_stopper:
 					if current_step['type'] != Navigator.StepType.BUILDING or not current_step["is_leaving"]:
 						return false
 
@@ -423,7 +471,9 @@ func _apply_caster_colliding(caster_id: String, colliding_casters: Dictionary) -
 	match caster_id:
 		"close":
 			target_speed = 0.0
-			current_brake_force = constants["CLOSE_BRAKING"] if current_speed < constants["CLOSE_BRAKING_LOW_SPEED_THRESHOLD"] else constants["EMERGENCY_BRAKING"]
+			current_brake_force = (constants["CLOSE_BRAKING"]
+				if current_speed < constants["CLOSE_BRAKING_LOW_SPEED_THRESHOLD"]
+				else constants["EMERGENCY_BRAKING"] )
 		"medium":
 			target_speed = max(constants["MEDIUM_CASTER_MIN_SPEED"], target_speed * constants["MEDIUM_CASTER_SPEED_MODIFIER"])
 			current_brake_force = constants["MEDIUM_BRAKING"]

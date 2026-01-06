@@ -50,7 +50,6 @@ func spawn_vehicle() -> void:
 		return
 
 	if target_building.segment == self.segment:
-		push_warning("Target building ID %d is on the same segment as spawner building ID %d. Skipping." % [target_building.id, id])
 		return
 
 	var vehicle = vehicle_manager.create_vehicle(VehicleManager.VehicleType.CAR)
@@ -142,9 +141,9 @@ func _roll_for_vehicle_spawn() -> bool:
 
 func _get_target_building_roll_weights() -> Dictionary:
 	return {
-		BuildingInfo.BuildingType.Residential: 1,
-		BuildingInfo.BuildingType.Commercial: 1,
-		BuildingInfo.BuildingType.Industrial: 1,
+		BuildingInfo.BuildingType.RESIDENTIAL: 1,
+		BuildingInfo.BuildingType.COMMERCIAL: 1,
+		BuildingInfo.BuildingType.INDUSTRIAL: 1,
 	}
 
 

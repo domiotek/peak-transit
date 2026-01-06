@@ -2,6 +2,18 @@ extends RefCounted
 
 class_name CarAI
 
+var _vehicle: Vehicle
+
+var _vehicle_manager: VehicleManager
+
+
+func bind(vehicle: Vehicle) -> void:
+	vehicle.ai = self
+	vehicle.driver.set_ai(self)
+	_vehicle = vehicle
+	_vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
+
+
 func get_constants() -> Dictionary:
 	return {
 		"ACCELERATION": 50.0,
@@ -22,5 +34,25 @@ func get_constants() -> Dictionary:
 		"LONG_CASTER_MIN_SPEED": 5,
 		"TURN_CRAWL_SPEED": 10.0,
 		"REROUTE_THRESHOLD": 10.0,
-		"REROUTE_CHANCE": 0.5
+		"REROUTE_CHANCE": 0.5,
 	}
+
+
+func process(_delta: float) -> void:
+	pass
+
+
+func can_drive() -> bool:
+	return true
+
+
+func get_state_name() -> String:
+	return "Driving"
+
+
+func get_custom_identifier() -> String:
+	return ""
+
+
+func on_trip_finished(_completed: bool, _trip_data: Dictionary) -> void:
+	_vehicle_manager.remove_vehicle(_vehicle.id)

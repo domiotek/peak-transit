@@ -12,14 +12,16 @@ const PathingManagerModule = preload("res://services/managers/pathing_manager.gd
 const UIManagerModule = preload("res://services/managers/ui_manager.gd")
 const IntersectionHelperModule = preload("res://helpers/graphic-helpers/intersection_helper.gd")
 const BuildingsManagerModule = preload("res://services/managers/buildings_manager.gd")
+const TransportManagerModule = preload("res://services/managers/transport_manager.gd")
 
 var deferred_init_list = []
+
 
 func inject(dep_name: String) -> Object:
 	return DIContainer.Inject(dep_name)
 
 
-func _ready()-> void:
+func _ready() -> void:
 	var on_ready_callback = Callable.create(self, "_init_deferred_dependencies")
 	DIContainer.AddOnReadyCallback(on_ready_callback)
 
@@ -40,11 +42,14 @@ func _register_instances():
 	_register_singleton("UIManager", UIManager.new())
 	_register_singleton("IntersectionHelper", IntersectionHelper.new())
 	_register_singleton("BuildingsManager", BuildingsManager.new())
+	_register_singleton("TransportManager", TransportManager.new())
+
 
 func _register_singleton(dep_name: String, instance: Object):
 	DIContainer.Register(dep_name, instance)
 
 	deferred_init_list.append(instance)
+
 
 func _init_deferred_dependencies():
 	for dep in deferred_init_list:

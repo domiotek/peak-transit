@@ -11,16 +11,14 @@ const STOP_SIGN = preload("res://assets/signs/stop_sign.png")
 var node: RoadNode
 var stoppers: Array = []
 
+var connecting_curves: Dictionary = { }
+var conflicting_paths: Dictionary = { }
 
-var connecting_curves: Dictionary = {}
-var conflicting_paths: Dictionary = {}
-
-var halted_vehicles: Dictionary = {}
+var halted_vehicles: Dictionary = { }
 
 var game_manager: GameManager
 var network_manager: NetworkManager
 var line_helper: LineHelper
-
 
 var CONFLICT_ZONE_OFFSET = 50.0
 
@@ -42,11 +40,12 @@ func setup(_node: RoadNode, new_stoppers: Array) -> void:
 
 	_draw_priority_signs()
 
+
 func process_tick(_delta: float) -> void:
-	
 	for stopper in stoppers:
 		var stopper_activated = process_stopper(stopper)
 		stopper.set_active(stopper_activated)
+
 
 func process_stopper(stopper: LaneStopper) -> bool:
 	if game_manager.try_hit_debug_pick(stopper):
@@ -57,7 +56,7 @@ func process_stopper(stopper: LaneStopper) -> bool:
 	var approaching_vehicle = lane.get_first_vehicle()
 
 	if approaching_vehicle:
-		var distance_left = approaching_vehicle.navigator.get_distance_left()
+		var distance_left = approaching_vehicle.navigator.get_step_distance_left()
 
 		if distance_left >= CONFLICT_ZONE_OFFSET and approaching_vehicle.driver.state != Driver.VehicleState.BLOCKED:
 			return false
@@ -92,20 +91,21 @@ func process_stopper(stopper: LaneStopper) -> bool:
 
 	return false
 
+
 func _fill_curves() -> void:
 	for stopper in stoppers:
 		var dest_endpoints = node.get_destination_endpoints(stopper.endpoint.Id)
 
-		var connections = {}
+		var connections = { }
 		for dest_id in dest_endpoints:
 			var path = node.get_connection_path(stopper.endpoint.Id, dest_id)
 			connections[dest_id] = path.curve
 
 		connecting_curves[stopper.endpoint.Id] = connections
-		
+
 
 func _get_conflicting_paths(stopper: LaneStopper) -> Dictionary:
-	var conflicting_per_connection: Dictionary = {}
+	var conflicting_per_connection: Dictionary = { }
 
 	for my_dest_endpoint_id in connecting_curves[stopper.endpoint.Id]:
 		var my_curve = node.get_connection_path(stopper.endpoint.Id, my_dest_endpoint_id).curve
@@ -159,6 +159,7 @@ func _filter_conflict(my_direction: Enums.Direction, other_direction: Enums.Dire
 
 	return false
 
+
 func _check_enough_space_in_lane_ahead(_stopper: LaneStopper, next_endpoint: int) -> bool:
 	var endpoint = network_manager.get_lane_endpoint(next_endpoint)
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId)
@@ -171,13 +172,12 @@ func _check_enough_space_in_lane_ahead(_stopper: LaneStopper, next_endpoint: int
 
 	if available_space < CONFLICT_ZONE_OFFSET * 2:
 		is_another_vehicle_already_on_intersection = node.intersection_manager.get_vehicles_crossing(_stopper.endpoint.Id, next_endpoint).size() > 0
-		
 
-	return is_another_vehicle_already_on_intersection || (available_space < 25.0 && last_vehicle.driver.get_target_speed() != last_vehicle.driver.get_maximum_speed()) ||  available_space < 50.0 && (vehicle_state == Driver.VehicleState.BRAKING || vehicle_state == Driver.VehicleState.BLOCKED)
+	return is_another_vehicle_already_on_intersection || (available_space < 25.0 && last_vehicle.driver.get_target_speed() != last_vehicle.driver.get_maximum_speed()) || available_space < 50.0 && (vehicle_state == Driver.VehicleState.BRAKING || vehicle_state == Driver.VehicleState.BLOCKED)
 
 
 func _check_conflicting_path(stopper: LaneStopper, next_endpoint: int) -> bool:
-	var stopper_conflicting_paths = conflicting_paths.get(stopper.endpoint.Id, {})
+	var stopper_conflicting_paths = conflicting_paths.get(stopper.endpoint.Id, { })
 
 	if not stopper_conflicting_paths.has(next_endpoint):
 		return false
@@ -185,7 +185,7 @@ func _check_conflicting_path(stopper: LaneStopper, next_endpoint: int) -> bool:
 	var _conflicting_paths = stopper_conflicting_paths[next_endpoint]
 
 	for path in _conflicting_paths:
-		var other_stopper = stoppers.filter(func (s): return s.endpoint.Id == path.from)[0]
+		var other_stopper = stoppers.filter(func(s): return s.endpoint.Id == path.from)[0]
 
 		var other_lane = other_stopper.get_lane()
 
@@ -201,16 +201,16 @@ func _check_conflicting_path(stopper: LaneStopper, next_endpoint: int) -> bool:
 		var vehicle_already_in_intersection = node.intersection_manager.get_vehicles_crossing(path.from, path.to).size() > 0
 		if vehicle_already_in_intersection:
 			return true
-				
+
 	return false
 
-func _draw_priority_signs() -> void:
 
+func _draw_priority_signs() -> void:
 	for segment in node.connected_segments:
 		var segment_stoppers = stoppers.filter(func(s): return s.get_lane().segment == segment)
 		var lane = segment_stoppers[0].get_lane() if segment_stoppers.size() > 0 else null
 
-		var lanes_count = segment.get_relation_of_lane(lane.id).relation_info.lanes.size();
+		var lanes_count = segment.get_relation_of_lane(lane.id).relation_info.lanes.size()
 		var right_most_lane_number = lanes_count - 1
 
 		var right_most_stopper: LaneStopper = segment_stoppers.filter(func(s): return s.endpoint.LaneNumber == right_most_lane_number)[0]
@@ -233,6 +233,7 @@ func _draw_priority_signs() -> void:
 				continue
 
 		box.add_child(sign_obj)
+
 
 func _get_road_side_position_box(ref_stopper: LaneStopper) -> Node2D:
 	var box = Node2D.new()

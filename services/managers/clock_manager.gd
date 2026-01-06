@@ -10,6 +10,10 @@ signal day_night_changed(is_day: bool)
 
 
 func _init() -> void:
+	reset()
+
+
+func reset() -> void:
 	current_hour = 0
 	current_minute = 0
 	current_day = Enums.Day.MONDAY
@@ -19,7 +23,7 @@ func _init() -> void:
 
 func advance_time(delta: float) -> void:
 	var was_day = is_day()
-	var game_minutes_passed = delta / 3.0 # 3 real seconds = 1 in-game minute (20x speed)
+	var game_minutes_passed = delta / SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE
 
 	accumulated_minutes += game_minutes_passed
 	var minutes_to_advance = int(accumulated_minutes)

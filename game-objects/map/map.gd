@@ -44,6 +44,12 @@ func clear_drawing_layer(layer_name: String) -> void:
 		child.queue_free()
 
 
+func clear_layers() -> void:
+	for layer in $Layers.get_children():
+		for child in layer.get_children():
+			child.queue_free()
+
+
 func update_day_progress(day_progression: float) -> void:
 	day_night_anim_player.seek(day_progression * day_night_anim_player.current_animation_length, true)
 
@@ -53,7 +59,8 @@ func update_day_progress(day_progression: float) -> void:
 func should_world_lights_be_on(day_progression: float) -> bool:
 	if day_progression >= SimulationConstants.SIMULATION_LIGHTS_ON_THRESHOLD or day_progression < SimulationConstants.SIMULATION_LIGHTS_OFF_THRESHOLD:
 		return true
-	elif day_progression >= SimulationConstants.SIMULATION_LIGHTS_OFF_THRESHOLD:
+
+	if day_progression >= SimulationConstants.SIMULATION_LIGHTS_OFF_THRESHOLD:
 		return false
 
 	return false

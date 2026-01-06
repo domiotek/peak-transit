@@ -3,13 +3,16 @@ extends Node2D
 class_name Vehicle
 
 var id: int
+var type: VehicleManager.VehicleType
 
+var ai
 var driver = Driver.new()
 var navigator = Navigator.new()
 
 signal trip_started(vehicle_id)
 signal trip_completed(vehicle_id)
 signal trip_abandoned(vehicle_id)
+signal trip_ended(vehicle_id, completed: bool)
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 @onready var simulation_manager: SimulationManager = GDInjector.inject("SimulationManager") as SimulationManager
@@ -20,6 +23,11 @@ signal trip_abandoned(vehicle_id)
 var config: VehicleConfig
 
 var main_path_follower: PathFollow2D
+
+var _trailer_states: Array[Dictionary] = []
+var _previous_front_rotation: float = 0.0
+var _previous_front_position: Vector2 = Vector2.ZERO
+var _smoothed_curvature: float = 0.0
 
 
 func _ready():
@@ -32,9 +40,9 @@ func _ready():
 		return
 	config = vehicle_config
 
-	main_path_follower = config["path_followers"][0]["follower"]
+	main_path_follower = config.path_follower
 
-	driver.set_ai(config["ai"])
+	config["ai"].bind(self)
 	driver.set_navigator(navigator)
 	driver.set_lights(config.head_lights, config.brake_lights)
 	driver.set_casters(config["casters"])
@@ -50,6 +58,23 @@ func _ready():
 
 	simulation_manager.desired_world_lights_state_changed.connect(Callable(self, "_on_lights_state_change"))
 
+	for body_area in config["body_areas"]:
+		body_area.connect("input_event", Callable(self, "_on_input_event"))
+
+	for collision_area in config["collision_areas"]:
+		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
+
+	for trailer_def in config.trailers:
+		var trailer_body = trailer_def["body"]
+
+		_trailer_states.append(
+			{
+				"body": trailer_body,
+				"offset": trailer_def.get("offset"),
+				"articulation_angle": 0.0,
+			},
+		)
+
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 	if from_building == to_building:
@@ -59,23 +84,44 @@ func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
 	navigator.setup_trip_between_buildings(from_building, to_building)
 
 
-func init_simple_trip(from_node_id: int, to_node_id: int) -> void:
+func init_trip_to_building(from_node_id: int, to_building: BaseBuilding, forced_start_endpoint: int = -1) -> void:
+	navigator.setup_trip_mixed(from_node_id, to_building.id, false, forced_start_endpoint)
+
+
+func init_trip_from_building(to_node_id: int, from_building: BaseBuilding, forced_end_endpoint: int = -1) -> void:
+	navigator.setup_trip_mixed(from_building.id, to_node_id, true, forced_end_endpoint)
+
+
+func init_simple_trip(from_node_id: int, to_node_id: int, from_endpoint: int = -1, to_endpoint: int = -1) -> void:
 	if from_node_id == to_node_id:
 		push_error("Invalid trip: Start and end nodes are the same for vehicle ID %d" % id)
 		return
 
-	navigator.setup_trip(from_node_id, to_node_id)
+	navigator.setup_trip(from_node_id, to_node_id, from_endpoint, to_endpoint)
+
+
+func init_trip_with_path(path: Array, from_building: BaseBuilding = null, to_building: BaseBuilding = null) -> void:
+	navigator.setup_trip_with_path(path, from_building, to_building)
 
 
 func get_popup_data() -> Dictionary:
+	var from_node = "N/A"
+	var to_node = "N/A"
+	var step_type = "N/A"
+
+	if navigator.has_trip():
+		from_node = navigator.trip_points[0]
+		to_node = navigator.trip_points[-1]
+		step_type = Navigator.StepType.keys()[navigator.get_current_step().get("type")]
+
 	var data = {
 		"speed": driver.get_current_speed(),
 		"target_speed": driver.get_target_speed(),
 		"max_speed": driver.get_max_allowed_speed(),
 		"state": Driver.VehicleState.keys()[driver.state],
-		"from_node": navigator.trip_points[0] if navigator.trip_points.size() > 0 else null,
-		"to_node": navigator.trip_points[1] if navigator.trip_points.size() > 1 else null,
-		"step_type": Navigator.StepType.keys()[navigator.get_current_step().get("type")],
+		"from_node": from_node,
+		"to_node": to_node,
+		"step_type": step_type,
 		"time_blocked": int(driver.get_time_blocked()),
 	}
 
@@ -95,6 +141,11 @@ func assign_to_path(path: Path2D, progress: float) -> void:
 	main_path_follower.progress = progress
 
 
+func recolor(new_color: Color) -> void:
+	for body in config.body_segments:
+		body.color = new_color
+
+
 func _physics_process(_delta: float) -> void:
 	if driver.just_enabled_casters:
 		driver.just_enabled_casters = false
@@ -106,10 +157,13 @@ func _process(delta: float) -> void:
 		print("Debug pick triggered for vehicle ID %d" % id)
 		breakpoint
 
-	if not navigator.can_advance(delta):
-		return
+	ai.process(delta)
 
 	driver.tick_lights(delta)
+
+	if not navigator.can_advance(delta):
+		driver.set_idle()
+		return
 
 	if driver.state == Driver.VehicleState.BLOCKED:
 		if driver.just_enabled_casters:
@@ -118,62 +172,65 @@ func _process(delta: float) -> void:
 		driver.check_blockade_cleared(delta)
 		return
 
-	var trail_length = navigator.get_current_step()["length"]
+	var current_speed = driver.tick_speed(delta, main_path_follower.progress)
 
-	var current_speed = driver.tick_speed(delta)
-
-	main_path_follower.progress_ratio += delta * current_speed / trail_length
-	self.global_transform = main_path_follower.global_transform
-
-	for path_follower_def in config["path_followers"]:
-		var path_follower = path_follower_def["follower"]
-		if path_follower == main_path_follower:
-			continue
-
-		var target_body = path_follower_def["body"]
-
-		var is_initialized = path_follower.get_parent() != target_body
-
-		if not is_initialized and main_path_follower.progress < path_follower_def["offset"]:
-			continue
-
-		if not is_initialized or path_follower.progress_ratio == 1.0:
-			var next_path = navigator.get_next_path(path_follower.get_parent() as Path2D)
-			if not next_path:
-				next_path = main_path_follower.get_parent() as Path2D
-
-			path_follower.reparent(next_path, true)
-			path_follower.progress = 0
-
-		var trailer_path = (path_follower.get_parent() as Path2D).curve
-
-		path_follower.progress_ratio += delta * current_speed / trailer_path.get_baked_length()
-		var trailer_direction = path_follower.global_rotation
-
-		var vehicle_direction = self.global_rotation
-		var desired_trailer_rotation = trailer_direction - vehicle_direction
-
-		while desired_trailer_rotation > PI:
-			desired_trailer_rotation -= 2 * PI
-		while desired_trailer_rotation < -PI:
-			desired_trailer_rotation += 2 * PI
-
-		var max_articulation = deg_to_rad(90.0)
-		var articulation_angle = clamp(desired_trailer_rotation, -max_articulation, max_articulation)
-
-		target_body.rotation = articulation_angle
+	_update_position(delta, current_speed)
 
 	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
 		navigator.complete_current_step()
 
 
+func _update_position(delta: float, current_speed: float) -> void:
+	var trail_length = navigator.get_current_step()["length"]
+
+	main_path_follower.progress_ratio += delta * current_speed / trail_length
+	self.global_transform = main_path_follower.global_transform
+
+	var front_pos: Vector2 = self.global_position
+	var front_rot: float = self.global_rotation
+
+	var rotation_change = front_rot - _previous_front_rotation
+	while rotation_change > PI:
+		rotation_change -= 2 * PI
+	while rotation_change < -PI:
+		rotation_change += 2 * PI
+
+	var instant_curvature = rotation_change / delta if delta > 0 else 0.0
+
+	var smoothing_factor = 0.2
+	_smoothed_curvature = lerp(_smoothed_curvature, instant_curvature, smoothing_factor)
+
+	var curvature_deadzone = 0.05
+	var effective_curvature = _smoothed_curvature if abs(_smoothed_curvature) > curvature_deadzone else 0.0
+	var max_articulation_speed: float = 2.0
+
+	for trailer_state in _trailer_states:
+		var trailer_body: Node2D = trailer_state["body"]
+		var offset: float = trailer_state["offset"]
+
+		var target_phi: float = -effective_curvature * 0.3
+
+		var max_target_phi = deg_to_rad(45.0)
+		target_phi = clamp(target_phi, -max_target_phi, max_target_phi)
+
+		var dphi: float = target_phi - trailer_state["articulation_angle"]
+		var max_step: float = max_articulation_speed * delta
+		dphi = clamp(dphi, -max_step, max_step)
+		trailer_state["articulation_angle"] += dphi
+
+		var trailer_rot: float = front_rot + trailer_state["articulation_angle"]
+		var trailer_pos: Vector2 = front_pos - Vector2.RIGHT.rotated(trailer_rot) * offset
+
+		trailer_body.global_rotation = trailer_rot
+
+		front_pos = trailer_pos
+		front_rot = trailer_rot
+
+	_previous_front_rotation = self.global_rotation
+	_previous_front_position = self.global_position
+
+
 func _on_trip_started() -> void:
-	for body_area in config["body_areas"]:
-		body_area.connect("input_event", Callable(self, "_on_input_event"))
-
-	for collision_area in config["collision_areas"]:
-		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
-
 	var starts_at_building = navigator.current_step["type"] == Navigator.StepType.BUILDING
 
 	if starts_at_building:
@@ -195,11 +252,15 @@ func _on_trip_started() -> void:
 	config["id_label"].text = str(id)
 
 
-func _on_trip_ended(completed: bool) -> void:
+func _on_trip_ended(completed: bool, trip_data: Dictionary) -> void:
+	driver.ai.on_trip_finished(completed, trip_data)
+
 	if completed:
 		emit_signal("trip_completed", id)
 	else:
 		emit_signal("trip_abandoned", id)
+
+	emit_signal("trip_ended", id, completed)
 
 
 func _on_input_event(_viewport, event, _shape_idx) -> void:
