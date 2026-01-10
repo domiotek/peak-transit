@@ -1,7 +1,33 @@
-[gd_scene load_steps=3 format=3 uid="uid://xllvlhj63lst"]
+[gd_scene load_steps=5 format=3 uid="uid://xllvlhj63lst"]
 
 [ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game-modes/base-mode/base_mode.tscn" id="1_wmy76"]
 [ext_resource type="Script" uid="uid://ck2irsw61l388" path="res://game-objects/game-modes/map-editor-mode/map_editor_mode.gd" id="2_kssn7"]
+[ext_resource type="PackedScene" uid="uid://csqi7ixxdkbbx" path="res://ui/views/map-editor/tools-bar/tools_bar.tscn" id="3_vfrew"]
+[ext_resource type="PackedScene" uid="uid://bdp5pr6dqwvvi" path="res://ui/views/map-editor/road-tool-panel/road_tool_panel.tscn" id="4_axg7b"]
 
 [node name="MapEditor" instance=ExtResource("1_wmy76")]
 script = ExtResource("2_kssn7")
+
+[node name="ToolsBar" parent="UI" index="1" instance=ExtResource("3_vfrew")]
+custom_minimum_size = Vector2(300, 30)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = -43.0
+offset_right = 150.0
+offset_bottom = -13.0
+grow_vertical = 0
+
+[node name="RoadToolPanel" parent="UI" index="2" instance=ExtResource("4_axg7b")]
+custom_minimum_size = Vector2(190, 100)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -151.0
+offset_top = -148.0
+offset_right = 39.0
+offset_bottom = -48.0
+grow_vertical = 0

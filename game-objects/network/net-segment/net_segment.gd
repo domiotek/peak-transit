@@ -29,6 +29,9 @@ var endpoints_mappings: Dictionary[int, int] = { }
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
 
+@onready var map_pickable_area: Area2D = $PickableArea
+var collision_shape: CollisionPolygon2D
+
 var line_helper: LineHelper
 var buildings_manager: BuildingsManager
 var segment_helper: SegmentHelper = GDInjector.inject("SegmentHelper") as SegmentHelper
@@ -40,6 +43,13 @@ func _ready() -> void:
 
 	main_road_layer.texture = ImageTexture.create_from_image(img)
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+
+	var game_manager = GDInjector.inject("GameManager") as GameManager
+
+	if game_manager.get_game_mode() == Enums.GameMode.MAP_EDITOR:
+		collision_shape = CollisionPolygon2D.new()
+		collision_shape.build_mode = CollisionPolygon2D.BUILD_SEGMENTS
+		map_pickable_area.add_child(collision_shape)
 
 
 func setup(start_node: RoadNode, target_node: RoadNode, segment_info: NetSegmentInfo) -> void:
@@ -126,6 +136,9 @@ func update_visuals() -> void:
 
 	main_road_layer.points = main_layer_curve.get_baked_points()
 	main_road_layer.width = total_lanes * NetworkConstants.LANE_WIDTH
+
+	if collision_shape:
+		collision_shape.polygon = line_helper.convert_curve_to_polygon(main_layer_curve, main_road_layer.width)
 
 	_update_markings_layer()
 	_update_debug_layer()

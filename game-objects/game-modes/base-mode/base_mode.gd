@@ -116,7 +116,9 @@ func _process(delta):
 
 	if Input.is_action_just_pressed("toggle_dev_tools"):
 		ui_manager.toggle_ui_view("DebugTogglesView")
-		ui_manager.toggle_ui_view("DebugIntersectionsView")
+
+		if ui_manager.has_ui_view("DebugIntersectionsView"):
+			ui_manager.toggle_ui_view("DebugIntersectionsView")
 		return
 
 	_on_input_check()

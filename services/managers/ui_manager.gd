@@ -58,12 +58,20 @@ func register_ui_view(name: String, node: Control, persistent: bool = false) -> 
 		_call_on_view(node, "load")
 
 
+func has_ui_view(name: String) -> bool:
+	return ui_views.has(name)
+
+
 func get_ui_view(name: String) -> Control:
 	if ui_views.has(name):
 		return ui_views[name]
 
 	push_error("UI View with name '%s' not found." % name)
 	return null
+
+
+func is_ui_view_visible(name: String) -> bool:
+	return visible_views.has(name)
 
 
 func show_ui_view(name: String, data: Dictionary = { }) -> void:

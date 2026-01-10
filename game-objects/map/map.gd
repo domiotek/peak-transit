@@ -25,6 +25,13 @@ func _draw():
 	draw_rect(rect, Color.WHITE_SMOKE, true)
 
 
+func create_drawing_layer(layer_name: String) -> Node2D:
+	var layer = Node2D.new()
+	layer.name = layer_name
+	$Layers.add_child(layer)
+	return layer
+
+
 func get_drawing_layer(layer_name: String) -> Node2D:
 	var layer = $Layers.get_node(layer_name) as Node2D
 
@@ -64,6 +71,11 @@ func should_world_lights_be_on(day_progression: float) -> bool:
 		return false
 
 	return false
+
+
+func is_within_map_bounds(world_position: Vector2) -> bool:
+	var half_size = map_size / 2
+	return world_position.x >= -half_size.x and world_position.x <= half_size.x and world_position.y >= -half_size.y and world_position.y <= half_size.y
 
 
 func _update_world_lights_state(day_progression: float) -> void:

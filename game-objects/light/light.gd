@@ -50,6 +50,15 @@ func redraw() -> void:
 		polygon.color = inactive_color
 
 
+func update_color(type: String, color: Color) -> void:
+	if type == "active":
+		active_color = color
+	else:
+		inactive_color = color
+
+	polygon.color = active_color if is_active else inactive_color
+
+
 func _on_desired_world_lights_state_changed(new_state: bool) -> void:
 	illumination_enabled = new_state
 

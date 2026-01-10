@@ -9,6 +9,13 @@ var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
 var _vehicle_with_path_drawn: Vehicle = null
 
 
+func _ready() -> void:
+	super._ready()
+	map.create_drawing_layer("VehiclesLayer")
+	map.create_drawing_layer("VehicleRouteLayer")
+	map.create_drawing_layer("LinesRoutesLayer")
+
+
 func draw_vehicle_route(vehicle: Vehicle) -> void:
 	if not vehicle:
 		return

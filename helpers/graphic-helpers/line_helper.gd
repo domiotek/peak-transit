@@ -628,3 +628,90 @@ func smooth_curve(curve: Curve2D, smoothing_factor: float = 1, resample_interval
 		smoothed_curve.add_point(point, in_handle, out_handle)
 
 	return smoothed_curve
+
+
+func convert_line_to_polygon(line: Line2D) -> PackedVector2Array:
+	var half_width = line.width * 0.5
+	var points = line.get_point_count()
+	var polygon_points: PackedVector2Array = []
+
+	for i in range(points):
+		var point = line.get_point_position(i)
+
+		var tangent: Vector2
+		if i == 0:
+			tangent = (line.get_point_position(i + 1) - point).normalized()
+		elif i == points - 1:
+			tangent = (point - line.get_point_position(i - 1)).normalized()
+		else:
+			tangent = (line.get_point_position(i + 1) - line.get_point_position(i - 1)).normalized()
+
+		var normal = Vector2(-tangent.y, tangent.x)
+
+		var left_point = point + normal * half_width
+
+		polygon_points.append(left_point)
+
+	for i in range(points - 1, -1, -1):
+		var point = line.get_point_position(i)
+
+		var tangent: Vector2
+		if i == 0:
+			tangent = (line.get_point_position(i + 1) - point).normalized()
+		elif i == points - 1:
+			tangent = (point - line.get_point_position(i - 1)).normalized()
+		else:
+			tangent = (line.get_point_position(i + 1) - line.get_point_position(i - 1)).normalized()
+
+		var normal = Vector2(-tangent.y, tangent.x)
+
+		var right_point = point - normal * half_width
+
+		polygon_points.append(right_point)
+
+	return polygon_points
+
+
+func convert_curve_to_polygon(curve: Curve2D, line_width: float) -> PackedVector2Array:
+	if not curve or curve.point_count < 2:
+		return PackedVector2Array()
+
+	var half_width = line_width * 0.5
+	var baked_points = curve.get_baked_points()
+	var polygon_points: PackedVector2Array = []
+
+	for i in range(baked_points.size()):
+		var point = baked_points[i]
+
+		var tangent: Vector2
+		if i == 0:
+			tangent = (baked_points[i + 1] - point).normalized()
+		elif i == baked_points.size() - 1:
+			tangent = (point - baked_points[i - 1]).normalized()
+		else:
+			tangent = (baked_points[i + 1] - baked_points[i - 1]).normalized()
+
+		var normal = Vector2(-tangent.y, tangent.x)
+
+		var left_point = point + normal * half_width
+
+		polygon_points.append(left_point)
+
+	for i in range(baked_points.size() - 1, -1, -1):
+		var point = baked_points[i]
+
+		var tangent: Vector2
+		if i == 0:
+			tangent = (baked_points[i + 1] - point).normalized()
+		elif i == baked_points.size() - 1:
+			tangent = (point - baked_points[i - 1]).normalized()
+		else:
+			tangent = (baked_points[i + 1] - baked_points[i - 1]).normalized()
+
+		var normal = Vector2(-tangent.y, tangent.x)
+
+		var right_point = point - normal * half_width
+
+		polygon_points.append(right_point)
+
+	return polygon_points
