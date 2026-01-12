@@ -50,6 +50,15 @@ func setup_intersection(assigned_node: RoadNode) -> void:
 	handler.setup(node, stoppers)
 
 
+func dispose_intersection() -> void:
+	if not node:
+		return
+
+	handler = null
+	node = null
+	crossing_vehicles.clear()
+
+
 func process_tick(delta: float) -> void:
 	if handler:
 		handler.process_tick(delta)

@@ -29,7 +29,7 @@ var is_priority_based: bool = false
 
 var _visuals_initialized: bool = false
 
-var intersection_manager: IntersectionManager
+var intersection_manager: IntersectionManager = IntersectionManager.new()
 
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
@@ -116,7 +116,6 @@ func late_update_visuals() -> void:
 	if connected_segments.size() > 2:
 		_draw_stop_lines()
 
-	intersection_manager = IntersectionManager.new()
 	intersection_manager.setup_intersection(self)
 
 	_update_debug_layer()
@@ -141,6 +140,9 @@ func reset_visuals() -> void:
 	for child in markings_layer.get_children():
 		child.queue_free()
 
+	for child in top_layer.get_children():
+		child.queue_free()
+
 	connections.clear()
 	connection_paths.clear()
 	connection_directions.clear()
@@ -149,6 +151,8 @@ func reset_visuals() -> void:
 	segment_directions.clear()
 	segment_priorities.clear()
 	is_priority_based = false
+
+	intersection_manager.dispose_intersection()
 
 
 func remove_segment(segment: NetSegment) -> void:
