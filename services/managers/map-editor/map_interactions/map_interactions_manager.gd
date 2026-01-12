@@ -10,6 +10,7 @@ signal tool_changed(new_tool: MapTools.MapEditorTool)
 
 func _init() -> void:
 	_tool_instances[MapTools.MapEditorTool.PLACE_ROAD] = PlaceRoadMapTool.new(self)
+	_tool_instances[MapTools.MapEditorTool.BULDOZE] = BuldozeMapTool.new(self)
 
 
 func set_map(map: Map) -> void:
@@ -115,7 +116,7 @@ func find_node_under_shape(shape: Shape2D, transform: Transform2D) -> Node2D:
 	params.transform = transform
 	params.collide_with_areas = true
 	params.collide_with_bodies = false
-	params.collision_mask = MapEditorConstants.MAP_PICKABLE_LAYER_ID
+	params.collision_mask = MapEditorConstants.MAP_NET_NODE_LAYER_ID
 
 	var results = space_state.intersect_shape(params, 1)
 

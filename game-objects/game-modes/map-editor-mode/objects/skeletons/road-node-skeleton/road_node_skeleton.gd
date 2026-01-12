@@ -9,7 +9,7 @@ var _is_trackable: bool = true
 
 
 func _ready() -> void:
-	pickable_area.collision_layer = MapEditorConstants.MAP_PICKABLE_LAYER_ID if _is_trackable else 0
+	pickable_area.collision_layer = MapEditorConstants.MAP_NET_NODE_LAYER_ID if _is_trackable else 0
 
 
 func render_default() -> void:

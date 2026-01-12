@@ -161,6 +161,10 @@ func late_update_visuals() -> void:
 			add_child(building)
 
 
+func get_curve() -> Curve2D:
+	return curve_shape
+
+
 func reposition_endpoints(of_node: RoadNode) -> void:
 	for lane in lanes:
 		var relation = get_relation_of_lane(lane.id)

@@ -29,6 +29,54 @@ func create_segment(node_a: RoadNode, node_b: RoadNode, segment_info: NetSegment
 	return segment
 
 
+func build_road(
+		start_node: RoadNode,
+		target_node: RoadNode,
+		segment_info: NetSegmentInfo,
+		registrator: Callable,
+		created_start_node: bool = false,
+		created_target_node: bool = false,
+) -> NetSegment:
+	start_node.reset_visuals()
+	target_node.reset_visuals()
+
+	var segment = create_segment(start_node, target_node, segment_info)
+
+	registrator.call(segment)
+	_network_manager.register_segment(segment)
+	segment.update_visuals()
+
+	start_node.update_visuals()
+	target_node.update_visuals()
+
+	segment.late_update_visuals()
+
+	if not created_start_node:
+		start_node.reposition_all_endpoints()
+
+	if not created_target_node:
+		target_node.reposition_all_endpoints()
+
+	start_node.late_update_visuals()
+	target_node.late_update_visuals()
+
+	return segment
+
+
+func destroy_road(
+		segment: NetSegment,
+) -> void:
+	_network_manager.unregister_segment(segment)
+
+	for node in segment.nodes:
+		node.remove_segment(segment)
+		if not node.has_connected_segments():
+			_network_manager.unregister_node(node)
+			node.queue_free()
+
+	segment.queue_free()
+
+
 func get_2way_relations(num_lanes: int) -> Array[NetRelationInfo]:
 	var relations: Array[NetRelationInfo] = []
 

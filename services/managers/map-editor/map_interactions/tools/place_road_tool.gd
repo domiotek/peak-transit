@@ -53,7 +53,7 @@ func setup() -> void:
 
 
 func handle_map_clicked(world_position: Vector2) -> void:
-	var nodes_at_position = _manager.find_nodes_at_position(world_position, MapEditorConstants.MAP_SNAPPING_RADIUS, MapEditorConstants.MAP_PICKABLE_LAYER_ID)
+	var nodes_at_position = _manager.find_nodes_at_position(world_position, MapEditorConstants.MAP_SNAPPING_RADIUS, MapEditorConstants.MAP_NET_NODE_LAYER_ID)
 	var target_position: Vector2 = world_position
 	var clicked_node: RoadNode = _find_first_road_node(nodes_at_position)
 
@@ -116,6 +116,7 @@ func handle_map_unclicked() -> void:
 func handle_map_mouse_move(world_position: Vector2) -> void:
 	if not _ghost_point:
 		return
+
 	var should_be_error: bool = false
 
 	var new_position: Vector2 = world_position
@@ -302,8 +303,6 @@ func _build_road_node_at_position(position: Vector2) -> void:
 		_network_manager.register_node(_target_node)
 		created_target_node = true
 
-	_start_node.reset_visuals()
-	_target_node.reset_visuals()
 	var curve_info = _get_curve_info()
 
 	var segment_info = NetSegmentInfo.new()
@@ -312,25 +311,14 @@ func _build_road_node_at_position(position: Vector2) -> void:
 	segment_info.curve_strength = curve_info["curve_strength"]
 	segment_info.relations = _network_builder.get_2way_relations(_road_size)
 
-	var segment = _network_builder.create_segment(_start_node, _target_node, segment_info)
-
-	_manager.add_network_object(segment)
-	_network_manager.register_segment(segment)
-	segment.update_visuals()
-
-	_start_node.update_visuals()
-	_target_node.update_visuals()
-
-	segment.late_update_visuals()
-
-	if not created_start_node:
-		_start_node.reposition_all_endpoints()
-
-	if not created_target_node:
-		_target_node.reposition_all_endpoints()
-
-	_start_node.late_update_visuals()
-	_target_node.late_update_visuals()
+	_network_builder.build_road(
+		_start_node,
+		_target_node,
+		segment_info,
+		Callable(_manager, "add_network_object"),
+		created_start_node,
+		created_target_node,
+	)
 
 
 func _get_curve_info() -> Dictionary:

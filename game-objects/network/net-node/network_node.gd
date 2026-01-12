@@ -151,6 +151,37 @@ func reset_visuals() -> void:
 	is_priority_based = false
 
 
+func remove_segment(segment: NetSegment) -> void:
+	if not connected_segments.has(segment):
+		return
+
+	connected_segments.erase(segment)
+
+	segment_priorities.erase(segment.id)
+	segment_directions.erase(segment.id)
+
+	var segment_endpoint_ids = segment.endpoints
+
+	incoming_endpoints = incoming_endpoints.filter(
+		func(e_id):
+			return not segment_endpoint_ids.has(e_id)
+	)
+
+	outgoing_endpoints = outgoing_endpoints.filter(
+		func(e_id):
+			return not segment_endpoint_ids.has(e_id)
+	)
+
+	reset_visuals()
+	update_visuals()
+	reposition_all_endpoints()
+	late_update_visuals()
+
+
+func has_connected_segments() -> bool:
+	return connected_segments.size() > 0
+
+
 func get_intersection_polygon() -> PackedVector2Array:
 	var global_points: PackedVector2Array = []
 

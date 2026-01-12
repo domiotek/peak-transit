@@ -1,5 +1,9 @@
 class_name NetworkManager
 
+var _node_ids: IDManager = IDManager.new()
+var _segment_ids: IDManager = IDManager.new()
+var _endpoint_ids: IDManager = IDManager.new()
+
 var nodes: Dictionary[int, RoadNode] = { }
 var segments: Dictionary[int, NetSegment] = { }
 
@@ -18,8 +22,13 @@ func register_node(node: RoadNode):
 	nodes[node.id] = node
 
 
+func unregister_node(node: RoadNode) -> void:
+	nodes.erase(node.id)
+	_node_ids.release_id(node.id)
+
+
 func get_next_node_id() -> int:
-	return nodes.size()
+	return _node_ids.occupy_next_id()
 
 
 func get_nodes() -> Array:
@@ -27,7 +36,7 @@ func get_nodes() -> Array:
 
 
 func register_segment(segment: NetSegment) -> NetSegment:
-	var new_segment_id = segments.size()
+	var new_segment_id = _segment_ids.occupy_next_id()
 	segment.id = new_segment_id
 	segments[new_segment_id] = segment
 
@@ -37,6 +46,24 @@ func register_segment(segment: NetSegment) -> NetSegment:
 	_n2n_segment_map[n2n_key] = new_segment_id
 
 	return segment
+
+
+func unregister_segment(segment: NetSegment) -> void:
+	if not segments.has(segment.id):
+		return
+
+	segments.erase(segment.id)
+	_segment_ids.release_id(segment.id)
+
+	var ids = [segment.nodes[0].id, segment.nodes[1].id]
+	ids.sort()
+	var n2n_key = "%d-%d" % [ids[0], ids[1]]
+	if _n2n_segment_map.has(n2n_key):
+		_n2n_segment_map.erase(n2n_key)
+
+	for endpoint_id in segment.endpoints:
+		lane_endpoints.erase(endpoint_id)
+		_endpoint_ids.release_id(endpoint_id)
 
 
 func get_segments() -> Array:
@@ -58,7 +85,7 @@ func get_node_intersection_polygon(node_id: int) -> PackedVector2Array:
 
 func add_lane_endpoint(lane_id: int, pos: Vector2, segment: NetSegment, node: RoadNode, is_outgoing: bool, lane_number: int, is_at_path_start: bool) -> int:
 	var endpoint = {
-		"Id": lane_endpoints.size(),
+		"Id": _endpoint_ids.occupy_next_id(),
 		"Position": pos,
 		"SegmentId": segment.id,
 		"NodeId": node.id,
@@ -193,3 +220,6 @@ func clear_state() -> void:
 	lane_endpoints.clear()
 	end_nodes = null
 	_n2n_segment_map.clear()
+	_node_ids.reset()
+	_segment_ids.reset()
+	_endpoint_ids.reset()

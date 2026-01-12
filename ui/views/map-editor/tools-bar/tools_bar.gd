@@ -5,6 +5,7 @@ class_name MapEditorToolsBar
 const VIEW_NAME: String = "MapEditorToolsBar"
 
 @onready var road_tool_button: Button = $MarginContainer/BoxContainer/RoadToolButton
+@onready var buldoze_tool_button: Button = $MarginContainer/BoxContainer/BuldozeToolButton
 
 var _game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 var _ui_manager: UIManager = GDInjector.inject("UIManager") as UIManager
@@ -24,6 +25,7 @@ func _ready() -> void:
 	_map_interactions_manager.tool_changed.connect(Callable(self, "_on_active_tool_changed"))
 
 	road_tool_button.pressed.connect(_on_road_tool_button_pressed)
+	buldoze_tool_button.pressed.connect(_on_buldoze_tool_button_pressed)
 
 
 func _exit_tree() -> void:
@@ -51,6 +53,14 @@ func _on_road_tool_button_pressed() -> void:
 		return
 
 	_set_active_tool(MapTools.MapEditorTool.PLACE_ROAD, road_tool_button)
+
+
+func _on_buldoze_tool_button_pressed() -> void:
+	if _is_active_tool(MapTools.MapEditorTool.BULDOZE):
+		_map_interactions_manager.set_active_tool(MapTools.MapEditorTool.NONE)
+		return
+
+	_set_active_tool(MapTools.MapEditorTool.BULDOZE, buldoze_tool_button)
 
 
 func _set_active_tool(tool: MapTools.MapEditorTool, button: Button) -> void:

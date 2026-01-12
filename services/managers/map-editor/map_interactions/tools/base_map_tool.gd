@@ -7,6 +7,10 @@ func _init(manager: MapInteractionsManager) -> void:
 	_manager = manager
 
 
+func setup() -> void:
+	pass
+
+
 func handle_map_clicked(_world_position: Vector2) -> void:
 	pass
 
