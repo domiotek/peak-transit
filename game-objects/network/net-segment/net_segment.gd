@@ -161,6 +161,13 @@ func late_update_visuals() -> void:
 			add_child(building)
 
 
+func reposition_endpoints(of_node: RoadNode) -> void:
+	for lane in lanes:
+		var relation = get_relation_of_lane(lane.id)
+		var is_outgoing = relation.start_node == of_node
+		lane.reposition_endpoint(of_node, "from" if is_outgoing else "to")
+
+
 func get_lane(lane_id: int) -> NetLane:
 	if lane_id < 0 or lane_id >= lanes.size():
 		push_error("Invalid lane ID: " + str(lane_id))
@@ -318,7 +325,7 @@ func _update_debug_layer() -> void:
 		var arrow_direction_vector
 		var arrow_pos
 
-		var starts_from_end = relation.StartNode == nodes[1]
+		var starts_from_end = relation.start_node == nodes[1]
 
 		var t_arrow = 0.1 if starts_from_end else 0.9
 		arrow_pos = curve_shape.sample_baked(curve_length * t_arrow)

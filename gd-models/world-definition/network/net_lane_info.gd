@@ -32,3 +32,11 @@ static func deserialize(data: Dictionary) -> NetLaneInfo:
 	net_lane_info.allowed_vehicles = data.get("allowedVehicles", { }) as Dictionary[Enums.BaseDirection, Array]
 
 	return net_lane_info
+
+
+static func get_default() -> NetLaneInfo:
+	var net_lane_info = NetLaneInfo.new()
+	net_lane_info.max_speed = 0.0
+	net_lane_info.direction = LaneDirection.Auto
+	net_lane_info.allowed_vehicles = { } as Dictionary[Enums.BaseDirection, Array]
+	return net_lane_info

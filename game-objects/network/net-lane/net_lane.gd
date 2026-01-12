@@ -28,6 +28,8 @@ var assigned_vehicles: Array
 
 var lane_usage_ema: float = 0.0
 
+var _original_curve: Curve2D = null
+
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
@@ -58,6 +60,8 @@ func update_trail_shape(curve: Curve2D) -> void:
 		return
 
 	var new_curve = line_helper.get_curve_with_offset(curve, offset)
+	_original_curve = new_curve
+
 	var points = { }
 
 	for node in segment.nodes:
@@ -70,6 +74,7 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 		if is_outgoing and not is_at_path_start:
 			new_curve = line_helper.reverse_curve(new_curve)
+			_original_curve = new_curve # Update if reversed
 			is_at_path_start = true
 
 		lane_number = _calc_lane_number()
@@ -213,6 +218,33 @@ func get_length() -> float:
 		return 0.0
 
 	return trail.curve.get_baked_length()
+
+
+func reposition_endpoint(of_node: RoadNode, type: String) -> void:
+	var endpoint_id = to_endpoint if type == "to" else from_endpoint
+	var target_endpoint = network_manager.get_lane_endpoint(endpoint_id)
+
+	if _original_curve == null:
+		push_warning("No untrimmed curve stored for lane %d, cannot reposition endpoint" % id)
+		return
+
+	var point = _get_endpoint_for_node(of_node, _original_curve)
+
+	target_endpoint.Position = point
+
+	var other_endpoint = network_manager.get_lane_endpoint(to_endpoint if type == "from" else from_endpoint)
+
+	var points = { }
+	if type == "from":
+		points[0] = point
+		points[1] = other_endpoint.Position
+	else:
+		points[0] = other_endpoint.Position
+		points[1] = point
+
+	var trimmed = line_helper.trim_curve(_original_curve, points[0], points[1])
+	trail.curve = trimmed
+	usage_indicator.points = trimmed.tessellate()
 
 
 func _update_lane_usage() -> void:

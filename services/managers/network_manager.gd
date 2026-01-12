@@ -18,6 +18,10 @@ func register_node(node: RoadNode):
 	nodes[node.id] = node
 
 
+func get_next_node_id() -> int:
+	return nodes.size()
+
+
 func get_nodes() -> Array:
 	return nodes.values()
 

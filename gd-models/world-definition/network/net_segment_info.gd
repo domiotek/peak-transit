@@ -1,15 +1,16 @@
 class_name NetSegmentInfo
 
 enum CurveDirection {
-	Clockwise = 1,
-	CounterClockwise = -1
+	CLOCKWISE = 1,
+	COUNTER_CLOCKWISE = -1,
 }
 
 var nodes: Array[int]
 var curve_strength: float
-var curve_direction: CurveDirection = CurveDirection.Clockwise
+var curve_direction: CurveDirection = CurveDirection.CLOCKWISE
 var relations: Array[NetRelationInfo] = []
 var max_speed: float
+
 
 static func deserialize(data: Dictionary) -> NetSegmentInfo:
 	var segment_def = NetSegmentInfo.new()
@@ -21,5 +22,16 @@ static func deserialize(data: Dictionary) -> NetSegmentInfo:
 	for relation_data in data.get("relations", []):
 		var relation = NetRelationInfo.deserialize(relation_data)
 		segment_def.relations.append(relation)
-		
+
+	return segment_def
+
+
+static func get_default() -> NetSegmentInfo:
+	var segment_def = NetSegmentInfo.new()
+	segment_def.nodes = [] as Array[int]
+	segment_def.curve_strength = 0.0
+	segment_def.curve_direction = CurveDirection.CLOCKWISE
+	segment_def.relations = [] as Array[NetRelationInfo]
+	segment_def.max_speed = 0.0
+
 	return segment_def

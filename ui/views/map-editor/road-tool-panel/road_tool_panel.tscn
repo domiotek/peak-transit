@@ -14,7 +14,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_right = -915.0
-offset_bottom = -539.0
+offset_bottom = -467.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = ExtResource("1_1mr1p")
@@ -36,7 +36,7 @@ layout_mode = 2
 theme_override_constants/separation = 12
 vertical = true
 
-[node name="Label" type="Label" parent="MarginContainer/MainContent"]
+[node name="TypeLabel" type="Label" parent="MarginContainer/MainContent"]
 layout_mode = 2
 text = "Road Type:"
 label_settings = SubResource("LabelSettings_1mr1p")
@@ -56,6 +56,37 @@ layout_mode = 2
 tooltip_text = "Curved Road"
 focus_mode = 0
 icon = ExtResource("3_a1lqm")
+
+[node name="SizeLabel" type="Label" parent="MarginContainer/MainContent"]
+layout_mode = 2
+text = "Road Size:"
+label_settings = SubResource("LabelSettings_1mr1p")
+
+[node name="SizesContainer" type="BoxContainer" parent="MarginContainer/MainContent"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TwoLanesButton" type="Button" parent="MarginContainer/MainContent/SizesContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "2 lanes
+"
+focus_mode = 0
+text = "2"
+
+[node name="FourLanesButton" type="Button" parent="MarginContainer/MainContent/SizesContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "4 lanes"
+focus_mode = 0
+text = "4"
+
+[node name="SixLanesButton" type="Button" parent="MarginContainer/MainContent/SizesContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "6 lanes"
+focus_mode = 0
+text = "6"
 
 [node name="HideButtonWrapper" type="BoxContainer" parent="MarginContainer/MainContent"]
 layout_mode = 2

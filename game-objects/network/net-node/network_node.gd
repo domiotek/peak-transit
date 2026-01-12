@@ -12,7 +12,7 @@ class_name RoadNode
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 @onready var game_manager = GDInjector.inject("GameManager") as GameManager
 
-@export var id: int
+@export var id: int = -1
 var definition: NetNodeInfo
 var connections: Dictionary = { }
 var incoming_endpoints: Array = []
@@ -26,6 +26,8 @@ var connected_segments: Array = []
 var segment_directions: Dictionary = { }
 var segment_priorities: Dictionary = { }
 var is_priority_based: bool = false
+
+var _visuals_initialized: bool = false
 
 var intersection_manager: IntersectionManager
 
@@ -52,6 +54,15 @@ func _process(delta: float) -> void:
 		return
 
 	intersection_manager.process_tick(delta)
+
+
+func set_id(new_id: int) -> void:
+	if id != -1:
+		push_warning("Attempting to change RoadNode ID from %d to %d. IDs should be immutable after creation." % [id, new_id])
+		return
+
+	id = new_id
+	definition.id = new_id
 
 
 func update_visuals() -> void:
@@ -109,6 +120,35 @@ func late_update_visuals() -> void:
 	intersection_manager.setup_intersection(self)
 
 	_update_debug_layer()
+
+	_visuals_initialized = true
+
+
+func reset_visuals() -> void:
+	if not _visuals_initialized:
+		return
+
+	main_layer.polygon = PackedVector2Array()
+	under_layer.polygon = PackedVector2Array()
+	boundary_layer.polygon = PackedVector2Array()
+
+	for child in coating_layer.get_children():
+		child.queue_free()
+
+	for child in pathing_layer.get_children():
+		child.queue_free()
+
+	for child in markings_layer.get_children():
+		child.queue_free()
+
+	connections.clear()
+	connection_paths.clear()
+	connection_directions.clear()
+	corner_points = []
+	connected_segments = []
+	segment_directions.clear()
+	segment_priorities.clear()
+	is_priority_based = false
 
 
 func get_intersection_polygon() -> PackedVector2Array:
@@ -177,6 +217,11 @@ func get_source_endpoints(to_endpoint_id: int) -> Array:
 		if connections[source_id].has(to_endpoint_id):
 			sources.append(source_id)
 	return sources
+
+
+func reposition_all_endpoints() -> void:
+	for segment in connected_segments:
+		segment.reposition_endpoints(self)
 
 
 func _setup_connections() -> void:

@@ -129,3 +129,13 @@ func add_skeleton(node: Node2D) -> void:
 	var skeleton_layer = _map.get_drawing_layer("SkeletonLayer")
 	if skeleton_layer:
 		skeleton_layer.add_child(node)
+
+
+func add_network_object(node: Node2D) -> void:
+	var network_layer = _map.get_drawing_layer("RoadGrid")
+	if network_layer:
+		network_layer.add_child(node)
+
+
+func wait_for_next_frame() -> void:
+	await _map.get_tree().process_frame

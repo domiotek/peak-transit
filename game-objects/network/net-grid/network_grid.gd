@@ -63,9 +63,9 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 
 func _create_node(node_info: NetNodeInfo, id: int) -> RoadNode:
 	var road_node = NetworkNodeScene.instantiate()
-	road_node.id = id
-	road_node.position = node_info.position
 	road_node.definition = node_info
+	road_node.set_id(id)
+	road_node.position = node_info.position
 
 	return road_node
 
