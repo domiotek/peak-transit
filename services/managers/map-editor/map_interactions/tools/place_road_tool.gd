@@ -210,6 +210,8 @@ func set_tool_type(tool_type: RoadToolType) -> void:
 
 func set_road_size(road_size: RoadSize) -> void:
 	_road_size = road_size
+	if _connection_line:
+		_connection_line.update_line_width(road_size * MapEditorConstants.SKELETON_SIZE)
 
 
 func get_tool_type() -> RoadToolType:

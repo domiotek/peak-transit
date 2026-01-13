@@ -30,6 +30,10 @@ func update_line(curve: Curve2D, ref_point: Vector2 = Vector2.ZERO, ref_point_se
 		line_ref_out.visible = false
 
 
+func update_line_width(width: float) -> void:
+	body.width = width
+
+
 func render_default() -> void:
 	body.default_color = MapEditorConstants.SKELETON_DEFAULT_COLOR
 
