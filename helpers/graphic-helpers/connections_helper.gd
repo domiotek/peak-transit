@@ -18,6 +18,7 @@ func setup_one_segment_connections(node: RoadNode) -> void:
 		return
 
 	var segment = node.connected_segments[0]
+	var is_start_of_segment = segment.nodes[0] == node
 	var edge_info = segment_helper.get_segment_edge_points_at_node(segment, node.id)
 
 	for in_id in node.incoming_endpoints:
@@ -35,8 +36,9 @@ func setup_one_segment_connections(node: RoadNode) -> void:
 				connections_array.append(out_id)
 				node.connections[in_id] = connections_array
 
+				var tangent = edge_info["tangent"] * (-1 if is_start_of_segment else 1)
 				var offset = (in_endpoint.LaneNumber + 1) * NetworkConstants.LANE_WIDTH * 2
-				var offset_point = edge_info["center"] + edge_info["tangent"] * offset
+				var offset_point = edge_info["center"] + tangent * offset
 				var p0 = node.to_local(in_endpoint.Position)
 				var p1 = node.to_local(offset_point)
 				var p2 = node.to_local(out_endpoint.Position)
