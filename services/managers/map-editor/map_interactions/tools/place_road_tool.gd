@@ -205,7 +205,9 @@ func reset_state(preserve_objects: bool = false) -> void:
 
 func set_tool_type(tool_type: RoadToolType) -> void:
 	_tool_type = tool_type
-	reset_state(true)
+	if _angle_ref_point:
+		_angle_ref_point.queue_free()
+		_angle_ref_point = null
 
 
 func set_road_size(road_size: RoadSize) -> void:
