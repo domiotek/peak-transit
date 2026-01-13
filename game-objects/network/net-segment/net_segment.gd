@@ -162,7 +162,7 @@ func late_update_visuals() -> void:
 
 
 func get_curve() -> Curve2D:
-	return curve_shape
+	return main_layer_curve
 
 
 func reposition_endpoints(of_node: RoadNode) -> void:
