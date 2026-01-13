@@ -53,6 +53,9 @@ func setup() -> void:
 
 
 func handle_map_clicked(world_position: Vector2) -> void:
+	if _is_error_state:
+		return
+
 	var nodes_at_position = _manager.find_nodes_at_position(world_position, MapEditorConstants.MAP_SNAPPING_RADIUS, MapEditorConstants.MAP_NET_NODE_LAYER_ID)
 	var target_position: Vector2 = world_position
 	var clicked_node: RoadNode = _find_first_road_node(nodes_at_position)
@@ -70,9 +73,6 @@ func handle_map_clicked(world_position: Vector2) -> void:
 		return
 
 	if _tool_type == RoadToolType.STRAIGHT:
-		if _is_error_state:
-			return
-
 		_target_node = clicked_node
 		_build_road_node_at_position(target_position)
 		reset_state(true)
