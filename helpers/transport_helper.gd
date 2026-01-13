@@ -1,5 +1,53 @@
 class_name TransportHelper
 
+static func load_transport_definition(
+		transport_def: TransportDefinition,
+		register_lines: bool = true,
+		generate_schedules: bool = true,
+) -> void:
+	var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
+	var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
+
+	for i in range(transport_def.demand_presets.size()):
+		game_manager.push_loading_progress("Loading demand presets...", i / float(transport_def.demand_presets.size()))
+		await game_manager.wait_frame()
+		var preset_def = transport_def.demand_presets[i]
+		transport_manager.register_demand_preset(preset_def)
+
+	for i in range(transport_def.depots.size()):
+		game_manager.push_loading_progress("Placing transport depots...", i / float(transport_def.depots.size()))
+		await game_manager.wait_frame()
+		var depot_def = transport_def.depots[i]
+		transport_manager.register_depot(depot_def)
+
+	for i in range(transport_def.terminals.size()):
+		game_manager.push_loading_progress("Placing transport terminals...", i / float(transport_def.terminals.size()))
+		await game_manager.wait_frame()
+		var terminal_def = transport_def.terminals[i]
+		transport_manager.register_terminal(terminal_def)
+
+	for i in range(transport_def.stops.size()):
+		game_manager.push_loading_progress("Placing transport stops...", i / float(transport_def.stops.size()))
+		await game_manager.wait_frame()
+		var stop_def = transport_def.stops[i]
+		transport_manager.register_stop(stop_def)
+
+	if register_lines:
+		for i in range(transport_def.lines.size()):
+			game_manager.push_loading_progress("Setting up transport lines...", i / float(transport_def.lines.size()))
+			await game_manager.wait_frame()
+			var line_def = transport_def.lines[i]
+			await transport_manager.register_line(line_def)
+
+		if generate_schedules:
+			var lines = transport_manager.get_lines()
+			for line_id in range(lines.size()):
+				var transport_line = lines[line_id] as TransportLine
+				game_manager.push_loading_progress("Generating schedules...", line_id / float(lines.size()))
+				await game_manager.wait_frame()
+				transport_manager.generate_line_schedule(transport_line)
+
+
 static func validate_stop_definition(network_manager: NetworkManager, transport_manager: TransportManager, stop_def: StopDefinition) -> String:
 	var validation_result = validate_segment_object_position(network_manager, stop_def.position)
 

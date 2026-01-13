@@ -34,7 +34,7 @@ func _ready() -> void:
 	click_area.connect("input_event", Callable(self, "_on_input_event"))
 	_process_tracks()
 
-	if config_manager.AutoFillDepotStopsOnLoad:
+	if config_manager.AutoFillDepotStopsOnLoad and game_manager.get_game_mode() == Enums.GameMode.CHALLENGE:
 		_fill_bus_stops()
 
 

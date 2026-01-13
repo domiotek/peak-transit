@@ -3,6 +3,7 @@ extends BaseGameController
 class_name MapEditorGameController
 
 var _map_interactions_manager: MapInteractionsManager = GDInjector.inject("MapInteractionsManager")
+var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 
 
 func _ready() -> void:
@@ -25,6 +26,8 @@ func _on_initialize_game(world: WorldDefinition) -> void:
 	var network_grid = map.get_drawing_layer("RoadGrid") as NetworkGrid
 
 	await network_grid.load_network_definition(world.network)
+
+	await TransportHelper.load_transport_definition(world.transport, true, false)
 
 
 func _after_initialize_game() -> void:

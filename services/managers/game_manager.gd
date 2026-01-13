@@ -150,6 +150,10 @@ func get_map() -> Map:
 	return _game_controller.get_map()
 
 
+func wait_frame() -> void:
+	await get_map().get_tree().process_frame
+
+
 func set_game_speed(speed: Enums.GameSpeed) -> void:
 	var max_speed = _game_controller.get_max_game_speed()
 
