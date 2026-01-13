@@ -70,6 +70,10 @@ func _set_active_tool(tool: MapTools.MapEditorTool, button: Button) -> void:
 	if _active_button and _active_button != button:
 		_active_button.flat = true
 
+	if _active_panel_name != "":
+		_ui_manager.hide_ui_view(_active_panel_name)
+		_active_panel_name = ""
+
 	_active_button = button
 
 	match tool:
