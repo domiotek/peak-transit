@@ -110,12 +110,14 @@ func reset_state() -> void:
 
 	_target_lane = null
 	_selected_lane = null
+	_ui_manager.hide_ui_view(LaneDirectionSelector.VIEW_NAME)
 
 
 func set_tool_type(tool_type: EditLaneToolType) -> void:
 	_tool_type = tool_type
 	_selected_lane = null
 	_target_lane = null
+	_ui_manager.hide_ui_view(LaneDirectionSelector.VIEW_NAME)
 
 	if _tool_type == EditLaneToolType.CHANGE_SPEED_LIMIT:
 		_toggle_speed_limit_layer(true)
