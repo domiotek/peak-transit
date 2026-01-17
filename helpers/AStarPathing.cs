@@ -307,7 +307,7 @@ public class AStarPathing
             var toEndpoint = NetworkManager.GetLaneEndpoint((int)node.ToEndpointId);
 
             var segment = GetSegment(fromEndpoint.SegmentId);
-            var lane = segment.Lanes.FirstOrDefault(l => l.Id == fromEndpoint.LaneId);
+            var lane = segment.Lanes[fromEndpoint.LaneId];
 
             var switchingCost = ApplyLaneSwitchingCost(fromEndpoint, toEndpoint);
             var speedBonus = ApplySpeedLimitBonus(lane);

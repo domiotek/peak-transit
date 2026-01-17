@@ -48,7 +48,7 @@ public partial class LaneCalculator : RefCounted
         for (int i = 0; i < sortedIncoming.Length; i++)
         {
             var lane = sortedIncoming[i];
-            var laneInfo = lanes.Where(l => l.Id == lane.LaneId).FirstOrDefault()?.LaneInfo;
+            var laneInfo = lanes[lane.LaneId].LaneInfo;
             List<int> laneConnections;
 
             if (laneInfo.Direction != LaneDirection.Auto)
@@ -100,12 +100,20 @@ public partial class LaneCalculator : RefCounted
         )
             connections.AddRange(MapToNTargetEndpoints(forwardEndpoints, laneEndpoint, n));
 
-        if (direction == LaneDirection.Left || direction == LaneDirection.ForwardLeft)
+        if (
+            direction == LaneDirection.Left
+            || direction == LaneDirection.ForwardLeft
+            || direction == LaneDirection.LeftRight
+        )
         {
             connections.AddRange(MapToNTargetEndpoints(leftEndpoints, laneEndpoint, n));
         }
 
-        if (direction == LaneDirection.Right || direction == LaneDirection.ForwardRight)
+        if (
+            direction == LaneDirection.Right
+            || direction == LaneDirection.ForwardRight
+            || direction == LaneDirection.LeftRight
+        )
         {
             connections.AddRange(MapToNTargetEndpoints(rightEndpoints, laneEndpoint, n));
         }

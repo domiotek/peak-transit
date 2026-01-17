@@ -77,6 +77,76 @@ func destroy_road(
 	segment.queue_free()
 
 
+func add_lane_to_road(
+		segment: NetSegment,
+		relation_index: int,
+) -> void:
+	for node in segment.nodes:
+		node.reset_visuals()
+
+	segment.add_lane_to_relation(relation_index, NetLaneInfo.get_default())
+
+	segment.update_visuals()
+
+	for node in segment.nodes:
+		node.update_visuals()
+
+	segment.late_update_visuals()
+
+	for node in segment.nodes:
+		node.reposition_all_endpoints()
+		node.late_update_visuals()
+
+	segment.reposition_roadside_objects(relation_index)
+
+
+func remove_lane_from_road(
+		segment: NetSegment,
+		lane: NetLane,
+) -> void:
+	for node in segment.nodes:
+		node.reset_visuals()
+
+	_network_manager.unregister_lane_endpoint(lane.from_endpoint)
+	_network_manager.unregister_lane_endpoint(lane.to_endpoint)
+
+	segment.remove_lane_from_relation(lane)
+	segment.update_visuals()
+
+	for node in segment.nodes:
+		node.update_visuals()
+
+	segment.late_update_visuals()
+
+	for node in segment.nodes:
+		node.reposition_all_endpoints()
+		node.late_update_visuals()
+
+	segment.reposition_roadside_objects(lane.relation_id)
+
+
+func change_lane_directions(
+		lane: NetLane,
+		new_direction: Enums.Direction,
+		allowed_vehicles: Dictionary = { },
+) -> void:
+	lane.update_lane_direction(new_direction, allowed_vehicles)
+
+	var segment = lane.get_parent_segment()
+
+	for node in segment.nodes:
+		node.reset_visuals()
+		node.update_visuals()
+		node.late_update_visuals()
+
+
+func change_lane_speed_limit(
+		lane: NetLane,
+		new_speed_limit: int,
+) -> void:
+	lane.update_speed_limit(new_speed_limit)
+
+
 func get_2way_relations(num_lanes: int) -> Array[NetRelationInfo]:
 	var relations: Array[NetRelationInfo] = []
 

@@ -1,0 +1,170 @@
+[gd_scene load_steps=8 format=3 uid="uid://dsx16oagnkx2y"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_j5bvw"]
+[ext_resource type="Script" uid="uid://b3kpubkaj5nvt" path="res://ui/views/map-editor/lane-tool-panel/lane_tool_panel.gd" id="2_4lw3r"]
+[ext_resource type="Texture2D" uid="uid://dha1op8yn0m0e" path="res://assets/ui_icons/map-editor/add_lane.png" id="3_vjd8o"]
+[ext_resource type="Texture2D" uid="uid://cylfopp7467i0" path="res://assets/ui_icons/map-editor/remove_lane.png" id="4_fmbtk"]
+[ext_resource type="Texture2D" uid="uid://d2uamlu1cmwqo" path="res://assets/ui_icons/map-editor/directions.png" id="5_3t88n"]
+[ext_resource type="Texture2D" uid="uid://di5o8wo5nrqtr" path="res://assets/ui_icons/chevron_down.png" id="7_5fs1d"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_4m0o2"]
+font_size = 12
+
+[node name="EditRoadToolPanel" type="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -861.0
+offset_bottom = -437.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_j5bvw")
+script = ExtResource("2_4lw3r")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+
+[node name="MainContent" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+vertical = true
+
+[node name="TypeLabel" type="Label" parent="MarginContainer/MainContent"]
+layout_mode = 2
+text = "Lanes:"
+label_settings = SubResource("LabelSettings_4m0o2")
+
+[node name="TypesContainer" type="BoxContainer" parent="MarginContainer/MainContent"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AddLaneToolButton" type="Button" parent="MarginContainer/MainContent/TypesContainer"]
+layout_mode = 2
+tooltip_text = "Add Lane"
+focus_mode = 0
+icon = ExtResource("3_vjd8o")
+
+[node name="RemoveLaneToolButton" type="Button" parent="MarginContainer/MainContent/TypesContainer"]
+layout_mode = 2
+tooltip_text = "Remove Lane"
+focus_mode = 0
+icon = ExtResource("4_fmbtk")
+
+[node name="DirectionsToolButton" type="Button" parent="MarginContainer/MainContent/TypesContainer"]
+layout_mode = 2
+tooltip_text = "Set Lane Direction"
+focus_mode = 0
+icon = ExtResource("5_3t88n")
+
+[node name="SpeedLimitLabel" type="Label" parent="MarginContainer/MainContent"]
+layout_mode = 2
+text = "Speed Limit:"
+label_settings = SubResource("LabelSettings_4m0o2")
+
+[node name="SpeedContainer" type="GridContainer" parent="MarginContainer/MainContent"]
+layout_mode = 2
+columns = 7
+
+[node name="SpeedLimit20Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "20"
+
+[node name="SpeedLimit30Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "30"
+
+[node name="SpeedLimit40Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "40"
+
+[node name="SpeedLimit50Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "50"
+
+[node name="SpeedLimit60Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "60"
+
+[node name="SpeedLimit70Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "70"
+
+[node name="SpeedLimit80Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "80"
+
+[node name="SpeedLimit90Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "90"
+
+[node name="SpeedLimit100Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "100"
+
+[node name="SpeedLimit110Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "110"
+
+[node name="SpeedLimit120Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "120"
+
+[node name="SpeedLimit130Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "130"
+
+[node name="SpeedLimit140Button" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "140"
+
+[node name="SpeedLimitUnlimitedButton" type="Button" parent="MarginContainer/MainContent/SpeedContainer"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+focus_mode = 0
+text = "∞"
+
+[node name="HideButtonWrapper" type="BoxContainer" parent="MarginContainer/MainContent"]
+layout_mode = 2
+
+[node name="HidePanelButton" type="Button" parent="MarginContainer/MainContent/HideButtonWrapper"]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+tooltip_text = "Hide panel"
+focus_mode = 0
+icon = ExtResource("7_5fs1d")
+flat = true
+expand_icon = true

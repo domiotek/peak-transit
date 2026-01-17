@@ -1,14 +1,25 @@
-[gd_scene load_steps=5 format=3 uid="uid://xllvlhj63lst"]
+[gd_scene load_steps=7 format=3 uid="uid://xllvlhj63lst"]
 
 [ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game-modes/base-mode/base_mode.tscn" id="1_wmy76"]
 [ext_resource type="Script" uid="uid://ck2irsw61l388" path="res://game-objects/game-modes/map-editor-mode/map_editor_mode.gd" id="2_kssn7"]
 [ext_resource type="PackedScene" uid="uid://csqi7ixxdkbbx" path="res://ui/views/map-editor/tools-bar/tools_bar.tscn" id="3_vfrew"]
+[ext_resource type="PackedScene" uid="uid://bp52rfp3lu4gt" path="res://ui/views/map-editor/lane-direction-selector/lane_direction_selector.tscn" id="3_wg35x"]
 [ext_resource type="PackedScene" uid="uid://bdp5pr6dqwvvi" path="res://ui/views/map-editor/road-tool-panel/road_tool_panel.tscn" id="4_axg7b"]
+[ext_resource type="PackedScene" uid="uid://dsx16oagnkx2y" path="res://ui/views/map-editor/lane-tool-panel/lane_tool_panel.tscn" id="5_lg3d2"]
 
 [node name="MapEditor" instance=ExtResource("1_wmy76")]
 script = ExtResource("2_kssn7")
 
-[node name="ToolsBar" parent="UI" index="1" instance=ExtResource("3_vfrew")]
+[node name="LaneDirectionSelector" parent="UI" index="1" instance=ExtResource("3_wg35x")]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 112.0
+offset_bottom = 41.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="ToolsBar" parent="UI" index="2" instance=ExtResource("3_vfrew")]
 custom_minimum_size = Vector2(300, 30)
 anchors_preset = 7
 anchor_left = 0.5
@@ -20,7 +31,7 @@ offset_right = 150.0
 offset_bottom = -13.0
 grow_vertical = 0
 
-[node name="RoadToolPanel" parent="UI" index="2" instance=ExtResource("4_axg7b")]
+[node name="RoadToolPanel" parent="UI" index="3" instance=ExtResource("4_axg7b")]
 custom_minimum_size = Vector2(190, 100)
 anchors_preset = 7
 anchor_left = 0.5
@@ -30,4 +41,15 @@ offset_left = -151.0
 offset_top = -218.0
 offset_right = 39.0
 offset_bottom = -48.0
+grow_vertical = 0
+
+[node name="EditRoadToolPanel" parent="UI" index="4" instance=ExtResource("5_lg3d2")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -119.0
+offset_top = -265.0
+offset_right = 168.0
+offset_bottom = -49.0
 grow_vertical = 0

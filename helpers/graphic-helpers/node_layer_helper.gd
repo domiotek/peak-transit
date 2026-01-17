@@ -179,8 +179,8 @@ func create_trapezoid_underlayer(target_node: RoadNode, segments: Array) -> void
 	var seg1 = segments[0]
 	var seg2 = segments[1]
 
-	var wider_segment = seg1 if seg1.total_lanes > seg2.total_lanes else seg2
-	var narrower_segment = seg1 if seg1.total_lanes < seg2.total_lanes else seg2
+	var wider_segment = seg1 if seg1.get_lane_count() > seg2.get_lane_count() else seg2
+	var narrower_segment = seg1 if seg1.get_lane_count() < seg2.get_lane_count() else seg2
 
 	var wider_edge_info = segment_helper.get_segment_edge_points_at_node(wider_segment, target_node.id)
 	var narrower_edge_info = segment_helper.get_segment_edge_points_at_node(narrower_segment, target_node.id, 50.0)

@@ -63,7 +63,7 @@ func setup(relation_id: int, _segment: NetSegment, _building_info: BuildingInfo)
 func setup_connections() -> void:
 	var endpoints = _get_connection_endpoints()
 
-	var supports_both_directions = segment.total_lanes == 2 and not segment.is_asymetric
+	var supports_both_directions = segment.get_lane_count() == 2 and not segment.is_asymetric
 
 	var edge_lanes = segment_helper.get_edge_lanes(segment)
 

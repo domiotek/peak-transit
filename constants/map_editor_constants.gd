@@ -2,10 +2,12 @@ class_name MapEditorConstants
 
 const MAP_NET_NODE_LAYER_ID = (1 << 4) # 5 layer
 const MAP_NET_SEGMENT_LAYER_ID = (1 << 5) # 6 layer
+const MAP_NET_LANE_LAYER_ID = (1 << 6) # 7 layer
 const MAP_ALL_DETECTABLE_LAYERS = MAP_NET_NODE_LAYER_ID | MAP_NET_SEGMENT_LAYER_ID
 
 const MAP_SNAPPING_RADIUS = 90.0
 
+const SKELETON_POSITIVE_COLOR = Color(0.0, 1.0, 0.0, 0.714)
 const SKELETON_DEFAULT_COLOR = Color(0.114, 0.353, 1.0, 0.714)
 const SKELETON_ERROR_COLOR = Color(1.0, 0.0, 0.0, 0.714)
 const SKELETON_SIZE = 60.0

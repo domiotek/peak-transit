@@ -42,6 +42,10 @@ func render_error() -> void:
 	body.default_color = MapEditorConstants.SKELETON_ERROR_COLOR
 
 
+func render_color(custom_color: Color) -> void:
+	body.default_color = custom_color
+
+
 func _get_straight_curve(start: Vector2, end: Vector2) -> Curve2D:
 	var curve = Curve2D.new()
 	curve.add_point(start)

@@ -12,7 +12,7 @@ public partial class NetSegment : IMapping<NetSegment>
 
     public List<int> Endpoints { get; set; } = [];
 
-    public List<NetLane> Lanes { get; set; } = [];
+    public Dictionary<int, NetLane> Lanes { get; set; } = [];
 
     public Dictionary<int, int> EndpointToEndpointMapping { get; set; } = [];
 
@@ -35,14 +35,10 @@ public partial class NetSegment : IMapping<NetSegment>
                 .Get("endpoints_mappings")
                 .AsGodotDictionary<int, int>()
                 .ToDictionary(),
-            Lanes =
-            [
-                .. segmentObject
-                    .Get("lanes")
-                    .AsGodotObjectArray<GodotObject>()
-                    .ToList()
-                    .Select(NetLane.Map),
-            ],
+            Lanes = segmentObject
+                .Get("lanes")
+                .AsGodotDictionary<int, GodotObject>()
+                .ToDictionary(kvp => kvp.Key, kvp => NetLane.Map(kvp.Value)),
         };
 
         return newSegment;

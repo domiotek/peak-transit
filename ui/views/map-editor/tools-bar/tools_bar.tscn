@@ -1,9 +1,12 @@
-[gd_scene load_steps=5 format=3 uid="uid://csqi7ixxdkbbx"]
+[gd_scene load_steps=8 format=3 uid="uid://csqi7ixxdkbbx"]
 
 [ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_dremp"]
 [ext_resource type="Script" uid="uid://bnd5j58yvdix1" path="res://ui/views/map-editor/tools-bar/tools_bar.gd" id="2_h068x"]
 [ext_resource type="Texture2D" uid="uid://8xbv2uv4kst4" path="res://assets/ui_icons/map-editor/road_tool.png" id="2_ndarc"]
 [ext_resource type="Texture2D" uid="uid://dxo48vcqcjhh0" path="res://assets/ui_icons/map-editor/destroy.png" id="4_h068x"]
+[ext_resource type="Texture2D" uid="uid://c82onajpwuyl1" path="res://assets/ui_icons/map-editor/edit_road.png" id="4_mpbrw"]
+[ext_resource type="Texture2D" uid="uid://cyxoa7de2v7tn" path="res://assets/ui_icons/map-editor/buildings.png" id="5_h6810"]
+[ext_resource type="Texture2D" uid="uid://b6q2i2qhd5xqi" path="res://assets/ui_icons/map-editor/traffic_lights.png" id="6_co7s7"]
 
 [node name="ToolsBar" type="Panel"]
 anchors_preset = 15
@@ -31,9 +34,32 @@ layout_mode = 2
 
 [node name="RoadToolButton" type="Button" parent="MarginContainer/BoxContainer"]
 layout_mode = 2
-tooltip_text = "Road Tool"
+tooltip_text = "Design Road"
 focus_mode = 0
 icon = ExtResource("2_ndarc")
+flat = true
+
+[node name="LaneToolButton" type="Button" parent="MarginContainer/BoxContainer"]
+layout_mode = 2
+tooltip_text = "Road Options"
+focus_mode = 0
+icon = ExtResource("4_mpbrw")
+flat = true
+
+[node name="BuildingsToolButton" type="Button" parent="MarginContainer/BoxContainer"]
+layout_mode = 2
+tooltip_text = "Place Building"
+focus_mode = 0
+disabled = true
+icon = ExtResource("5_h6810")
+flat = true
+
+[node name="IntersectionToolButton" type="Button" parent="MarginContainer/BoxContainer"]
+layout_mode = 2
+tooltip_text = "Configure Intersections"
+focus_mode = 0
+disabled = true
+icon = ExtResource("6_co7s7")
 flat = true
 
 [node name="Control" type="Control" parent="MarginContainer/BoxContainer"]

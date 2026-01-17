@@ -22,14 +22,20 @@ var lane_number: int = 0
 var from_endpoint: int
 var to_endpoint: int
 
-var direction: Enums.Direction = Enums.Direction.BACKWARD
+var direction: Enums.Direction = Enums.Direction.UNSPECIFIED
+var bus_lane_direction: Enums.BaseDirection = Enums.BaseDirection.UNSPECIFIED
 
 var assigned_vehicles: Array
 
 var lane_usage_ema: float = 0.0
 
+var _constructed: bool = false
 var _original_curve: Curve2D = null
 
+@onready var map_pickable_area: Area2D = $PickableArea
+var collision_shape: CollisionPolygon2D = null
+
+@onready var game_manager = GDInjector.inject("GameManager") as GameManager
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
 @onready var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 @onready var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
@@ -46,6 +52,11 @@ func _ready() -> void:
 
 	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
 
+	if game_manager.get_game_mode() == Enums.GameMode.MAP_EDITOR:
+		collision_shape = CollisionPolygon2D.new()
+		collision_shape.build_mode = CollisionPolygon2D.BUILD_SEGMENTS
+		map_pickable_area.add_child(collision_shape)
+
 
 func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lane_offset: float, _relation_id: int) -> void:
 	id = lane_id
@@ -56,8 +67,10 @@ func setup(lane_id: int, parent_segment: NetSegment, lane_info: NetLaneInfo, lan
 
 
 func update_trail_shape(curve: Curve2D) -> void:
-	if curve == null:
+	if curve == null or _constructed:
 		return
+
+	_constructed = true
 
 	var new_curve = line_helper.get_curve_with_offset(curve, offset)
 	_original_curve = new_curve
@@ -93,6 +106,9 @@ func update_trail_shape(curve: Curve2D) -> void:
 	usage_indicator.points = new_curve.tessellate()
 	_populate_main_layer()
 
+	if collision_shape:
+		collision_shape.polygon = line_helper.convert_curve_to_polygon(new_curve, NetworkConstants.LANE_WIDTH)
+
 	_update_debug_layer()
 
 
@@ -106,6 +122,18 @@ func get_endpoint_by_type(is_outgoing: bool) -> Variant:
 
 func get_curve() -> Curve2D:
 	return trail.curve
+
+
+func get_parent_segment() -> NetSegment:
+	return segment
+
+
+func get_segment_relation_id() -> int:
+	return relation_id
+
+
+func get_segment_relation() -> NetRelation:
+	return segment.get_relation_of_lane(id)
 
 
 func assign_vehicle(vehicle: Vehicle) -> void:
@@ -245,6 +273,17 @@ func reposition_endpoint(of_node: RoadNode, type: String) -> void:
 	var trimmed = line_helper.trim_curve(_original_curve, points[0], points[1])
 	trail.curve = trimmed
 	usage_indicator.points = trimmed.tessellate()
+
+
+func update_lane_direction(new_direction: Enums.Direction, allowed_vehicles: Dictionary) -> void:
+	data.set_direction_from_enum(new_direction)
+	data.set_allowed_vehicles(allowed_vehicles)
+
+
+func update_speed_limit(new_speed_limit: int) -> void:
+	data.max_speed = new_speed_limit
+
+	_update_debug_layer()
 
 
 func _update_lane_usage() -> void:

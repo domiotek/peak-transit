@@ -210,7 +210,7 @@ func _draw_priority_signs() -> void:
 		var segment_stoppers = stoppers.filter(func(s): return s.get_lane().segment == segment)
 		var lane = segment_stoppers[0].get_lane() if segment_stoppers.size() > 0 else null
 
-		var lanes_count = segment.get_relation_of_lane(lane.id).relation_info.lanes.size()
+		var lanes_count = segment.get_relation_of_lane(lane.id).get_lane_count() if lane else 0
 		var right_most_lane_number = lanes_count - 1
 
 		var right_most_stopper: LaneStopper = segment_stoppers.filter(func(s): return s.endpoint.LaneNumber == right_most_lane_number)[0]

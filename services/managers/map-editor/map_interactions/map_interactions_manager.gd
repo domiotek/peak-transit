@@ -10,6 +10,7 @@ signal tool_changed(new_tool: MapTools.MapEditorTool)
 
 func _init() -> void:
 	_tool_instances[MapTools.MapEditorTool.PLACE_ROAD] = PlaceRoadMapTool.new(self)
+	_tool_instances[MapTools.MapEditorTool.EDIT_LANE] = EditLaneMapTool.new(self)
 	_tool_instances[MapTools.MapEditorTool.BULDOZE] = BuldozeMapTool.new(self)
 
 
@@ -69,8 +70,8 @@ func handle_map_mouse_move(world_position: Vector2) -> void:
 func find_nodes_at_position(
 		world_position: Vector2,
 		radius: float = 0.0,
-		max_count: int = 10,
 		mask = MapEditorConstants.MAP_ALL_DETECTABLE_LAYERS,
+		max_count: int = 10,
 ) -> Array:
 	var space_state := _map.get_world_2d().direct_space_state
 

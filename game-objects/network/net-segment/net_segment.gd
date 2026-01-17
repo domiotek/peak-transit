@@ -5,33 +5,34 @@ class_name NetSegment
 const NetLaneScene = preload("res://game-objects/network/net-lane/net_lane.tscn")
 const BuildingScene = preload("res://game-objects/buildings/base-building/base-building.tscn")
 
-@onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
-@onready var transport_manager = GDInjector.inject("TransportManager") as TransportManager
-
 var id: int
 var data: NetSegmentInfo
 var nodes: Array[RoadNode] = []
 var relations: Array[NetRelation] = []
-var lanes: Array[NetLane] = []
+var lanes: Dictionary[int, NetLane] = { }
 var curve_shape: Curve2D
 var main_layer_curve: Curve2D
 var main_layer_offset: float = 0.0
 var left_edge_curve: Curve2D
 var right_edge_curve: Curve2D
-var total_lanes: int = 0
 var is_asymetric: bool = false
 var max_lanes_relation_idx: int = -1
 
 var endpoints: Array[int] = []
 var endpoints_mappings: Dictionary[int, int] = { }
 
+var _lane_ids = IDManager.new()
+
 @onready var main_road_layer: Line2D = $MainLayer
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
+@onready var roadside_layer: Node2D = $RoadSideLayer
 
 @onready var map_pickable_area: Area2D = $PickableArea
 var collision_shape: CollisionPolygon2D
 
+@onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
+@onready var transport_manager = GDInjector.inject("TransportManager") as TransportManager
 var line_helper: LineHelper
 var buildings_manager: BuildingsManager
 var segment_helper: SegmentHelper = GDInjector.inject("SegmentHelper") as SegmentHelper
@@ -87,21 +88,9 @@ func add_connection(start_node: RoadNode, target_node: RoadNode, relation_info: 
 
 	relations.append(relation)
 
-	var starts_from_end = relation.start_node == nodes[1]
-
 	for i in range(relation_info.lanes.size()):
 		var lane_info = relation_info.lanes[i]
-		var offset
-		if starts_from_end:
-			offset = (i + 1) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2
-		else:
-			offset = (i + 1) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2
-
-		var lane = NetLaneScene.instantiate()
-		lane.setup(lanes.size(), self, lane_info, offset, relations.size() - 1)
-		add_child(lane)
-		lanes.append(lane)
-		relation.lanes.append(lane.id)
+		add_lane_to_relation(relation_id, lane_info)
 
 
 func update_visuals() -> void:
@@ -114,12 +103,13 @@ func update_visuals() -> void:
 	var max_lanes = 0
 
 	for i in range(relations.size()):
-		var connection = relations[i].relation_info
-		if connection.lanes.size() > max_lanes:
-			max_lanes = connection.lanes.size()
+		var relation = relations[i]
+		var lane_count = relation.get_lane_count()
+		if lane_count > max_lanes:
+			max_lanes = lane_count
 			max_lanes_relation_idx = i
 
-		total_lanes += connection.lanes.size()
+	var total_lanes = lanes.size()
 
 	is_asymetric = max_lanes > total_lanes / float(relations.size())
 
@@ -157,8 +147,8 @@ func late_update_visuals() -> void:
 
 			segment_helper.position_along_the_edge(self, building, building_info.offset_position, relation_idx, BuildingConstants.BUILDING_ROAD_OFFSET)
 
-			relation.register_building(building.id, building_info.offset_position)
-			add_child(building)
+			relation.register_building(building.id, building_info.offset_position, BuildingConstants.BUILDING_ROAD_OFFSET)
+			roadside_layer.add_child(building)
 
 
 func get_curve() -> Curve2D:
@@ -166,17 +156,23 @@ func get_curve() -> Curve2D:
 
 
 func reposition_endpoints(of_node: RoadNode) -> void:
-	for lane in lanes:
+	for lane in lanes.values():
 		var relation = get_relation_of_lane(lane.id)
 		var is_outgoing = relation.start_node == of_node
 		lane.reposition_endpoint(of_node, "from" if is_outgoing else "to")
 
 
 func get_lane(lane_id: int) -> NetLane:
-	if lane_id < 0 or lane_id >= lanes.size():
-		push_error("Invalid lane ID: " + str(lane_id))
+	var lane = lanes[lane_id]
+	if not lane:
+		push_error("Lane with ID %d not found." % lane_id)
 		return null
-	return lanes.filter(func(lane): return lane.id == lane_id)[0]
+
+	return lane
+
+
+func get_lane_count() -> int:
+	return lanes.size()
 
 
 func get_other_node_id(node_id: int) -> int:
@@ -223,7 +219,7 @@ func place_stop(stop: Stop) -> void:
 	relation.register_stop(stop.id, stop.get_position_offset())
 
 	segment_helper.position_along_the_edge(self, stop, new_stop_offset, starts_from_end)
-	add_child(stop)
+	roadside_layer.add_child(stop)
 
 	var should_show_road_marking = main_layer_curve.get_baked_length() >= NetworkConstants.MIN_SEGMENT_LENGTH_FOR_ROAD_MARKINGS
 
@@ -238,7 +234,7 @@ func place_terminal(terminal: Terminal) -> void:
 	relation.register_building(terminal.id, terminal.get_position_offset())
 
 	segment_helper.position_along_the_edge(self, terminal, new_terminal_offset, starts_from_end)
-	add_child(terminal)
+	roadside_layer.add_child(terminal)
 
 	terminal.update_visuals()
 
@@ -251,7 +247,7 @@ func place_depot(depot: Depot) -> void:
 	relation.register_building(depot.id, depot.get_position_offset())
 
 	segment_helper.position_along_the_edge(self, depot, new_depot_offset, starts_from_end)
-	add_child(depot)
+	roadside_layer.add_child(depot)
 
 	depot.update_visuals()
 
@@ -272,8 +268,64 @@ func get_buildings() -> Dictionary:
 	return buildings_dict
 
 
+func add_lane_to_relation(relation_idx: int, lane_info: NetLaneInfo) -> void:
+	var relation = relations[relation_idx]
+	var starts_from_end = relation.start_node == nodes[1]
+	var offset
+	var lane_count = relation.get_lane_count()
+
+	if starts_from_end:
+		offset = (lane_count + 1) * -NetworkConstants.LANE_WIDTH + NetworkConstants.LANE_WIDTH / 2
+	else:
+		offset = (lane_count + 1) * NetworkConstants.LANE_WIDTH - NetworkConstants.LANE_WIDTH / 2
+
+	var lane = NetLaneScene.instantiate()
+	lane.setup(_lane_ids.occupy_next_id(), self, lane_info, offset, relation_idx)
+	add_child(lane)
+	lanes[lane.id] = lane
+	relation.lanes.append(lane.id)
+
+
+func remove_lane_from_relation(lane: NetLane) -> void:
+	var relation = get_relation_of_lane(lane.id)
+
+	relation.lanes.erase(lane.id)
+
+	lanes.erase(lane.id)
+	_lane_ids.release_id(lane.id)
+	lane.queue_free()
+
+	remove_endpoint_bind(lane.from_endpoint)
+	remove_endpoint_bind(lane.to_endpoint)
+
+
+func remove_endpoint_bind(endpoint_id: int) -> void:
+	endpoints.erase(endpoint_id)
+	endpoints_mappings.erase(endpoint_id)
+
+
+func reposition_roadside_objects(target_relation_idx: int) -> void:
+	var relation = relations[target_relation_idx]
+
+	var stops = relation.get_stops()
+	var buildings = relation.get_buildings()
+
+	for child in roadside_layer.get_children():
+		if child is BaseBuilding or child is Stop:
+			var target_def: Dictionary
+
+			if child is Stop:
+				target_def = stops
+			else:
+				target_def = buildings
+
+			if target_def.has(child.id):
+				var def = target_def[child.id]
+				segment_helper.position_along_the_edge(self, child, def["offset"], target_relation_idx, def["horizontal_offset"])
+
+
 func _update_lanes_pathing_shape() -> void:
-	for lane in lanes:
+	for lane in lanes.values():
 		lane.update_trail_shape(curve_shape)
 		endpoints_mappings[lane.from_endpoint] = lane.to_endpoint
 
@@ -286,7 +338,7 @@ func _update_markings_layer() -> void:
 		return
 
 	if relations.size() == 2:
-		if total_lanes == 2:
+		if lanes.size() == 2:
 			line_helper.draw_dash_line(curve_shape, markings_layer)
 		else:
 			line_helper.draw_solid_line(curve_shape, markings_layer)
@@ -295,7 +347,7 @@ func _update_markings_layer() -> void:
 		var starts_from_end = relation.start_node == nodes[1]
 		var midline_side = -1 if starts_from_end else 1
 
-		for i in range(relation.relation_info.lanes.size() - 1):
+		for i in range(relation.get_lane_count() - 1):
 			var offset = (i + 1) * NetworkConstants.LANE_WIDTH * midline_side
 			var path = line_helper.get_curve_with_offset(curve_shape, offset)
 			line_helper.draw_dash_line(path, markings_layer)

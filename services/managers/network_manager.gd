@@ -116,6 +116,21 @@ func get_lane_endpoint(endpoint_id: int) -> Variant:
 	return null
 
 
+func unregister_lane_endpoint(endpoint_id: int) -> void:
+	if not lane_endpoints.has(endpoint_id):
+		return
+
+	var endpoint = lane_endpoints[endpoint_id]
+	var node = nodes[endpoint.NodeId]
+	var segment = segments[endpoint.SegmentId]
+
+	node.remove_endpoint_bind(endpoint_id)
+	segment.remove_endpoint_bind(endpoint_id)
+
+	lane_endpoints.erase(endpoint_id)
+	_endpoint_ids.release_id(endpoint_id)
+
+
 func get_opposite_lane_endpoint(endpoint_id: int) -> Variant:
 	var endpoint = get_lane_endpoint(endpoint_id)
 	var segment = get_segment(endpoint.SegmentId)

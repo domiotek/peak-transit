@@ -3,6 +3,7 @@ class_name UIManager
 enum AnchorPoint {
 	TOP_LEFT,
 	TOP_RIGHT,
+	CENTER,
 	BOTTOM_LEFT,
 	BOTTOM_RIGHT,
 }
@@ -165,6 +166,10 @@ func toggle_ui_view_exclusively(group: String, view_name: String, data: Dictiona
 
 func get_anchor_point_to_world_object(viewport: Viewport, object: Object) -> Vector2:
 	var vehicle_world_pos = object.global_position
+	return get_anchor_point_to_world_position(viewport, vehicle_world_pos)
+
+
+func get_anchor_point_to_world_position(viewport: Viewport, world_position: Vector2) -> Vector2:
 	var camera = viewport.get_camera_2d()
 
 	if not camera:
@@ -174,20 +179,27 @@ func get_anchor_point_to_world_object(viewport: Viewport, object: Object) -> Vec
 	var camera_pos = camera.global_position
 	var camera_zoom = camera.zoom
 
-	var relative_pos = (vehicle_world_pos - camera_pos) * camera_zoom
+	var relative_pos = (world_position - camera_pos) * camera_zoom
 	var screen_pos = viewport_size * 0.5 + relative_pos
 	return screen_pos
 
 
 func reanchor_to_world_object(control: Control, target_object: Node2D, anchor: AnchorPoint, clamp_to_screen: bool) -> void:
+	var world_position = target_object.global_position
+	reanchor_to_world_position(control, world_position, anchor, clamp_to_screen)
+
+
+func reanchor_to_world_position(control: Control, world_position: Vector2, anchor: AnchorPoint, clamp_to_screen: bool) -> void:
 	var viewport = control.get_viewport()
-	var position = get_anchor_point_to_world_object(viewport, target_object)
+	var position = get_anchor_point_to_world_position(viewport, world_position)
 
 	match anchor:
 		AnchorPoint.TOP_LEFT:
 			pass
 		AnchorPoint.TOP_RIGHT:
 			position.x -= control.size.x
+		AnchorPoint.CENTER:
+			position -= control.size * 0.5
 		AnchorPoint.BOTTOM_LEFT:
 			position.y -= control.size.y
 		AnchorPoint.BOTTOM_RIGHT:

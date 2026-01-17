@@ -42,7 +42,7 @@ func find_perpendicular_segment_at_node(segments: Array, node_id: int) -> NetSeg
 
 
 func get_segment_edge_points_at_node(segment: NetSegment, node_id: int, sample_offset = 0.0) -> Dictionary:
-	var road_half_width = (segment.total_lanes * NetworkConstants.LANE_WIDTH) / 2.0
+	var road_half_width = (segment.get_lane_count() * NetworkConstants.LANE_WIDTH) / 2.0
 
 	var main_curve = segment.main_layer_curve
 	if not main_curve:
@@ -206,7 +206,7 @@ func get_edge_lanes(segment: NetSegment) -> Dictionary:
 
 	var result = { }
 
-	for lane in segment.lanes:
+	for lane in segment.lanes.values():
 		var relation_idx = lane.relation_id
 		if not result.has(relation_idx):
 			result[relation_idx] = lane

@@ -106,6 +106,13 @@ toggle_game_menu={
 ]
 }
 
+[layer_names]
+
+2d_physics/layer_1="UI"
+2d_physics/layer_5="Net Nodes"
+2d_physics/layer_6="Net Segments"
+2d_physics/layer_7="Net Lanes"
+
 [rendering]
 
 textures/vram_compression/import_etc2_astc=true

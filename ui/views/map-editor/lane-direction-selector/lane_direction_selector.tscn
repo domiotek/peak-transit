@@ -1,0 +1,106 @@
+[gd_scene load_steps=9 format=3 uid="uid://bp52rfp3lu4gt"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_5vupu"]
+[ext_resource type="Script" uid="uid://bcbjv4tnuf4go" path="res://ui/views/map-editor/lane-direction-selector/lane_direction_selector.gd" id="2_6nhod"]
+[ext_resource type="Texture2D" uid="uid://y52s3icxtjl" path="res://assets/ui_icons/map-editor/left_direction.png" id="2_g0kmp"]
+[ext_resource type="Texture2D" uid="uid://di5o8wo5nrqtr" path="res://assets/ui_icons/chevron_down.png" id="3_2t45i"]
+[ext_resource type="Texture2D" uid="uid://456apkne3pvx" path="res://assets/ui_icons/map-editor/forward_direction.png" id="3_6nhod"]
+[ext_resource type="Texture2D" uid="uid://cvej3a30xghtk" path="res://assets/ui_icons/map-editor/right_direction.png" id="4_plqrs"]
+[ext_resource type="Texture2D" uid="uid://8hn80lnj30o4" path="res://assets/ui_icons/spawn_car.png" id="7_fldx2"]
+[ext_resource type="Texture2D" uid="uid://dbxf6fm10buh5" path="res://assets/ui_icons/public-transport/bus.png" id="8_pfrc8"]
+
+[node name="LaneDirectionSelector" type="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -997.0
+offset_bottom = -533.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_5vupu")
+script = ExtResource("2_6nhod")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="MainWrapper" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="MainButtons" type="BoxContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+
+[node name="ExpandButton" type="Button" parent="MarginContainer/MainWrapper/MainButtons"]
+layout_mode = 2
+icon = ExtResource("3_2t45i")
+flat = true
+
+[node name="LeftButton" type="Button" parent="MarginContainer/MainWrapper/MainButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("2_g0kmp")
+
+[node name="ForwardButton" type="Button" parent="MarginContainer/MainWrapper/MainButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("3_6nhod")
+
+[node name="RightButton" type="Button" parent="MarginContainer/MainWrapper/MainButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("4_plqrs")
+
+[node name="CarButtons" type="BoxContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MarginContainer/MainWrapper/CarButtons"]
+layout_mode = 2
+texture = ExtResource("7_fldx2")
+expand_mode = 2
+
+[node name="LeftButton" type="Button" parent="MarginContainer/MainWrapper/CarButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("2_g0kmp")
+
+[node name="ForwardButton" type="Button" parent="MarginContainer/MainWrapper/CarButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("3_6nhod")
+
+[node name="RightButton" type="Button" parent="MarginContainer/MainWrapper/CarButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("4_plqrs")
+
+[node name="BusButtons" type="BoxContainer" parent="MarginContainer/MainWrapper"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MarginContainer/MainWrapper/BusButtons"]
+layout_mode = 2
+texture = ExtResource("8_pfrc8")
+expand_mode = 2
+
+[node name="LeftButton" type="Button" parent="MarginContainer/MainWrapper/BusButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("2_g0kmp")
+
+[node name="ForwardButton" type="Button" parent="MarginContainer/MainWrapper/BusButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("3_6nhod")
+
+[node name="RightButton" type="Button" parent="MarginContainer/MainWrapper/BusButtons"]
+layout_mode = 2
+focus_mode = 0
+icon = ExtResource("4_plqrs")

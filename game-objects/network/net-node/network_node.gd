@@ -4,7 +4,6 @@ class_name RoadNode
 
 @onready var layer_helper = GDInjector.inject("NodeLayerHelper") as NodeLayerHelper
 @onready var circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
-@onready var lane_calculator = GDInjector.inject("LaneCalculator") as LaneCalculator
 @onready var connections_helper = GDInjector.inject("ConnectionsHelper") as ConnectionsHelper
 @onready var config_manager = GDInjector.inject("ConfigManager") as ConfigManager
 @onready var line_helper = GDInjector.inject("LineHelper") as LineHelper
@@ -73,8 +72,8 @@ func update_visuals() -> void:
 	var max_lanes = 0
 
 	for segment in connected_segments:
-		if segment.total_lanes > max_lanes:
-			max_lanes = segment.total_lanes
+		if segment.get_lane_count() > max_lanes:
+			max_lanes = segment.get_lane_count()
 
 	if connected_segments.size() > 0:
 		var node_width = max_lanes * NetworkConstants.LANE_WIDTH
@@ -88,7 +87,7 @@ func update_visuals() -> void:
 				coating.color = Color(0.2, 0.2, 0.2)
 				coating_layer.add_child(coating)
 
-		elif connected_segments.size() == 2 and connected_segments[0].total_lanes != connected_segments[1].total_lanes:
+		elif connected_segments.size() == 2 and connected_segments[0].get_lane_count() != connected_segments[1].get_lane_count():
 			layer_helper.create_trapezoid_underlayer(self, connected_segments)
 		elif connected_segments.size() == 2:
 			layer_helper.create_rectangle_underlayer(self, connected_segments, node_width, NetworkConstants.LANE_WIDTH)
@@ -96,7 +95,7 @@ func update_visuals() -> void:
 			layer_helper.create_circle_underlayer(
 				self,
 				connected_segments[0],
-				connected_segments[0].total_lanes * NetworkConstants.LANE_WIDTH / 2.0,
+				connected_segments[0].get_lane_count() * NetworkConstants.LANE_WIDTH / 2.0,
 			)
 
 		if connected_segments.size() < 3:
@@ -186,6 +185,10 @@ func has_connected_segments() -> bool:
 	return connected_segments.size() > 0
 
 
+func get_connected_segment_count() -> int:
+	return connected_segments.size()
+
+
 func get_intersection_polygon() -> PackedVector2Array:
 	var global_points: PackedVector2Array = []
 
@@ -246,6 +249,31 @@ func get_destination_endpoints(from_endpoint_id: int) -> Array:
 	return connections.get(from_endpoint_id, [])
 
 
+func get_segment_directions(segment_id: int) -> Array:
+	var segments_map = segment_directions.get(segment_id, { })
+
+	var result: Array = []
+
+	for direction in segments_map.keys():
+		var has_connection = segments_map[direction] != null
+
+		match direction:
+			"left":
+				if has_connection:
+					result.append(Enums.BaseDirection.LEFT)
+			"forward":
+				if has_connection:
+					result.append(Enums.BaseDirection.FORWARD)
+			"right":
+				if has_connection:
+					result.append(Enums.BaseDirection.RIGHT)
+			"backward":
+				if has_connection:
+					result.append(Enums.BaseDirection.BACKWARD)
+
+	return result
+
+
 func get_source_endpoints(to_endpoint_id: int) -> Array:
 	var sources: Array = []
 	for source_id in connections.keys():
@@ -257,6 +285,11 @@ func get_source_endpoints(to_endpoint_id: int) -> Array:
 func reposition_all_endpoints() -> void:
 	for segment in connected_segments:
 		segment.reposition_endpoints(self)
+
+
+func remove_endpoint_bind(endpoint_id: int) -> void:
+	incoming_endpoints.erase(endpoint_id)
+	outgoing_endpoints.erase(endpoint_id)
 
 
 func _setup_connections() -> void:
