@@ -3,7 +3,7 @@ extends BoxContainer
 class_name RouteStepItem
 
 const StopIcon: Resource = preload("res://assets/ui_icons/route_step.png")
-const TerminalIcon: Resource = preload("res://assets/ui_icons/terminal.png")
+const TerminalIcon: Resource = preload("res://assets/ui_icons/building_icons/terminal.png")
 const SpacerIcon: Resource = preload("res://assets/ui_icons/route_arrow.png")
 const WaypointIcon: Resource = preload("res://assets/ui_icons/route_middle.png")
 

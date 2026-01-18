@@ -11,15 +11,23 @@ var _relation_id: int
 var _lines: Array[int] = []
 
 var _passengers_spawner: StopPassengersSpawner
+var _collision_shape: CollisionPolygon2D
 
 @onready var road_marking = $RoadMarking
 @onready var click_area: Area2D = $ClickArea
+@onready var map_pickable_area: Area2D = $CollisionArea
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
 
 func _ready() -> void:
 	click_area.connect("input_event", Callable(self, "_on_input_event"))
+
+	if game_manager.get_game_mode() == Enums.GameMode.MAP_EDITOR:
+		_collision_shape = CollisionPolygon2D.new()
+		_collision_shape.polygon = get_collision_polygon()
+		_collision_shape.build_mode = CollisionPolygon2D.BUILD_SEGMENTS
+		map_pickable_area.add_child(_collision_shape)
 
 
 func _process(delta: float) -> void:
@@ -66,6 +74,10 @@ func can_vehicle_wait() -> bool:
 	return _data.can_wait
 
 
+func get_segment() -> NetSegment:
+	return _segment
+
+
 func get_lane() -> NetLane:
 	return _segment.get_lane(_segment.relations[_relation_id].get_rightmost_lane_id())
 
@@ -81,6 +93,21 @@ func register_line(line_id: int) -> void:
 
 func get_lines() -> Array[int]:
 	return _lines
+
+
+static func get_collision_polygon() -> PackedVector2Array:
+	return PackedVector2Array(
+		[
+			Vector2(-9, -27),
+			Vector2(9, -27),
+			Vector2(9, 4),
+			Vector2(68, 4),
+			Vector2(68, 29),
+			Vector2(-68, 29),
+			Vector2(-68, 4),
+			Vector2(-9, 4),
+		],
+	)
 
 
 func _on_input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:

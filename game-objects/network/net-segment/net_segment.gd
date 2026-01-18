@@ -143,12 +143,7 @@ func late_update_visuals() -> void:
 		for i in range(relation.relation_info.buildings.size()):
 			var building_info = relation.relation_info.buildings[i]
 			var building = buildings_manager.create_spawner_building(building_info)
-			building.setup(relation_idx, self, building_info)
-
-			segment_helper.position_along_the_edge(self, building, building_info.offset_position, relation_idx, BuildingConstants.BUILDING_ROAD_OFFSET)
-
-			relation.register_building(building.id, building_info.offset_position, BuildingConstants.BUILDING_ROAD_OFFSET)
-			roadside_layer.add_child(building)
+			place_spawner_building(building, relation_idx)
 
 
 func get_curve() -> Curve2D:
@@ -211,6 +206,23 @@ func get_relation_with_starting_node(node_id: int) -> NetRelation:
 	return null
 
 
+func place_spawner_building(building: SpawnerBuilding, relation_idx: int) -> void:
+	var relation = relations[relation_idx]
+
+	building.setup(relation_idx, self, building.building_info)
+
+	segment_helper.position_along_the_edge(self, building, building.building_info.offset_position, relation_idx)
+
+	relation.register_building(building.id, building.building_info.offset_position)
+	roadside_layer.add_child(building)
+
+
+func remove_spawner_building(building: SpawnerBuilding) -> void:
+	var relation = relations[building.target_relation_idx]
+	relation.unregister_building(building.id)
+	building.queue_free()
+
+
 func place_stop(stop: Stop) -> void:
 	var new_stop_offset = stop.get_position_offset()
 	var relation = get_relation_with_starting_node(stop.get_incoming_node_id()) as NetRelation
@@ -226,6 +238,12 @@ func place_stop(stop: Stop) -> void:
 	stop.update_visuals(should_show_road_marking)
 
 
+func remove_stop(stop: Stop) -> void:
+	var relation = get_relation_with_starting_node(stop.get_incoming_node_id()) as NetRelation
+	relation.unregister_stop(stop.id)
+	stop.queue_free()
+
+
 func place_terminal(terminal: Terminal) -> void:
 	var new_terminal_offset = terminal.get_position_offset()
 	var relation = get_relation_with_starting_node(terminal.get_incoming_node_id()) as NetRelation
@@ -239,6 +257,12 @@ func place_terminal(terminal: Terminal) -> void:
 	terminal.update_visuals()
 
 
+func remove_terminal(terminal: Terminal) -> void:
+	var relation = get_relation_with_starting_node(terminal.get_incoming_node_id()) as NetRelation
+	relation.unregister_building(terminal.id)
+	terminal.queue_free()
+
+
 func place_depot(depot: Depot) -> void:
 	var new_depot_offset = depot.get_position_offset()
 	var relation = get_relation_with_starting_node(depot.get_incoming_node_id()) as NetRelation
@@ -250,6 +274,12 @@ func place_depot(depot: Depot) -> void:
 	roadside_layer.add_child(depot)
 
 	depot.update_visuals()
+
+
+func remove_depot(depot: Depot) -> void:
+	var relation = get_relation_with_starting_node(depot.get_incoming_node_id()) as NetRelation
+	relation.unregister_building(depot.id)
+	depot.queue_free()
 
 
 func get_stops() -> Dictionary:

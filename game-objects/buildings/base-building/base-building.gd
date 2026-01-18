@@ -169,6 +169,10 @@ func supports_routed_leaving() -> bool:
 	return false
 
 
+static func get_collision_polygon() -> PackedVector2Array:
+	return PackedVector2Array()
+
+
 func _check_stopper() -> void:
 	if vehicle_leaving == null or not vehicle_leaving.navigator.step_ready:
 		out_stopper.set_active(false)

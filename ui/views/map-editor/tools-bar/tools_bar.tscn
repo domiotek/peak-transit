@@ -46,11 +46,10 @@ focus_mode = 0
 icon = ExtResource("4_mpbrw")
 flat = true
 
-[node name="BuildingsToolButton" type="Button" parent="MarginContainer/BoxContainer"]
+[node name="BuildingToolButton" type="Button" parent="MarginContainer/BoxContainer"]
 layout_mode = 2
 tooltip_text = "Place Building"
 focus_mode = 0
-disabled = true
 icon = ExtResource("5_h6810")
 flat = true
 

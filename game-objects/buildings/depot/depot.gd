@@ -20,6 +20,7 @@ var _known_bus_ids: Dictionary = {
 }
 var _next_bus_number: int = 1
 
+@onready var terrain: Polygon2D = $Terrain
 @onready var click_area: Area2D = $ClickerArea
 @onready var building: Node2D = $Building
 @onready var in_stop_tracks_wrapper: Node2D = $StopInTracks
@@ -33,6 +34,7 @@ func _ready() -> void:
 	super._ready()
 	click_area.connect("input_event", Callable(self, "_on_input_event"))
 	_process_tracks()
+	terrain.polygon = get_collision_polygon()
 
 	if config_manager.AutoFillDepotStopsOnLoad and game_manager.get_game_mode() == Enums.GameMode.CHALLENGE:
 		_fill_bus_stops()
@@ -126,6 +128,18 @@ func insta_return_bus(vehicle_id: int) -> void:
 		return
 
 	_on_vehicle_entered(vehicle_id, true)
+
+
+static func get_collision_polygon() -> PackedVector2Array:
+	return PackedVector2Array(
+		[
+			Vector2(-172.0001, -188.0000),
+			Vector2(169.0001, -189.0002),
+			Vector2(169.0001, 0.0000),
+			Vector2(4.4035, 0.2318),
+			Vector2(-171.0000, 0.0000),
+		],
+	)
 
 
 func _do_spawn(track_id: int, is_articulated: bool) -> void:

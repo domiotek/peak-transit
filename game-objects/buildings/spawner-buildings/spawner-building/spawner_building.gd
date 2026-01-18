@@ -15,6 +15,7 @@ var _roll_cooldown: float = 0.0
 
 func _ready() -> void:
 	super._ready()
+	building_shape.polygon = get_collision_polygon()
 	building_shape.color = _get_shape_color()
 	click_area.connect("input_event", Callable(self, "_on_input_event"))
 
@@ -73,6 +74,17 @@ func get_popup_data() -> Dictionary:
 	}
 
 
+static func get_collision_polygon() -> PackedVector2Array:
+	return PackedVector2Array(
+		[
+			Vector2(-25, -50),
+			Vector2(26, -50),
+			Vector2(26, -16),
+			Vector2(-25, -16),
+		],
+	)
+
+
 func _process(_delta: float) -> void:
 	if game_manager.try_hit_debug_pick(self):
 		print("Debug pick triggered for spawner building ID %d" % id)
@@ -122,8 +134,8 @@ func _get_shape_color() -> Color:
 
 func _get_connection_endpoints() -> Dictionary:
 	return {
-		"in": to_global(Vector2(10, -5)),
-		"out": to_global(Vector2(-10, -5)),
+		"in": to_global(Vector2(10, -25)),
+		"out": to_global(Vector2(-10, -25)),
 	}
 
 

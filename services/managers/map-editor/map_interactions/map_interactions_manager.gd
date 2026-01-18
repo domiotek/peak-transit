@@ -11,6 +11,7 @@ signal tool_changed(new_tool: MapTools.MapEditorTool)
 func _init() -> void:
 	_tool_instances[MapTools.MapEditorTool.PLACE_ROAD] = PlaceRoadMapTool.new(self)
 	_tool_instances[MapTools.MapEditorTool.EDIT_LANE] = EditLaneMapTool.new(self)
+	_tool_instances[MapTools.MapEditorTool.PLACE_ROADSIDE] = PlaceRoadSideObjectMapTool.new(self)
 	_tool_instances[MapTools.MapEditorTool.BULDOZE] = BuldozeMapTool.new(self)
 
 
@@ -109,7 +110,7 @@ func find_nodes_at_position(
 	)
 
 
-func find_node_under_shape(shape: Shape2D, transform: Transform2D) -> Node2D:
+func find_nodes_under_shape(shape: Shape2D, transform: Transform2D, mask = MapEditorConstants.MAP_ALL_DETECTABLE_LAYERS, max_count: int = 10) -> Array:
 	var space_state := _map.get_world_2d().direct_space_state
 
 	var params := PhysicsShapeQueryParameters2D.new()
@@ -117,14 +118,14 @@ func find_node_under_shape(shape: Shape2D, transform: Transform2D) -> Node2D:
 	params.transform = transform
 	params.collide_with_areas = true
 	params.collide_with_bodies = false
-	params.collision_mask = MapEditorConstants.MAP_NET_NODE_LAYER_ID
+	params.collision_mask = mask
 
-	var results = space_state.intersect_shape(params, 1)
+	var results = space_state.intersect_shape(params, max_count)
 
-	if results.size() > 0:
-		return results[0].collider.get_parent() as Node2D
-
-	return null
+	return results.map(
+		func(result):
+			return result.collider.get_parent() as Node2D
+	)
 
 
 func add_skeleton(node: Node2D) -> void:

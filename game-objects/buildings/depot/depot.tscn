@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://ewvo6ju3iblb"]
+[gd_scene load_steps=11 format=3 uid="uid://ewvo6ju3iblb"]
 
 [ext_resource type="PackedScene" uid="uid://baf4uogxpw50c" path="res://game-objects/buildings/base-building/base-building.tscn" id="1_q76uy"]
 [ext_resource type="Script" uid="uid://cqcnqp7yju10o" path="res://game-objects/buildings/depot/depot.gd" id="2_5mj2m"]
@@ -44,14 +44,16 @@ _data = {
 }
 point_count = 9
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5mj2m"]
+size = Vector2(341, 188)
+
 [node name="BaseBuilding" instance=ExtResource("1_q76uy")]
 script = ExtResource("2_5mj2m")
 
 [node name="Terrain" type="Polygon2D" parent="." index="1"]
 position = Vector2(-8.34675e-21, 0)
-scale = Vector2(0.0537146, 0.0537146)
 color = Color(0.232243, 0.549304, 0.337196, 1)
-polygon = PackedVector2Array(-3202.11, -3499.98, 3146.26, -3518.6, 3146.26, 0, 81.9799, 4.31473, -3183.49, 0)
+polygon = PackedVector2Array(-172, -188, 169, -189, 169, 0, 4.4035, 0.2318, -171, 0)
 
 [node name="Road" type="Polygon2D" parent="." index="2"]
 position = Vector2(-1, 0)
@@ -92,3 +94,13 @@ curve = SubResource("Curve2D_7lk5o")
 
 [node name="Track2" type="Path2D" parent="StopOutTracks" index="2"]
 curve = SubResource("Curve2D_jwde0")
+
+[node name="PickableArea" type="Area2D" parent="." index="7"]
+process_mode = 3
+collision_layer = 128
+collision_mask = 0
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PickableArea" index="0"]
+position = Vector2(-1.5, -95)
+shape = SubResource("RectangleShape2D_5mj2m")

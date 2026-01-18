@@ -18,12 +18,20 @@ func register_building(building_id: int, offset: float, horizontal_offset: float
 	}
 
 
+func unregister_building(building_id: int) -> void:
+	_buildings.erase(building_id)
+
+
 func register_stop(stop_id: int, offset: float) -> void:
 	_stops[stop_id] = {
 		"id": stop_id,
 		"offset": offset,
 		"horizontal_offset": 0.0,
 	}
+
+
+func unregister_stop(stop_id: int) -> void:
+	_stops.erase(stop_id)
 
 
 func get_stops() -> Dictionary:

@@ -108,10 +108,10 @@ toggle_game_menu={
 
 [layer_names]
 
-2d_physics/layer_1="UI"
-2d_physics/layer_5="Net Nodes"
-2d_physics/layer_6="Net Segments"
-2d_physics/layer_7="Net Lanes"
+2d_physics/layer_5="Nodes"
+2d_physics/layer_6="Segments"
+2d_physics/layer_7="Lanes"
+2d_physics/layer_8="Buildings"
 
 [rendering]
 

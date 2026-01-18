@@ -17,6 +17,9 @@ var _tracks = { }
 var _vehicles_on_tracks: Dictionary = { }
 var _tracks_in_use: Dictionary = { }
 
+var _collision_shape: CollisionPolygon2D
+
+@onready var terrain: Polygon2D = $Terrain
 @onready var in_track: Path2D = $InTrack
 @onready var in_line_track: Path2D = $InLineTrack
 @onready var in_wait_track: Path2D = $InWaitTrack
@@ -32,11 +35,14 @@ var _tracks_in_use: Dictionary = { }
 @onready var peron_out_tracks: Node2D = $PeronTracks/OutTracks
 @onready var peron_around_tracks: Node2D = $PeronTracks/AroundTracks
 
+@onready var map_pickable_area: Area2D = $PickableArea
+
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
 
 func _ready() -> void:
 	super._ready()
+	terrain.polygon = get_collision_polygon()
 	_tracks["wait"] = []
 	_tracks["peron"] = []
 
@@ -44,6 +50,11 @@ func _ready() -> void:
 	_peron_count = _process_tracks(peron_in_tracks, peron_out_tracks, _tracks["peron"], peron_around_tracks)
 	_smooth_tracks()
 	_setup_perons()
+
+	if game_manager.get_game_mode() == Enums.GameMode.MAP_EDITOR:
+		_collision_shape = CollisionPolygon2D.new()
+		_collision_shape.polygon = get_collision_polygon()
+		map_pickable_area.add_child(_collision_shape)
 
 
 func _process(delta: float) -> void:
@@ -80,6 +91,7 @@ func late_setup() -> void:
 			TransportConstants.MAX_PASSENGER_AT_TERMINAL_PERON,
 		)
 		_peron_passenger_spawners.append(peron_passengers_spawner)
+
 
 func get_terminal_name() -> String:
 	return _terminal_data.name
@@ -278,6 +290,57 @@ func notify_vehicle_left_terminal(vehicle_id: int) -> void:
 
 func supports_routed_leaving() -> bool:
 	return true
+
+
+static func get_collision_polygon() -> PackedVector2Array:
+	return PackedVector2Array(
+		[
+			Vector2(-146.000, -297.999),
+			Vector2(-129.000, -308.000),
+			Vector2(-112.000, -316.000),
+			Vector2(-86.000, -322.001),
+			Vector2(-59.000, -324.001),
+			Vector2(192.000, -297.999),
+			Vector2(207.000, -293.000),
+			Vector2(217.000, -287.000),
+			Vector2(225.000, -278.999),
+			Vector2(230.000, -270.000),
+			Vector2(234.000, -259.999),
+			Vector2(233.000, -246.000),
+			Vector2(230.000, -235.000),
+			Vector2(225.000, -219.000),
+			Vector2(218.000, -201.000),
+			Vector2(205.000, -178.000),
+			Vector2(139.000, -92.000),
+			Vector2(126.000, -83.000),
+			Vector2(115.000, -75.000),
+			Vector2(105.000, -67.000),
+			Vector2(96.000, -62.000),
+			Vector2(85.000, -56.000),
+			Vector2(57.000, -45.000),
+			Vector2(49.000, -39.000),
+			Vector2(41.000, -32.000),
+			Vector2(22.000, 1.000),
+			Vector2(-19.000, 1.000),
+			Vector2(-34.000, -15.000),
+			Vector2(-45.000, -23.000),
+			Vector2(-91.000, -27.000),
+			Vector2(-140.000, -32.000),
+			Vector2(-168.000, -42.000),
+			Vector2(-184.000, -52.000),
+			Vector2(-203.000, -67.000),
+			Vector2(-207.000, -76.000),
+			Vector2(-209.000, -88.000),
+			Vector2(-209.000, -109.000),
+			Vector2(-205.000, -141.000),
+			Vector2(-197.000, -172.000),
+			Vector2(-191.000, -194.000),
+			Vector2(-181.000, -231.000),
+			Vector2(-174.000, -249.000),
+			Vector2(-167.000, -265.001),
+			Vector2(-157.000, -280.999),
+		],
+	)
 
 
 func _find_next_track(vehicle_id: int, state_map: Dictionary, custom_track_search_callback) -> Dictionary:

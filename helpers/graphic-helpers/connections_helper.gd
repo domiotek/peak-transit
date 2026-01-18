@@ -188,7 +188,6 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 
 			var target_lane = segment.get_lane(in_endpoint.LaneId)
 			target_lane.direction = direction
-			print("Set lane direction of endpoint %d to %s" % [in_endpoint.Id, Enums.Direction.keys()[direction + 1]])
 
 			if public_transport_only_direction != Enums.BaseDirection.UNSPECIFIED and possible_directions.has(public_transport_only_direction):
 				var subtracted_direction = subtract_base_direction(direction, public_transport_only_direction)
