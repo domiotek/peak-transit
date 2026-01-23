@@ -32,6 +32,7 @@ var intersection_manager: IntersectionManager = IntersectionManager.new()
 
 @onready var debug_layer: Node2D = $DebugLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
+@onready var line_markings_layer: Node2D = $LineMarkingsLayer
 @onready var main_layer: Polygon2D = $MainLayer
 @onready var coating_layer: Node2D = $CoatingLayer
 @onready var under_layer: Polygon2D = $UnderLayer
@@ -112,10 +113,10 @@ func update_visuals() -> void:
 func late_update_visuals() -> void:
 	_setup_connections()
 
+	intersection_manager.setup_intersection(self)
+
 	if connected_segments.size() > 2:
 		_draw_stop_lines()
-
-	intersection_manager.setup_intersection(self)
 
 	_update_debug_layer()
 
@@ -187,6 +188,10 @@ func has_connected_segments() -> bool:
 
 func get_connected_segment_count() -> int:
 	return connected_segments.size()
+
+
+func get_connected_segments() -> Array:
+	return connected_segments.duplicate()
 
 
 func get_intersection_polygon() -> PackedVector2Array:
@@ -292,6 +297,61 @@ func remove_endpoint_bind(endpoint_id: int) -> void:
 	outgoing_endpoints.erase(endpoint_id)
 
 
+func change_intersection_to_traffic_light() -> void:
+	var current_type = intersection_manager.get_intersection_handler_type()
+
+	if current_type == IntersectionManager.IntersectionHandlerType.TRAFFIC_LIGHTS or current_type == IntersectionManager.IntersectionHandlerType.NULL:
+		return
+
+	intersection_manager.switch_intersection_type(Enums.IntersectionType.TRAFFIC_LIGHTS)
+	definition.intersection_type = Enums.IntersectionType.TRAFFIC_LIGHTS
+
+	_draw_stop_lines()
+
+
+func change_intersection_to_priority_signs() -> void:
+	var current_type = intersection_manager.get_intersection_handler_type()
+
+	if current_type == IntersectionManager.IntersectionHandlerType.DEFAULT or current_type == IntersectionManager.IntersectionHandlerType.NULL:
+		return
+
+	intersection_manager.switch_intersection_type(Enums.IntersectionType.DEFAULT)
+	definition.intersection_type = Enums.IntersectionType.DEFAULT
+
+	_draw_stop_lines()
+
+
+func toggle_intersection_priority_sign(segment: NetSegment) -> void:
+	var interesetion_type = intersection_manager.get_intersection_handler_type()
+
+	if interesetion_type != IntersectionManager.IntersectionHandlerType.DEFAULT:
+		return
+
+	var current_priority = segment_priorities.get(segment.id, Enums.IntersectionPriority.YIELD)
+	var next_priority = _get_next_priority(current_priority)
+
+	if next_priority == Enums.IntersectionPriority.PRIORITY:
+		var priority_count = _count_priority_segments()
+		if priority_count >= 2:
+			next_priority = Enums.IntersectionPriority.STOP
+
+	_update_segment_priority(segment, next_priority)
+	_fill_segment_priorities(false)
+	_sync_segment_priorities()
+	_draw_stop_lines()
+	intersection_manager.switch_intersection_type(Enums.IntersectionType.DEFAULT)
+
+
+func revalidate_intersection_priorities() -> void:
+	var priority_count = definition.priority_segments.size()
+
+	if priority_count == 1:
+		definition.priority_segments.clear()
+		_fill_segment_priorities(false)
+		_draw_stop_lines()
+		intersection_manager.switch_intersection_type(Enums.IntersectionType.DEFAULT)
+
+
 func _setup_connections() -> void:
 	if connected_segments.size() == 0:
 		return
@@ -305,6 +365,12 @@ func _setup_connections() -> void:
 
 
 func _draw_stop_lines() -> void:
+	for child in line_markings_layer.get_children():
+		child.queue_free()
+
+	if intersection_manager.get_intersection_handler_type() != IntersectionManager.IntersectionHandlerType.DEFAULT:
+		return
+
 	for endpoint_id in incoming_endpoints:
 		var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 		var lane = network_manager.get_segment(endpoint.SegmentId).lanes[endpoint.LaneId]
@@ -322,20 +388,13 @@ func _draw_stop_lines() -> void:
 				Enums.IntersectionPriority.PRIORITY:
 					continue
 				Enums.IntersectionPriority.STOP:
-					line_helper.draw_solid_line(perpendicular_line, markings_layer, 3.0, Color.GRAY)
+					line_helper.draw_solid_line(perpendicular_line, line_markings_layer, 3.0, Color.GRAY)
 				Enums.IntersectionPriority.YIELD:
-					line_helper.draw_dash_line(perpendicular_line, markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+					line_helper.draw_dash_line(perpendicular_line, line_markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
 
 
-func _fill_segment_priorities() -> void:
-	var get_all_yield = func() -> Dictionary:
-		var dict: Dictionary = { }
-		for segment in connected_segments:
-			dict[segment.id] = Enums.IntersectionPriority.YIELD
-		return dict
-
+func _fill_segment_priorities(print_warnings: bool = true) -> void:
 	var new_state = { }
-
 	var priority_count = 0
 
 	for segment in connected_segments:
@@ -343,28 +402,71 @@ func _fill_segment_priorities() -> void:
 		var is_in_priority = definition.priority_segments.has(dest_node_id)
 		var is_in_stop = definition.stop_segments.has(dest_node_id)
 
-		if is_in_priority:
-			if priority_count >= 2 || is_in_stop:
-				var warn_message = ("Intersection node " + str(id) + " has more than two priority segments or a segment " +
-					"marked as both priority and stop. All non-priority segments will be set to yield." )
-				push_warning(warn_message)
-				segment_priorities = get_all_yield.call()
-				return
+		if is_in_priority and is_in_stop:
+			if print_warnings:
+				push_warning("Intersection node %d: segment %d marked as both PRIORITY and STOP. Treating as STOP." % [id, segment.id])
+			definition.priority_segments.erase(dest_node_id)
+			is_in_priority = false
 
-			new_state[segment.id] = Enums.IntersectionPriority.PRIORITY
+		if is_in_priority:
 			priority_count += 1
+
+	if priority_count > 2:
+		if print_warnings:
+			push_warning("Intersection node %d has more than 2 PRIORITY segments. Resetting all to YIELD." % id)
+		for segment in connected_segments:
+			var dest_node_id = segment.get_other_node_id(id)
+			definition.priority_segments.erase(dest_node_id)
+		priority_count = 0
+
+	for segment in connected_segments:
+		var dest_node_id = segment.get_other_node_id(id)
+		var is_in_priority = definition.priority_segments.has(dest_node_id)
+		var is_in_stop = definition.stop_segments.has(dest_node_id)
+
+		if is_in_priority:
+			new_state[segment.id] = Enums.IntersectionPriority.PRIORITY
 		elif is_in_stop:
 			new_state[segment.id] = Enums.IntersectionPriority.STOP
 		else:
 			new_state[segment.id] = Enums.IntersectionPriority.YIELD
 
-	if priority_count != 2:
-		for priority in new_state.keys():
-			if new_state[priority] == Enums.IntersectionPriority.PRIORITY:
-				new_state[priority] = Enums.IntersectionPriority.YIELD
-
-	is_priority_based = priority_count == 2
+	is_priority_based = (priority_count == 2)
 	segment_priorities = new_state
+
+
+func _update_segment_priority(segment: NetSegment, new_priority: Enums.IntersectionPriority) -> void:
+	var dest_node_id = segment.get_other_node_id(id)
+
+	definition.priority_segments.erase(dest_node_id)
+	definition.stop_segments.erase(dest_node_id)
+
+	if new_priority == Enums.IntersectionPriority.PRIORITY:
+		definition.priority_segments.append(dest_node_id)
+	elif new_priority == Enums.IntersectionPriority.STOP:
+		definition.stop_segments.append(dest_node_id)
+
+
+func _sync_segment_priorities() -> void:
+	for segment in segment_priorities.keys():
+		var current_priority = segment_priorities[segment]
+		_update_segment_priority(network_manager.get_segment(segment), current_priority)
+
+
+func _get_next_priority(current_priority: Enums.IntersectionPriority) -> Enums.IntersectionPriority:
+	match current_priority:
+		Enums.IntersectionPriority.PRIORITY:
+			return Enums.IntersectionPriority.STOP
+		Enums.IntersectionPriority.STOP:
+			return Enums.IntersectionPriority.YIELD
+		Enums.IntersectionPriority.YIELD:
+			return Enums.IntersectionPriority.PRIORITY
+
+	return Enums.IntersectionPriority.YIELD
+
+
+func _count_priority_segments() -> int:
+	return definition.priority_segments.size()
 
 
 func _update_debug_layer() -> void:

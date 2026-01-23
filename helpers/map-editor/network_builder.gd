@@ -147,6 +147,31 @@ func change_lane_speed_limit(
 	lane.update_speed_limit(new_speed_limit)
 
 
+func change_intersection_to_traffic_light(
+		node: RoadNode,
+) -> void:
+	node.change_intersection_to_traffic_light()
+
+
+func change_intersection_to_priority_signs(
+		node: RoadNode,
+) -> void:
+	node.change_intersection_to_priority_signs()
+
+
+func toggle_intersection_priority_sign(
+		node: RoadNode,
+		segment: NetSegment,
+) -> void:
+	node.toggle_intersection_priority_sign(segment)
+
+
+func revalidate_intersection_priorities(
+		node: RoadNode,
+) -> void:
+	node.revalidate_intersection_priorities()
+
+
 func get_2way_relations(num_lanes: int) -> Array[NetRelationInfo]:
 	var relations: Array[NetRelationInfo] = []
 

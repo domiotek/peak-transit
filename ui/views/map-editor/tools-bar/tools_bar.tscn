@@ -57,7 +57,6 @@ flat = true
 layout_mode = 2
 tooltip_text = "Configure Intersections"
 focus_mode = 0
-disabled = true
 icon = ExtResource("6_co7s7")
 flat = true
 

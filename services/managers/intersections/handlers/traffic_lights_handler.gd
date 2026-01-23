@@ -36,6 +36,8 @@ var current_flow_ratio: float = 100.0
 
 var node: RoadNode
 
+var _rendered_visuals: Array = []
+
 
 func setup(_node: RoadNode, _stoppers: Array) -> void:
 	node = _node
@@ -50,6 +52,12 @@ func setup(_node: RoadNode, _stoppers: Array) -> void:
 	var flows = _find_flows()
 	_create_phases(flows)
 	_create_traffic_light_visuals()
+
+
+func dispose() -> void:
+	for visual in _rendered_visuals:
+		visual.queue_free()
+	_rendered_visuals.clear()
 
 
 func process_tick(_delta: float) -> void:
@@ -376,6 +384,7 @@ func _create_pole(road_curve: Curve2D, right_most_stopper: LaneStopper, left_mos
 	light_pole_instance.setup(left_most_stopper.endpoint.Position + Vector2(-10, 0).rotated(deg_to_rad(left_most_stopper.rotation_degrees)))
 
 	node.top_layer.add_child(light_pole_instance)
+	_rendered_visuals.append(light_pole_instance)
 
 
 func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: TrafficLightConfiguration, position_mode: TrafficLightPosition) -> void:
@@ -384,6 +393,7 @@ func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: Tra
 	assembly.rotation_degrees = ref_stopper.rotation_degrees + 90.0
 	assembly.z_index = 1
 	node.top_layer.add_child(assembly)
+	_rendered_visuals.append(assembly)
 
 	var pos_offset = Vector2(0, 0)
 	if position_mode == TrafficLightPosition.ROAD_SIDE:

@@ -22,6 +22,9 @@ z_index = 2
 z_index = 3
 z_as_relative = false
 
+[node name="LineMarkingsLayer" type="Node2D" parent="."]
+z_index = 3
+
 [node name="DebugLayer" type="Node2D" parent="."]
 z_index = 99
 z_as_relative = false

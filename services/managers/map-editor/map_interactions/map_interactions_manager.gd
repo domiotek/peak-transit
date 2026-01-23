@@ -12,6 +12,7 @@ func _init() -> void:
 	_tool_instances[MapTools.MapEditorTool.PLACE_ROAD] = PlaceRoadMapTool.new(self)
 	_tool_instances[MapTools.MapEditorTool.EDIT_LANE] = EditLaneMapTool.new(self)
 	_tool_instances[MapTools.MapEditorTool.PLACE_ROADSIDE] = PlaceRoadSideObjectMapTool.new(self)
+	_tool_instances[MapTools.MapEditorTool.INTERSECTIONS] = IntersectionsMapTool.new(self)
 	_tool_instances[MapTools.MapEditorTool.BULDOZE] = BuldozeMapTool.new(self)
 
 

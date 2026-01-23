@@ -7,6 +7,7 @@ const VIEW_NAME: String = "MapEditorToolsBar"
 @onready var road_tool_button: Button = $MarginContainer/BoxContainer/RoadToolButton
 @onready var lane_tool_button: Button = $MarginContainer/BoxContainer/LaneToolButton
 @onready var building_tool_button: Button = $MarginContainer/BoxContainer/BuildingToolButton
+@onready var intersections_tool_button: Button = $MarginContainer/BoxContainer/IntersectionToolButton
 @onready var buldoze_tool_button: Button = $MarginContainer/BoxContainer/BuldozeToolButton
 
 var _game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
@@ -30,6 +31,7 @@ func _ready() -> void:
 	lane_tool_button.pressed.connect(_on_lane_tool_button_pressed)
 	buldoze_tool_button.pressed.connect(_on_buldoze_tool_button_pressed)
 	building_tool_button.pressed.connect(_on_building_tool_button_pressed)
+	intersections_tool_button.pressed.connect(_on_intersections_tool_button_pressed)
 
 
 func _exit_tree() -> void:
@@ -81,6 +83,17 @@ func _on_building_tool_button_pressed() -> void:
 	_set_active_tool(MapTools.MapEditorTool.PLACE_ROADSIDE, building_tool_button)
 
 
+func _on_intersections_tool_button_pressed() -> void:
+	if _is_active_tool(MapTools.MapEditorTool.INTERSECTIONS):
+		if _ui_manager.is_ui_view_visible(IntersectionToolPanel.VIEW_NAME):
+			_map_interactions_manager.set_active_tool(MapTools.MapEditorTool.NONE)
+			return
+		_ui_manager.show_ui_view(IntersectionToolPanel.VIEW_NAME)
+		return
+
+	_set_active_tool(MapTools.MapEditorTool.INTERSECTIONS, intersections_tool_button)
+
+
 func _on_buldoze_tool_button_pressed() -> void:
 	if _is_active_tool(MapTools.MapEditorTool.BULDOZE):
 		_map_interactions_manager.set_active_tool(MapTools.MapEditorTool.NONE)
@@ -112,6 +125,9 @@ func _set_active_tool(tool: MapTools.MapEditorTool, button: Button) -> void:
 		MapTools.MapEditorTool.PLACE_ROADSIDE:
 			_ui_manager.show_ui_view(RoadSideObjectPanel.VIEW_NAME)
 			_active_panel_name = RoadSideObjectPanel.VIEW_NAME
+		MapTools.MapEditorTool.INTERSECTIONS:
+			_ui_manager.show_ui_view(IntersectionToolPanel.VIEW_NAME)
+			_active_panel_name = IntersectionToolPanel.VIEW_NAME
 
 
 func _is_active_tool(tool: MapTools.MapEditorTool) -> bool:
