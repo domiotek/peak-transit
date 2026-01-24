@@ -58,14 +58,14 @@ func handle_map_mouse_move(world_position: Vector2) -> void:
 	var offset = curve.get_closest_offset(world_position)
 	_segment_helper.position_along_the_edge(road_lane.get_parent_segment(), _ghost_object, offset, road_lane.get_segment_relation_id())
 	_ghost_object.visible = true
-	var polygon: PackedVector2Array = _get_collision_polygon()
-	_ghost_object.update_shape(polygon)
+	var polygon_data: Dictionary = _get_collision_polygon()
+	_ghost_object.update_shape(polygon_data["collision"], polygon_data.get("visual", PackedVector2Array()))
 
 	var transform := Transform2D.IDENTITY
 	transform.origin = _ghost_object.global_position
 
-	var shape_2d := ConvexPolygonShape2D.new()
-	shape_2d.set_points(polygon)
+	var shape_2d: Shape2D = ConvexPolygonShape2D.new()
+	shape_2d.set_points(polygon_data["collision"])
 
 	var collision_objects = _manager.find_nodes_under_shape(
 		shape_2d,
@@ -148,18 +148,30 @@ func _find_edge_lane(
 	return segment.get_lane(edge_lane_id)
 
 
-func _get_collision_polygon() -> PackedVector2Array:
+func _get_collision_polygon() -> Dictionary:
 	match _object_type:
 		RoadSideObjectType.RESIDENTIAL_BUILDING, RoadSideObjectType.COMMERCIAL_BUILDING, RoadSideObjectType.INDUSTRIAL_BUILDING:
-			return SpawnerBuilding.get_collision_polygon()
+			return {
+				"collision": SpawnerBuilding.get_collision_polygon(),
+			}
 		RoadSideObjectType.TERMINAL:
-			return Terminal.get_collision_polygon()
+			return {
+				"collision": Terminal.get_collision_polygon(),
+				"visual": Terminal.get_visual_polygon(),
+			}
 		RoadSideObjectType.DEPOT:
-			return Depot.get_collision_polygon()
+			return {
+				"collision": Depot.get_collision_polygon(),
+			}
 		RoadSideObjectType.STOP:
-			return Stop.get_collision_polygon()
+			return {
+				"collision": Stop.get_collision_polygon(),
+				"visual": Stop.get_visual_polygon(),
+			}
 		_:
-			return PackedVector2Array()
+			return {
+				"collision": PackedVector2Array(),
+			}
 
 
 func _create_object_instance() -> void:

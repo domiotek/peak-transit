@@ -78,6 +78,15 @@ func is_within_map_bounds(world_position: Vector2) -> bool:
 	return world_position.x >= -half_size.x and world_position.x <= half_size.x and world_position.y >= -half_size.y and world_position.y <= half_size.y
 
 
+func get_map_size() -> Vector2:
+	return map_size
+
+
+func set_map_size(new_size: Vector2) -> void:
+	map_size = new_size
+	queue_redraw()
+
+
 func _update_world_lights_state(day_progression: float) -> void:
 	var desired_state = should_world_lights_be_on(day_progression)
 	var actual_state = are_lights_on

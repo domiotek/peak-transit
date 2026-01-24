@@ -4,6 +4,15 @@ var size: Vector2
 var initial_pos: Vector2
 var initial_zoom: float
 
+
+func serialize() -> Dictionary:
+	return {
+		"size": size,
+		"initialPosition": initial_pos,
+		"initialZoom": initial_zoom,
+	}
+
+
 static func deserialize(data: Dictionary) -> MapDefinition:
 	var map_def = MapDefinition.new()
 

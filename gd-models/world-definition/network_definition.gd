@@ -3,6 +3,23 @@ class_name NetworkDefinition
 var nodes: Array[NetNodeInfo] = []
 var segments: Array[NetSegmentInfo] = []
 
+
+func serialize() -> Dictionary:
+	var _nodes: Array[Dictionary] = []
+	var _segments: Array[Dictionary] = []
+
+	for node in self.nodes:
+		_nodes.append(node.serialize())
+
+	for segment in self.segments:
+		_segments.append(segment.serialize())
+
+	return {
+		"nodes": _nodes,
+		"segments": _segments,
+	}
+
+
 static func deserialize(data: Dictionary) -> NetworkDefinition:
 	var net_def = NetworkDefinition.new()
 

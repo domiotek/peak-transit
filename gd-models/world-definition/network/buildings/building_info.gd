@@ -8,8 +8,21 @@ enum BuildingType {
 	DEPOT,
 }
 
+const LANE_STORED_BUILDING_TYPES = [
+	BuildingType.RESIDENTIAL,
+	BuildingType.COMMERCIAL,
+	BuildingType.INDUSTRIAL,
+]
+
 var type: BuildingType
 var offset_position: float
+
+
+func serialize() -> Dictionary:
+	return {
+		"type": type,
+		"offset": offset_position,
+	}
 
 
 static func deserialize(data: Dictionary) -> BuildingInfo:

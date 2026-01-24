@@ -7,6 +7,16 @@ var priority_segments: Array[int]
 var stop_segments: Array[int]
 
 
+func serialize() -> Dictionary:
+	return {
+		"id": id,
+		"pos": position,
+		"intersection": intersection_type,
+		"priSegments": priority_segments,
+		"stpSegments": stop_segments,
+	}
+
+
 static func deserialize(data: Dictionary) -> NetNodeInfo:
 	var net_node_info = NetNodeInfo.new()
 	net_node_info.id = data.get("id")

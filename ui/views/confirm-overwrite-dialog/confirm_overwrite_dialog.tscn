@@ -1,0 +1,83 @@
+[gd_scene load_steps=5 format=3 uid="uid://cg08v2krfwd0v"]
+
+[ext_resource type="StyleBox" uid="uid://dxarxyvkaag2u" path="res://ui/resources/backdrop_styles.tres" id="1_ltlp4"]
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_w2koq"]
+[ext_resource type="Script" uid="uid://dkovdek3hk38f" path="res://ui/views/confirm-overwrite-dialog/confirm_overwrite_dialog.gd" id="2_nswny"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_w2koq"]
+font_size = 10
+
+[node name="ConfirmOverwriteDialog" type="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -4.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_ltlp4")
+script = ExtResource("2_nswny")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -175.0
+offset_top = -75.0
+offset_right = 175.0
+offset_bottom = 75.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_w2koq")
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Wrapper" type="BoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+text = "File already exists"
+
+[node name="Sep" type="Control" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label2" type="Label" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+text = "File with that name already exists. If you continue, the file will be overwritten."
+label_settings = SubResource("LabelSettings_w2koq")
+autowrap_mode = 2
+
+[node name="Sep1" type="Control" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Buttons" type="BoxContainer" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+alignment = 2
+
+[node name="CancelButton" type="Button" parent="Panel/MarginContainer/Wrapper/Buttons"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "Cancel"
+
+[node name="OverwriteButton" type="Button" parent="Panel/MarginContainer/Wrapper/Buttons"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+focus_mode = 0
+text = "Overwrite"

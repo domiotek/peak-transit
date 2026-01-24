@@ -3,7 +3,6 @@ extends Panel
 var LIST_ITEM_SCENE: PackedScene = preload("res://ui/components/list_item/list_item.tscn")
 var CHEVRON_RIGHT_ICON: Texture2D = preload("res://assets/ui_icons/chevron_right.png")
 
-
 @onready var cancel_button: Button = $PanelContainer/MarginContainer/MainContainer/ButtonsContainer/CancelButton
 @onready var confirm_button: Button = $PanelContainer/MarginContainer/MainContainer/ButtonsContainer/ConfirmButton
 @onready var open_folder_button: Button = $PanelContainer/MarginContainer/MainContainer/ButtonsContainer/OpenFolderButton
@@ -23,28 +22,32 @@ func _ready() -> void:
 	confirm_button.connect("pressed", Callable(self, "_on_confirm_button_pressed"))
 	open_folder_button.connect("pressed", Callable(self, "_on_open_folder_button_pressed"))
 
+
 func init() -> void:
 	visible = true
 	_populate_world_list()
-
 
 
 func _on_cancel_button_pressed() -> void:
 	visible = false
 	_cleanup()
 
+
 func _on_confirm_button_pressed() -> void:
 	visible = false
 	emit_signal("world_selected", selected_world_id)
 	_cleanup()
 
+
 func _on_open_folder_button_pressed() -> void:
 	world_manager.OpenWorldsFolder()
 
+
 func _populate_world_list() -> void:
 	var worlds = world_manager.GetAvailableWorlds()
-	worlds = worlds.map(func (w):
-		return SlimWorldDefinition.deserialize(w)
+	worlds = worlds.map(
+		func(w):
+			return SlimWorldDefinition.deserialize(w)
 	) as Array[SlimWorldDefinition]
 
 	for world in worlds:
@@ -53,8 +56,9 @@ func _populate_world_list() -> void:
 		var final_name = base_name if world.built_in == false else "%s (Built-in)" % base_name
 
 		list_item.init_item(final_name, world.description)
-		list_item.set_data({"world": world})
+		list_item.set_data({ "world": world })
 		list_item.show_button(CHEVRON_RIGHT_ICON)
+		list_item.set_tooltip(world.file_path.get_file())
 		list_item.connect("button_pressed", Callable(self, "_on_world_item_selected"))
 		world_container.add_child(list_item)
 
@@ -62,11 +66,12 @@ func _populate_world_list() -> void:
 func _on_world_item_selected(sender: ListItem, data: Dictionary) -> void:
 	if selected_world_item:
 		selected_world_item.disable_button(false)
-	
+
 	sender.disable_button(true)
 	selected_world_id = data["world"].file_path
 	selected_world_item = sender
 	confirm_button.disabled = false
+
 
 func _cleanup() -> void:
 	selected_world_id = ""

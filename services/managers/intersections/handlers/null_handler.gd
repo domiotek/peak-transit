@@ -24,6 +24,10 @@ func setup(_node: RoadNode, new_stoppers: Array) -> void:
 		stopper.set_active(false)
 
 
+func dispose() -> void:
+	pass
+
+
 func process_tick(_delta: float) -> void:
 	for stopper in stoppers:
 		var stopper_activated = process_stopper(stopper)

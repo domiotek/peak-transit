@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://xllvlhj63lst"]
+[gd_scene load_steps=10 format=3 uid="uid://xllvlhj63lst"]
 
 [ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game-modes/base-mode/base_mode.tscn" id="1_wmy76"]
 [ext_resource type="Script" uid="uid://ck2irsw61l388" path="res://game-objects/game-modes/map-editor-mode/map_editor_mode.gd" id="2_kssn7"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dsx16oagnkx2y" path="res://ui/views/map-editor/lane-tool-panel/lane_tool_panel.tscn" id="5_lg3d2"]
 [ext_resource type="PackedScene" uid="uid://c4j21mttvd2kw" path="res://ui/views/map-editor/roadside-object-panel/roadside_object_panel.tscn" id="7_sodbg"]
 [ext_resource type="PackedScene" uid="uid://ddm1k7v6m2wfs" path="res://ui/views/map-editor/intersection-tool-panel/intersection_tool_panel.tscn" id="8_5p2bh"]
+[ext_resource type="PackedScene" uid="uid://c736fpqckxwt3" path="res://ui/views/map-editor/object-configuration-panel/object_configuration_panel.tscn" id="9_7mm8k"]
 
 [node name="MapEditor" instance=ExtResource("1_wmy76")]
 script = ExtResource("2_kssn7")
@@ -78,3 +79,12 @@ offset_top = -161.0
 offset_right = 175.0
 offset_bottom = -55.0
 grow_vertical = 0
+
+[node name="ObjectConfigurationPanel" parent="UI" index="7" instance=ExtResource("9_7mm8k")]
+anchors_preset = 11
+anchor_left = 1.0
+offset_left = -24.0
+offset_top = 85.0
+offset_right = 326.0
+offset_bottom = -103.0
+grow_horizontal = 0

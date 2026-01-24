@@ -40,7 +40,7 @@ func register_demand_preset(preset_def: DemandPresetDefinition) -> bool:
 	var validation_error = TransportHelper.validate_demand_preset_definition(preset_def)
 
 	if validation_error.length() > 0:
-		push_error("Invalid demand preset definition: %s - %s" % [preset_def.name, validation_error])
+		push_error("Invalid demand preset definition: %s" % [validation_error])
 		return false
 
 	_demand_presets.append(preset_def)
@@ -57,6 +57,10 @@ func get_demand_preset(preset_id: int) -> DemandPresetDefinition:
 		return null
 
 	return _demand_presets[preset_id] as DemandPresetDefinition
+
+
+func get_demand_presets() -> Array:
+	return _demand_presets
 
 
 func register_stop(stop_def: StopDefinition) -> bool:
@@ -248,6 +252,10 @@ func unregister_depot(depot_id: int) -> void:
 		_depot_ids.release_id(depot_id)
 	else:
 		push_error("Attempted to unregister non-existent depot with ID %d." % depot_id)
+
+
+func get_depots() -> Array:
+	return _depots.values()
 
 
 func register_line(line_def: LineDefinition) -> bool:

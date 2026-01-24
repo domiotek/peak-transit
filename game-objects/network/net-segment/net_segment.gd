@@ -146,6 +146,34 @@ func late_update_visuals() -> void:
 			place_spawner_building(building, relation_idx)
 
 
+func get_definition() -> NetSegmentInfo:
+	var def = NetSegmentInfo.new()
+
+	def.nodes.append(nodes[0].id)
+	def.nodes.append(nodes[1].id)
+
+	def.curve_strength = data.curve_strength
+	def.curve_direction = data.curve_direction
+	def.max_speed = data.max_speed
+
+	for relation in relations:
+		var relation_def = NetRelationInfo.new()
+
+		var buildings_defs = relation.get_buildings_info()
+
+		for building_info in buildings_defs:
+			if BuildingInfo.LANE_STORED_BUILDING_TYPES.has(building_info.type):
+				relation_def.buildings.append(building_info)
+
+		for lane_id in relation.lanes:
+			var lane = get_lane(lane_id)
+			relation_def.lanes.append(lane.data)
+
+		def.relations.append(relation_def)
+
+	return def
+
+
 func get_curve() -> Curve2D:
 	return main_layer_curve
 
@@ -213,7 +241,7 @@ func place_spawner_building(building: SpawnerBuilding, relation_idx: int) -> voi
 
 	segment_helper.position_along_the_edge(self, building, building.building_info.offset_position, relation_idx)
 
-	relation.register_building(building.id, building.building_info.offset_position)
+	relation.register_building(building.id, building.building_info.offset_position, building.type)
 	roadside_layer.add_child(building)
 
 
@@ -249,7 +277,7 @@ func place_terminal(terminal: Terminal) -> void:
 	var relation = get_relation_with_starting_node(terminal.get_incoming_node_id()) as NetRelation
 	var starts_from_end = terminal.get_incoming_node_id() == nodes[1].id
 
-	relation.register_building(terminal.id, terminal.get_position_offset())
+	relation.register_building(terminal.id, terminal.get_position_offset(), terminal.type)
 
 	segment_helper.position_along_the_edge(self, terminal, new_terminal_offset, starts_from_end)
 	roadside_layer.add_child(terminal)
@@ -268,7 +296,7 @@ func place_depot(depot: Depot) -> void:
 	var relation = get_relation_with_starting_node(depot.get_incoming_node_id()) as NetRelation
 	var starts_from_end = depot.get_incoming_node_id() == nodes[1].id
 
-	relation.register_building(depot.id, depot.get_position_offset())
+	relation.register_building(depot.id, depot.get_position_offset(), depot.type)
 
 	segment_helper.position_along_the_edge(self, depot, new_depot_offset, starts_from_end)
 	roadside_layer.add_child(depot)

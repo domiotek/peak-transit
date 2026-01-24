@@ -113,14 +113,20 @@ func is_game_initialized() -> bool:
 
 
 func show_game_menu() -> void:
-	ui_manager.show_ui_view("GameMenuView")
+	ui_manager.show_ui_view(GameMenuView.VIEW_NAME)
 	game_menu_visible = true
 	set_game_speed(Enums.GameSpeed.PAUSE)
 
 
 func hide_game_menu() -> void:
-	ui_manager.hide_ui_view("GameMenuView")
+	ui_manager.hide_ui_view(GameMenuView.VIEW_NAME)
 	game_menu_visible = false
+
+
+func toggle_game_menu_interaction(state: bool) -> void:
+	var game_menu_view = ui_manager.get_ui_view(GameMenuView.VIEW_NAME) as GameMenuView
+	if game_menu_view:
+		game_menu_view.set_interaction_enabled(state)
 
 
 func toggle_game_menu() -> void:

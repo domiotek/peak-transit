@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace PT.Models.WorldDefinition.Network;
@@ -37,6 +38,30 @@ public class NetSegmentInfo
                 Relations.ConvertAll(relation => relation.Serialize())
             ),
             ["maxSpeed"] = MaxSpeed,
+        };
+    }
+
+    public static NetSegmentInfo Deserialize(Godot.Collections.Dictionary data)
+    {
+        return new NetSegmentInfo
+        {
+            Nodes = data.TryGetValue("nodes", out var nodes) ? [.. nodes.AsGodotArray<int>()] : [],
+            CurveStrength = data.TryGetValue("bendStrength", out var bendStrength)
+                ? (float)bendStrength
+                : 0f,
+            CurveDirection = data.TryGetValue("bendDir", out var bendDir)
+                ? (CurveDirection)(int)bendDir
+                : CurveDirection.Clockwise,
+            Relations = data.TryGetValue("relations", out var relations)
+                ?
+                [
+                    .. relations
+                        .AsGodotArray<Godot.Collections.Dictionary>()
+                        .ToArray()
+                        .Select(relationData => NetRelationInfo.Deserialize(relationData ?? [])),
+                ]
+                : [],
+            MaxSpeed = data.TryGetValue("maxSpeed", out var maxSpeed) ? (float)maxSpeed : -1f,
         };
     }
 }

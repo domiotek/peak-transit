@@ -70,6 +70,17 @@ func get_outgoing_node_id() -> int:
 	return _data.position.segment[1]
 
 
+func get_definition() -> StopDefinition:
+	var stop_def = StopDefinition.new()
+
+	stop_def.name = _data.name
+	stop_def.position = _data.position
+	stop_def.draw_stripes = _data.draw_stripes
+	stop_def.can_wait = _data.can_wait
+
+	return stop_def
+
+
 func can_vehicle_wait() -> bool:
 	return _data.can_wait
 
@@ -95,19 +106,12 @@ func get_lines() -> Array[int]:
 	return _lines
 
 
+static func get_visual_polygon() -> PackedVector2Array:
+	return BuildingConstants.STOP_VISUAL_POLYGON
+
+
 static func get_collision_polygon() -> PackedVector2Array:
-	return PackedVector2Array(
-		[
-			Vector2(-9, -27),
-			Vector2(9, -27),
-			Vector2(9, 4),
-			Vector2(68, 4),
-			Vector2(68, 29),
-			Vector2(-68, 29),
-			Vector2(-68, 4),
-			Vector2(-9, 4),
-		],
-	)
+	return BuildingConstants.STOP_COLLISION_POLYGON
 
 
 func _on_input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:

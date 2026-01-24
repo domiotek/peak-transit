@@ -49,6 +49,9 @@ func start_simulation() -> void:
 
 
 func stop_simulation() -> void:
+	if not simulation_running:
+		return
+
 	simulation_running = false
 	game_controller.get_map().process_mode = Node.PROCESS_MODE_DISABLED
 	print("Simulation stopped")

@@ -42,7 +42,7 @@ var _collision_shape: CollisionPolygon2D
 
 func _ready() -> void:
 	super._ready()
-	terrain.polygon = get_collision_polygon()
+	terrain.polygon = get_visual_polygon()
 	_tracks["wait"] = []
 	_tracks["peron"] = []
 
@@ -107,6 +107,15 @@ func get_incoming_node_id() -> int:
 
 func get_outgoing_node_id() -> int:
 	return _terminal_data.position.segment[1]
+
+
+func get_definition() -> TerminalDefinition:
+	var terminal_def = TerminalDefinition.new()
+	terminal_def.name = _terminal_data.name
+	terminal_def.position = _terminal_data.position
+	terminal_def.demand_preset = _terminal_data.demand_preset
+
+	return terminal_def
 
 
 func register_line(line_id) -> int:
@@ -292,55 +301,12 @@ func supports_routed_leaving() -> bool:
 	return true
 
 
+static func get_visual_polygon() -> PackedVector2Array:
+	return BuildingConstants.TERMINAL_VISUAL_POLYGON
+
+
 static func get_collision_polygon() -> PackedVector2Array:
-	return PackedVector2Array(
-		[
-			Vector2(-146.000, -297.999),
-			Vector2(-129.000, -308.000),
-			Vector2(-112.000, -316.000),
-			Vector2(-86.000, -322.001),
-			Vector2(-59.000, -324.001),
-			Vector2(192.000, -297.999),
-			Vector2(207.000, -293.000),
-			Vector2(217.000, -287.000),
-			Vector2(225.000, -278.999),
-			Vector2(230.000, -270.000),
-			Vector2(234.000, -259.999),
-			Vector2(233.000, -246.000),
-			Vector2(230.000, -235.000),
-			Vector2(225.000, -219.000),
-			Vector2(218.000, -201.000),
-			Vector2(205.000, -178.000),
-			Vector2(139.000, -92.000),
-			Vector2(126.000, -83.000),
-			Vector2(115.000, -75.000),
-			Vector2(105.000, -67.000),
-			Vector2(96.000, -62.000),
-			Vector2(85.000, -56.000),
-			Vector2(57.000, -45.000),
-			Vector2(49.000, -39.000),
-			Vector2(41.000, -32.000),
-			Vector2(22.000, 1.000),
-			Vector2(-19.000, 1.000),
-			Vector2(-34.000, -15.000),
-			Vector2(-45.000, -23.000),
-			Vector2(-91.000, -27.000),
-			Vector2(-140.000, -32.000),
-			Vector2(-168.000, -42.000),
-			Vector2(-184.000, -52.000),
-			Vector2(-203.000, -67.000),
-			Vector2(-207.000, -76.000),
-			Vector2(-209.000, -88.000),
-			Vector2(-209.000, -109.000),
-			Vector2(-205.000, -141.000),
-			Vector2(-197.000, -172.000),
-			Vector2(-191.000, -194.000),
-			Vector2(-181.000, -231.000),
-			Vector2(-174.000, -249.000),
-			Vector2(-167.000, -265.001),
-			Vector2(-157.000, -280.999),
-		],
-	)
+	return BuildingConstants.TERMINAL_COLLISION_POLYGON
 
 
 func _find_next_track(vehicle_id: int, state_map: Dictionary, custom_track_search_callback) -> Dictionary:

@@ -46,6 +46,10 @@ func get_camera_bounds() -> Rect2:
 	return camera_bounds
 
 
+func get_camera_zoom_bounds() -> Array[Vector2]:
+	return camera_zoom_bounds
+
+
 func get_max_game_speed() -> Enums.GameSpeed:
 	return Enums.GameSpeed.TURBO
 
@@ -81,6 +85,10 @@ func init_map(world: WorldDefinition) -> void:
 	camera.set_camera_props(camera_bounds, camera_projection_offset, camera_zoom_bounds, camera_speed)
 	camera.position = world.map.initial_pos
 	camera.zoom = Vector2.ONE * world.map.initial_zoom
+
+
+func get_game_menu_buttons() -> Array[GameMenuButton]:
+	return []
 
 
 func _draw() -> void:

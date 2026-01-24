@@ -10,10 +10,11 @@ var _stops: Dictionary = { }
 var relation_info: NetRelationInfo
 
 
-func register_building(building_id: int, offset: float, horizontal_offset: float = 0.0) -> void:
+func register_building(building_id: int, offset: float, type: BuildingInfo.BuildingType, horizontal_offset: float = 0.0) -> void:
 	_buildings[building_id] = {
 		"id": building_id,
 		"offset": offset,
+		"type": type,
 		"horizontal_offset": horizontal_offset,
 	}
 
@@ -64,3 +65,15 @@ func get_lane_count() -> int:
 
 func get_road_edge_offset() -> float:
 	return lanes.size() * NetworkConstants.LANE_WIDTH
+
+
+func get_buildings_info() -> Array[BuildingInfo]:
+	var buildings_info: Array[BuildingInfo] = []
+
+	for building_data in _buildings.values():
+		var building_info = BuildingInfo.new()
+		building_info.offset_position = building_data["offset"]
+		building_info.type = building_data["type"]
+		buildings_info.append(building_info)
+
+	return buildings_info

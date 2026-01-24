@@ -155,6 +155,16 @@ func reset_visuals() -> void:
 	intersection_manager.dispose_intersection()
 
 
+func get_definition() -> NetNodeInfo:
+	var def = NetNodeInfo.new()
+	def.id = id
+	def.position = global_position
+	def.intersection_type = definition.intersection_type
+	def.priority_segments = definition.priority_segments.duplicate()
+	def.stop_segments = definition.stop_segments.duplicate()
+	return def
+
+
 func remove_segment(segment: NetSegment) -> void:
 	if not connected_segments.has(segment):
 		return

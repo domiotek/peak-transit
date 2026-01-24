@@ -30,3 +30,11 @@ func serialize() -> Dictionary:
 	data["frames"] = frames_data
 
 	return data
+
+
+static func get_default_definition() -> DemandPresetDefinition:
+	var default_def = DemandPresetDefinition.new()
+	default_def.boredom_tolerance_multiplier = 1.0
+	default_def.spawn_chance_multiplier = 1.0
+	default_def.frames.append(PresetFrameDefinition.get_default_definition())
+	return default_def

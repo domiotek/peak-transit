@@ -7,3 +7,5 @@ script = ExtResource("1_tvwxu")
 
 [node name="Shape" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(0, 0, -21, -18, 23, -18)
+
+[node name="SecondLayerShape" type="Polygon2D" parent="."]

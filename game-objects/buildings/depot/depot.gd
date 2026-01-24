@@ -47,6 +47,10 @@ func setup_depot(new_id: int, depot_data: DepotDefinition) -> void:
 	_current_articulated_bus_count = depot_data.articulated_bus_capacity
 
 
+func get_definition() -> DepotDefinition:
+	return _depot_data
+
+
 func update_visuals() -> void:
 	# Depots might have specific visuals to update in the future
 	pass
@@ -131,15 +135,7 @@ func insta_return_bus(vehicle_id: int) -> void:
 
 
 static func get_collision_polygon() -> PackedVector2Array:
-	return PackedVector2Array(
-		[
-			Vector2(-172.0001, -188.0000),
-			Vector2(169.0001, -189.0002),
-			Vector2(169.0001, 0.0000),
-			Vector2(4.4035, 0.2318),
-			Vector2(-171.0000, 0.0000),
-		],
-	)
+	return BuildingConstants.DEPOT_COLLISION_POLYGON
 
 
 func _do_spawn(track_id: int, is_articulated: bool) -> void:

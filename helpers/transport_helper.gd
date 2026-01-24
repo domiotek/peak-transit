@@ -8,6 +8,10 @@ static func load_transport_definition(
 	var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 	var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
+	if transport_def.demand_presets.size() == 0:
+		var default_preset = DemandPresetDefinition.get_default_definition()
+		transport_def.demand_presets.append(default_preset)
+
 	for i in range(transport_def.demand_presets.size()):
 		game_manager.push_loading_progress("Loading demand presets...", i / float(transport_def.demand_presets.size()))
 		await game_manager.wait_frame()

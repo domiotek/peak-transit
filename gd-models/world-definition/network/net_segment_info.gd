@@ -5,11 +5,26 @@ enum CurveDirection {
 	COUNTER_CLOCKWISE = -1,
 }
 
-var nodes: Array[int]
+var nodes: Array[int] = []
 var curve_strength: float
 var curve_direction: CurveDirection = CurveDirection.CLOCKWISE
 var relations: Array[NetRelationInfo] = []
 var max_speed: float
+
+
+func serialize() -> Dictionary:
+	var _relations: Array[Dictionary] = []
+
+	for relation in relations:
+		_relations.append(relation.serialize())
+
+	return {
+		"nodes": nodes,
+		"bendStrength": curve_strength,
+		"bendDir": curve_direction,
+		"relations": _relations,
+		"maxSpeed": max_speed,
+	}
 
 
 static func deserialize(data: Dictionary) -> NetSegmentInfo:

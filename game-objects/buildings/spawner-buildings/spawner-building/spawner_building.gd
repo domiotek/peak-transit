@@ -75,14 +75,7 @@ func get_popup_data() -> Dictionary:
 
 
 static func get_collision_polygon() -> PackedVector2Array:
-	return PackedVector2Array(
-		[
-			Vector2(-25, -50),
-			Vector2(26, -50),
-			Vector2(26, -16),
-			Vector2(-25, -16),
-		],
-	)
+	return BuildingConstants.SPAWNER_BUILDING_COLLISION_POLYGON
 
 
 func _process(_delta: float) -> void:
