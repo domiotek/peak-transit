@@ -455,7 +455,7 @@
 							{
 								"direction": 3,
 								"allowedVehicles": {
-									"0": [
+									"2": [
 										1
 									]
 								}

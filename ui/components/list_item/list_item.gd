@@ -42,6 +42,10 @@ func disable_button(disabled: bool) -> void:
 	button.disabled = disabled
 
 
+func set_tooltip(text: String) -> void:
+	tooltip_text = text
+
+
 func set_data(data_dict: Dictionary) -> void:
 	data = data_dict
 

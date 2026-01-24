@@ -17,6 +17,9 @@ var _tracks = { }
 var _vehicles_on_tracks: Dictionary = { }
 var _tracks_in_use: Dictionary = { }
 
+var _collision_shape: CollisionPolygon2D
+
+@onready var terrain: Polygon2D = $Terrain
 @onready var in_track: Path2D = $InTrack
 @onready var in_line_track: Path2D = $InLineTrack
 @onready var in_wait_track: Path2D = $InWaitTrack
@@ -32,11 +35,14 @@ var _tracks_in_use: Dictionary = { }
 @onready var peron_out_tracks: Node2D = $PeronTracks/OutTracks
 @onready var peron_around_tracks: Node2D = $PeronTracks/AroundTracks
 
+@onready var map_pickable_area: Area2D = $PickableArea
+
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
 
 func _ready() -> void:
 	super._ready()
+	terrain.polygon = get_visual_polygon()
 	_tracks["wait"] = []
 	_tracks["peron"] = []
 
@@ -44,6 +50,11 @@ func _ready() -> void:
 	_peron_count = _process_tracks(peron_in_tracks, peron_out_tracks, _tracks["peron"], peron_around_tracks)
 	_smooth_tracks()
 	_setup_perons()
+
+	if game_manager.get_game_mode() == Enums.GameMode.MAP_EDITOR:
+		_collision_shape = CollisionPolygon2D.new()
+		_collision_shape.polygon = get_collision_polygon()
+		map_pickable_area.add_child(_collision_shape)
 
 
 func _process(delta: float) -> void:
@@ -81,6 +92,7 @@ func late_setup() -> void:
 		)
 		_peron_passenger_spawners.append(peron_passengers_spawner)
 
+
 func get_terminal_name() -> String:
 	return _terminal_data.name
 
@@ -95,6 +107,15 @@ func get_incoming_node_id() -> int:
 
 func get_outgoing_node_id() -> int:
 	return _terminal_data.position.segment[1]
+
+
+func get_definition() -> TerminalDefinition:
+	var terminal_def = TerminalDefinition.new()
+	terminal_def.name = _terminal_data.name
+	terminal_def.position = _terminal_data.position
+	terminal_def.demand_preset = _terminal_data.demand_preset
+
+	return terminal_def
 
 
 func register_line(line_id) -> int:
@@ -278,6 +299,14 @@ func notify_vehicle_left_terminal(vehicle_id: int) -> void:
 
 func supports_routed_leaving() -> bool:
 	return true
+
+
+static func get_visual_polygon() -> PackedVector2Array:
+	return BuildingConstants.TERMINAL_VISUAL_POLYGON
+
+
+static func get_collision_polygon() -> PackedVector2Array:
+	return BuildingConstants.TERMINAL_COLLISION_POLYGON
 
 
 func _find_next_track(vehicle_id: int, state_map: Dictionary, custom_track_search_callback) -> Dictionary:

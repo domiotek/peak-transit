@@ -10,6 +10,7 @@ const STOP_SIGN = preload("res://assets/signs/stop_sign.png")
 
 var node: RoadNode
 var stoppers: Array = []
+var _render_boxes: Array = []
 
 var connecting_curves: Dictionary = { }
 var conflicting_paths: Dictionary = { }
@@ -39,6 +40,12 @@ func setup(_node: RoadNode, new_stoppers: Array) -> void:
 	connecting_curves.clear()
 
 	_draw_priority_signs()
+
+
+func dispose() -> void:
+	for box in _render_boxes:
+		box.queue_free()
+	_render_boxes.clear()
 
 
 func process_tick(_delta: float) -> void:
@@ -210,7 +217,7 @@ func _draw_priority_signs() -> void:
 		var segment_stoppers = stoppers.filter(func(s): return s.get_lane().segment == segment)
 		var lane = segment_stoppers[0].get_lane() if segment_stoppers.size() > 0 else null
 
-		var lanes_count = segment.get_relation_of_lane(lane.id).relation_info.lanes.size()
+		var lanes_count = segment.get_relation_of_lane(lane.id).get_lane_count() if lane else 0
 		var right_most_lane_number = lanes_count - 1
 
 		var right_most_stopper: LaneStopper = segment_stoppers.filter(func(s): return s.endpoint.LaneNumber == right_most_lane_number)[0]
@@ -241,6 +248,7 @@ func _get_road_side_position_box(ref_stopper: LaneStopper) -> Node2D:
 	box.rotation_degrees = ref_stopper.rotation_degrees + 90.0
 	box.z_index = 1
 	node.top_layer.add_child(box)
+	_render_boxes.append(box)
 
 	var offset = Vector2(NetworkConstants.LANE_WIDTH, 30).rotated(deg_to_rad(box.rotation_degrees))
 	box.position += offset

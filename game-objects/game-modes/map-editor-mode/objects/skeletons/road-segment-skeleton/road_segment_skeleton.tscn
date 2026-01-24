@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://hsxjjc52k2yr"]
+
+[ext_resource type="Script" uid="uid://b0landf351d0d" path="res://game-objects/game-modes/map-editor-mode/objects/skeletons/road-segment-skeleton/road_segment_skeleton.gd" id="1_eeqgm"]
+
+[node name="RoadSegmentSkeleton" type="Node2D"]
+z_index = -1
+script = ExtResource("1_eeqgm")
+
+[node name="Body" type="Line2D" parent="."]
+width = 60.0
+default_color = Color(0.113725, 0.352941, 1, 0.713726)
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="RefInLine" type="Node2D" parent="."]
+
+[node name="RefOutLine" type="Node2D" parent="."]

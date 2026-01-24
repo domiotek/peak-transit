@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using PT.Models.Network.Buildings;
 
@@ -24,5 +25,30 @@ public class NetRelationInfo
             ),
         };
         return dict;
+    }
+
+    public static NetRelationInfo Deserialize(Godot.Collections.Dictionary data)
+    {
+        return new NetRelationInfo
+        {
+            Lanes = data.TryGetValue("lanes", out var lanes)
+                ?
+                [
+                    .. lanes
+                        .AsGodotArray<Godot.Collections.Dictionary>()
+                        .ToArray()
+                        .Select(laneData => NetLaneInfo.Deserialize(laneData ?? [])),
+                ]
+                : [],
+            Buildings = data.TryGetValue("buildings", out var buildings)
+                ?
+                [
+                    .. buildings
+                        .AsGodotArray<Godot.Collections.Dictionary>()
+                        .ToArray()
+                        .Select(buildingData => BuildingInfo.Deserialize(buildingData ?? [])),
+                ]
+                : [],
+        };
     }
 }

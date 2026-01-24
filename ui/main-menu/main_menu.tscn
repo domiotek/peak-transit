@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://bwpts6ndy6nvr"]
+[gd_scene load_steps=5 format=3 uid="uid://bwpts6ndy6nvr"]
 
 [ext_resource type="Script" uid="uid://bbskk47ler7g8" path="res://ui/main-menu/main_menu.gd" id="1_umu7m"]
 [ext_resource type="PackedScene" uid="uid://cfl84n8mdwt5t" path="res://ui/views/select-world-view/select_world_view.tscn" id="2_e8l02"]
+[ext_resource type="PackedScene" uid="uid://c0arqrtiuslav" path="res://ui/views/launch-map-editor-view/launch_map_editor.tscn" id="2_nvasf"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_rc4um"]
 font_size = 78
@@ -56,11 +57,21 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Select World"
 
+[node name="MapEditorButton" type="Button" parent="MarginContainer/BoxContainer/BoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Map Editor"
+
 [node name="ExitButton" type="Button" parent="MarginContainer/BoxContainer/BoxContainer"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Exit"
+
+[node name="LaunchMapEditorView" parent="." instance=ExtResource("2_nvasf")]
+visible = false
+layout_mode = 1
 
 [node name="SelectWorldView" parent="." instance=ExtResource("2_e8l02")]
 visible = false

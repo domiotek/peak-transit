@@ -35,6 +35,10 @@ func set_camera_position(new_position: Vector2) -> void:
 	global_position = new_position
 
 
+func update_camera_bounds(new_bounds: Rect2) -> void:
+	bounds = new_bounds
+
+
 func _process(delta):
 	if not game_manager.is_game_initialized():
 		return

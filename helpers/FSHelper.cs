@@ -71,4 +71,14 @@ public static class FSHelper
 
         return path;
     }
+
+    public static string SanitizeFileName(string fileName)
+    {
+        var invalidChars = System.IO.Path.GetInvalidFileNameChars();
+        foreach (var invalidChar in invalidChars)
+        {
+            fileName = fileName.Replace(invalidChar.ToString(), "_");
+        }
+        return fileName;
+    }
 }

@@ -11,9 +11,16 @@ var _schedule_generator: ScheduleGenerator
 var _buildings_manager: BuildingsManager
 
 var _demand_presets: Array = []
+
+var _stop_ids: IDManager = IDManager.new()
 var _stops: Dictionary = { }
+
+var _terminal_ids: IDManager = IDManager.new()
 var _terminals: Dictionary = { }
+
+var _depot_ids: IDManager = IDManager.new()
 var _depots: Dictionary = { }
+
 var _lines: Dictionary = { }
 var _drawn_lines: Dictionary = { }
 
@@ -33,7 +40,7 @@ func register_demand_preset(preset_def: DemandPresetDefinition) -> bool:
 	var validation_error = TransportHelper.validate_demand_preset_definition(preset_def)
 
 	if validation_error.length() > 0:
-		push_error("Invalid demand preset definition: %s - %s" % [preset_def.name, validation_error])
+		push_error("Invalid demand preset definition: %s" % [validation_error])
 		return false
 
 	_demand_presets.append(preset_def)
@@ -52,6 +59,10 @@ func get_demand_preset(preset_id: int) -> DemandPresetDefinition:
 	return _demand_presets[preset_id] as DemandPresetDefinition
 
 
+func get_demand_presets() -> Array:
+	return _demand_presets
+
+
 func register_stop(stop_def: StopDefinition) -> bool:
 	var validation_error = TransportHelper.validate_stop_definition(_network_manager, self, stop_def)
 
@@ -59,7 +70,7 @@ func register_stop(stop_def: StopDefinition) -> bool:
 		push_error("Invalid stop definition: %s - %s" % [stop_def.name, validation_error])
 		return false
 
-	var idx = _get_next_idx(_stops)
+	var idx = _stop_ids.occupy_next_id()
 
 	if not stop_def.name or stop_def.name == "":
 		stop_def.name = "Stop %d" % idx
@@ -98,6 +109,16 @@ func get_stops() -> Array:
 	return _stops.values()
 
 
+func unregister_stop(stop_id: int) -> void:
+	if _stops.has(stop_id):
+		var stop = _stops[stop_id] as Stop
+		stop.get_segment().remove_stop(stop)
+		_stops.erase(stop_id)
+		_stop_ids.release_id(stop_id)
+	else:
+		push_error("Attempted to unregister non-existent stop with ID %d." % stop_id)
+
+
 func register_terminal(terminal_def: TerminalDefinition) -> bool:
 	var validation_error = TransportHelper.validate_terminal_definition(_network_manager, self, terminal_def)
 
@@ -105,7 +126,7 @@ func register_terminal(terminal_def: TerminalDefinition) -> bool:
 		push_error("Invalid terminal definition: %s - %s" % [terminal_def.name, validation_error])
 		return false
 
-	var idx = _get_next_idx(_terminals)
+	var idx = _terminal_ids.occupy_next_id()
 
 	if not terminal_def.name or terminal_def.name == "":
 		terminal_def.name = "Terminal %d" % idx
@@ -158,6 +179,17 @@ func get_terminals() -> Array:
 	return _terminals.values()
 
 
+func unregister_terminal(terminal_id: int) -> void:
+	if _terminals.has(terminal_id):
+		var terminal = _terminals[terminal_id] as Terminal
+		terminal.segment.remove_terminal(terminal)
+		_buildings_manager.destroy_building(terminal.id)
+		_terminals.erase(terminal_id)
+		_terminal_ids.release_id(terminal_id)
+	else:
+		push_error("Attempted to unregister non-existent terminal with ID %d." % terminal_id)
+
+
 func register_depot(depot_def: DepotDefinition) -> bool:
 	var validation_error = TransportHelper.validate_depot_definition(_network_manager, depot_def)
 
@@ -165,7 +197,7 @@ func register_depot(depot_def: DepotDefinition) -> bool:
 		push_error("Invalid depot definition: %s - %s" % [depot_def.name, validation_error])
 		return false
 
-	var idx = _get_next_idx(_depots)
+	var idx = _depot_ids.occupy_next_id()
 
 	if not depot_def.name or depot_def.name == "":
 		depot_def.name = "Depot %d" % idx
@@ -209,6 +241,21 @@ func get_depot(depot_id: int) -> Depot:
 
 func depot_exists(depot_id: int) -> bool:
 	return _depots.has(depot_id)
+
+
+func unregister_depot(depot_id: int) -> void:
+	if _depots.has(depot_id):
+		var depot = _depots[depot_id] as Depot
+		depot.segment.remove_depot(depot)
+		_buildings_manager.destroy_building(depot.id)
+		_depots.erase(depot_id)
+		_depot_ids.release_id(depot_id)
+	else:
+		push_error("Attempted to unregister non-existent depot with ID %d." % depot_id)
+
+
+func get_depots() -> Array:
+	return _depots.values()
 
 
 func register_line(line_def: LineDefinition) -> bool:
@@ -410,6 +457,10 @@ func clear_state() -> void:
 	_lines.clear()
 	_drawn_lines.clear()
 	brigades.clear_state()
+
+	_stop_ids.reset()
+	_terminal_ids.reset()
+	_depot_ids.reset()
 
 
 func _get_next_idx(dict: Dictionary) -> int:

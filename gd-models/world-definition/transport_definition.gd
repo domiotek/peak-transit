@@ -7,6 +7,37 @@ var lines: Array[LineDefinition] = []
 var demand_presets: Array[DemandPresetDefinition] = []
 
 
+func serialize() -> Dictionary:
+	var _stops: Array[Dictionary] = []
+	var _depots: Array[Dictionary] = []
+	var _terminals: Array[Dictionary] = []
+	var _lines: Array[Dictionary] = []
+	var _demand_presets: Array[Dictionary] = []
+
+	for stop in self.stops:
+		_stops.append(stop.serialize())
+
+	for terminal in self.terminals:
+		_terminals.append(terminal.serialize())
+
+	for depot in self.depots:
+		_depots.append(depot.serialize())
+
+	for line in self.lines:
+		_lines.append(line.serialize())
+
+	for preset in self.demand_presets:
+		_demand_presets.append(preset.serialize())
+
+	return {
+		"stops": _stops,
+		"terminals": _terminals,
+		"depots": _depots,
+		"lines": _lines,
+		"demandPresets": _demand_presets,
+	}
+
+
 static func deserialize(data: Dictionary) -> TransportDefinition:
 	var transport_def = TransportDefinition.new()
 

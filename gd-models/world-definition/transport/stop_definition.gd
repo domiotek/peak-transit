@@ -7,6 +7,16 @@ var draw_stripes: bool = false
 var can_wait: bool = true
 
 
+func serialize() -> Dictionary:
+	return {
+		"name": name,
+		"pos": position.serialize(),
+		"demandPreset": demand_preset,
+		"drawStripes": draw_stripes,
+		"canWait": can_wait,
+	}
+
+
 static func deserialize(data: Dictionary) -> StopDefinition:
 	var stop_def = StopDefinition.new()
 

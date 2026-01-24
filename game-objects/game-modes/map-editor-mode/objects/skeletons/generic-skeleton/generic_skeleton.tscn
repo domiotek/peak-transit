@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwxqd3ox7fgjw"]
+
+[ext_resource type="Script" uid="uid://2wr8suj1it2q" path="res://game-objects/game-modes/map-editor-mode/objects/skeletons/generic-skeleton/generic_skeleton.gd" id="1_tvwxu"]
+
+[node name="GenericSkeleton" type="Node2D"]
+script = ExtResource("1_tvwxu")
+
+[node name="Shape" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, -21, -18, 23, -18)
+
+[node name="SecondLayerShape" type="Polygon2D" parent="."]

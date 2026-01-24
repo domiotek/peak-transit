@@ -1,0 +1,77 @@
+[gd_scene load_steps=5 format=3 uid="uid://c0arqrtiuslav"]
+
+[ext_resource type="StyleBox" uid="uid://dxarxyvkaag2u" path="res://ui/resources/backdrop_styles.tres" id="1_xnhvm"]
+[ext_resource type="Script" uid="uid://bou128b32ban2" path="res://ui/views/launch-map-editor-view/launch_map_editor.gd" id="2_u0k04"]
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="3_wew3s"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_ce026"]
+font_size = 20
+
+[node name="LaunchMapEditorView" type="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_xnhvm")
+script = ExtResource("2_u0k04")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(400, 350)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -213.0
+offset_right = 150.0
+offset_bottom = 137.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("3_wew3s")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 20
+
+[node name="MainContainer" type="BoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 57
+vertical = true
+
+[node name="Title" type="Label" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+text = "Launch Map Editor"
+label_settings = SubResource("LabelSettings_ce026")
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="BoxContainer" parent="PanelContainer/MarginContainer/MainContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+alignment = 2
+vertical = true
+
+[node name="CreateNewButton" type="Button" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Create new world"
+
+[node name="LoadExistingButton" type="Button" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Load world"
+
+[node name="Control" type="Control" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GoBackButton" type="Button" parent="PanelContainer/MarginContainer/MainContainer/ButtonsContainer"]
+layout_mode = 2
+text = "Go back
+"

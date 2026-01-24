@@ -59,6 +59,10 @@ func _ready() -> void:
 	)
 
 
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view("VehiclePopupView")
+
+
 func update(_data: Dictionary) -> void:
 	if game_manager.get_selection_type() != GameManager.SelectionType.VEHICLE:
 		_on_close_button_pressed()
@@ -116,7 +120,9 @@ func _on_close_button_pressed() -> void:
 	ui_manager.hide_ui_view("VehiclePopupView")
 	selected_vehicle = null
 	_handle_pinned_button(false)
-	game_manager.clear_drawn_route()
+	if game_manager.get_game_mode() == Enums.GameMode.CHALLENGE:
+		var game = game_manager.get_game_controller() as ChallengeGameController
+		game.clear_drawn_route()
 
 
 func _on_delete_button_pressed() -> void:
@@ -126,13 +132,18 @@ func _on_delete_button_pressed() -> void:
 
 
 func _on_show_route_button_pressed() -> void:
+	if not game_manager.get_game_mode() == Enums.GameMode.CHALLENGE:
+		return
+
+	var game = game_manager.get_game_controller() as ChallengeGameController
+
 	if selected_vehicle:
 		draw_route = not draw_route
 		show_route_button.flat = not draw_route
-		game_manager.clear_drawn_route()
+		game.clear_drawn_route()
 
 		if draw_route:
-			game_manager.draw_vehicle_route(selected_vehicle)
+			game.draw_vehicle_route(selected_vehicle)
 
 
 func _on_debugger_button_pressed() -> void:

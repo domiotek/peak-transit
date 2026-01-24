@@ -13,6 +13,7 @@ const UIManagerModule = preload("res://services/managers/ui_manager.gd")
 const IntersectionHelperModule = preload("res://helpers/graphic-helpers/intersection_helper.gd")
 const BuildingsManagerModule = preload("res://services/managers/buildings_manager.gd")
 const TransportManagerModule = preload("res://services/managers/transport_manager.gd")
+const MapInteractionsManagerModule = preload("res://services/managers/map-editor/map_interactions/map_interactions_manager.gd")
 
 var deferred_init_list = []
 
@@ -43,6 +44,7 @@ func _register_instances():
 	_register_singleton("IntersectionHelper", IntersectionHelper.new())
 	_register_singleton("BuildingsManager", BuildingsManager.new())
 	_register_singleton("TransportManager", TransportManager.new())
+	_register_singleton("MapInteractionsManager", MapInteractionsManager.new())
 
 
 func _register_singleton(dep_name: String, instance: Object):

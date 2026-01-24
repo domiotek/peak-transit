@@ -11,11 +11,15 @@ var config_manager: ConfigManager
 func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	config_manager = GDInjector.inject("ConfigManager") as ConfigManager
-	
+
 	visible = false
 	ui_manager.register_ui_view("DebugTogglesView", self)
 
 	$MainWrapper/HeaderMargins/HeaderFlex/CloseButton.pressed.connect(_on_close_button_pressed)
+
+
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view("DebugTogglesView")
 
 
 func init() -> void:
@@ -29,11 +33,11 @@ func init() -> void:
 		instance.connect("toggled", Callable(self, "_on_toggle_toggled"))
 
 		item_list_holder.add_child(instance)
-		
 
 
 func _on_close_button_pressed() -> void:
 	ui_manager.hide_ui_view("DebugTogglesView")
+
 
 func _on_toggle_toggled(id: String, state: bool) -> void:
 	config_manager.DebugToggles.SetToggle(id, state)

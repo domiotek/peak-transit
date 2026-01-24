@@ -1,0 +1,79 @@
+[gd_scene load_steps=4 format=3 uid="uid://qu065xlgavcj"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_31nff"]
+[ext_resource type="StyleBox" uid="uid://dxarxyvkaag2u" path="res://ui/resources/backdrop_styles.tres" id="1_53wno"]
+[ext_resource type="Script" uid="uid://cj24txfle1xdf" path="res://ui/views/new-name-save-dialog/new_name_save_dialog.gd" id="2_2le6g"]
+
+[node name="NewNameSaveDialog" type="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 2.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_53wno")
+script = ExtResource("2_2le6g")
+
+[node name="Panel" type="Panel" parent="."]
+custom_minimum_size = Vector2(400, 200)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_31nff")
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Wrapper" type="BoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+text = "Choose new file name"
+
+[node name="Sep" type="Control" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="FileName" type="LineEdit" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+placeholder_text = "File name"
+
+[node name="Sep1" type="Control" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Buttons" type="BoxContainer" parent="Panel/MarginContainer/Wrapper"]
+layout_mode = 2
+alignment = 2
+
+[node name="CancelButton" type="Button" parent="Panel/MarginContainer/Wrapper/Buttons"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "Cancel"
+
+[node name="SaveButton" type="Button" parent="Panel/MarginContainer/Wrapper/Buttons"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+focus_mode = 0
+text = "Save"

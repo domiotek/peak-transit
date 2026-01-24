@@ -1,0 +1,96 @@
+[gd_scene load_steps=8 format=3 uid="uid://c736fpqckxwt3"]
+
+[ext_resource type="Script" uid="uid://bspuelro2lqxa" path="res://ui/views/map-editor/object-configuration-panel/object_configuration_panel.gd" id="1_h3ree"]
+[ext_resource type="Texture2D" uid="uid://cy0q766smleq4" path="res://assets/ui_icons/settings.png" id="1_lhd36"]
+[ext_resource type="PackedScene" uid="uid://dd0g12mdrcrig" path="res://ui/views/map-editor/object-configuration-panel/panels/world-config-panel/world_config_panel.tscn" id="3_h3ree"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a80kt"]
+bg_color = Color(0.273873, 0.273873, 0.273873, 0.937255)
+corner_radius_top_left = 6
+corner_radius_bottom_left = 6
+expand_margin_left = 4.0
+expand_margin_top = 4.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h3ree"]
+bg_color = Color(0.158472, 0.158472, 0.158472, 0.937255)
+corner_radius_top_left = 6
+corner_radius_bottom_left = 6
+expand_margin_left = 4.0
+expand_margin_top = 4.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lhd36"]
+bg_color = Color(0.196078, 0.196078, 0.196078, 0.937255)
+corner_radius_top_left = 6
+corner_radius_bottom_left = 6
+expand_margin_left = 4.0
+expand_margin_top = 4.0
+expand_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4xaxw"]
+bg_color = Color(0.196078, 0.196078, 0.196078, 0.937255)
+corner_radius_top_left = 12
+corner_radius_bottom_left = 12
+
+[node name="ObjectConfigurationPanel" type="BoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -814.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+script = ExtResource("1_h3ree")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_top = 50
+
+[node name="ExpandButton" type="Button" parent="MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+focus_mode = 0
+theme_override_styles/hover = SubResource("StyleBoxFlat_a80kt")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_h3ree")
+theme_override_styles/normal = SubResource("StyleBoxFlat_lhd36")
+icon = ExtResource("1_lhd36")
+
+[node name="MainPanel" type="Panel" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_4xaxw")
+
+[node name="MarginContainer" type="MarginContainer" parent="MainPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="BoxContainer" type="BoxContainer" parent="MainPanel/MarginContainer"]
+layout_mode = 2
+vertical = true
+
+[node name="Label" type="Label" parent="MainPanel/MarginContainer/BoxContainer"]
+layout_mode = 2
+text = "World options
+"
+
+[node name="PanelContainer" type="BoxContainer" parent="MainPanel/MarginContainer/BoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainPanel/MarginContainer/BoxContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="WorldConfigPanel" parent="MainPanel/MarginContainer/BoxContainer/PanelContainer/ScrollContainer" instance=ExtResource("3_h3ree")]
+layout_mode = 2
+size_flags_horizontal = 3

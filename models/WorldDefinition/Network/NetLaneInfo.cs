@@ -16,6 +16,7 @@ public enum LaneDirection
     Backward,
     Left,
     ForwardLeft,
+    LeftRight,
 }
 
 public enum BaseLaneDirection

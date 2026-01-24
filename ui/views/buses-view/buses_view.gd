@@ -25,6 +25,10 @@ func _ready() -> void:
 	_vehicle_manager.vehicle_destroyed.connect(_on_vehicle_destroyed)
 
 
+func _exit_tree() -> void:
+	_ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func update(_data) -> void:
 	for child in bus_list.get_children():
 		child.queue_free()

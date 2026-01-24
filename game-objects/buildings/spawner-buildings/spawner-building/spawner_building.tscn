@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://dd6wy8eoadc8v"]
+[gd_scene load_steps=5 format=3 uid="uid://dd6wy8eoadc8v"]
 
 [ext_resource type="PackedScene" uid="uid://baf4uogxpw50c" path="res://game-objects/buildings/base-building/base-building.tscn" id="1_x8twb"]
 [ext_resource type="Script" uid="uid://cnrokorglrjcm" path="res://game-objects/buildings/spawner-buildings/spawner-building/spawner_building.gd" id="2_ksjhd"]
@@ -6,15 +6,28 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ksjhd"]
 size = Vector2(51, 34)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wjvel"]
+size = Vector2(51, 50)
+
 [node name="SpawnerBuilding" instance=ExtResource("1_x8twb")]
 script = ExtResource("2_ksjhd")
 
 [node name="Shape" type="Polygon2D" parent="." index="1"]
 color = Color(0.924435, 0.393531, 0.462238, 1)
-polygon = PackedVector2Array(-25, -30, 26, -30, 26, 4, -25, 4)
+polygon = PackedVector2Array(-25, -50, 26, -50, 26, -16, -25, -16)
 
 [node name="ClickArea" type="Area2D" parent="." index="2"]
 
 [node name="ClickAreaShape" type="CollisionShape2D" parent="ClickArea" index="0"]
-position = Vector2(0.5, -13)
+position = Vector2(0.5, -33)
 shape = SubResource("RectangleShape2D_ksjhd")
+
+[node name="CollisionArea" type="Area2D" parent="." index="3"]
+process_mode = 3
+collision_layer = 128
+collision_mask = 0
+monitoring = false
+
+[node name="CollisionShape" type="CollisionShape2D" parent="CollisionArea" index="0"]
+position = Vector2(0.5, -25)
+shape = SubResource("RectangleShape2D_wjvel")

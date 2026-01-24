@@ -4,6 +4,13 @@ var step_type: Enums.TransportRouteStepType
 var target_id: int = -1
 
 
+func serialize() -> Dictionary:
+	return {
+		"type": step_type,
+		"targetId": target_id,
+	}
+
+
 static func deserialize(data: Dictionary) -> RouteStepDefinition:
 	var route_step_def = RouteStepDefinition.new()
 

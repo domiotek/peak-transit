@@ -25,4 +25,23 @@ public class MapDefinition
         };
         return dict;
     }
+
+    public static MapDefinition Deserialize(Godot.Collections.Dictionary data)
+    {
+        return new MapDefinition
+        {
+            MapSize = data.TryGetValue("size", out var size)
+                ? new Vector2(((Godot.Vector2)size).X, ((Godot.Vector2)size).Y)
+                : new Vector2(5000, 5000),
+            InitialMapPos = data.TryGetValue("initialPosition", out var initialPosition)
+                ? new Vector2(
+                    ((Godot.Vector2)initialPosition).X,
+                    ((Godot.Vector2)initialPosition).Y
+                )
+                : new Vector2(0, 0),
+            InitialZoom = data.TryGetValue("initialZoom", out var initialZoom)
+                ? (float)initialZoom
+                : 1.0f,
+        };
+    }
 }

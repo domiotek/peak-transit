@@ -14,7 +14,7 @@ var NetworkSegmentScene = preload("res://game-objects/network/net-segment/net_se
 func load_network_definition(network_def: NetworkDefinition) -> void:
 	for i in range(network_def.nodes.size()):
 		var node = network_def.nodes[i]
-		var road_node = _create_node(node, i)
+		var road_node = _create_node(node)
 		add_child(road_node)
 		network_manager.register_node(road_node)
 
@@ -61,11 +61,12 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 	await get_tree().process_frame
 
 
-func _create_node(node_info: NetNodeInfo, id: int) -> RoadNode:
+func _create_node(node_info: NetNodeInfo) -> RoadNode:
+	var id = network_manager.get_next_node_id()
 	var road_node = NetworkNodeScene.instantiate()
-	road_node.id = id
-	road_node.position = node_info.position
 	road_node.definition = node_info
+	road_node.set_id(id)
+	road_node.position = node_info.position
 
 	return road_node
 

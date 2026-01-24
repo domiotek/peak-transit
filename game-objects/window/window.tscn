@@ -1,15 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://cs0xhapsmdgen"]
+[gd_scene load_steps=6 format=3 uid="uid://cs0xhapsmdgen"]
 
-[ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game/game.tscn" id="1_eqjj1"]
 [ext_resource type="Script" uid="uid://5yada0arowup" path="res://game-objects/window/window.gd" id="1_quggc"]
 [ext_resource type="PackedScene" uid="uid://bwpts6ndy6nvr" path="res://ui/main-menu/main_menu.tscn" id="2_yjkk1"]
+[ext_resource type="PackedScene" uid="uid://qu065xlgavcj" path="res://ui/views/new-name-save-dialog/new_name_save_dialog.tscn" id="4_3cim5"]
 [ext_resource type="PackedScene" uid="uid://bfd25756i44bm" path="res://ui/views/message-box-view/message_box_view.tscn" id="4_ma1do"]
+[ext_resource type="PackedScene" uid="uid://cg08v2krfwd0v" path="res://ui/views/confirm-overwrite-dialog/confirm_overwrite_dialog.tscn" id="5_3cim5"]
 
 [node name="Window" type="Node2D"]
 script = ExtResource("1_quggc")
-
-[node name="Game" parent="." instance=ExtResource("1_eqjj1")]
-visible = false
 
 [node name="UI" type="CanvasLayer" parent="."]
 layer = 2
@@ -18,3 +16,11 @@ layer = 2
 
 [node name="MessageBoxView" parent="UI" instance=ExtResource("4_ma1do")]
 z_as_relative = false
+
+[node name="NewNameSaveDialog" parent="UI" instance=ExtResource("4_3cim5")]
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="ConfirmOverwriteDialog" parent="UI" instance=ExtResource("5_3cim5")]
+offset_right = 0.0
+offset_bottom = 0.0

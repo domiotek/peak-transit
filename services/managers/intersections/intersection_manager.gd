@@ -4,12 +4,19 @@ class_name IntersectionManager
 
 const LaneStopperScene = preload("res://game-objects/network/net-node/lane-stopper/lane_stopper.tscn")
 
+enum IntersectionHandlerType {
+	NULL = -1,
+	DEFAULT = Enums.IntersectionType.DEFAULT,
+	TRAFFIC_LIGHTS = Enums.IntersectionType.TRAFFIC_LIGHTS,
+}
+
 var network_manager: NetworkManager
 var line_helper: LineHelper
 
 var node: RoadNode
 
 var handler: RefCounted
+var _handler_type: IntersectionHandlerType = IntersectionHandlerType.NULL
 
 var crossing_vehicles: Dictionary = { }
 
@@ -48,6 +55,37 @@ func setup_intersection(assigned_node: RoadNode) -> void:
 
 	handler = _choose_intersection_handler()
 	handler.setup(node, stoppers)
+
+
+func dispose_intersection() -> void:
+	if not node:
+		return
+
+	if handler:
+		handler.dispose()
+
+	handler = null
+	node = null
+	crossing_vehicles.clear()
+
+
+func switch_intersection_type(new_type: Enums.IntersectionType) -> void:
+	if not node:
+		push_error("No node assigned to IntersectionManager")
+		return
+
+	var stoppers = handler.stoppers if handler else []
+
+	if handler:
+		handler.dispose()
+		handler = null
+
+	handler = _choose_intersection_handler(new_type as IntersectionHandlerType)
+	handler.setup(node, stoppers)
+
+
+func get_intersection_handler_type() -> IntersectionHandlerType:
+	return _handler_type
 
 
 func process_tick(delta: float) -> void:
@@ -107,13 +145,18 @@ func get_custom_data() -> Dictionary:
 	return { }
 
 
-func _choose_intersection_handler() -> RefCounted:
+func _choose_intersection_handler(override: IntersectionHandlerType = IntersectionHandlerType.NULL) -> RefCounted:
 	if node.connected_segments.size() <= 2:
+		_handler_type = IntersectionHandlerType.NULL
 		return NullIntersectionHandler.new()
 
-	match node.definition.intersection_type:
+	var intersection_type = override if override != IntersectionHandlerType.NULL else (node.definition.intersection_type as IntersectionHandlerType)
+
+	match intersection_type:
 		Enums.IntersectionType.DEFAULT:
+			_handler_type = IntersectionHandlerType.DEFAULT
 			return DefaultIntersectionHandler.new()
 		Enums.IntersectionType.TRAFFIC_LIGHTS:
+			_handler_type = IntersectionHandlerType.TRAFFIC_LIGHTS
 			return TrafficLightsIntersectionHandler.new()
 	return TrafficLightsIntersectionHandler.new()

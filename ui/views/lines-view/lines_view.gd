@@ -33,6 +33,10 @@ func _ready() -> void:
 	toggle_all_visibility_button.pressed.connect(Callable(self, "_on_toggle_all_visibility_button_pressed"))
 
 
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func load() -> void:
 	var lines = transport_manager.get_lines()
 

@@ -1,0 +1,90 @@
+[gd_scene load_steps=10 format=3 uid="uid://xllvlhj63lst"]
+
+[ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game-modes/base-mode/base_mode.tscn" id="1_wmy76"]
+[ext_resource type="Script" uid="uid://ck2irsw61l388" path="res://game-objects/game-modes/map-editor-mode/map_editor_mode.gd" id="2_kssn7"]
+[ext_resource type="PackedScene" uid="uid://csqi7ixxdkbbx" path="res://ui/views/map-editor/tools-bar/tools_bar.tscn" id="3_vfrew"]
+[ext_resource type="PackedScene" uid="uid://bp52rfp3lu4gt" path="res://ui/views/map-editor/lane-direction-selector/lane_direction_selector.tscn" id="3_wg35x"]
+[ext_resource type="PackedScene" uid="uid://bdp5pr6dqwvvi" path="res://ui/views/map-editor/road-tool-panel/road_tool_panel.tscn" id="4_axg7b"]
+[ext_resource type="PackedScene" uid="uid://dsx16oagnkx2y" path="res://ui/views/map-editor/lane-tool-panel/lane_tool_panel.tscn" id="5_lg3d2"]
+[ext_resource type="PackedScene" uid="uid://c4j21mttvd2kw" path="res://ui/views/map-editor/roadside-object-panel/roadside_object_panel.tscn" id="7_sodbg"]
+[ext_resource type="PackedScene" uid="uid://ddm1k7v6m2wfs" path="res://ui/views/map-editor/intersection-tool-panel/intersection_tool_panel.tscn" id="8_5p2bh"]
+[ext_resource type="PackedScene" uid="uid://c736fpqckxwt3" path="res://ui/views/map-editor/object-configuration-panel/object_configuration_panel.tscn" id="9_7mm8k"]
+
+[node name="MapEditor" instance=ExtResource("1_wmy76")]
+script = ExtResource("2_kssn7")
+
+[node name="LaneDirectionSelector" parent="UI" index="1" instance=ExtResource("3_wg35x")]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 112.0
+offset_bottom = 41.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="ToolsBar" parent="UI" index="2" instance=ExtResource("3_vfrew")]
+custom_minimum_size = Vector2(300, 30)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = -43.0
+offset_right = 150.0
+offset_bottom = -13.0
+grow_vertical = 0
+
+[node name="RoadToolPanel" parent="UI" index="3" instance=ExtResource("4_axg7b")]
+custom_minimum_size = Vector2(190, 100)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -151.0
+offset_top = -218.0
+offset_right = 39.0
+offset_bottom = -48.0
+grow_vertical = 0
+
+[node name="EditRoadToolPanel" parent="UI" index="4" instance=ExtResource("5_lg3d2")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -119.0
+offset_top = -265.0
+offset_right = 168.0
+offset_bottom = -49.0
+grow_vertical = 0
+
+[node name="RoadsideObjectPanel" parent="UI" index="5" instance=ExtResource("7_sodbg")]
+custom_minimum_size = Vector2(312, 90)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = -161.0
+offset_right = 175.0
+offset_bottom = -55.0
+grow_vertical = 0
+
+[node name="IntersectionToolPanel" parent="UI" index="6" instance=ExtResource("8_5p2bh")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = -161.0
+offset_right = 175.0
+offset_bottom = -55.0
+grow_vertical = 0
+
+[node name="ObjectConfigurationPanel" parent="UI" index="7" instance=ExtResource("9_7mm8k")]
+anchors_preset = 11
+anchor_left = 1.0
+offset_left = -24.0
+offset_top = 85.0
+offset_right = 326.0
+offset_bottom = -103.0
+grow_horizontal = 0

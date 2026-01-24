@@ -5,6 +5,14 @@ var position: SegmentPosDefinition = SegmentPosDefinition.new()
 var demand_preset: int = 0
 
 
+func serialize() -> Dictionary:
+	return {
+		"name": name,
+		"pos": position.serialize(),
+		"demandPreset": demand_preset,
+	}
+
+
 static func deserialize(data: Dictionary) -> TerminalDefinition:
 	var terminal_def = TerminalDefinition.new()
 

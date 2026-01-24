@@ -42,4 +42,24 @@ public class NetNodeInfo
             ["stpSegments"] = new Array<int>(StopSegments),
         };
     }
+
+    public static NetNodeInfo Deserialize(Dictionary data)
+    {
+        return new NetNodeInfo
+        {
+            Id = data.TryGetValue("id", out var id) ? (int)id : 0,
+            Position = data.TryGetValue("pos", out var pos)
+                ? new Vector2(((Godot.Vector2)pos).X, ((Godot.Vector2)pos).Y)
+                : new Vector2(0, 0),
+            IntersectionType = data.TryGetValue("intersection", out var intersection)
+                ? (IntersectionType)(int)intersection
+                : IntersectionType.Default,
+            PrioritySegments = data.TryGetValue("priSegments", out var priSegments)
+                ? [.. priSegments.AsGodotArray<int>()]
+                : [],
+            StopSegments = data.TryGetValue("stpSegments", out var stpSegments)
+                ? [.. stpSegments.AsGodotArray<int>()]
+                : [],
+        };
+    }
 }

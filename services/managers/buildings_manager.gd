@@ -7,10 +7,11 @@ var CommercialBuildingScene = load("res://game-objects/buildings/spawner-buildin
 var IndustrialBuildingScene = load("res://game-objects/buildings/spawner-buildings/industrial-building/industrial_building.tscn")
 
 var buildings: Dictionary = { }
+var _ids_manager: IDManager = IDManager.new()
 
 
 func register_building(building: BaseBuilding) -> int:
-	var id = _get_next_id()
+	var id = _ids_manager.occupy_next_id()
 
 	if buildings.has(id):
 		push_error("Building ID collision detected for ID %d" % id)
@@ -22,7 +23,7 @@ func register_building(building: BaseBuilding) -> int:
 
 
 func create_spawner_building(info: BuildingInfo) -> SpawnerBuilding:
-	var id = _get_next_id()
+	var id = _ids_manager.occupy_next_id()
 
 	if buildings.has(id):
 		push_error("Building ID collision detected for ID %d" % id)
@@ -41,8 +42,18 @@ func create_spawner_building(info: BuildingInfo) -> SpawnerBuilding:
 			push_error("Unsupported building type: %s" % str(info.type))
 			return null
 	building.id = id
+	building.building_info = info
 	buildings[id] = building
 	return building
+
+
+func destroy_building(building_id: int) -> void:
+	if buildings.has(building_id):
+		buildings[building_id].queue_free()
+		buildings.erase(building_id)
+		_ids_manager.release_id(building_id)
+	else:
+		push_error("Attempted to destroy non-existent building with ID %d." % building_id)
 
 
 func get_building(building_id: int) -> BaseBuilding:
@@ -103,11 +114,4 @@ func get_random_building_type(other_than: BuildingInfo.BuildingType, weights: Di
 
 func clear_state() -> void:
 	buildings.clear()
-
-
-func _get_next_id() -> int:
-	var max_id = -1
-	for building_id in buildings.keys():
-		if building_id > max_id:
-			max_id = building_id
-	return max_id + 1
+	_ids_manager.reset()

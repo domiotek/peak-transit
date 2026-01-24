@@ -1,6 +1,5 @@
 extends Control
 
-
 var ui_manager: UIManager
 var game_manager: GameManager
 
@@ -16,6 +15,10 @@ func _ready() -> void:
 	ui_manager.register_ui_view("WorldLoadingProgressView", self)
 
 	game_manager.world_loading_progress.connect(update_progress)
+
+
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view("WorldLoadingProgressView")
 
 
 func update_progress(action: String, progress: float) -> void:

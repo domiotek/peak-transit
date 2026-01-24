@@ -2,7 +2,6 @@ extends Control
 
 class_name GameSpeedView
 
-
 var ui_manager: UIManager
 var game_manager: GameManager
 
@@ -29,6 +28,11 @@ func _ready() -> void:
 	high_button.pressed.connect(_on_high_button_pressed)
 	turbo_button.pressed.connect(_on_turbo_button_pressed)
 
+
+func _exit_tree() -> void:
+	ui_manager.unregister_ui_view(VIEW_NAME)
+
+
 func _on_game_speed_changed(_new_speed: Enums.GameSpeed) -> void:
 	_update_buttons()
 
@@ -36,17 +40,22 @@ func _on_game_speed_changed(_new_speed: Enums.GameSpeed) -> void:
 func _on_pause_button_pressed() -> void:
 	game_manager.set_game_speed(Enums.GameSpeed.PAUSE)
 
+
 func _on_low_button_pressed() -> void:
 	game_manager.set_game_speed(Enums.GameSpeed.LOW)
+
 
 func _on_medium_button_pressed() -> void:
 	game_manager.set_game_speed(Enums.GameSpeed.MEDIUM)
 
+
 func _on_high_button_pressed() -> void:
 	game_manager.set_game_speed(Enums.GameSpeed.HIGH)
 
+
 func _on_turbo_button_pressed() -> void:
 	game_manager.set_game_speed(Enums.GameSpeed.TURBO)
+
 
 func _update_buttons() -> void:
 	var game_speed = game_manager.get_game_speed()

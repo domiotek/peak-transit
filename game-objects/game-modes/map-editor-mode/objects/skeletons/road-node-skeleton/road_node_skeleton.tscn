@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://dydx1e1w12rhi"]
+
+[ext_resource type="PackedScene" uid="uid://cx5r114fjgwq7" path="res://game-objects/light/light.tscn" id="1_c7pfi"]
+[ext_resource type="Script" uid="uid://b1psefbefy3j3" path="res://game-objects/game-modes/map-editor-mode/objects/skeletons/road-node-skeleton/road_node_skeleton.gd" id="1_v7d17"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_v7d17"]
+radius = 30.0
+
+[node name="RoadNodeSkeleton" type="Node2D"]
+script = ExtResource("1_v7d17")
+
+[node name="Indicator" parent="." instance=ExtResource("1_c7pfi")]
+inactive_color = Color(0.113725, 0.352941, 1, 0.713726)
+radius = 30.0
+segments = 32
+light_energy = 0.0
+ilumination_scale = 0.0
+
+[node name="PickableArea" type="Area2D" parent="."]
+process_mode = 3
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PickableArea"]
+shape = SubResource("CircleShape2D_v7d17")

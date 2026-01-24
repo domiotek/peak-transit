@@ -9,6 +9,26 @@ var end_time: TimeOfDay
 var routes: Array[Array] = []
 
 
+func serialize() -> Dictionary:
+	var _routes: Array[Array] = []
+
+	for route in routes:
+		var route_data: Array = []
+		for step in route:
+			route_data.append(step.serialize())
+		_routes.append(route_data)
+
+	return {
+		"displayNumber": display_number,
+		"color": color_hex,
+		"frequency": frequency_minutes,
+		"minLayover": min_layover_minutes,
+		"startTime": start_time.format(),
+		"endTime": end_time.format(),
+		"routes": _routes,
+	}
+
+
 static func deserialize(data: Dictionary) -> LineDefinition:
 	var line_def = LineDefinition.new()
 
