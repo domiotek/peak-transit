@@ -221,7 +221,6 @@ func _save_world(file_name: String, definition: Dictionary, overwrite: bool) -> 
 
 
 func _take_file_name_input(file_name: String) -> Dictionary:
-	game_manager.toggle_game_menu_interaction(false)
 	ui_manager.show_ui_view(
 		NewNameSaveDialog.VIEW_NAME,
 		{ "file_name": file_name },
@@ -258,13 +257,11 @@ func _take_file_name_input(file_name: String) -> Dictionary:
 		dialog.cancel_requested.disconnect(cancel_callback)
 
 	ui_manager.hide_ui_view(NewNameSaveDialog.VIEW_NAME)
-	game_manager.toggle_game_menu_interaction(true)
 
 	return response
 
 
 func _ask_for_overwrite_confirmation() -> bool:
-	game_manager.toggle_game_menu_interaction(false)
 	ui_manager.show_ui_view(ConfirmOverwriteDialog.VIEW_NAME)
 
 	var dialog = ui_manager.get_ui_view(ConfirmOverwriteDialog.VIEW_NAME) as ConfirmOverwriteDialog
@@ -291,7 +288,6 @@ func _ask_for_overwrite_confirmation() -> bool:
 		dialog.overwrite_canceled.disconnect(cancel_callback)
 
 	ui_manager.hide_ui_view(ConfirmOverwriteDialog.VIEW_NAME)
-	game_manager.toggle_game_menu_interaction(true)
 
 	return response["overwrite"]
 

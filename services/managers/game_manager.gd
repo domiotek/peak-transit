@@ -123,12 +123,6 @@ func hide_game_menu() -> void:
 	game_menu_visible = false
 
 
-func toggle_game_menu_interaction(state: bool) -> void:
-	var game_menu_view = ui_manager.get_ui_view(GameMenuView.VIEW_NAME) as GameMenuView
-	if game_menu_view:
-		game_menu_view.set_interaction_enabled(state)
-
-
 func toggle_game_menu() -> void:
 	if game_menu_visible:
 		hide_game_menu()
