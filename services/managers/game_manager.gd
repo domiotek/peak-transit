@@ -34,6 +34,7 @@ var transport_manager: TransportManager
 
 var _game_controller: BaseGameController
 var _game_mode: Enums.GameMode
+var _rl_mode: bool = false
 
 var world_definition: WorldDefinition
 
@@ -43,8 +44,10 @@ var game_menu_visible: bool = false
 var clock = ClockManager.new()
 
 signal game_controller_registration(controller: BaseGameController)
+signal game_initialized(success: bool)
 signal game_speed_changed(new_speed: Enums.GameSpeed)
 signal world_loading_progress(action: String, progress: float)
+signal rl_mode_toggled(enabled: bool)
 
 
 func setup(game_controller: BaseGameController) -> void:
@@ -83,6 +86,7 @@ func initialize_game(mode: Enums.GameMode, world_file_path: String = "") -> void
 	set_game_speed(Enums.GameSpeed.PAUSE)
 
 	initialized = await _game_controller.initialize_game(world_file_path)
+	game_initialized.emit(initialized)
 
 	if not initialized:
 		push_error("Failed to initialize game controller")
@@ -305,6 +309,15 @@ func clear_state() -> void:
 	network_manager.clear_state()
 	buildings_manager.clear_state()
 	transport_manager.clear_state()
+
+
+func set_rl_mode() -> void:
+	_rl_mode = true
+	rl_mode_toggled.emit(true)
+
+
+func is_rl_mode() -> bool:
+	return _rl_mode
 
 
 func _create_game_controller(mode: Enums.GameMode) -> BaseGameController:

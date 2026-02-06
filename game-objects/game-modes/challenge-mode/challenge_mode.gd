@@ -95,6 +95,9 @@ func _after_initialize_game() -> void:
 
 
 func _on_input_check() -> void:
+	if game_manager.is_rl_mode():
+		return
+
 	if Input.is_action_just_pressed("game_speed_0"):
 		if game_manager.get_game_speed() != Enums.GameSpeed.PAUSE:
 			game_manager.set_game_speed(Enums.GameSpeed.PAUSE)

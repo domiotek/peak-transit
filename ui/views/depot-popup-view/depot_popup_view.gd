@@ -92,6 +92,7 @@ func update(_data: Dictionary) -> void:
 
 func _process(_delta: float) -> void:
 	if visible and _selected_depot:
+		var is_rl_mode = _game_manager.is_rl_mode()
 		var data = _selected_depot.get_popup_data()
 		_ui_manager.reanchor_to_world_object(self, _selected_depot.get_anchor(), UIManager.AnchorPoint.BOTTOM_LEFT, _is_pinned)
 
@@ -105,15 +106,15 @@ func _process(_delta: float) -> void:
 			bus_counter_value.text = "%d / %d" % [current_bus_count, _max_bus_capacity]
 			art_bus_counter_value.text = "%d / %d" % [current_articulated_bus_count, _max_articulated_bus_capacity]
 
-			spawn_button.disabled = current_bus_count <= 0
-			art_spawn_button.disabled = current_articulated_bus_count <= 0
+			spawn_button.disabled = current_bus_count <= 0 || is_rl_mode
+			art_spawn_button.disabled = current_articulated_bus_count <= 0 || is_rl_mode
 		else:
 			bus_counter_value.text = "∞ / ∞"
 			art_bus_counter_value.text = "∞ / ∞"
 			buses_counter.value = _max_bus_capacity
 			articulated_buses_counter.value = _max_articulated_bus_capacity
-			spawn_button.disabled = false
-			art_spawn_button.disabled = false
+			spawn_button.disabled = is_rl_mode
+			art_spawn_button.disabled = is_rl_mode
 
 		for i in range(_data_items.size()):
 			var item = _data_items[i]

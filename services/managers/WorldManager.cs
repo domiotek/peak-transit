@@ -38,6 +38,25 @@ public partial class WorldManager : RefCounted
         return [.. worlds.Select(w => w.Serialize())];
     }
 
+    public Dictionary FindWorldByName(string worldName)
+    {
+        var results = new List<SlimWorldDefinition>();
+
+        var comparer = new Func<SlimWorldDefinition, bool>(w =>
+            w.Name.Equals(worldName, StringComparison.OrdinalIgnoreCase)
+        );
+
+        var foundInBuiltIn = FindWorldInPath(builtInWorldDirectory, comparer);
+        if (foundInBuiltIn != null)
+            return foundInBuiltIn.Serialize();
+
+        var foundInUser = FindWorldInPath(worldDirectory, comparer);
+        if (foundInUser != null)
+            return foundInUser.Serialize();
+
+        return null;
+    }
+
     public void OpenWorldsFolder()
     {
         if (!FSHelper.EnsureDirectoryExists(worldDirectory))
@@ -220,5 +239,44 @@ public partial class WorldManager : RefCounted
 
             worlds.Add(slimWorldDef);
         }
+    }
+
+    private static SlimWorldDefinition FindWorldInPath(
+        string basePath,
+        Func<SlimWorldDefinition, bool> comparer
+    )
+    {
+        if (string.IsNullOrWhiteSpace(basePath) || !FSHelper.EnsureDirectoryExists(basePath))
+        {
+            return null;
+        }
+
+        var filesInDirectory = DirAccess.GetFilesAt(basePath);
+        foreach (var fileName in filesInDirectory)
+        {
+            if (!fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var filePath = basePath.EndsWith('/') ? basePath + fileName : basePath + "/" + fileName;
+
+            var fileContents = FileAccess.Open(filePath, FileAccess.ModeFlags.Read).GetAsText();
+            var slimWorldDef = Newtonsoft.Json.JsonConvert.DeserializeObject<SlimWorldDefinition>(
+                fileContents
+            );
+
+            if (slimWorldDef == null)
+                continue;
+
+            slimWorldDef.FilePath = filePath;
+
+            if (comparer(slimWorldDef))
+            {
+                return slimWorldDef;
+            }
+        }
+
+        return null;
     }
 }

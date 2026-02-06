@@ -68,6 +68,8 @@ func update(_data: Dictionary) -> void:
 		_on_close_button_pressed()
 		return
 
+	_check_for_rl_mode()
+
 	selected_vehicle = game_manager.get_selected_object() as Vehicle
 
 	if selected_vehicle.type in _ai_tabs:
@@ -188,3 +190,10 @@ func _switch_to_ai_tab(control_name: String) -> void:
 
 		if child.visible:
 			_active_ai_tab = child
+
+
+func _check_for_rl_mode() -> void:
+	var is_rl_mode = game_manager.is_rl_mode()
+
+	delete_button.disabled = is_rl_mode
+	reroute_button.disabled = is_rl_mode

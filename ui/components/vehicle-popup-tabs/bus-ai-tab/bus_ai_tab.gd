@@ -41,6 +41,8 @@ func bind(vehicle: Vehicle) -> void:
 	_vehicle = vehicle
 	_brigades = transport_manager.brigades.get_all()
 
+	_check_for_rl_mode()
+
 	brigade_selector.clear()
 
 	brigade_selector.add_item("Reserve", int(INF))
@@ -247,3 +249,11 @@ func _on_current_time_changed(new_time: ClockTime) -> void:
 			continue
 
 		step_item.update_schedule_diff(vehicle_diff, current_time)
+
+
+func _check_for_rl_mode() -> void:
+	var is_rl_mode = game_manager.is_rl_mode()
+
+	return_to_depot_button.disabled = is_rl_mode
+	trip_selector.disabled = is_rl_mode
+	brigade_selector.disabled = is_rl_mode

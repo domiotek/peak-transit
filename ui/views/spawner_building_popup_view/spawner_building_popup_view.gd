@@ -60,6 +60,8 @@ func update(_data: Dictionary) -> void:
 
 	toggle_debug_button.flat = not selected_building.are_debug_visuals_enabled()
 
+	spawn_car_button.disabled = game_manager.is_rl_mode()
+
 
 func _process(_delta: float) -> void:
 	if visible and selected_building:
