@@ -16,6 +16,7 @@ var _peron_passenger_spawners: Array = []
 var _tracks = { }
 var _vehicles_on_tracks: Dictionary = { }
 var _tracks_in_use: Dictionary = { }
+var _last_departure_times_per_line: Dictionary[int, TimeOfDay] = { }
 
 var _collision_shape: CollisionPolygon2D
 
@@ -127,6 +128,10 @@ func register_line(line_id) -> int:
 
 func get_peron_for_line(line_id) -> int:
 	return _line_id_to_peron.get(line_id, -1)
+
+
+func get_last_departure_time(line_id: int) -> TimeOfDay:
+	return _last_departure_times_per_line.get(line_id)
 
 
 func get_line_curves(line_id: int, is_out: bool) -> Array:
@@ -295,6 +300,15 @@ func notify_vehicle_left_terminal(vehicle_id: int) -> void:
 	if current_track_id != "":
 		_tracks_in_use.erase(current_track_id)
 		_vehicles_on_tracks.erase(vehicle_id)
+
+
+func update_line_departure(line_id: int) -> void:
+	var current_time = game_manager.clock.get_time().to_time_of_day()
+	_last_departure_times_per_line[line_id] = current_time
+
+
+func get_departure_time_for_line(line_id: int) -> TimeOfDay:
+	return _last_departure_times_per_line.get(line_id)
 
 
 func supports_routed_leaving() -> bool:

@@ -25,10 +25,6 @@ CSInjector="*res://dependency-provider/CSInjector.cs"
 
 project/assembly_name="peak-transit"
 
-[editor]
-
-run/main_run_args="--mode=Challenge --world=\"Default World\" --rl --port=3000"
-
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/MaxSizeContainer/plugin.cfg", "res://addons/godot_rl_agents/plugin.cfg")

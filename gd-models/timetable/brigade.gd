@@ -49,6 +49,34 @@ func get_trip(index: int) -> BrigadeTrip:
 	return _trips[index]
 
 
+func get_ongoing_trip(current_time: TimeOfDay) -> BrigadeTrip:
+	for trip in _trips:
+		var departure_time = trip.get_departure_time()
+		var arrival_time = trip.get_arrival_time()
+		var departure_diff = departure_time.difference_in_minutes_sin_cos(current_time)
+		var arrival_diff = arrival_time.difference_in_minutes_sin_cos(current_time)
+
+		if departure_diff <= 0 and arrival_diff >= 0:
+			return trip
+
+	return null
+
+
+func get_next_trip(current_time: TimeOfDay) -> BrigadeTrip:
+	var current_trip = get_ongoing_trip(current_time)
+
+	if current_trip == null:
+		return _trips[0]
+
+	var current_index = current_trip.idx
+	var next_index = current_index + 1
+
+	if next_index >= _trips.size():
+		next_index = 0
+
+	return _trips[next_index]
+
+
 func get_trips() -> Array:
 	return _trips
 

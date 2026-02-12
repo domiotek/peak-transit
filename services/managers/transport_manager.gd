@@ -179,6 +179,10 @@ func get_terminals() -> Array:
 	return _terminals.values()
 
 
+func terminal_count() -> int:
+	return _terminals.size()
+
+
 func unregister_terminal(terminal_id: int) -> void:
 	if _terminals.has(terminal_id):
 		var terminal = _terminals[terminal_id] as Terminal

@@ -3,15 +3,15 @@ extends RefCounted
 class_name BusAI
 
 enum BusState {
-	IDLE,
-	CONFUSED,
-	RETURNING_TO_DEPOT,
-	TRANSFERING_TO_TERMINAL,
-	TRANSFERING_TO_STOP,
-	EN_ROUTE,
-	BOARDING_PASSENGERS,
-	SYNCING_WITH_SCHEDULE,
-	WAIT_BETWEEN_TRIPS,
+	IDLE, #In reserve
+	CONFUSED, # disaster, break
+	RETURNING_TO_DEPOT, #transfer
+	TRANSFERING_TO_TERMINAL, #transfer
+	TRANSFERING_TO_STOP, #transfer
+	EN_ROUTE, #en_route
+	BOARDING_PASSENGERS, #en_route
+	SYNCING_WITH_SCHEDULE, #en_route
+	WAIT_BETWEEN_TRIPS, #waiting_for_trip / in_reserve
 }
 
 var _bus_identifier: String = ""
@@ -44,6 +44,8 @@ var _boarding_timer: float = 0.0
 
 var _finalizing_previous_step: Dictionary = { }
 
+var _score_manager: ScoreManager = null
+
 
 func bind(vehicle: Vehicle) -> void:
 	vehicle.driver.set_ai(self)
@@ -52,6 +54,7 @@ func bind(vehicle: Vehicle) -> void:
 	_vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 	_transport_manager = GDInjector.inject("TransportManager") as TransportManager
 	_game_manager = GDInjector.inject("GameManager") as GameManager
+	_score_manager = _game_manager.get_game_controller().score_manager() if _game_manager.get_game_mode() == Enums.GameMode.CHALLENGE else null
 	_max_passengers = TransportHelper.get_bus_capacity(_vehicle.type)
 
 
@@ -77,6 +80,10 @@ func get_constants() -> Dictionary:
 		"REROUTE_THRESHOLD": 0.0,
 		"REROUTE_CHANCE": 0,
 	}
+
+
+func get_current_state() -> BusState:
+	return _state
 
 
 func get_state_name() -> String:
@@ -278,6 +285,10 @@ func drive_to_terminal(id: int) -> void:
 
 	if not _is_leaving_building:
 		_drive_to_terminal()
+
+
+func get_target_terminal() -> Terminal:
+	return _target_terminal
 
 
 func process(delta: float) -> void:
@@ -536,6 +547,9 @@ func _drive_to_next_stop() -> void:
 	if not current_trip:
 		return
 
+	if _state == BusState.SYNCING_WITH_SCHEDULE: #is leaving the stop
+		_check_for_leftover_passengers()
+
 	if _brigade_trip_current_stop_idx + 1 >= current_trip.get_stops().size():
 		var trip_idx = _brigade.assign_next_trip(_vehicle.id, _brigade_trip_idx)
 		if trip_idx == -1:
@@ -562,6 +576,9 @@ func _drive_to_next_stop() -> void:
 	_brigade_trip_current_stop_idx += 1
 	_target_terminal = current_trip.get_arrival_terminal()
 	_vehicle.driver.resume_driving()
+
+	if _is_at_terminal:
+		_current_terminal.update_line_departure(_brigade.line_id)
 
 
 func _trace_route_to_next_stop() -> void:
@@ -732,7 +749,8 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 				_state = BusState.WAIT_BETWEEN_TRIPS
 				var leftover_passengers = _unload_passengers()
 
-				if leftover_passengers > 0: # TODO: Apply fine in agent model for leftover passengers
+				if leftover_passengers > 0:
+					_push_score_event(ChallengeEnums.ScoreReason.BUS_CHANGED_STATE_WITH_PASSENGERS_ONBOARD)
 					push_warning(
 						("Bus %s has leftover passengers (%d) after arriving at terminal %s waiting spot."
 							% [_vehicle.ai.get_custom_identifier(), leftover_passengers, _current_terminal.get_terminal_name()] ),
@@ -761,6 +779,9 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 		BusState.EN_ROUTE:
 			_state = BusState.BOARDING_PASSENGERS
 			var passengers_to_unload = _unload_passengers()
+
+			var arrival_score_reason = _determine_arrival_score()
+			_push_score_event(arrival_score_reason)
 
 			var passengers_to_board = 0
 
@@ -822,6 +843,9 @@ func _unload_passengers() -> int:
 	_current_passengers -= passengers_to_unload
 	_passenger_buckets[_brigade_trip_current_stop_idx] = 0
 
+	if passengers_to_unload > 0:
+		_push_score_event(ChallengeEnums.ScoreReason.SERVICED_PASSENGER, passengers_to_unload)
+
 	return passengers_to_unload
 
 
@@ -851,3 +875,39 @@ func _load_passengers(count: int) -> void:
 		var offset := randi_range(0, remaining_stop_count - 1)
 		var target_bucket_idx := _brigade_trip_current_stop_idx + 1 + offset
 		_passenger_buckets[target_bucket_idx] += 1
+
+
+func _check_for_leftover_passengers() -> void:
+	if _current_passengers < _max_passengers:
+		return
+
+	var current_trip = get_current_trip()
+	var stop = current_trip.get_stop(_brigade_trip_current_stop_idx).get_stop_selection()
+	var stop_passengers = stop.get_passengers()
+
+	var passengers_left_at_stop = stop_passengers.get_waiting_passengers_for_line(_brigade.line_id)
+
+	if passengers_left_at_stop > 0:
+		_push_score_event(ChallengeEnums.ScoreReason.LEFT_PASSENGERS_BEHIND, passengers_left_at_stop)
+
+
+func _push_score_event(reason: ChallengeEnums.ScoreReason, count: int = 1) -> void:
+	if _score_manager == null:
+		return
+
+	_score_manager.update_score(reason, count)
+
+
+func _determine_arrival_score() -> ChallengeEnums.ScoreReason:
+	var time_diff = get_time_difference_to_schedule(_game_manager.clock.get_time().to_time_of_day())
+
+	if time_diff == 0:
+		return ChallengeEnums.ScoreReason.SERVICED_STOP_ON_TIME
+
+	if time_diff < 0:
+		return ChallengeEnums.ScoreReason.SERVICED_STOP_AHEAD_OF_TIME
+
+	if time_diff > ChallengeEnums.ArrivalTimeThreshold.VERY_LATE:
+		return ChallengeEnums.ScoreReason.SERVICED_STOP_VERY_LATE
+
+	return ChallengeEnums.ScoreReason.SERVICED_STOP_LATE

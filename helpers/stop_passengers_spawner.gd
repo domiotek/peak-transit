@@ -11,6 +11,7 @@ var _lines: Array[TransportLine] = []
 
 var _game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 var _transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
+var _score_manager: ScoreManager = null
 
 
 func _init(target_id: int, is_terminal: bool, lines: Array, demand_preset: DemandPresetDefinition, max_passenger_count: int) -> void:
@@ -18,11 +19,21 @@ func _init(target_id: int, is_terminal: bool, lines: Array, demand_preset: Deman
 	_is_terminal = is_terminal
 	_demand_preset = demand_preset
 	_max_passenger_count = max_passenger_count
+	_score_manager = _game_manager.get_game_controller().score_manager() if _game_manager.get_game_mode() == Enums.GameMode.CHALLENGE else null
 
 	for line_id in lines:
 		var line = _transport_manager.get_line(line_id)
 		if line != null:
 			_lines.append(line)
+
+
+func get_waiting_passengers_for_line(line_id: int) -> int:
+	var total: int = 0
+
+	for bucket in _buckets:
+		total += bucket.get_passengers_for_line(line_id)
+
+	return total
 
 
 func get_total_waiting() -> int:
@@ -32,6 +43,10 @@ func get_total_waiting() -> int:
 		total += bucket.get_total_passengers()
 
 	return total
+
+
+func get_max_waiting() -> int:
+	return _max_passenger_count
 
 
 func get_lowest_till_bored_time(clock: ClockTime) -> int:
@@ -115,6 +130,8 @@ func _check_for_bored_passengers(clock: ClockTime) -> void:
 	var first_bucket: PassengerBucketEntry = _buckets[0] if _buckets.size() > 0 else null
 
 	if first_bucket != null:
+		var bored_passengers = first_bucket.get_total_passengers()
+		_apply_boredom_penalty(bored_passengers)
 		_buckets.remove_at(0)
 
 
@@ -189,3 +206,10 @@ func _get_next_departure(line: TransportLine, clock: TimeOfDay) -> StopDeparture
 		return departures[0] as StopDeparture
 
 	return null
+
+
+func _apply_boredom_penalty(bored_passengers: int) -> void:
+	if _score_manager == null:
+		return
+
+	_score_manager.update_score(ChallengeEnums.ScoreReason.BORED_PASSENGER, bored_passengers)

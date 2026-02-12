@@ -1,0 +1,160 @@
+[gd_scene load_steps=6 format=3 uid="uid://dpvlrockvjk3t"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_61v2q"]
+[ext_resource type="PackedScene" uid="uid://bby7np77y1y5l" path="res://ui/components/challenge-mode/score-list-item/score_list_item.tscn" id="2_h2qhg"]
+[ext_resource type="Texture2D" uid="uid://dq1b7l61weyi8" path="res://assets/ui_icons/challenge_mode/episode_score.png" id="2_kmovw"]
+[ext_resource type="Texture2D" uid="uid://b0lqwhq384gyv" path="res://assets/ui_icons/challenge_mode/step_score.png" id="3_h2qhg"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_jgk6k"]
+font_size = 9
+font_color = Color(0.601223, 0.601223, 0.601223, 1)
+
+[node name="ScoreView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+offset_left = -125.0
+offset_top = -180.0
+offset_right = 125.0
+offset_bottom = -59.0
+theme_override_styles/panel = ExtResource("1_61v2q")
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="BoxContainer" type="BoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="BoxContainer2" type="BoxContainer" parent="Panel/MarginContainer/BoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/BoxContainer/BoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BoxContainer" type="BoxContainer" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical = true
+
+[node name="ScoreListItem" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer/BoxContainer" instance=ExtResource("2_h2qhg")]
+layout_mode = 2
+
+[node name="ScoreListItem2" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer/BoxContainer" instance=ExtResource("2_h2qhg")]
+layout_mode = 2
+
+[node name="ScoreListItem3" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer/BoxContainer" instance=ExtResource("2_h2qhg")]
+layout_mode = 2
+
+[node name="ScoreListItem4" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer/BoxContainer" instance=ExtResource("2_h2qhg")]
+layout_mode = 2
+
+[node name="ScoreListItem5" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer/BoxContainer" instance=ExtResource("2_h2qhg")]
+layout_mode = 2
+
+[node name="ScoreListItem6" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer/BoxContainer" instance=ExtResource("2_h2qhg")]
+layout_mode = 2
+
+[node name="ScoreListItem7" parent="Panel/MarginContainer/BoxContainer/BoxContainer2/ScrollContainer/BoxContainer" instance=ExtResource("2_h2qhg")]
+layout_mode = 2
+
+[node name="BoxContainer3" type="BoxContainer" parent="Panel/MarginContainer/BoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="Panel/MarginContainer/BoxContainer/BoxContainer3"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BoxContainer" type="BoxContainer" parent="Panel/MarginContainer/BoxContainer/BoxContainer3/ScrollContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="OverviewPanel" type="Panel" parent="."]
+layout_mode = 1
+offset_left = -125.0
+offset_top = -55.0
+offset_right = 125.0
+theme_override_styles/panel = ExtResource("1_61v2q")
+
+[node name="MarginContainer" type="MarginContainer" parent="OverviewPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="BoxContainer" type="BoxContainer" parent="OverviewPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="BoxContainer" type="BoxContainer" parent="OverviewPanel/MarginContainer/BoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+vertical = true
+
+[node name="Label2" type="Label" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer"]
+layout_mode = 2
+text = "Current step:"
+label_settings = SubResource("LabelSettings_jgk6k")
+
+[node name="BoxContainer" type="BoxContainer" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer/BoxContainer"]
+layout_mode = 2
+texture = ExtResource("2_kmovw")
+
+[node name="Label" type="Label" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer/BoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100"
+horizontal_alignment = 2
+
+[node name="BoxContainer2" type="BoxContainer" parent="OverviewPanel/MarginContainer/BoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+vertical = true
+
+[node name="Label3" type="Label" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer2"]
+layout_mode = 2
+text = "Current episode:"
+label_settings = SubResource("LabelSettings_jgk6k")
+
+[node name="BoxContainer" type="BoxContainer" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer2"]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer2/BoxContainer"]
+layout_mode = 2
+texture = ExtResource("3_h2qhg")
+
+[node name="Label" type="Label" parent="OverviewPanel/MarginContainer/BoxContainer/BoxContainer2/BoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100"
+horizontal_alignment = 2

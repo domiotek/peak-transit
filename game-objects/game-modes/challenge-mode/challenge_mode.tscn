@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://bi6roixagfde8"]
+[gd_scene load_steps=16 format=3 uid="uid://bi6roixagfde8"]
 
 [ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game-modes/base-mode/base_mode.tscn" id="1_iv1ck"]
 [ext_resource type="Script" uid="uid://c8hjp8kiushca" path="res://game-objects/game-modes/challenge-mode/challenge_mode.gd" id="2_hwci8"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://17v128p3voi0" path="res://ui/views/shortcuts-view/shortcuts_view.tscn" id="8_7mnik"]
 [ext_resource type="PackedScene" uid="uid://6ipl1lxu6eyw" path="res://ui/views/game-clock-view/game_clock_view.tscn" id="9_djhi3"]
 [ext_resource type="PackedScene" uid="uid://vy0ji1ac0ru5" path="res://ui/views/game_speed_view/game_speed_view.tscn" id="10_l24ln"]
+[ext_resource type="PackedScene" uid="uid://dpvlrockvjk3t" path="res://ui/views/challenge-mode/score-view/score_view.tscn" id="11_ana5o"]
 [ext_resource type="PackedScene" uid="uid://c7qjs6bf61f2l" path="res://ui/views/lines-view/lines_view.tscn" id="11_aq2b7"]
 [ext_resource type="PackedScene" uid="uid://bwlmiyrdnnjft" path="res://ui/views/buses-view/buses_view.tscn" id="12_bxmbd"]
 [ext_resource type="PackedScene" uid="uid://c5jn0klrj2752" path="res://ui/views/brigades-view/brigades_view.tscn" id="13_xppfi"]
@@ -105,7 +106,14 @@ offset_right = 200.0
 offset_bottom = -10.0
 grow_vertical = 0
 
-[node name="LinesView" parent="UI" index="9" instance=ExtResource("11_aq2b7")]
+[node name="ScoreView" parent="UI" index="9" instance=ExtResource("11_ana5o")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+grow_vertical = 0
+
+[node name="LinesView" parent="UI" index="10" instance=ExtResource("11_aq2b7")]
 anchors_preset = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
@@ -116,7 +124,7 @@ offset_bottom = 505.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="BusesView" parent="UI" index="10" instance=ExtResource("12_bxmbd")]
+[node name="BusesView" parent="UI" index="11" instance=ExtResource("12_bxmbd")]
 anchors_preset = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
@@ -127,7 +135,7 @@ offset_bottom = 505.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="BrigadesView" parent="UI" index="11" instance=ExtResource("13_xppfi")]
+[node name="BrigadesView" parent="UI" index="12" instance=ExtResource("13_xppfi")]
 anchors_preset = 9
 anchor_right = 0.0
 offset_left = 40.0

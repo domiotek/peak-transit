@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://bby7np77y1y5l"]
+
+[ext_resource type="PackedScene" uid="uid://igt0cl0wc7uu" path="res://ui/components/list_item/list_item.tscn" id="1_bkc4u"]
+[ext_resource type="Script" uid="uid://duy8bn5sdlark" path="res://ui/components/challenge-mode/score-list-item/score_list_item.gd" id="2_mxo4c"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_mxo4c"]
+font_color = Color(0.348663, 0.702466, 0.501179, 1)
+
+[node name="ScoreListItem" instance=ExtResource("1_bkc4u")]
+script = ExtResource("2_mxo4c")
+
+[node name="SupportLabel" parent="BoxContainer" index="1"]
+visible = false
+
+[node name="ScoreLabel" type="Label" parent="." index="2"]
+layout_mode = 2
+text = "+10.0"
+label_settings = SubResource("LabelSettings_mxo4c")

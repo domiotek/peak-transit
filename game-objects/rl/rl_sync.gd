@@ -22,7 +22,8 @@ func _initialize() -> bool:
 		return false
 
 	_set_seed()
-	_set_action_repeat()
+	action_repeat = RLConstants.RL_ACTION_REPEAT_FRAMES
+	print("action_repeat set to: ", action_repeat)
 	initialized = true
 
 	return connected

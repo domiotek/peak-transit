@@ -170,15 +170,17 @@ func set_game_speed(speed: Enums.GameSpeed) -> void:
 		Enums.GameSpeed.PAUSE:
 			Engine.time_scale = 0.0
 		Enums.GameSpeed.LOW:
-			Engine.time_scale = 1.0
+			Engine.time_scale = SimulationConstants.SPEED_1_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_1_PHYSICS_TICKS_PER_SECOND
 		Enums.GameSpeed.MEDIUM:
-			Engine.time_scale = 5.0
+			Engine.time_scale = SimulationConstants.SPEED_2_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_2_PHYSICS_TICKS_PER_SECOND
 		Enums.GameSpeed.HIGH:
-			Engine.time_scale = 10.0
-			Engine.physics_ticks_per_second = 120
+			Engine.time_scale = SimulationConstants.SPEED_3_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_3_PHYSICS_TICKS_PER_SECOND
 		Enums.GameSpeed.TURBO:
-			Engine.time_scale = 20.0
-			Engine.physics_ticks_per_second = 180
+			Engine.time_scale = SimulationConstants.SPEED_TURBO_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_TURBO_PHYSICS_TICKS_PER_SECOND
 
 	game_speed_changed.emit(game_speed)
 

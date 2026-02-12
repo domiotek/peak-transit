@@ -7,6 +7,9 @@ var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as Veh
 var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
 
 var _vehicle_with_path_drawn: Vehicle = null
+var _score_manager: ScoreManager
+
+@onready var ai_controller: ChallengeAiController = $RLAgent as ChallengeAiController
 
 
 func _ready() -> void:
@@ -14,6 +17,8 @@ func _ready() -> void:
 	map.create_drawing_layer("VehiclesLayer")
 	map.create_drawing_layer("VehicleRouteLayer")
 	map.create_drawing_layer("LinesRoutesLayer")
+
+	_score_manager = ScoreManager.new()
 
 
 func draw_vehicle_route(vehicle: Vehicle) -> void:
@@ -79,6 +84,10 @@ func redraw_route() -> void:
 	call_deferred("draw_vehicle_route", _vehicle_with_path_drawn)
 
 
+func score_manager() -> ScoreManager:
+	return _score_manager
+
+
 func _on_initialize_game(world: WorldDefinition) -> void:
 	vehicle_manager.set_vehicles_layer(map.get_drawing_layer("VehiclesLayer"))
 
@@ -87,6 +96,8 @@ func _on_initialize_game(world: WorldDefinition) -> void:
 
 
 func _after_initialize_game() -> void:
+	ai_controller.setup()
+
 	ui_manager.show_ui_view(GameSpeedView.VIEW_NAME)
 	ui_manager.show_ui_view(GameClockView.VIEW_NAME)
 	ui_manager.show_ui_view(ShortcutsView.VIEW_NAME)

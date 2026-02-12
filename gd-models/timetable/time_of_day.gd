@@ -52,6 +52,11 @@ func to_minutes() -> int:
 	return total_minutes
 
 
+func to_sin_cos() -> Array:
+	var radians = (total_minutes / 1440.0) * 2.0 * PI
+	return [sin(radians), cos(radians)]
+
+
 func add_minutes(minutes_to_add: int) -> TimeOfDay:
 	var new_total_minutes = total_minutes + minutes_to_add
 	var new_hour = int(new_total_minutes / 60.0) % 24
@@ -70,6 +75,16 @@ func subtract_minutes(minutes_to_subtract: int) -> TimeOfDay:
 
 func difference_in_minutes(other: TimeOfDay) -> int:
 	return total_minutes - other.total_minutes
+
+
+func difference_in_minutes_sin_cos(other: TimeOfDay) -> float:
+	var self_sin_cos = to_sin_cos()
+	var other_sin_cos = other.to_sin_cos()
+
+	var a1 = atan2(self_sin_cos[0], self_sin_cos[1])
+	var a2 = atan2(other_sin_cos[0], other_sin_cos[1])
+	var da = wrapf(a2 - a1, -PI, PI)
+	return da * (1440.0 / TAU)
 
 
 func as_next_day() -> TimeOfDay:
