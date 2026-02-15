@@ -35,5 +35,6 @@ func _get_vehicle_config() -> Variant:
 	_config.collision_areas = [collision_area] as Array[Area2D]
 	_config.blockade_indicator = $Body/Line2D
 	_config.body_segments = [$Body] as Array[Polygon2D]
+	_config.body_color = TransportConstants.CAR_COLORS[randi() % TransportConstants.CAR_COLORS.size()]
 
 	return _config

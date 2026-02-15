@@ -14,3 +14,4 @@ var body_areas: Array[Area2D]
 var collision_areas: Array[Area2D]
 var blockade_indicator: Line2D
 var body_segments: Array[Polygon2D]
+var body_color: Color
