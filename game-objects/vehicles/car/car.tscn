@@ -34,61 +34,37 @@ position = Vector2(15, 0)
 points = PackedVector2Array(-62, 48, -57, 44, -62, 40)
 width = 1.0
 
-[node name="LeftBrakeLight" parent="Body" index="1" instance=ExtResource("3_jn7db")]
-position = Vector2(-71.5, 38)
-inactive_color = Color(0.2, 0, 0, 1)
-active_color = Color(1, 0, 0, 1)
-backlight_energy = 15.0
-ilumination_scale = 0.25
-
-[node name="LeftRayIndicator" parent="Body" index="2" instance=ExtResource("3_jn7db")]
+[node name="LeftRayIndicator" parent="Body" index="1" instance=ExtResource("3_jn7db")]
 position = Vector2(-43, 38)
 inactive_color = Color(0.328363, 0.188552, 0.0617831, 1)
 active_color = Color(0.993088, 0.761047, 0.36313, 1)
 ilumination_scale = 0.25
 
-[node name="RightRayIndicator" parent="Body" index="3" instance=ExtResource("3_jn7db")]
+[node name="RightRayIndicator" parent="Body" index="2" instance=ExtResource("3_jn7db")]
 position = Vector2(-43, 50)
 inactive_color = Color(0.329412, 0.188235, 0.0627451, 1)
 active_color = Color(0.992157, 0.760784, 0.364706, 1)
 ilumination_scale = 0.25
 
-[node name="RightBrakeLight" parent="Body" index="4" instance=ExtResource("3_jn7db")]
-position = Vector2(-71.5, 50)
-inactive_color = Color(0.2, 0, 0, 1)
-active_color = Color(1, 0, 0, 1)
-backlight_energy = 15.0
-ilumination_scale = 0.25
-
-[node name="LongRayIndicator" parent="Body" index="5" instance=ExtResource("3_jn7db")]
+[node name="LongRayIndicator" parent="Body" index="3" instance=ExtResource("3_jn7db")]
 position = Vector2(-60, 41)
 inactive_color = Color(0.0998999, 5.17646e-05, 0.34762, 1)
 active_color = Color(0.602044, 0.610385, 1, 1)
 ilumination_scale = 0.25
 
-[node name="MediumRayIndicator" parent="Body" index="6" instance=ExtResource("3_jn7db")]
+[node name="MediumRayIndicator" parent="Body" index="4" instance=ExtResource("3_jn7db")]
 position = Vector2(-60, 44)
 inactive_color = Color(0.2, 0.364706, 0, 1)
 active_color = Color(0.394249, 0.68442, 0, 1)
 ilumination_scale = 0.25
 
-[node name="CloseRayIndicator" parent="Body" index="7" instance=ExtResource("3_jn7db")]
+[node name="CloseRayIndicator" parent="Body" index="5" instance=ExtResource("3_jn7db")]
 position = Vector2(-60, 47)
 inactive_color = Color(0.531182, 0, 0.263433, 1)
 active_color = Color(1, 0.359538, 0.595255, 1)
 ilumination_scale = 0.25
 
-[node name="LeftBeam" parent="Body" index="8" instance=ExtResource("4_jn7db")]
-z_index = 100
-z_as_relative = false
-position = Vector2(-40, 40)
-
-[node name="RightBeam" parent="Body" index="9" instance=ExtResource("4_jn7db")]
-z_index = 100
-z_as_relative = false
-position = Vector2(-40, 47)
-
-[node name="Label" type="Label" parent="Body" index="10"]
+[node name="Label" type="Label" parent="Body" index="6"]
 offset_left = -50.0
 offset_top = 36.0
 offset_right = -34.0
@@ -98,7 +74,7 @@ text = "12"
 label_settings = SubResource("LabelSettings_mo3rb")
 horizontal_alignment = 1
 
-[node name="Visuals" type="Node2D" parent="Body" index="11"]
+[node name="Visuals" type="Node2D" parent="Body" index="7"]
 position = Vector2(-56, 44)
 
 [node name="Tires" type="Node2D" parent="Body/Visuals" index="0"]
@@ -170,6 +146,73 @@ polygon = PackedVector2Array(1.007812, -4.398438, 1.457922, -4.429688, 2.005227,
 [node name="RearLeftWindow" type="Polygon2D" parent="Body/Visuals/Windows" index="5"]
 color = Color(0.16470589, 0.16470589, 0.16470589, 1)
 polygon = PackedVector2Array(-10.40625, -5.992188, -8, -6, -5.984375, -6.039062, -3.96875, -6.078125, -3, -6.101562, -1.994773, -6.114328, -0.992188, -6.145524, -1, -5.634041, -1, -5, -1, -5, -1, -4.351562, -2, -4.359375, -2.992188, -4.351562, -3.992188, -4.367188, -5, -4.367188, -5.984375, -4.359375, -6.609122, -4.356187, -7.046875, -4.390625, -7.273438, -4.453125, -7.521537, -4.540805, -7.960238, -4.748789, -8.414062, -5, -9.259375, -5.45, -9.967188, -5.792188, -10.144009, -5.867209)
+
+[node name="Lights" type="Node2D" parent="Body" index="8"]
+
+[node name="LeftBrakeLight" parent="Body/Lights" index="0" instance=ExtResource("3_jn7db")]
+position = Vector2(-71.5, 39)
+inactive_color = Color(0.2, 0, 0, 1)
+active_color = Color(1, 0, 0, 1)
+radius = 0.5
+backlight_energy = 15.0
+ilumination_scale = 0.25
+
+[node name="RightBrakeLight" parent="Body/Lights" index="1" instance=ExtResource("3_jn7db")]
+position = Vector2(-71.5, 49)
+inactive_color = Color(0.2, 0, 0, 1)
+active_color = Color(1, 0, 0, 1)
+radius = 0.5
+backlight_energy = 15.0
+ilumination_scale = 0.25
+
+[node name="LeftBeam" parent="Body/Lights" index="2" instance=ExtResource("4_jn7db")]
+z_index = 100
+z_as_relative = false
+position = Vector2(-40, 40)
+
+[node name="RightBeam" parent="Body/Lights" index="3" instance=ExtResource("4_jn7db")]
+z_index = 100
+z_as_relative = false
+position = Vector2(-40, 47)
+
+[node name="Blinkers" type="Node2D" parent="Body/Lights" index="4"]
+position = Vector2(-56, 44)
+
+[node name="LeftFront" parent="Body/Lights/Blinkers" index="0" instance=ExtResource("3_jn7db")]
+position = Vector2(14.5, -6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="LeftRear" parent="Body/Lights/Blinkers" index="1" instance=ExtResource("3_jn7db")]
+position = Vector2(-15.5, -6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightRear" parent="Body/Lights/Blinkers" index="2" instance=ExtResource("3_jn7db")]
+position = Vector2(-15.5, 6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="LeftSide" parent="Body/Lights/Blinkers" index="3" instance=ExtResource("3_jn7db")]
+position = Vector2(9.5, -7)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightSide" parent="Body/Lights/Blinkers" index="4" instance=ExtResource("3_jn7db")]
+position = Vector2(9.5, 7)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightFront" parent="Body/Lights/Blinkers" index="5" instance=ExtResource("3_jn7db")]
+position = Vector2(14.5, 6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
 
 [node name="CollisionArea" type="Area2D" parent="." index="1"]
 collision_layer = 6

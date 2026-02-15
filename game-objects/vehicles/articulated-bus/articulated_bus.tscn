@@ -16,7 +16,7 @@ size = Vector2(57, 28)
 size = Vector2(10.5, 20)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_65tko"]
-size = Vector2(51.5, 22)
+size = Vector2(60, 22)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2xaxp"]
 size = Vector2(59, 28)
@@ -92,12 +92,12 @@ monitoring = false
 monitorable = false
 
 [node name="CollisionShape" type="CollisionShape2D" parent="FrontBody/CollisionArea" index="0"]
-position = Vector2(0.5, 0)
+position = Vector2(0.5, -1)
 shape = SubResource("RectangleShape2D_aone0")
 disabled = true
 
 [node name="CloseRayCaster" type="RayCast2D" parent="FrontBody" index="9"]
-position = Vector2(30.0001, 4.19617e-05)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(11, 0)
@@ -107,7 +107,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="MediumRayCaster" type="RayCast2D" parent="FrontBody" index="10"]
-position = Vector2(30.0001, 4.19617e-05)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(36, 0)
@@ -117,7 +117,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="LongRayCaster" type="RayCast2D" parent="FrontBody" index="11"]
-position = Vector2(30.0001, 4.19617e-05)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(71, 0)
@@ -127,7 +127,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="LeftRayCaster" type="RayCast2D" parent="FrontBody" index="12"]
-position = Vector2(30.0001, 4.19617e-05)
+position = Vector2(34, 0)
 enabled = false
 exclude_parent = false
 target_position = Vector2(45, -13)
@@ -137,7 +137,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="RightRayCaster" type="RayCast2D" parent="FrontBody" index="13"]
-position = Vector2(30.0001, 4.19617e-05)
+position = Vector2(34.0001, 4.19617e-05)
 enabled = false
 exclude_parent = false
 target_position = Vector2(44, 15)
@@ -147,7 +147,7 @@ collide_with_areas = true
 collide_with_bodies = false
 
 [node name="ForwardBlockadeObserver" type="Area2D" parent="FrontBody" index="14"]
-position = Vector2(14.0001, 4.19617e-05)
+position = Vector2(17.5, -1)
 collision_layer = 4
 collision_mask = 4
 input_pickable = false
@@ -163,24 +163,14 @@ monitoring = false
 monitorable = false
 
 [node name="BodyShape" type="CollisionShape2D" parent="FrontBody/BodyArea" index="0"]
-position = Vector2(4.75, 0)
+position = Vector2(4, -1)
 shape = SubResource("RectangleShape2D_65tko")
 
 [node name="PathFollower" type="PathFollow2D" parent="FrontBody" index="16"]
 position = Vector2(6.10352e-05, 4.19617e-05)
 loop = false
 
-[node name="LeftBeam" parent="FrontBody" index="17" instance=ExtResource("4_xwv6l")]
-z_index = 100
-z_as_relative = false
-position = Vector2(30.5, -7)
-
-[node name="RightBeam" parent="FrontBody" index="18" instance=ExtResource("4_xwv6l")]
-z_index = 100
-z_as_relative = false
-position = Vector2(30.5, 5)
-
-[node name="Visuals" type="Node2D" parent="FrontBody" index="19"]
+[node name="Visuals" type="Node2D" parent="FrontBody" index="17"]
 position = Vector2(0, -1)
 
 [node name="Tires" type="Node2D" parent="FrontBody/Visuals" index="0"]
@@ -338,6 +328,44 @@ position = Vector2(-1, 10.5)
 color = Color(0.16470589, 0.16470589, 0.16470589, 1)
 polygon = PackedVector2Array(-2.5528536, -0.3909241, 0.05184555, -0.38205338, 4.4296875, -0.40499124, 4.435942, 0.39715573, -2.5341125, 0.40029454)
 
+[node name="Lights" type="Node2D" parent="FrontBody" index="18"]
+
+[node name="LeftBeam" parent="FrontBody/Lights" index="0" instance=ExtResource("4_xwv6l")]
+z_index = 100
+z_as_relative = false
+position = Vector2(34, -7)
+
+[node name="RightBeam" parent="FrontBody/Lights" index="1" instance=ExtResource("4_xwv6l")]
+z_index = 100
+z_as_relative = false
+position = Vector2(34, 5)
+
+[node name="Blinkers" type="Node2D" parent="FrontBody/Lights" index="2"]
+
+[node name="LeftFront" parent="FrontBody/Lights/Blinkers" index="0" instance=ExtResource("3_xwv6l")]
+position = Vector2(34, -11)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="LeftSide" parent="FrontBody/Lights/Blinkers" index="1" instance=ExtResource("3_xwv6l")]
+position = Vector2(24, -12)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightSide" parent="FrontBody/Lights/Blinkers" index="2" instance=ExtResource("3_xwv6l")]
+position = Vector2(24, 10)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightFront" parent="FrontBody/Lights/Blinkers" index="3" instance=ExtResource("3_xwv6l")]
+position = Vector2(34, 9)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
 [node name="Trailer" type="Node2D" parent="." index="1"]
 position = Vector2(-28, 0)
 
@@ -349,27 +377,13 @@ color = Color(0.105882, 0.513726, 0.831373, 1)
 polygon = PackedVector2Array(-23.84375, -10.84375, -23.698208, -10.953125, -23.48004, -11, 17.515625, -11, 17.777554, -10.921875, 17.914063, -10.78125, 18, -10.53125, 18, -9.343078, 18, 10.4765625, 17.953125, 10.6953125, 17.84375, 10.8203125, 17.71875, 10.9296875, 17.523438, 11, -23.532549, 11, -23.757813, 10.8828125, -23.898438, 10.761358, -24, 10.5390625, -24, -10.421536, -23.9375, -10.682201)
 uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
 
-[node name="LeftBrakeLight" parent="Trailer/TrailerBody" index="0" instance=ExtResource("3_xwv6l")]
-position = Vector2(-24, -9)
-inactive_color = Color(0.2, 0, 0, 1)
-active_color = Color(1, 0, 0, 1)
-backlight_energy = 15.0
-ilumination_scale = 0.25
-
-[node name="RightBrakeLight" parent="Trailer/TrailerBody" index="1" instance=ExtResource("3_xwv6l")]
-position = Vector2(-24, 9)
-inactive_color = Color(0.2, 0, 0, 1)
-active_color = Color(1, 0, 0, 1)
-backlight_energy = 15.0
-ilumination_scale = 0.25
-
-[node name="TrailerLink" type="Polygon2D" parent="Trailer/TrailerBody" index="2"]
+[node name="TrailerLink" type="Polygon2D" parent="Trailer/TrailerBody" index="0"]
 z_index = -2
 position = Vector2(-83, -44)
 polygon = PackedVector2Array(101, 33.3, 108, 33.3, 110.492, 33.9972, 113.313, 35.8829, 114.839, 37.4857, 115.492, 49.0893, 113.168, 51.7759, 111.058, 53.416, 109.132, 54.5, 101.019, 54.5)
 uv = PackedVector2Array(-108.994, 52.8229)
 
-[node name="Visuals" type="Node2D" parent="Trailer/TrailerBody" index="3"]
+[node name="Visuals" type="Node2D" parent="Trailer/TrailerBody" index="1"]
 
 [node name="Tires" type="Node2D" parent="Trailer/TrailerBody/Visuals" index="0"]
 
@@ -479,6 +493,38 @@ modulate = Color(1, 1, 1, 0.5882353)
 position = Vector2(8, 25)
 rotation = 1.5707964
 polygon = PackedVector2Array(-28.773438, -5.4921875, -28.426167, -5.7924933, -27.990854, -6, -21.986, -6.0078125, -21.511288, -5.749347, -21.25376, -5.452371, -21.000002, -5.0114193, -20.99219, 1.0094137, -21.234257, 1.4244785, -21.55457, 1.7471085, -22.006142, 1.9936938, -28.005617, 1.9858813, -28.43652, 1.7345433, -28.755732, 1.4735518, -28.985477, 1.0005016, -28.99219, -4.994576)
+
+[node name="Lights" type="Node2D" parent="Trailer/TrailerBody" index="2"]
+
+[node name="LeftBrakeLight" parent="Trailer/TrailerBody/Lights" index="0" instance=ExtResource("3_xwv6l")]
+position = Vector2(-24, -9)
+inactive_color = Color(0.2, 0, 0, 1)
+active_color = Color(1, 0, 0, 1)
+radius = 0.5
+backlight_energy = 15.0
+ilumination_scale = 0.25
+
+[node name="RightBrakeLight" parent="Trailer/TrailerBody/Lights" index="1" instance=ExtResource("3_xwv6l")]
+position = Vector2(-24, 9)
+inactive_color = Color(0.2, 0, 0, 1)
+active_color = Color(1, 0, 0, 1)
+radius = 0.5
+backlight_energy = 15.0
+ilumination_scale = 0.25
+
+[node name="Blinkers" type="Node2D" parent="Trailer/TrailerBody/Lights" index="2"]
+
+[node name="LeftRear" parent="Trailer/TrailerBody/Lights/Blinkers" index="0" instance=ExtResource("3_xwv6l")]
+position = Vector2(-24, -10)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightRear" parent="Trailer/TrailerBody/Lights/Blinkers" index="1" instance=ExtResource("3_xwv6l")]
+position = Vector2(-24, 10)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
 
 [node name="CollisionArea" type="Area2D" parent="Trailer" index="1"]
 position = Vector2(-23, 0)

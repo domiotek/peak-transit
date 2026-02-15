@@ -53,7 +53,7 @@ func _ready():
 
 	config["ai"].bind(self)
 	driver.set_navigator(navigator)
-	driver.set_lights(config.head_lights, config.brake_lights)
+	driver.set_lights(config.head_lights, config.brake_lights, config.left_blinker_nodes, config.right_blinker_nodes)
 	driver.set_casters(config["casters"])
 
 	driver.set_blockade_observer(config["blockade_observer"])
