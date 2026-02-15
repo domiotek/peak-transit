@@ -394,6 +394,7 @@ func process(delta: float) -> void:
 			return
 
 	_state = BusState.CONFUSED
+	_vehicle.driver.set_hazardous_lights_enabled(true)
 
 
 func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
