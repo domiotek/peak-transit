@@ -123,6 +123,8 @@ func try_enter(vehicle: Vehicle) -> Path2D:
 
 	var path = _stop_tracks[track_id]["in"]
 
+	vehicle.driver.set_blinkers_state(Enums.BlinkersState.OFF)
+
 	return path
 
 

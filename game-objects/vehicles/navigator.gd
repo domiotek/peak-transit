@@ -606,6 +606,7 @@ func _pass_node(leave_progress: bool = false) -> void:
 		"from_endpoint": current_step["next_node"].from,
 		"to_endpoint": current_step["next_node"].to,
 		"is_intersection": node.connected_segments.size() > 2,
+		"direction": current_step["next_node"].direction,
 	}
 
 	if not leave_progress:
@@ -687,19 +688,22 @@ func _create_segment_step(lane: NetLane, progress_offset: float) -> Dictionary:
 		"max_speed": lane.get_max_allowed_speed(),
 		"prev_node": prev_node_id,
 		"from_endpoint": lane.from_endpoint,
-		"to_endpoint": finish_endpoint.Id,
+		"to_endpoint": finish_endpoint.Id
 	}
 	_progress_offset = progress_offset
 
 	var node = network_manager.get_node(finish_endpoint.NodeId)
 
 	if node:
+		var next_target_endpoint_id = trip_path[trip_step_index + 1].ViaEndpointId if trip_step_index + 1 < trip_path.size() else null
+		var next_direction = node.get_connection_direction(finish_endpoint.Id, next_target_endpoint_id) if next_target_endpoint_id != null else Enums.Direction.UNSPECIFIED
+		
 		step["next_node"] = {
 			"node": node,
 			"is_intersection": node.connected_segments.size() > 2,
 			"from": finish_endpoint.Id,
-			"to": trip_path[trip_step_index + 1].ViaEndpointId if trip_step_index + 1 < trip_path.size() else null,
-			"approaching_intersection": node.connected_segments.size() > 2,
+			"to": next_target_endpoint_id,
+			"direction": next_direction,
 		}
 
 	return step

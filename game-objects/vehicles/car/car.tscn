@@ -13,91 +13,206 @@ shadow_size = 0
 size = Vector2(40, 22)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_xrjyi"]
-size = Vector2(32, 15)
+size = Vector2(32, 16)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4la2q"]
 size = Vector2(10.5, 20)
 
 [node name="Car" instance=ExtResource("1_2cddw")]
-visible = false
 script = ExtResource("2_t6643")
 
 [node name="Body" type="Polygon2D" parent="." index="0"]
 z_index = 5
 z_as_relative = false
 position = Vector2(56, -44)
-color = Color(1, 0.501961, 0.309804, 1)
-polygon = PackedVector2Array(-72, 36, -40, 36, -40, 52, -72, 52)
-uv = PackedVector2Array(-366, -51.5, 93, -54.5, 93, 77.5, -373, 79.5)
+color = Color(0.8, 0.1, 0.1, 1)
+polygon = PackedVector2Array(-71.57384, 37.584286, -71.28792, 37.284145, -70.98102, 37.13968, -70.5177, 37.073353, -69.99011, 37.003876, -49.51459, 36.71633, -49.585938, 35.835938, -49.546875, 35.523438, -49.496975, 35.335938, -49.29618, 35.09375, -49, 34.992188, -48.761364, 35.123924, -48.581223, 35.296875, -48.484375, 35.523438, -48.483055, 35.8125, -48.51358, 36.709423, -43.507774, 36.585484, -43.007813, 36.585938, -42.634087, 36.604897, -42.375, 36.640625, -42.125, 36.710938, -41.929688, 36.820313, -41.773438, 37, -41.52579, 37.33421, -41.234375, 37.8125, -41.007813, 38.265625, -40.670116, 38.97491, -40.315445, 39.77933, -40.166016, 40.163048, -40.071312, 40.67589, -40.03013, 41.270786, -39.999214, 42.983173, -39.987232, 45.01026, -40.027218, 46.637444, -40.070755, 47.355225, -40.136894, 47.78471, -40.23902, 48.080166, -40.38912, 48.465317, -40.657814, 48.992435, -40.991127, 49.64565, -41.31418, 50.294804, -41.72452, 51.006702, -41.914063, 51.226563, -42.090652, 51.334946, -42.273438, 51.382813, -42.50375, 51.416225, -43.505722, 51.40656, -48.485374, 51.289063, -48.476593, 52.18224, -48.525093, 52.545906, -48.59807, 52.730385, -48.6875, 52.867188, -48.80761, 52.95503, -48.992188, 53.023438, -49.148438, 52.992188, -49.359375, 52.890625, -49.485073, 52.738144, -49.554688, 52.546875, -49.587715, 52.167854, -49.51934, 51.26097, -70.01796, 51.01155, -70.48367, 50.964294, -70.99826, 50.83828, -71.27461, 50.65414, -71.56836, 50.31787, -71.739716, 50.00653, -71.85158, 49.673866, -71.90547, 49.009453, -71.94492, 48.21922, -72, 46.995758, -71.96955, 43.983894, -71.952736, 41.059807, -71.912155, 39.535633, -71.874916, 39.004498, -71.83011, 38.356976, -71.76042, 37.97417)
+uv = PackedVector2Array(-71.144585, 36.450764, -70.62424, 36.35413, -69.874405, 36.42632, -69.15865, 36.395832, -68.55869, 36.258816, -40, 36, -40, 52, -70.21728, 52, -71, 52, -71.48654, 52, -72, 52, -72, 51.76061, -72, 51, -72, 51, -72, 46.039185, -72, 41.059807, -71.83661, 39.284374, -71.68466, 37.90514, -71.51783, 37.04316, -71.39615, 36.618874)
 
 [node name="Line2D" type="Line2D" parent="Body" index="0"]
-position = Vector2(12, 0)
+position = Vector2(15, 0)
 points = PackedVector2Array(-62, 48, -57, 44, -62, 40)
 width = 1.0
 
-[node name="LeftBrakeLight" parent="Body" index="1" instance=ExtResource("3_jn7db")]
-position = Vector2(-72, 37)
-inactive_color = Color(0.2, 0, 0, 1)
-active_color = Color(1, 0, 0, 1)
-backlight_energy = 15.0
-ilumination_scale = 0.25
-
-[node name="LeftRayIndicator" parent="Body" index="2" instance=ExtResource("3_jn7db")]
+[node name="LeftRayIndicator" parent="Body" index="1" instance=ExtResource("3_jn7db")]
 position = Vector2(-43, 38)
 inactive_color = Color(0.328363, 0.188552, 0.0617831, 1)
 active_color = Color(0.993088, 0.761047, 0.36313, 1)
 ilumination_scale = 0.25
 
-[node name="RightRayIndicator" parent="Body" index="3" instance=ExtResource("3_jn7db")]
+[node name="RightRayIndicator" parent="Body" index="2" instance=ExtResource("3_jn7db")]
 position = Vector2(-43, 50)
 inactive_color = Color(0.329412, 0.188235, 0.0627451, 1)
 active_color = Color(0.992157, 0.760784, 0.364706, 1)
 ilumination_scale = 0.25
 
-[node name="RightBrakeLight" parent="Body" index="4" instance=ExtResource("3_jn7db")]
-position = Vector2(-72, 51)
-inactive_color = Color(0.2, 0, 0, 1)
-active_color = Color(1, 0, 0, 1)
-backlight_energy = 15.0
-ilumination_scale = 0.25
-
-[node name="LongRayIndicator" parent="Body" index="5" instance=ExtResource("3_jn7db")]
-position = Vector2(-60, 39)
+[node name="LongRayIndicator" parent="Body" index="3" instance=ExtResource("3_jn7db")]
+position = Vector2(-60, 41)
 inactive_color = Color(0.0998999, 5.17646e-05, 0.34762, 1)
 active_color = Color(0.602044, 0.610385, 1, 1)
 ilumination_scale = 0.25
 
-[node name="MediumRayIndicator" parent="Body" index="6" instance=ExtResource("3_jn7db")]
+[node name="MediumRayIndicator" parent="Body" index="4" instance=ExtResource("3_jn7db")]
 position = Vector2(-60, 44)
 inactive_color = Color(0.2, 0.364706, 0, 1)
 active_color = Color(0.394249, 0.68442, 0, 1)
 ilumination_scale = 0.25
 
-[node name="CloseRayIndicator" parent="Body" index="7" instance=ExtResource("3_jn7db")]
-position = Vector2(-60, 49)
+[node name="CloseRayIndicator" parent="Body" index="5" instance=ExtResource("3_jn7db")]
+position = Vector2(-60, 47)
 inactive_color = Color(0.531182, 0, 0.263433, 1)
 active_color = Color(1, 0.359538, 0.595255, 1)
 ilumination_scale = 0.25
 
-[node name="LeftBeam" parent="Body" index="8" instance=ExtResource("4_jn7db")]
-z_index = 100
-z_as_relative = false
-position = Vector2(-40, 40)
-
-[node name="RightBeam" parent="Body" index="9" instance=ExtResource("4_jn7db")]
-z_index = 100
-z_as_relative = false
-position = Vector2(-40, 47)
-
-[node name="Label" type="Label" parent="Body" index="10"]
-offset_left = -61.0
+[node name="Label" type="Label" parent="Body" index="6"]
+offset_left = -50.0
 offset_top = 36.0
-offset_right = -45.0
+offset_right = -34.0
 offset_bottom = 48.0
 rotation = 1.5708
 text = "12"
 label_settings = SubResource("LabelSettings_mo3rb")
 horizontal_alignment = 1
+
+[node name="Visuals" type="Node2D" parent="Body" index="7"]
+position = Vector2(-56, 44)
+
+[node name="Tires" type="Node2D" parent="Body/Visuals" index="0"]
+
+[node name="FrontLeftTire" type="Polygon2D" parent="Body/Visuals/Tires" index="0"]
+z_index = 4
+z_as_relative = false
+position = Vector2(10, -7.25)
+color = Color(0, 0, 0, 1)
+polygon = PackedVector2Array(-1.910156, -0.382812, -1.988281, -0.304687, -2.011719, -0.054687, -2.011719, 0.15625, -1.996094, 0.304688, -1.933594, 0.382813, -1.832031, 0.445313, -1.683594, 0.484375, -1.480469, 0.5, -0.003906, 0.5, 1.441406, 0.5, 1.636719, 0.476563, 1.769531, 0.445313, 1.871094, 0.375, 1.949219, 0.304688, 2.003906, 0.210938, 2.011719, -0.289062, 1.925781, -0.398437, 1.800781, -0.453125, 1.636719, -0.492187, 1.441406, -0.5, 0.003906, -0.5, -1.472656, -0.5, -1.667969, -0.476562, -1.792969, -0.4375, -1.910156, -0.382812)
+
+[node name="FrontRightTire" type="Polygon2D" parent="Body/Visuals/Tires" index="1"]
+z_index = 4
+z_as_relative = false
+position = Vector2(10, 7.25)
+color = Color(0, 0, 0, 1)
+polygon = PackedVector2Array(-1.910156, -0.382812, -1.988281, -0.304687, -2.011719, -0.054687, -2.011719, 0.15625, -1.996094, 0.304688, -1.933594, 0.382813, -1.832031, 0.445313, -1.683594, 0.484375, -1.480469, 0.5, -0.003906, 0.5, 1.441406, 0.5, 1.636719, 0.476563, 1.769531, 0.445313, 1.871094, 0.375, 1.949219, 0.304688, 2.003906, 0.210938, 2.011719, -0.289062, 1.925781, -0.398437, 1.800781, -0.453125, 1.636719, -0.492187, 1.441406, -0.5, 0.003906, -0.5, -1.472656, -0.5, -1.667969, -0.476562, -1.792969, -0.4375, -1.910156, -0.382812)
+
+[node name="RearRightTire" type="Polygon2D" parent="Body/Visuals/Tires" index="2"]
+z_index = 4
+z_as_relative = false
+position = Vector2(-10, 7)
+color = Color(0, 0, 0, 1)
+polygon = PackedVector2Array(-1.910156, -0.382812, -1.988281, -0.304687, -2.011719, -0.054687, -2.011719, 0.15625, -1.996094, 0.304688, -1.933594, 0.382813, -1.832031, 0.445313, -1.683594, 0.484375, -1.480469, 0.5, -0.003906, 0.5, 1.441406, 0.5, 1.636719, 0.476563, 1.769531, 0.445313, 1.871094, 0.375, 1.949219, 0.304688, 2.003906, 0.210938, 2.011719, -0.289062, 1.925781, -0.398437, 1.800781, -0.453125, 1.636719, -0.492187, 1.441406, -0.5, 0.003906, -0.5, -1.472656, -0.5, -1.667969, -0.476562, -1.792969, -0.4375, -1.910156, -0.382812)
+
+[node name="RearLeftTire" type="Polygon2D" parent="Body/Visuals/Tires" index="3"]
+z_index = 4
+z_as_relative = false
+position = Vector2(-10, -7)
+color = Color(0, 0, 0, 1)
+polygon = PackedVector2Array(-1.910156, -0.382812, -1.988281, -0.304687, -2.011719, -0.054687, -2.011719, 0.15625, -1.996094, 0.304688, -1.933594, 0.382813, -1.832031, 0.445313, -1.683594, 0.484375, -1.480469, 0.5, -0.003906, 0.5, 1.441406, 0.5, 1.636719, 0.476563, 1.769531, 0.445313, 1.871094, 0.375, 1.949219, 0.304688, 2.003906, 0.210938, 2.011719, -0.289062, 1.925781, -0.398437, 1.800781, -0.453125, 1.636719, -0.492187, 1.441406, -0.5, 0.003906, -0.5, -1.472656, -0.5, -1.667969, -0.476562, -1.792969, -0.4375, -1.910156, -0.382812)
+
+[node name="TopSurfaces" type="Node2D" parent="Body/Visuals" index="1"]
+
+[node name="Trunk" type="Polygon2D" parent="Body/Visuals/TopSurfaces" index="0"]
+modulate = Color(1, 1, 1, 0.11764706)
+polygon = PackedVector2Array(-14, -6, -14.262958, -5.8854785, -14.438418, -5.756891, -14.6446495, -5.5819106, -14.7890625, -5.328125, -14.921875, -5, -15.090685, -2.9885616, -15.113562, 0.012681961, -15.078125, 2.9921875, -14.908611, 5.0054502, -14.80862, 5.2353535, -14.707183, 5.4334416, -14.556852, 5.612406, -14.401052, 5.7630095, -14.243971, 5.8836765, -14, 6, -12, 6, -10.995131, 5.9885616, -11.141886, 5.7774043, -11.337419, 5.327043, -11.455873, 4.8834267, -11.603941, 3.9010103, -11.553611, -0.5422689, -11.553613, -2.1564429, -11.503284, -4.188176, -11.371449, -5.1126833, -10.999572, -5.9843473, -12, -6, -13, -6)
+
+[node name="Roof" type="Polygon2D" parent="Body/Visuals/TopSurfaces" index="1"]
+modulate = Color(1, 1, 1, 0.11764706)
+polygon = PackedVector2Array(-5, -4, 2, -4, 2.4661045, -3.9605584, 2.823156, -3.8935106, 3.255193, -3.7591228, 3.5776386, -3.4553719, 3.679728, -2.9771235, 3.6454132, 3.0343149, 3.5452306, 3.4436312, 3.2667017, 3.7278373, 2.995881, 3.8533418, 2.494813, 3.9738476, 2, 4, -5, 4, -5.7985573, 3.8420682, -6.2807636, 3.4536114, -6.525201, 3.2091742, -6.7748165, 2.8111215, -6.7933908, 2.0085185, -6.8125, -2, -6.787072, -2.7832398, -6.5390625, -3.21875, -6.2763567, -3.5127058, -5.821541, -3.8268964)
+
+[node name="Hood" type="Polygon2D" parent="Body/Visuals/TopSurfaces" index="2"]
+modulate = Color(1, 1, 1, 0.11764706)
+polygon = PackedVector2Array(7.4345994, -6.578343, 7.7732363, -6.0103073, 8.226764, -4.988662, 8.307429, -4.3328753, 8.3202, -3.7393782, 8.307916, 0.49920282, 8.30005, 3.8657238, 8.232481, 4.607247, 8.155904, 5.0068874, 7.8294873, 6.0035515, 7.4936366, 6.6448026, 11.723674, 6.939679, 13, 7, 13.205776, 6.94905, 13.386459, 6.8423386, 13.624729, 6.6415854, 13.804687, 6.3894258, 14.03125, 6.0234375, 14.348747, 5.451249, 14.661514, 4.8542967, 15.015734, 4.0210795, 15.216728, 3.2697809, 15.378651, 2.3807218, 15.376263, 1.7231832, 15.373689, 1.0138403, 15.377461, 0.008214667, 15.390044, -0.96746755, 15.331829, -2.3119009, 15.239356, -3.2754653, 15.01955, -3.9930902, 14.726068, -4.7783504, 14.551708, -5.1739626, 14.359934, -5.4847336, 14.171022, -5.7936263, 14.04, -6.0327344, 13.859689, -6.3041606, 13.713041, -6.5170174, 13.478862, -6.725212, 13.246054, -6.89302, 13.002204, -6.9957933, 11.620787, -6.9470015)
+
+[node name="Windows" type="Node2D" parent="Body/Visuals" index="2"]
+
+[node name="RearWindow" type="Polygon2D" parent="Body/Visuals/Windows" index="0"]
+color = Color(0.16565639, 0.16565642, 0.16565639, 1)
+polygon = PackedVector2Array(-10.44451, -5.444246, -10.591645, -5.4135585, -10.724886, -5.3094964, -10.8125, -5.109375, -10.866122, -4.798168, -10.981642, -3.9934309, -11, -3.0173368, -11, 3, -11, 3, -10.986907, 3.99957, -11, 4, -10.8828125, 4.8984375, -10.785085, 5.118096, -10.6328125, 5.2890625, -10.456444, 5.334095, -10.234496, 5.339794, -10.004759, 5.303581, -8.981827, 4.8354425, -7.998375, 4.244912, -7.7890625, 4.1015625, -7.577172, 3.968913, -7.4364443, 3.80543, -7.3332253, 3.6154416, -7.2734375, 3.359375, -7.2724757, 3.0268857, -7.269058, 2.5015106, -7.275855, 1.6024337, -7.253143, 1.038048, -7.2198453, -2.0137715, -7.223951, -2.8374658, -7.203125, -3.1796875, -7.246511, -3.5218055, -7.2619996, -3.6827862, -7.3515625, -3.8359375, -7.496631, -3.9935155, -7.995528, -4.2431045, -8.99482, -4.7474637, -9.99188, -5.2574224, -10.2265625, -5.3671875)
+
+[node name="RearRightWindow" type="Polygon2D" parent="Body/Visuals/Windows" index="1"]
+color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+polygon = PackedVector2Array(-10.40625, 5.9921875, -8, 6, -5.984375, 6.0390625, -3.96875, 6.078125, -3, 6.1015625, -1.9947734, 6.1143284, -0.9921875, 6.1455235, -1, 5.634041, -1, 5, -1, 5, -1, 4.3515625, -2, 4.359375, -2.9921875, 4.3515625, -3.9921875, 4.3671875, -5, 4.3671875, -5.984375, 4.359375, -6.6091223, 4.3561873, -7.046875, 4.390625, -7.2734375, 4.453125, -7.521537, 4.5408053, -7.9602385, 4.748789, -8.4140625, 5, -9.259375, 5.45, -9.967188, 5.7921877, -10.144009, 5.867209)
+
+[node name="FrontRightWindow" type="Polygon2D" parent="Body/Visuals/Windows" index="2"]
+color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+polygon = PackedVector2Array(1.0078125, 4.3984375, 1.457922, 4.4296875, 2.005227, 4.515625, 2.4849515, 4.625, 2.983263, 4.7734375, 3.4890625, 4.967969, 3.914322, 5.1416655, 4.592039, 5.406101, 5.15625, 5.6523438, 5.8046875, 5.96875, 6.0693436, 6.079713, 6.2607856, 6.1972675, 6.3046875, 6.3125, 6.2161965, 6.403746, 6.1171875, 6.4453125, 5.993015, 6.459881, 5.8733053, 6.454161, 5.0625, 6.421875, 3.984375, 6.359375, 2.0078125, 6.28125, 1.0141368, 6.249504, -0.48210958, 6.175156, -0.48992208, 4.364297, 0.5, 4.3671875)
+
+[node name="WindShield" type="Polygon2D" parent="Body/Visuals/Windows" index="3"]
+color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+polygon = PackedVector2Array(7.3336353, 5.938206, 7.2112036, 5.996667, 7.0078125, 5.96875, 6.482539, 5.753062, 6.041647, 5.4391627, 5.3944697, 5.0091567, 4.909462, 4.6782913, 4.475031, 4.3639703, 4.1953125, 4.140625, 4.0724306, 3.9571424, 4.0207496, 3.7813704, 4, 0.007812738, 3.9921875, -3.7265625, 4.1547346, -3.9687362, 4.556293, -4.3422785, 5.3311377, -4.96085, 6.064627, -5.44336, 6.8293686, -5.8767996, 7.0234375, -5.935859, 7.2144575, -5.866619, 7.4934373, -5.6936717, 7.7109375, -5.3828125, 7.911132, -4.871915, 7.9984775, -3.7924223, 8, -1.9743589, 8, 2, 8.00279, 3.6467333, 7.872468, 4.7141457, 7.736975, 5.2272596, 7.5546875, 5.6796875, 7.4528513, 5.8643813)
+
+[node name="FrontLeftWindow" type="Polygon2D" parent="Body/Visuals/Windows" index="4"]
+color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+polygon = PackedVector2Array(1.007812, -4.398438, 1.457922, -4.429688, 2.005227, -4.515625, 2.484952, -4.625, 2.983263, -4.773438, 3.489063, -4.967969, 3.914322, -5.141666, 4.592039, -5.406101, 5.15625, -5.652344, 5.804688, -5.96875, 6.069344, -6.079713, 6.260786, -6.197267, 6.304688, -6.3125, 6.216196, -6.403746, 6.117188, -6.445312, 5.993015, -6.459881, 5.873305, -6.454161, 5.0625, -6.421875, 3.984375, -6.359375, 2.007812, -6.28125, 1.014137, -6.249504, -0.48211, -6.175156, -0.489922, -4.364297, 0.5, -4.367188)
+
+[node name="RearLeftWindow" type="Polygon2D" parent="Body/Visuals/Windows" index="5"]
+color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+polygon = PackedVector2Array(-10.40625, -5.992188, -8, -6, -5.984375, -6.039062, -3.96875, -6.078125, -3, -6.101562, -1.994773, -6.114328, -0.992188, -6.145524, -1, -5.634041, -1, -5, -1, -5, -1, -4.351562, -2, -4.359375, -2.992188, -4.351562, -3.992188, -4.367188, -5, -4.367188, -5.984375, -4.359375, -6.609122, -4.356187, -7.046875, -4.390625, -7.273438, -4.453125, -7.521537, -4.540805, -7.960238, -4.748789, -8.414062, -5, -9.259375, -5.45, -9.967188, -5.792188, -10.144009, -5.867209)
+
+[node name="Lights" type="Node2D" parent="Body" index="8"]
+
+[node name="LeftBrakeLight" parent="Body/Lights" index="0" instance=ExtResource("3_jn7db")]
+position = Vector2(-71.5, 39)
+inactive_color = Color(0.2, 0, 0, 1)
+active_color = Color(1, 0, 0, 1)
+radius = 0.5
+backlight_energy = 15.0
+ilumination_scale = 0.25
+
+[node name="RightBrakeLight" parent="Body/Lights" index="1" instance=ExtResource("3_jn7db")]
+position = Vector2(-71.5, 49)
+inactive_color = Color(0.2, 0, 0, 1)
+active_color = Color(1, 0, 0, 1)
+radius = 0.5
+backlight_energy = 15.0
+ilumination_scale = 0.25
+
+[node name="LeftBeam" parent="Body/Lights" index="2" instance=ExtResource("4_jn7db")]
+z_index = 100
+z_as_relative = false
+position = Vector2(-40, 40)
+
+[node name="RightBeam" parent="Body/Lights" index="3" instance=ExtResource("4_jn7db")]
+z_index = 100
+z_as_relative = false
+position = Vector2(-40, 47)
+
+[node name="Blinkers" type="Node2D" parent="Body/Lights" index="4"]
+position = Vector2(-56, 44)
+
+[node name="LeftFront" parent="Body/Lights/Blinkers" index="0" instance=ExtResource("3_jn7db")]
+position = Vector2(14.5, -6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="LeftRear" parent="Body/Lights/Blinkers" index="1" instance=ExtResource("3_jn7db")]
+position = Vector2(-15.5, -6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightRear" parent="Body/Lights/Blinkers" index="2" instance=ExtResource("3_jn7db")]
+position = Vector2(-15.5, 6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="LeftSide" parent="Body/Lights/Blinkers" index="3" instance=ExtResource("3_jn7db")]
+position = Vector2(9.5, -7)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightSide" parent="Body/Lights/Blinkers" index="4" instance=ExtResource("3_jn7db")]
+position = Vector2(9.5, 7)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
+
+[node name="RightFront" parent="Body/Lights/Blinkers" index="5" instance=ExtResource("3_jn7db")]
+position = Vector2(14.5, 6)
+inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
+active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
+radius = 0.5
 
 [node name="CollisionArea" type="Area2D" parent="." index="1"]
 collision_layer = 6
@@ -165,7 +280,6 @@ monitoring = false
 monitorable = false
 
 [node name="BodyShape" type="CollisionShape2D" parent="BodyArea" index="0"]
-position = Vector2(0, -0.5)
 shape = SubResource("RectangleShape2D_xrjyi")
 
 [node name="ForwardBlockadeObserver" type="Area2D" parent="." index="8"]
@@ -176,6 +290,7 @@ monitoring = false
 monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ForwardBlockadeObserver" index="0"]
+visible = false
 position = Vector2(21.75, 0)
 shape = SubResource("RectangleShape2D_4la2q")
 

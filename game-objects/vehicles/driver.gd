@@ -35,12 +35,18 @@ var state: VehicleState = VehicleState.IDLE
 
 var beam_light_nodes: Array = []
 var brake_light_nodes: Array = []
+var left_blinker_nodes: Array = []
+var right_blinker_nodes: Array = []
 var casters: CasterCollection
 var blockade_observer: Area2D
 var time_blocked: float = 0.0
 
 var _headlights_state = false
 var _headlights_state_change_ticks_counter: float = 0
+
+var _hazardous_lights_enabled: bool = false
+var _blinkers_state: Enums.BlinkersState = Enums.BlinkersState.OFF
+var _blinkers_state_change_ticks_counter: float = 0.0
 
 var _stop_at_distance: float = 0.0
 var _slow_down_threshold: float = 0.0
@@ -67,10 +73,11 @@ func set_owner(vehicle: Vehicle) -> void:
 	owner = vehicle
 
 
-func set_lights(beam_nodes: Array, brake_nodes: Array) -> void:
+func set_lights(beam_nodes: Array, brake_nodes: Array, _left_blinker_nodes: Array, _right_blinker_nodes: Array) -> void:
 	beam_light_nodes = beam_nodes
 	brake_light_nodes = brake_nodes
-
+	left_blinker_nodes = _left_blinker_nodes
+	right_blinker_nodes = _right_blinker_nodes
 
 func set_casters(used_casters: CasterCollection) -> void:
 	casters = used_casters
@@ -174,6 +181,11 @@ func set_headlights_enabled(enabled: bool, set_instant: bool) -> void:
 	for beam_light in beam_light_nodes:
 		beam_light.set_enabled(enabled)
 
+func set_hazardous_lights_enabled(enabled: bool) -> void:
+	_hazardous_lights_enabled = enabled
+
+func set_blinkers_state(new_state: Enums.BlinkersState) -> void:
+	_blinkers_state = new_state
 
 func set_idle() -> void:
 	current_speed = 0.0
@@ -185,8 +197,8 @@ func set_idle() -> void:
 func tick_speed(delta: float, current_distance: float) -> float:
 	target_speed = get_max_allowed_speed()
 
-	_apply_slowdown_intersection()
-	_apply_slowdown_building()
+	_handle_approaching_intersection()
+	_handle_building_step()
 	_apply_slowdown_to_distance(current_distance)
 
 	if no_caster_allowance_time > 0.0:
@@ -213,6 +225,8 @@ func tick_lights(delta: float) -> void:
 		if _headlights_state_change_ticks_counter <= 0:
 			set_headlights_enabled(not _headlights_state, true)
 
+	_handle_blinkers_state(delta)
+	
 
 func check_blockade_cleared(delta: float) -> bool:
 	var colliders = get_blocking_objects()
@@ -285,27 +299,45 @@ func check_blockade_cleared(delta: float) -> bool:
 	return unblocked
 
 
-func _apply_slowdown_intersection() -> void:
+func _handle_approaching_intersection() -> void:
 	var current_step = navigator.get_current_step()
 
 	if not current_step or current_step.type != Navigator.StepType.SEGMENT or current_step["next_node"] == null:
 		return
 
 	var distance_to_node = current_step["length"] - current_step["progress"]
-	var approaching_intersection = current_step["next_node"].approaching_intersection
+	var approaching_intersection = current_step["next_node"].is_intersection
 
 	if approaching_intersection and distance_to_node < constants["INTERSECTION_SLOWDOWN_THRESHOLD"]:
-		target_speed = constants["INTERSECTION_SLOWDOWN"]
+		var direction = current_step["next_node"]["direction"]
+
+		match direction:
+			Enums.Direction.LEFT:
+				target_speed = constants["INTERSECTION_SLOWDOWN"]
+				set_blinkers_state(Enums.BlinkersState.LEFT)
+				return
+			Enums.Direction.RIGHT:
+				target_speed = constants["INTERSECTION_SLOWDOWN"]
+				set_blinkers_state(Enums.BlinkersState.RIGHT)
+				return
+	
+	set_blinkers_state(Enums.BlinkersState.OFF)
+		
 
 
-func _apply_slowdown_building() -> void:
+func _handle_building_step() -> void:
 	var current_step = navigator.get_current_step()
 
 	if not current_step or current_step.type != Navigator.StepType.BUILDING:
 		return
 
-	if current_step["is_entering"]:
+	var is_opposite_relation = current_step["connection"]["is_opposite_relation"]
+	var is_entering = current_step["is_entering"]
+
+	if is_entering:
 		target_speed = constants["BUILDING_ENTRY_SPEED"]
+
+	set_blinkers_state(Enums.BlinkersState.LEFT if is_opposite_relation else Enums.BlinkersState.RIGHT)
 
 
 func _apply_slowdown_to_distance(current_distance: float) -> void:
@@ -527,3 +559,32 @@ func _check_if_is_leaving_target_building(other_vehicle: Vehicle) -> bool:
 			return true
 
 	return false
+
+func _handle_blinkers_state(delta: float) -> void:
+	if _blinkers_state == Enums.BlinkersState.OFF and not _hazardous_lights_enabled:
+		_blinkers_state_change_ticks_counter = SimulationConstants.VEHICLE_BLINKERS_STATE_CHANGE_TICKS_OFFSET
+		_toggle_blinkers_active(left_blinker_nodes + right_blinker_nodes, false)
+		return
+
+	var target_blinkers = []
+
+	if _hazardous_lights_enabled:
+		target_blinkers.append_array(left_blinker_nodes)
+		target_blinkers.append_array(right_blinker_nodes)
+	else:
+		match _blinkers_state:
+			Enums.BlinkersState.LEFT:
+				target_blinkers = left_blinker_nodes
+			Enums.BlinkersState.RIGHT:
+				target_blinkers = right_blinker_nodes
+
+	_blinkers_state_change_ticks_counter -= delta
+	if _blinkers_state_change_ticks_counter <= 0.0:
+		_blinkers_state_change_ticks_counter = SimulationConstants.VEHICLE_BLINKERS_STATE_CHANGE_TICKS_OFFSET
+		_toggle_blinkers_active(target_blinkers)
+
+func _toggle_blinkers_active(target_blinkers: Array, force_state = null) -> void:
+	var active = force_state if force_state != null else not target_blinkers[0].is_active if target_blinkers.size() > 0 else false
+	
+	for blinker in target_blinkers:
+		blinker.set_active(active)

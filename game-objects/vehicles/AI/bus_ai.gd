@@ -405,6 +405,7 @@ func process(delta: float) -> void:
 			return
 
 	_state = BusState.CONFUSED
+	_vehicle.driver.set_hazardous_lights_enabled(true)
 
 
 func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
@@ -673,6 +674,7 @@ func _handle_entering_terminal() -> bool:
 		_is_at_terminal = true
 		_current_terminal = _target_terminal
 		_is_entering_building = false
+		_vehicle.driver.set_blinkers_state(Enums.BlinkersState.OFF)
 		return true
 
 	return false

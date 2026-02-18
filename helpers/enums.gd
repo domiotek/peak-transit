@@ -71,3 +71,9 @@ enum TransportRouteStepType {
 	STOP,
 	WAYPOINT,
 }
+
+enum BlinkersState {
+	OFF,
+	LEFT,
+	RIGHT,
+}
