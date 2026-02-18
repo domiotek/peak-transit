@@ -19,6 +19,7 @@ signal trip_ended(vehicle_id, completed: bool)
 @onready var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 @onready var pathing_manager: PathingManager = GDInjector.inject("PathingManager") as PathingManager
 @onready var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
+@onready var config_manager: ConfigManager = GDInjector.inject("ConfigManager") as ConfigManager
 
 var config: VehicleConfig
 
@@ -31,6 +32,8 @@ var _smoothed_curvature: float = 0.0
 
 
 func _ready():
+	self.visible = false
+
 	driver.set_owner(self)
 
 	var vehicle_config = _get_vehicle_config() as VehicleConfig
@@ -40,11 +43,17 @@ func _ready():
 		return
 	config = vehicle_config
 
+	if config.body_color:
+		recolor(config.body_color)
+
+	config_manager.DebugToggles.connect("ToggleChanged", Callable(self, "_on_debug_toggle_changed"))
+	_toggle_debug_indicators(config_manager.DebugToggles.UseVehicleDebugIndicators)
+
 	main_path_follower = config.path_follower
 
 	config["ai"].bind(self)
 	driver.set_navigator(navigator)
-	driver.set_lights(config.head_lights, config.brake_lights)
+	driver.set_lights(config.head_lights, config.brake_lights, config.left_blinker_nodes, config.right_blinker_nodes)
 	driver.set_casters(config["casters"])
 
 	driver.set_blockade_observer(config["blockade_observer"])
@@ -313,3 +322,15 @@ func _get_vehicle_config() -> Variant:
 
 func _on_lights_state_change(should_be_on: bool) -> void:
 	driver.set_headlights_enabled(should_be_on, false)
+
+func _on_debug_toggle_changed(toggle_name: String, value: bool) -> void:
+	if toggle_name == "UseVehicleDebugIndicators":
+		_toggle_debug_indicators(value)
+
+
+func _toggle_debug_indicators(enabled: bool) -> void:
+	for indicator in config.caster_indicators.values():
+		indicator.visible = enabled
+
+	config.blockade_indicator.visible = enabled
+	config.id_label.visible = enabled
