@@ -129,7 +129,8 @@ func _process(_delta: float) -> void:
 
 	if _assigned_vehicle:
 		vehicle_diff = (_assigned_vehicle.ai as BusAI).get_time_difference_to_schedule(current_time)
-		current_stop_idx = _assigned_vehicle.ai.get_next_stop().stop_idx - 1
+		var next_stop = _assigned_vehicle.ai.get_next_stop()
+		current_stop_idx = next_stop.stop_idx - 1 if next_stop != null else 0
 
 	for stop_idx in range(steps_list.get_child_count()):
 		var child = steps_list.get_child(stop_idx)

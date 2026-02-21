@@ -64,6 +64,7 @@ func setup(owner: Vehicle) -> void:
 
 
 func setup_trip(from_node_id: int, to_node_id: int, from_endpoint: int = -1, to_endpoint: int = -1) -> void:
+	step_ready = false
 	trip_points = [from_node_id, to_node_id]
 	trip_buildings = [null, null]
 
@@ -71,6 +72,7 @@ func setup_trip(from_node_id: int, to_node_id: int, from_endpoint: int = -1, to_
 
 
 func setup_trip_between_buildings(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
+	step_ready = false
 	var out_connections = from_building.get_out_connections()
 	var in_connections = to_building.get_in_connections()
 
@@ -94,6 +96,7 @@ func setup_trip_between_buildings(from_building: BaseBuilding, to_building: Base
 
 
 func setup_trip_mixed(from_id: int, to_id: int, is_from_building: bool, forced_node_endpoint: int = -1) -> void:
+	step_ready = false
 	var target_building_id = from_id if is_from_building else to_id
 	var target_building = buildings_manager.get_building(target_building_id) as BaseBuilding
 	if not target_building:
@@ -511,6 +514,13 @@ func _handle_reroute(path: Variant) -> void:
 
 	var updated_path = existing_path + new_path
 
+	if not _verify_path_continuity(existing_path, new_path):
+		push_error("Navigator: Updated path is not continuous.")
+		breakpoint
+		vehicle.driver.set_hazardous_lights_enabled(true)
+		vehicle.driver.emergency_stop()
+		return
+
 	var is_different = false
 
 	if new_path.size() != remaining_existing_path.size():
@@ -534,6 +544,7 @@ func _handle_reroute(path: Variant) -> void:
 
 	if not is_at_node:
 		_assign_to_step(trip_path[trip_step_index], true)
+	step_ready = true
 	_calc_trip_distance()
 	emit_signal("trip_rerouted")
 
@@ -688,7 +699,7 @@ func _create_segment_step(lane: NetLane, progress_offset: float) -> Dictionary:
 		"max_speed": lane.get_max_allowed_speed(),
 		"prev_node": prev_node_id,
 		"from_endpoint": lane.from_endpoint,
-		"to_endpoint": finish_endpoint.Id
+		"to_endpoint": finish_endpoint.Id,
 	}
 	_progress_offset = progress_offset
 
@@ -697,7 +708,7 @@ func _create_segment_step(lane: NetLane, progress_offset: float) -> Dictionary:
 	if node:
 		var next_target_endpoint_id = trip_path[trip_step_index + 1].ViaEndpointId if trip_step_index + 1 < trip_path.size() else null
 		var next_direction = node.get_connection_direction(finish_endpoint.Id, next_target_endpoint_id) if next_target_endpoint_id != null else Enums.Direction.UNSPECIFIED
-		
+
 		step["next_node"] = {
 			"node": node,
 			"is_intersection": node.connected_segments.size() > 2,
@@ -749,3 +760,16 @@ func _reset_state() -> void:
 
 	trip_curves_cache = []
 	_location_triggers = { "segment": [], "node": [] }
+
+
+func _verify_path_continuity(path1: Array, path2: Array) -> bool:
+	if path2.size() == 0:
+		return true
+
+	var path1_last_node = path1[-1].ToNodeId if path1.size() > 0 else -1
+	var path2_first_node = path2[0].FromNodeId if path2.size() > 0 else -1
+
+	if path1_last_node == -1 or path2_first_node == -1:
+		return false
+
+	return path1_last_node == path2_first_node

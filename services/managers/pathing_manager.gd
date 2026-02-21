@@ -30,6 +30,7 @@ func find_path(
 	active_requests[request_id] = {
 		"results": [null],
 		"completed_count": 0,
+		"requested_at": Time.get_unix_time_from_system(),
 		"executing_stack": get_stack(),
 		"total_count": 1,
 		"callback": callback,
@@ -63,6 +64,8 @@ func find_path_with_multiple_options(
 	var path_context = {
 		"results": [],
 		"completed_count": 0,
+		"requested_at": Time.get_unix_time_from_system(),
+		"executing_stack": get_stack(),
 		"total_count": combinations.size(),
 		"callback": callback,
 		"is_finished": false,
@@ -164,8 +167,10 @@ func _on_pathfinding_result(request_id: int, combination_id: int, path_result) -
 
 	path_context.results[combination_id] = path_result
 	path_context.completed_count += 1
+	path_context.last_result_completed_at = Time.get_unix_time_from_system()
 
 	if path_context.completed_count >= path_context.total_count:
+		path_context.completion_time = path_context.last_result_completed_at - path_context.requested_at
 		path_context.is_finished = true
 		active_requests.erase(request_id)
 		_select_best_path(path_context.results, path_context.callback)

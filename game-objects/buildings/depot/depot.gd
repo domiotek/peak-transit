@@ -39,6 +39,8 @@ func _ready() -> void:
 	if config_manager.AutoFillDepotStopsOnLoad and game_manager.get_game_mode() == Enums.GameMode.CHALLENGE:
 		_fill_bus_stops()
 
+	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
+
 
 func setup_depot(new_id: int, depot_data: DepotDefinition) -> void:
 	depot_id = new_id
@@ -183,6 +185,18 @@ func _get_connection_endpoints() -> Dictionary:
 func _on_input_event(_viewport, event, _shape_idx) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		game_manager.set_selection(self, GameManager.SelectionType.DEPOT)
+
+
+func _on_vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleManager.VehicleType) -> void:
+	if vehicle_type != VehicleManager.VehicleType.BUS and vehicle_type != VehicleManager.VehicleType.ARTICULATED_BUS:
+		return
+
+	if not vehicle_id in _buses:
+		return
+
+	_increase_bus_count(vehicle_type == VehicleManager.VehicleType.ARTICULATED_BUS)
+	_clear_vehicle_from_tracks(vehicle_id)
+	_buses.erase(vehicle_id)
 
 
 func _process_tracks() -> void:

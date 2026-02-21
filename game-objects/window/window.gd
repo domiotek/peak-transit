@@ -62,9 +62,9 @@ func _handle_autoload() -> void:
 
 	var world = SlimWorldDefinition.deserialize(world_def)
 
-	if game_mode == game_mode_names[Enums.GameMode.CHALLENGE]:
+	if game_mode == game_mode_names[Enums.GameMode.CHALLENGE + 1]:
 		game_manager.initialize_game(Enums.GameMode.CHALLENGE, world.file_path)
-	elif game_mode == game_mode_names[Enums.GameMode.MAP_EDITOR]:
+	elif game_mode == game_mode_names[Enums.GameMode.MAP_EDITOR + 1]:
 		game_manager.initialize_game(Enums.GameMode.MAP_EDITOR, world.file_path)
 	else:
 		prints("Invalid game mode specified in arguments. Ignoring.")

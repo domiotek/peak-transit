@@ -36,6 +36,10 @@ func _ready() -> void:
 	game_manager.rl_mode_toggled.connect(_show_rl_tag)
 
 
+func get_mode() -> Enums.GameMode:
+	return Enums.GameMode.UNSPECIFIED
+
+
 func get_map() -> Map:
 	return map
 

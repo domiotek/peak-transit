@@ -32,6 +32,7 @@ var _brigade_trip_idx: int = -1
 var _brigade_trip_current_stop_idx: int = -1
 
 var _is_leaving_building: bool = false
+var _is_ready_to_leave_building: bool = false
 var _is_entering_building: bool = false
 var _has_navigation_set: bool = true
 var _arrived_at_stop: bool = false
@@ -41,6 +42,7 @@ var _max_passengers: int = 0
 var _passenger_buckets: Array = []
 
 var _boarding_timer: float = 0.0
+var _stop_syncing_timer: float = 0.0
 
 var _finalizing_previous_step: Dictionary = { }
 
@@ -214,6 +216,7 @@ func unassign_brigade() -> void:
 	_prepare_passenger_buckets()
 	_vehicle.navigator.unblock_reroutes()
 	_vehicle.recolor(TransportConstants.BUS_DEFAULT_COLOR)
+	_vehicle.navigator.clear_location_triggers()
 
 
 func set_current_trip(trip_idx: int) -> void:
@@ -252,6 +255,8 @@ func return_to_depot() -> void:
 	if _state == BusState.RETURNING_TO_DEPOT:
 		return
 
+	unassign_brigade()
+
 	if not _origin_depot or _is_at_depot:
 		_remove_vehicle()
 		return
@@ -264,7 +269,6 @@ func return_to_depot() -> void:
 				_drive_to_depot()
 
 	_state = BusState.RETURNING_TO_DEPOT
-	unassign_brigade()
 
 
 func drive_to_terminal(id: int) -> void:
@@ -485,8 +489,9 @@ func _drive_to_terminal() -> void:
 
 	elif _target_terminal != source_building:
 		_is_leaving_building = true
-		_vehicle.init_trip(source_building, _target_terminal)
-		_has_navigation_set = true
+		if _is_ready_to_leave_building:
+			_vehicle.init_trip(source_building, _target_terminal)
+			_has_navigation_set = true
 
 
 func _join_trip(hot_join: bool) -> void:
@@ -510,6 +515,10 @@ func _join_trip(hot_join: bool) -> void:
 
 	if hot_join and not current_trip.is_past_trip():
 		stop_idx = current_trip.find_next_stop_after_time(current_time)
+
+		if stop_idx == -1:
+			stop_idx = 0
+			_state = BusState.TRANSFERING_TO_TERMINAL
 
 	var line_stop = current_trip.get_stop(stop_idx)
 	if line_stop.is_terminal:
@@ -555,10 +564,7 @@ func _drive_to_next_stop() -> void:
 		var trip_idx = _brigade.assign_next_trip(_vehicle.id, _brigade_trip_idx)
 		if trip_idx == -1:
 			_state = BusState.TRANSFERING_TO_TERMINAL
-			_brigade = null
-			_vehicle.recolor(TransportConstants.BUS_DEFAULT_COLOR)
-			_brigade_trip_idx = -1
-			_brigade_trip_current_stop_idx = -1
+			unassign_brigade()
 			_drive_to_terminal()
 			return
 		_brigade_trip_idx = trip_idx
@@ -659,6 +665,7 @@ func _get_start_node_of_network_location(step: Dictionary) -> Array:
 
 
 func _remove_vehicle() -> void:
+	unassign_brigade()
 	_origin_depot.insta_return_bus(_vehicle.id)
 	_vehicle_manager.remove_vehicle(_vehicle.id)
 
@@ -675,6 +682,7 @@ func _handle_entering_terminal() -> bool:
 		_current_terminal = _target_terminal
 		_is_entering_building = false
 		_vehicle.driver.set_blinkers_state(Enums.BlinkersState.OFF)
+		_vehicle.driver.disable_casters()
 		return true
 
 	return false
@@ -690,6 +698,7 @@ func _handle_leaving_building() -> bool:
 				_has_navigation_set = true
 				return true
 			TerminalTrackState.TrackSearchError.ALREADY_ON_TARGET:
+				_is_ready_to_leave_building = true
 				if _state == BusState.TRANSFERING_TO_STOP:
 					_trace_route_to_next_stop()
 				else:
@@ -698,17 +707,22 @@ func _handle_leaving_building() -> bool:
 				_current_terminal = null
 				_is_at_terminal = false
 				_is_leaving_building = false
+				_is_ready_to_leave_building = false
 				_has_navigation_set = true
+				_vehicle.driver.enable_casters()
 				return true
 
 	if _is_at_depot:
+		_is_ready_to_leave_building = true
 		if _state == BusState.TRANSFERING_TO_TERMINAL:
 			_drive_to_terminal()
 		else:
 			_drive_to_next_stop()
 		_is_at_depot = false
 		_is_leaving_building = false
+		_is_ready_to_leave_building = false
 		_has_navigation_set = true
+		_vehicle.driver.enable_casters()
 		return true
 
 	return false
@@ -725,9 +739,9 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 	if _brigade != null:
 		var peron_index = _current_terminal.get_peron_for_line(_brigade.line_id)
 
-		if current_trip.is_future_trip():
+		if current_trip.is_future_trip() && _current_passengers == 0:
 			var time_to_dep = current_trip.get_time_till_departure()
-			if time_to_dep > TransportConstants.BUS_OCCUPY_PERON_THRESHOLD:
+			if time_to_dep > TransportConstants.BUS_OCCUPY_PERON_THRESHOLD || current_trip.is_past_trip():
 				result = _current_terminal.wait_at_terminal(_vehicle.id)
 			else:
 				result = _current_terminal.navigate_to_peron(_vehicle.id, peron_index)
@@ -753,11 +767,6 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 
 				if leftover_passengers > 0:
 					_push_score_event(ChallengeEnums.ScoreReason.BUS_CHANGED_STATE_WITH_PASSENGERS_ONBOARD)
-					push_warning(
-						("Bus %s has leftover passengers (%d) after arriving at terminal %s waiting spot."
-							% [_vehicle.ai.get_custom_identifier(), leftover_passengers, _current_terminal.get_terminal_name()] ),
-					)
-
 				return true
 
 			_handle_stop(current_trip, delta)
@@ -799,9 +808,13 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 
 			if _boarding_timer <= 0.0:
 				_state = BusState.SYNCING_WITH_SCHEDULE
+				_stop_syncing_timer = TransportConstants.BUS_MAX_STOP_SYNCING_TIME
 				_handle_stop(current_trip, delta)
 		BusState.SYNCING_WITH_SCHEDULE:
+			_stop_syncing_timer -= delta
+
 			if is_last_stop or not current_trip.check_if_can_wait_at_stop(_brigade_trip_current_stop_idx):
+				_stop_syncing_timer = 0.0
 				_drive_to_next_stop()
 				return
 
@@ -810,9 +823,10 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 
 			var current_time = _game_manager.clock.get_time().to_time_of_day()
 
-			if current_time.to_minutes() < stop_departure_time.to_minutes():
+			if current_time.to_minutes() < stop_departure_time.to_minutes() and _stop_syncing_timer > 0.0:
 				return
 
+			_stop_syncing_timer = 0.0
 			_drive_to_next_stop()
 
 
@@ -890,7 +904,7 @@ func _check_for_leftover_passengers() -> void:
 	var passengers_left_at_stop = stop_passengers.get_waiting_passengers_for_line(_brigade.line_id)
 
 	if passengers_left_at_stop > 0:
-		_push_score_event(ChallengeEnums.ScoreReason.LEFT_PASSENGERS_BEHIND, passengers_left_at_stop)
+		_push_score_event(ChallengeEnums.ScoreReason.LEFT_PASSENGERS_BEHIND)
 
 
 func _push_score_event(reason: ChallengeEnums.ScoreReason, count: int = 1) -> void:

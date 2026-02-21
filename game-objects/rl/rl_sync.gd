@@ -42,3 +42,9 @@ func connect_to_server():
 		stream.poll()
 
 	return stream.get_status() == 2
+
+
+func _reset_agents(agents = all_agents) -> void:
+	for agent in agents:
+		agent.needs_reset = true
+		agent.reset()

@@ -39,6 +39,7 @@ var _collision_shape: CollisionPolygon2D
 @onready var map_pickable_area: Area2D = $PickableArea
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
+@onready var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
 
 
 func _ready() -> void:
@@ -57,10 +58,17 @@ func _ready() -> void:
 		_collision_shape.polygon = get_collision_polygon()
 		map_pickable_area.add_child(_collision_shape)
 
+	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
+
 
 func _process(delta: float) -> void:
 	for spawner in _peron_passenger_spawners:
 		spawner.process(delta)
+
+func _on_vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleManager.VehicleType) -> void:
+	if vehicle_type != VehicleManager.VehicleType.BUS and vehicle_type != VehicleManager.VehicleType.ARTICULATED_BUS:
+		return
+	notify_vehicle_left_terminal(vehicle_id)
 
 
 func setup_terminal(new_id: int, terminal_data: TerminalDefinition, demand_preset: DemandPresetDefinition) -> void:
@@ -166,6 +174,10 @@ func get_lines_at_peron(peron_index: int) -> Array:
 		if _line_id_to_peron[line_id] == peron_index:
 			lines.append(line_id)
 	return lines
+
+
+func get_current_bus_count() -> int:
+	return _vehicles_on_tracks.size()
 
 
 func try_enter(vehicle_id: int) -> Path2D:

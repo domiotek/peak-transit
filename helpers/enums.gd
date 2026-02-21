@@ -1,6 +1,7 @@
 class_name Enums
 
 enum GameMode {
+	UNSPECIFIED = -1,
 	MAP_EDITOR,
 	CHALLENGE,
 }

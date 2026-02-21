@@ -18,6 +18,10 @@ func _exit_tree() -> void:
 	_map_interactions_manager.reset_state()
 
 
+func get_mode() -> Enums.GameMode:
+	return Enums.GameMode.MAP_EDITOR
+
+
 func get_max_game_speed() -> Enums.GameSpeed:
 	return Enums.GameSpeed.PAUSE
 

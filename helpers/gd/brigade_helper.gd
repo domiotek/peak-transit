@@ -17,16 +17,20 @@ static func get_ongoing_trip(brigade: Brigade, current_time: TimeOfDay, vehicle_
 
 	var next_stop_idx
 	var assigned_bus
+	var next_bus_stop
 
 	if assigned_bus_idx != -1:
-		var bus = vehicle_manager.get_vehicle(assigned_bus_idx) as Bus
-		var bus_ai = bus.ai as BusAI
+		if not vehicle_manager.vehicle_exists(assigned_bus_idx):
+			brigade.unassign_vehicle(assigned_bus_idx)
+			assigned_bus_idx = -1
+		else:
+			var bus = vehicle_manager.get_vehicle(assigned_bus_idx) as Vehicle
 
-		assigned_bus = bus
+			var bus_ai = bus.ai as BusAI
+			assigned_bus = bus
+			next_bus_stop = bus_ai.get_next_stop()
 
-		next_stop_idx = bus_ai.get_next_stop().stop_idx
-	else:
-		next_stop_idx = ongoing_trip.find_next_stop_after_time(current_time)
+	next_stop_idx = next_bus_stop.stop_idx if next_bus_stop != null else ongoing_trip.find_next_stop_after_time(current_time)
 
 	return {
 		"ongoing_trip": ongoing_trip,

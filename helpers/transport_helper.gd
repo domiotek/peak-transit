@@ -396,6 +396,7 @@ static func draw_route(
 		var line2d = Line2D.new()
 		line2d.width = 2
 		line2d.default_color = color_hex
+		line2d.z_index = 3
 
 		var curve_length = curve.get_baked_length()
 		if curve_length > 0:
@@ -435,6 +436,7 @@ static func draw_route(
 			triangle.color = color_hex.lerp(Color.WHITE, 0.3)
 			triangle.position = position
 			triangle.rotation = tangent.angle()
+			triangle.z_index = 4
 
 			layer.add_child(triangle)
 
@@ -509,7 +511,7 @@ static func get_lanes_of_path(network_manager: NetworkManager, path: Array) -> A
 	for step in path:
 		var endpoint = network_manager.get_lane_endpoint(step.ViaEndpointId)
 
-		if endpoint:
+		if not endpoint:
 			continue
 
 		var segment = network_manager.get_segment(endpoint.SegmentId)

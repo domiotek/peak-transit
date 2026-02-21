@@ -19,12 +19,27 @@ func _init(target_id: int, is_terminal: bool, lines: Array, demand_preset: Deman
 	_is_terminal = is_terminal
 	_demand_preset = demand_preset
 	_max_passenger_count = max_passenger_count
-	_score_manager = _game_manager.get_game_controller().score_manager() if _game_manager.get_game_mode() == Enums.GameMode.CHALLENGE else null
+
+	_game_manager.rl_mode_toggled.connect(Callable(self, "_on_rl_mode_toggled"))
+	_game_manager.clock.clock_reset.connect(Callable(self, "_on_clock_reset"))
 
 	for line_id in lines:
 		var line = _transport_manager.get_line(line_id)
 		if line != null:
 			_lines.append(line)
+
+
+func _on_rl_mode_toggled(enabled: bool) -> void:
+	if enabled:
+		_score_manager = _game_manager.get_game_controller().score_manager()
+		return
+
+	_score_manager = null
+
+
+func _on_clock_reset() -> void:
+	_buckets.clear()
+	_spawn_timer = TransportConstants.PASSENGER_SPAWN_INTERVAL_DELTA
 
 
 func get_waiting_passengers_for_line(line_id: int) -> int:
@@ -59,6 +74,8 @@ func get_lowest_till_bored_time(clock: ClockTime) -> int:
 	var current_time = clock.to_time_of_day()
 
 	var minutes_waited = current_time.to_minutes() - creation_time.to_minutes()
+	if minutes_waited < 0:
+		minutes_waited += 1440
 
 	return max(0, get_boredom_time() - int(minutes_waited))
 

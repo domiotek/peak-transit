@@ -52,6 +52,7 @@ signal rl_mode_toggled(enabled: bool)
 
 func setup(game_controller: BaseGameController) -> void:
 	_game_controller = game_controller
+	_game_mode = game_controller.get_mode()
 
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager

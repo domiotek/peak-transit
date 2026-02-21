@@ -17,5 +17,7 @@ public partial class ConfigManager : RefCounted
 
     public bool AutoFillDepotStopsOnLoad { get; } = true;
 
+    public bool UseRlLogger { get; } = true;
+
     public DebugToggles DebugToggles { get; } = new DebugToggles();
 }

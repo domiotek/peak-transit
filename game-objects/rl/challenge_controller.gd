@@ -3,9 +3,12 @@ extends "res://addons/godot_rl_agents/controller/ai_controller_2d.gd"
 class_name ChallengeAiController
 
 var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
+var config_manager: ConfigManager = GDInjector.inject("ConfigManager") as ConfigManager
 var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
+
+var _logger: GDLogger = GDLogger.DummyGDLogger.new()
 
 var _depots: Array = []
 var _terminals: Array = []
@@ -13,10 +16,15 @@ var _brigades: Array = []
 var _buses_available: Dictionary = { }
 var _buses: Array = []
 
+var _technical_reset_done: bool = false
+
 var _score_manager: ScoreManager
 
 
 func setup() -> void:
+	if config_manager.UseRlLogger:
+		_logger = GDLogger.new("challenge_rl_train.log", true, true)
+
 	_depots = transport_manager.get_depots()
 	_terminals = transport_manager.get_terminals()
 	_brigades = transport_manager.brigades.get_all()
@@ -28,6 +36,9 @@ func setup() -> void:
 	_score_manager = game_manager.get_game_controller().score_manager()
 	reset_after = RLConstants.RL_RESET_AFTER_STEPS
 
+	game_manager.clock.time_changed.connect(Callable(self, "_time_changed"))
+	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
+
 
 func gather_features() -> Dictionary:
 	var time_of_day = game_manager.clock.get_time().to_time_of_day().to_sin_cos()
@@ -35,6 +46,7 @@ func gather_features() -> Dictionary:
 
 	var bus_features = _gather_bus_features(_buses)
 	var brigade_features = _gather_brigade_features(brigades)
+	var terminal_features = _gather_terminal_features(_terminals)
 
 	return {
 		"time_of_day": time_of_day,
@@ -49,28 +61,40 @@ func gather_features() -> Dictionary:
 		"brigade_traffic_intensity": brigade_features["brigade_traffic_intensity"],
 		"brigade_time_to_next_departure": brigade_features["brigade_time_to_next_departure"],
 		"brigade_gap_ahead_norm": brigade_features["brigade_gap_ahead_norm"],
+		"terminal_bus_count": terminal_features["terminal_bus_count"],
 	}
 
 
 func get_obs() -> Dictionary:
-	print("getting obs at time: ", game_manager.clock.get_time().to_time_of_day().format())
+	_logger.log("getting obs at time: " + game_manager.clock.get_time().to_time_of_day().format())
 	var features = gather_features()
+	_logger.log("features: " + str(features))
 
 	return { "obs": _flatten_features(features) }
 
 
 func get_reward() -> float:
+	var regular_upkeep_count = 0
+	var articulated_upkeep_count = 0
+
 	for bus_idx in range(_buses.size()):
 		var bus = _buses[bus_idx] as Vehicle
 
 		if bus == null:
 			continue
 
-		var cost_reason = (ChallengeEnums.ScoreReason.BUS_ARTICULATED_UPKEEP_COST
-			if _is_bus_articulated(bus_idx) else ChallengeEnums.ScoreReason.BUS_REGULAR_UPKEEP_COST )
+		if _is_bus_articulated(bus_idx):
+			articulated_upkeep_count += 1
+		else:
+			regular_upkeep_count += 1
 
-		_score_manager.update_score(cost_reason)
+	if regular_upkeep_count > 0:
+		_score_manager.update_score(ChallengeEnums.ScoreReason.BUS_REGULAR_UPKEEP_COST, regular_upkeep_count)
 
+	if articulated_upkeep_count > 0:
+		_score_manager.update_score(ChallengeEnums.ScoreReason.BUS_ARTICULATED_UPKEEP_COST, articulated_upkeep_count)
+
+	var unserved_brigade_count = 0
 	for brigade_idx in range(_brigades.size()):
 		var brigade = _brigades[brigade_idx] as Brigade
 
@@ -79,9 +103,12 @@ func get_reward() -> float:
 			continue
 
 		if ongoing_trip_info["assigned_bus"] == null:
-			_score_manager.update_score(ChallengeEnums.ScoreReason.UNSERVED_BRIGADE)
+			unserved_brigade_count += 1
 
-	print("reward: ", _score_manager.get_score())
+	if unserved_brigade_count > 0:
+		_score_manager.update_score(ChallengeEnums.ScoreReason.UNSERVED_BRIGADE, unserved_brigade_count)
+
+	_logger.log("reward: " + str(_score_manager.get_score()))
 	return _score_manager.get_score()
 
 
@@ -119,14 +146,28 @@ func get_action_space() -> Dictionary:
 
 
 func set_action(action) -> void:
+	_score_manager.push_action(action)
+
 	match action["command"] as int:
 		RLEnums.ActionType.NO_OP:
-			print("Received NO_OP action, doing nothing")
+			_logger.log("Received NO_OP action, doing nothing")
 			return
 		RLEnums.ActionType.SET_STATE:
 			_set_state_action(action["bus_idx"], action["state"], action["reserve_term_idx"])
 		RLEnums.ActionType.ASSIGN_TO_BRIGADE:
 			_assign_to_brigade_action(action["bus_idx"], action["brigade_idx"])
+
+
+func reset():
+	super.reset()
+	vehicle_manager.clear_all_vehicles()
+	game_manager.clock.reset()
+
+	if _technical_reset_done:
+		_score_manager.end_episode()
+		_buses.fill(null)
+	else:
+		_technical_reset_done = true
 
 
 func _gather_bus_features(buses: Array) -> Dictionary:
@@ -141,8 +182,8 @@ func _gather_bus_features(buses: Array) -> Dictionary:
 	var current_bus_counts = TransportHelper.get_total_deployed_buses(_depots)
 
 	features["bus_availability"] = [
-		current_bus_counts["regular"] / _buses_available["regular"],
-		current_bus_counts["articulated"] / _buses_available["articulated"],
+		current_bus_counts["regular"] / float(_buses_available["regular"]),
+		current_bus_counts["articulated"] / float(_buses_available["articulated"]),
 	]
 
 	for bus_idx in range(buses.size()):
@@ -166,7 +207,7 @@ func _gather_bus_features(buses: Array) -> Dictionary:
 		features["bus_load_ratio"].append(passenger_stats.current_passengers / max(passenger_stats.max_passengers, 1))
 
 		var time_diff = bus_ai.get_time_difference_to_schedule(game_manager.clock.get_time().to_time_of_day())
-		features["bus_delay"].append(time_diff / 60.0)
+		features["bus_delay"].append(time_diff / (60.0 * 24.0))
 
 	return features
 
@@ -185,15 +226,17 @@ func _gather_brigade_features(brigades: Array) -> Dictionary:
 	var current_time = game_manager.clock.get_time().to_time_of_day()
 
 	for brigade in brigades as Array[Brigade]:
-		features["brigade_bus_count"].append(brigade.get_vehicle_count() / total_buses)
+		features["brigade_bus_count"].append(brigade.get_vehicle_count() / float(total_buses))
+
+		var next_trip = brigade.get_next_trip(current_time)
+		features["brigade_time_to_next_departure"].append(next_trip.get_time_till_departure() / (60.0 * 24.0))
 
 		var ongoing_trip = BrigadeHelper.get_ongoing_trip(brigade, current_time)
 
 		if ongoing_trip["ongoing_trip"] == null:
 			features["brigade_unserved_demand"].append(0.0)
-			features["brigade_spillover_risk"].append(0.0)
+			features["brigade_spillover_risk"].append(1.0)
 			features["brigade_traffic_intensity"].append(0.0)
-			features["brigade_time_to_next_departure"].append(1.0)
 			features["brigade_gap_ahead_norm"].append(1.0)
 			continue
 
@@ -202,7 +245,8 @@ func _gather_brigade_features(brigades: Array) -> Dictionary:
 		var serving_vehicle = ongoing_trip["assigned_bus"] as Vehicle
 		var bus_ai = serving_vehicle.ai as BusAI if serving_vehicle != null else null
 
-		features["brigade_unserved_demand"].append(waiting_passengers_ahead["own_waiting"] / max(waiting_passengers_ahead["max_waiting"], 1))
+		var unserved_demand = waiting_passengers_ahead["own_waiting"] / float(max(waiting_passengers_ahead["max_waiting"], 1))
+		features["brigade_unserved_demand"].append(unserved_demand)
 
 		if bus_ai != null:
 			var passenger_stats = bus_ai.get_passenger_counts()
@@ -210,7 +254,7 @@ func _gather_brigade_features(brigades: Array) -> Dictionary:
 
 			features["brigade_spillover_risk"].append(
 				clamp(
-					(waiting_passengers_ahead["own_waiting_next_stop"] - next_bus_capacity) / max(waiting_passengers_ahead["max_waiting_next_stop"], 1),
+					(waiting_passengers_ahead["own_waiting_next_stop"] - next_bus_capacity) / float(max(waiting_passengers_ahead["max_waiting_next_stop"], 1)),
 					0.0,
 					1.0,
 				),
@@ -230,15 +274,29 @@ func _gather_brigade_features(brigades: Array) -> Dictionary:
 			),
 		)
 
-		var next_trip = brigade.get_next_trip(current_time)
-		features["brigade_time_to_next_departure"].append(next_trip.get_time_till_departure() / 60.0)
-
 		var departure_time = ongoing_trip["ongoing_trip"].get_departure_terminal().get_departure_time_for_line(brigade.line_id)
+
 		if departure_time == null:
 			features["brigade_gap_ahead_norm"].append(1.0)
 			continue
-		var time_diff = departure_time.difference_in_minutes_sin_cos(current_time) as int
-		features["brigade_gap_ahead_norm"].append(clamp(time_diff / 2.0 * transport_line.get_frequency_minutes(), 0.0, 1.0))
+
+		var gap_ahead = current_time.to_minutes() - departure_time.to_minutes()
+		if gap_ahead < 0:
+			gap_ahead += 1440
+
+		var normalization = 2.0 * transport_line.get_frequency_minutes()
+		features["brigade_gap_ahead_norm"].append(clamp(gap_ahead / normalization, 0.0, 1.0))
+
+	return features
+
+
+func _gather_terminal_features(terminals: Array) -> Dictionary:
+	var features = {
+		"terminal_bus_count": [],
+	}
+
+	for terminal in terminals as Array[Terminal]:
+		features["terminal_bus_count"].append(terminal.get_current_bus_count() / float(_buses_available["regular"] + _buses_available["articulated"]))
 
 	return features
 
@@ -252,8 +310,8 @@ func _get_bus_state(bus: Vehicle) -> RLEnums.BusState:
 		BusAI.BusState.IDLE:
 			return RLEnums.BusState.IN_RESERVE
 		BusAI.BusState.CONFUSED:
-			push_error("Bus ID %d is in CONFUSED state. Breaking training." % bus.id)
-			done = true
+			push_error("Bus ID %d is in CONFUSED state. Resetting environment." % bus.id)
+			_reset_environment()
 			return RLEnums.BusState.IN_RESERVE
 		BusAI.BusState.RETURNING_TO_DEPOT, BusAI.BusState.TRANSFERING_TO_TERMINAL, BusAI.BusState.TRANSFERING_TO_STOP:
 			return RLEnums.BusState.TRANSFER
@@ -286,7 +344,7 @@ func _onehot_encode(value: int, size: int) -> Array:
 func _set_state_action(bus_idx: int, state: RLEnums.BusStateRequest, reserve_term_idx: int) -> void:
 	var bus = _buses[bus_idx] as Vehicle
 
-	print("Setting state of bus index %d to state %d with reserve terminal index %d" % [bus_idx, state, reserve_term_idx])
+	_logger.log("Setting state of bus index %d to state %d with reserve terminal index %d" % [bus_idx, state, reserve_term_idx])
 
 	match state:
 		RLEnums.BusStateRequest.DEPOT:
@@ -323,7 +381,6 @@ func _set_state_action(bus_idx: int, state: RLEnums.BusStateRequest, reserve_ter
 					breakpoint
 					return
 
-				new_bus.destroyed.connect(_del_bus_with_idx)
 				_buses[bus_idx] = new_bus
 				bus = new_bus
 
@@ -346,7 +403,7 @@ func _set_state_action(bus_idx: int, state: RLEnums.BusStateRequest, reserve_ter
 
 
 func _assign_to_brigade_action(bus_idx: int, brigade_idx: int) -> void:
-	print(
+	_logger.log(
 		"Assigning bus #%d (articulated=%s) to brigade #%d (%s)" % [
 			bus_idx,
 			_is_bus_articulated(bus_idx),
@@ -388,3 +445,29 @@ func _del_bus_with_idx(bus_id: int) -> void:
 		push_error("Trying to delete bus with ID %d that is not tracked in controller's bus list" % bus_id)
 		return
 	_buses[bus_idx] = null
+
+
+func _on_vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleManager.VehicleType) -> void:
+	if not _technical_reset_done:
+		return
+
+	if vehicle_type != VehicleManager.VehicleType.BUS and vehicle_type != VehicleManager.VehicleType.ARTICULATED_BUS:
+		return
+
+	_del_bus_with_idx(vehicle_id)
+
+
+func _time_changed(new_time: ClockTime) -> void:
+	var minutes_in_day = new_time.to_time_of_day().to_minutes()
+
+	if minutes_in_day == 0 && not get_done(): # is midnight
+		_logger.log("New day reached, ending episode and resetting environment.")
+		_reset_environment()
+
+	if minutes_in_day % 60 == 0: # every hour
+		_logger.flush()
+
+
+func _reset_environment() -> void:
+	done = true
+	reset()

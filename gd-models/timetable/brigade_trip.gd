@@ -90,9 +90,13 @@ func is_ongoing_trip() -> bool:
 
 func get_time_till_departure() -> int:
 	var current_time = _clock_manager.get_time().to_time_of_day()
-	var departure_time = _data.departure_time
+	var departure_minutes = _data.departure_time.to_minutes()
+	var current_minutes = current_time.to_minutes()
 
-	return departure_time.difference_in_minutes_sin_cos(current_time) as int
+	if departure_minutes >= current_minutes:
+		return departure_minutes - current_minutes
+
+	return (1440 - current_minutes) + departure_minutes
 
 
 func check_if_can_wait_at_stop(stop_id: int) -> bool:

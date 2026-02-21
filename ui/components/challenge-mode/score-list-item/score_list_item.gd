@@ -1,11 +1,19 @@
 extends ListItem
 
+class_name ScoreListItem
 
-# Called when the node enters the scene tree for the first time.
+@onready var score_label: Label = $ScoreLabel
+
+var _score: float = 0
+
+
 func _ready() -> void:
-	pass # Replace with function body.
+	super._ready()
+
+	score_label.text = str(_score)
+	score_label.label_settings = score_label.label_settings.duplicate()
+	score_label.label_settings.font_color = Color(0, 1, 0) if _score > 0 else Color(1, 0, 0)
 
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+func set_score(score: float) -> void:
+	_score = score

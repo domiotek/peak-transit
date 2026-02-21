@@ -28,6 +28,7 @@ var current_brake_force: float = 0.0
 var no_caster_allowance_time: float = 0.0
 var just_enabled_casters: bool = false
 var casters_state: bool = false
+var _ignore_blockades: bool = false
 
 var constants: Dictionary = { }
 
@@ -78,6 +79,7 @@ func set_lights(beam_nodes: Array, brake_nodes: Array, _left_blinker_nodes: Arra
 	brake_light_nodes = brake_nodes
 	left_blinker_nodes = _left_blinker_nodes
 	right_blinker_nodes = _right_blinker_nodes
+
 
 func set_casters(used_casters: CasterCollection) -> void:
 	casters = used_casters
@@ -167,6 +169,14 @@ func grant_no_caster_allowance(time_seconds: float) -> void:
 	_on_blockade_area_exited(null)
 
 
+func disable_casters() -> void:
+	_ignore_blockades = true
+
+
+func enable_casters() -> void:
+	_ignore_blockades = false
+
+
 func get_time_blocked() -> float:
 	return time_blocked
 
@@ -181,11 +191,14 @@ func set_headlights_enabled(enabled: bool, set_instant: bool) -> void:
 	for beam_light in beam_light_nodes:
 		beam_light.set_enabled(enabled)
 
+
 func set_hazardous_lights_enabled(enabled: bool) -> void:
 	_hazardous_lights_enabled = enabled
 
+
 func set_blinkers_state(new_state: Enums.BlinkersState) -> void:
 	_blinkers_state = new_state
+
 
 func set_idle() -> void:
 	current_speed = 0.0
@@ -226,10 +239,13 @@ func tick_lights(delta: float) -> void:
 			set_headlights_enabled(not _headlights_state, true)
 
 	_handle_blinkers_state(delta)
-	
+
 
 func check_blockade_cleared(delta: float) -> bool:
 	var colliders = get_blocking_objects()
+
+	if _ignore_blockades:
+		return true
 
 	if just_enabled_casters:
 		return false
@@ -320,9 +336,8 @@ func _handle_approaching_intersection() -> void:
 				target_speed = constants["INTERSECTION_SLOWDOWN"]
 				set_blinkers_state(Enums.BlinkersState.RIGHT)
 				return
-	
+
 	set_blinkers_state(Enums.BlinkersState.OFF)
-		
 
 
 func _handle_building_step() -> void:
@@ -396,6 +411,9 @@ func _update_state(vehicle_state: VehicleState) -> void:
 
 
 func _check_for_obstacles() -> void:
+	if _ignore_blockades:
+		return
+
 	var colliding_casters = _get_colliding_casters()
 
 	for caster_id in CASTERS_CHECK_ORDER:
@@ -560,6 +578,7 @@ func _check_if_is_leaving_target_building(other_vehicle: Vehicle) -> bool:
 
 	return false
 
+
 func _handle_blinkers_state(delta: float) -> void:
 	if _blinkers_state == Enums.BlinkersState.OFF and not _hazardous_lights_enabled:
 		_blinkers_state_change_ticks_counter = SimulationConstants.VEHICLE_BLINKERS_STATE_CHANGE_TICKS_OFFSET
@@ -583,8 +602,9 @@ func _handle_blinkers_state(delta: float) -> void:
 		_blinkers_state_change_ticks_counter = SimulationConstants.VEHICLE_BLINKERS_STATE_CHANGE_TICKS_OFFSET
 		_toggle_blinkers_active(target_blinkers)
 
+
 func _toggle_blinkers_active(target_blinkers: Array, force_state = null) -> void:
 	var active = force_state if force_state != null else not target_blinkers[0].is_active if target_blinkers.size() > 0 else false
-	
+
 	for blinker in target_blinkers:
 		blinker.set_active(active)

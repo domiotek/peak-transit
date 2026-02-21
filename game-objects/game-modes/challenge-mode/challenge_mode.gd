@@ -21,6 +21,10 @@ func _ready() -> void:
 	_score_manager = ScoreManager.new()
 
 
+func get_mode() -> Enums.GameMode:
+	return Enums.GameMode.CHALLENGE
+
+
 func draw_vehicle_route(vehicle: Vehicle) -> void:
 	if not vehicle:
 		return

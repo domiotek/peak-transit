@@ -652,7 +652,9 @@
 						12
 					],
 					"offset": 300
-				}
+				},
+				"busCount": 3,
+				"articulatedBusCount": 2
 			}
 		],
 		"lines": [

@@ -202,6 +202,10 @@ func _check_entering_vehicles(delta: float) -> void:
 		return
 
 	for vehicle in vehicles_entering:
+		if not is_instance_valid(vehicle):
+			vehicles_entering = vehicles_entering.filter(func(veh):return veh!=null)
+			return # Remove invalid vehicle and try again in next frame 
+			
 		var current_step = vehicle.navigator.get_current_step()
 		var is_on_other_relation = current_step["connection"]["lane"].relation_id != target_relation_idx
 

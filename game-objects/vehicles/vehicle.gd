@@ -328,6 +328,7 @@ func _get_vehicle_config() -> Variant:
 func _on_lights_state_change(should_be_on: bool) -> void:
 	driver.set_headlights_enabled(should_be_on, false)
 
+
 func _on_debug_toggle_changed(toggle_name: String, value: bool) -> void:
 	if toggle_name == "UseVehicleDebugIndicators":
 		_toggle_debug_indicators(value)
