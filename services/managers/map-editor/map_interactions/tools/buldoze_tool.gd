@@ -37,7 +37,7 @@ func handle_map_clicked(_world_position: Vector2) -> void:
 		return
 
 	if _target_segment:
-		_network_builder.buldoze_segment(_target_segment)
+		_network_builder.destroy_road(_target_segment)
 		_target_segment = null
 		return
 
