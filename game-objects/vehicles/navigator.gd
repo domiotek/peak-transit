@@ -40,6 +40,8 @@ var total_trip_distance: float = 0.0
 
 var reroute_cooldown: float = 0.0
 var _is_rerouting_enabled: bool = true
+var _pathing_request_id: int = -1
+var _is_pathing_request_pending: bool = false
 
 var trip_curves_cache: Array = []
 var _location_triggers: Dictionary = {
@@ -64,14 +66,31 @@ func setup(owner: Vehicle) -> void:
 
 
 func setup_trip(from_node_id: int, to_node_id: int, from_endpoint: int = -1, to_endpoint: int = -1) -> void:
+	if _is_pathing_request_pending:
+		push_error("Navigator: Cannot setup a new trip while another pathing request is pending.")
+		return
+
 	step_ready = false
 	trip_points = [from_node_id, to_node_id]
 	trip_buildings = [null, null]
 
-	pathing_manager.find_path(from_node_id, to_node_id, Callable(self, "_on_pathfinder_result"), vehicle.config.category, from_endpoint, to_endpoint)
+	var pathing_request_id = pathing_manager.find_path(
+		from_node_id,
+		to_node_id,
+		Callable(self, "_on_pathfinder_result"),
+		vehicle.config.category,
+		from_endpoint,
+		to_endpoint,
+	)
+	_pathing_request_id = pathing_request_id
+	_is_pathing_request_pending = true
 
 
 func setup_trip_between_buildings(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
+	if _is_pathing_request_pending:
+		push_error("Navigator: Cannot setup a new trip while another pathing request is pending.")
+		return
+
 	step_ready = false
 	var out_connections = from_building.get_out_connections()
 	var in_connections = to_building.get_in_connections()
@@ -92,10 +111,16 @@ func setup_trip_between_buildings(from_building: BaseBuilding, to_building: Base
 
 	trip_buildings = [from_building, to_building]
 
-	pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+	var pathing_request_id = pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+	_pathing_request_id = pathing_request_id
+	_is_pathing_request_pending = true
 
 
 func setup_trip_mixed(from_id: int, to_id: int, is_from_building: bool, forced_node_endpoint: int = -1) -> void:
+	if _is_pathing_request_pending:
+		push_error("Navigator: Cannot setup a new trip while another pathing request is pending.")
+		return
+
 	step_ready = false
 	var target_building_id = from_id if is_from_building else to_id
 	var target_building = buildings_manager.get_building(target_building_id) as BaseBuilding
@@ -120,7 +145,9 @@ func setup_trip_mixed(from_id: int, to_id: int, is_from_building: bool, forced_n
 
 	trip_buildings = [target_building, null] if is_from_building else [null, target_building]
 
-	pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+	var pathing_request_id = pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+	_pathing_request_id = pathing_request_id
+	_is_pathing_request_pending = true
 
 
 func setup_trip_with_path(path: Array, from_building: BaseBuilding = null, to_building: BaseBuilding = null) -> void:
@@ -164,7 +191,11 @@ func reroute_to_node(node_id: int, to_endpoint_id: int = -1, path: Array = []) -
 			},
 		)
 	else:
-		pathing_manager.find_path(
+		if _is_pathing_request_pending:
+			push_error("Navigator: Cannot reroute to node while another pathing request is pending.")
+			return
+
+		var pathing_request_id = pathing_manager.find_path(
 			trip_points[0],
 			node_id,
 			Callable(self, "_on_pathfinder_result"),
@@ -172,6 +203,8 @@ func reroute_to_node(node_id: int, to_endpoint_id: int = -1, path: Array = []) -
 			current_step["from_endpoint"],
 			to_endpoint_id,
 		)
+		_pathing_request_id = pathing_request_id
+		_is_pathing_request_pending = true
 
 
 func reroute_to_building(building: BaseBuilding, path: Array = []) -> void:
@@ -197,6 +230,10 @@ func reroute_to_building(building: BaseBuilding, path: Array = []) -> void:
 			},
 		)
 	else:
+		if _is_pathing_request_pending:
+			push_error("Navigator: Cannot reroute to building while another pathing request is pending.")
+			return
+
 		var building_connections = building.get_in_connections()
 
 		var combinations = []
@@ -214,7 +251,9 @@ func reroute_to_building(building: BaseBuilding, path: Array = []) -> void:
 				},
 			)
 
-		pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+		var pathing_request_id = pathing_manager.find_path_with_multiple_options(combinations, Callable(self, "_on_pathfinder_result"), vehicle.config.category)
+		_pathing_request_id = pathing_request_id
+		_is_pathing_request_pending = true
 
 
 func has_trip() -> bool:
@@ -326,8 +365,14 @@ func abandon_trip() -> void:
 	)
 
 
-func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
+func reroute(force: bool = false) -> void:
 	if not _is_rerouting_enabled:
+		return
+
+	if not _is_pathing_request_pending:
+		if force:
+			push_error("Navigator: No pathing request is pending, but force flag is set. This should not happen.")
+
 		return
 
 	if current_step["type"] != StepType.SEGMENT and current_step["type"] != StepType.NODE:
@@ -341,10 +386,10 @@ func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
 	step_ready = false
 
 	var current_node = current_step["prev_node"] if current_step["type"] == StepType.SEGMENT else current_step["node"].id
-	var new_trip = [current_node, trip_points[1] if to_endpoint_id == -1 else to_endpoint_id]
+	var new_trip = [current_node, trip_points[1]]
 	var finish_endpoint = segment_helper.get_other_endpoint_in_lane(last_step_forced_endpoint) if last_step_forced_endpoint != -1 else null
 
-	pathing_manager.find_path(
+	var pathing_request_id = pathing_manager.find_path(
 		new_trip[0],
 		new_trip[1],
 		Callable(self, "_on_pathfinder_result"),
@@ -352,6 +397,8 @@ func reroute(force: bool = false, to_endpoint_id: int = -1) -> void:
 		current_step["from_endpoint"],
 		finish_endpoint.Id if finish_endpoint else -1,
 	)
+	_pathing_request_id = pathing_request_id
+	_is_pathing_request_pending = true
 
 
 func block_reroutes() -> void:
@@ -457,7 +504,18 @@ func _tick_segment_triggers() -> void:
 					_location_triggers["segment"].erase(trigger)
 
 
-func _on_pathfinder_result(path: Variant) -> void:
+func _on_pathfinder_result(request_id: int, path: Variant) -> void:
+	if not _is_pathing_request_pending:
+		push_error("Navigator: Received a pathfinder result while no request was pending.")
+		return
+
+	if request_id != _pathing_request_id and request_id != int(INF):
+		push_error("Navigator: Received a pathfinder result for request ID %d, but current pending request ID is %d." % [request_id, _pathing_request_id])
+		return
+
+	_pathing_request_id = -1
+	_is_pathing_request_pending = false
+
 	if trip_path.size() > 0:
 		_handle_reroute(path)
 		return
@@ -487,6 +545,13 @@ func _on_pathfinder_result(path: Variant) -> void:
 		call_deferred("_start_trip")
 		call_deferred("_calc_trip_distance")
 	else:
+		if path.State == 2:
+			push_warning("Navigator: Pathfinder failed to find a path between node %d and node %d." % [trip_points[0], trip_points[1]])
+		elif path.State == 4:
+			push_warning("Navigator: Pathfinder request timed out.")
+		else:
+			push_warning("Navigator: Pathfinder returned an unknown state: %d" % [path.State])
+
 		emit_signal(
 			"trip_ended",
 			false,

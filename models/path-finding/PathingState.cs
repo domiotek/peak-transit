@@ -6,4 +6,5 @@ public enum PathingState
     Completed,
     Failed,
     Cancelled,
+    TimedOut,
 }

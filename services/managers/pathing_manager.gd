@@ -18,13 +18,14 @@ func find_path(
 		requester_vehicle_type: VehicleManager.VehicleCategory,
 		force_start_endpoint: int = -1,
 		force_end_endpoint: int = -1,
-) -> void:
+) -> int:
 	var cache_key = _generate_cache_key(start_node_id, end_node_id, force_start_endpoint, force_end_endpoint)
 
 	var cached_result = _get_cached_result(cache_key)
 	if cached_result != null:
-		callback.call(cached_result)
-		return
+		var dummy_id = int(INF)
+		callback.call(dummy_id, cached_result)
+		return dummy_id
 
 	var request_id = _get_request_id()
 	active_requests[request_id] = {
@@ -48,16 +49,19 @@ func find_path(
 		0,
 	)
 
+	return request_id
+
 
 func find_path_with_multiple_options(
 		combinations: Array,
 		callback: Callable,
 		requester_vehicle_type: VehicleManager.VehicleCategory,
-		timeout: float = 50.0,
-) -> void:
+		timeout: float = 150.0,
+) -> int:
 	if combinations.is_empty():
-		callback.call(null)
-		return
+		var dummy_id = int(INF)
+		callback.call(dummy_id, null)
+		return dummy_id
 
 	var request_id = _get_request_id()
 
@@ -112,9 +116,15 @@ func find_path_with_multiple_options(
 			i,
 		)
 
+	return request_id
+
 
 func cancel_all_requests() -> void:
 	active_requests.clear()
+
+
+func get_request_count() -> int:
+	return active_requests.size()
 
 
 func clear_state() -> void:
@@ -173,7 +183,7 @@ func _on_pathfinding_result(request_id: int, combination_id: int, path_result) -
 		path_context.completion_time = path_context.last_result_completed_at - path_context.requested_at
 		path_context.is_finished = true
 		active_requests.erase(request_id)
-		_select_best_path(path_context.results, path_context.callback)
+		_select_best_path(request_id, path_context.results, path_context.callback)
 
 
 func _on_request_timeout(request_id: int) -> void:
@@ -185,11 +195,12 @@ func _on_request_timeout(request_id: int) -> void:
 		return
 
 	path_context.is_finished = true
+	path_context.timed_out = true
 	active_requests.erase(request_id)
-	_select_best_path(path_context.results, path_context.callback)
+	_select_best_path(request_id, path_context.results, path_context.callback)
 
 
-func _select_best_path(results: Array, callback: Callable) -> void:
+func _select_best_path(request_id: int, results: Array, callback: Callable) -> void:
 	var best_cost: float = INF
 	var best_result_index: int = -1
 
@@ -208,7 +219,7 @@ func _select_best_path(results: Array, callback: Callable) -> void:
 
 	if best_result_index == -1:
 		best_result = {
-			"State": 2,
+			"State": 4, # Timed out state
 		}
 	else:
 		var cache_key = _generate_cache_key(
@@ -222,4 +233,4 @@ func _select_best_path(results: Array, callback: Callable) -> void:
 			"timestamp": Time.get_unix_time_from_system(),
 		}
 
-	callback.call(best_result)
+	callback.call(request_id, best_result)

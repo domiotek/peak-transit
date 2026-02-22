@@ -115,6 +115,7 @@ func _try_spawn_vehicle() -> void:
 
 func _vehicle_routing_failed(_vehicle_id: int) -> void:
 	vehicle_leaving = null
+	vehicles_pool += 1
 
 
 func _get_starting_vehicles_pool() -> int:
