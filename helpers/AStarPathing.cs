@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using PT.DependencyProvider;
 using PT.Models.Mappings;
@@ -14,7 +13,6 @@ namespace PT.Helpers;
 class AStarNode(int nodeId)
 {
     public int NodeId { get; set; } = nodeId;
-    public string NodeRouteKey { get; set; }
     public float GCost { get; set; } = float.MaxValue;
     public float HCost { get; set; } = 0;
     public float FCost => GCost + HCost;
@@ -76,7 +74,7 @@ public class AStarPathing
         }
 
         var explorationSet = new PriorityQueue<AStarNode, float>();
-        var bestCostToState = new Dictionary<string, double>();
+        var bestCostToState = new Dictionary<(int nodeId, int? fromEndpointId), float>();
         var visitedNodes = new HashSet<int>();
         var bestSolutionNodes = new HashSet<int>();
         AStarNode bestSolution = null;
@@ -88,6 +86,7 @@ public class AStarPathing
             HCost = CalculateHeuristic(startGraphNode, endGraphNode),
         };
 
+        bestCostToState[(startNode.NodeId, startNode.FromEndpointId)] = startNode.GCost;
         explorationSet.Enqueue(startNode, startNode.FCost);
 
         while (explorationSet.Count > 0)
@@ -95,16 +94,14 @@ public class AStarPathing
             cancellationToken.ThrowIfCancellationRequested();
 
             var currentNode = explorationSet.Dequeue();
-            string currentStateKey = $"{currentNode.NodeId}_{currentNode.FromEndpointId}";
+            var currentStateKey = (currentNode.NodeId, currentNode.FromEndpointId);
             if (
                 currentNode.GCost
-                > bestCostToState.GetValueOrDefault(currentStateKey, double.MaxValue)
+                > bestCostToState.GetValueOrDefault(currentStateKey, float.MaxValue)
             )
             {
                 continue;
             }
-
-            bestCostToState[currentStateKey] = currentNode.GCost;
 
             if (currentNode.NodeId == endNodeId)
             {
@@ -161,6 +158,16 @@ public class AStarPathing
 
             foreach (var neighbor in neighborNodes)
             {
+                var neighborStateKey = (neighbor.NodeId, neighbor.FromEndpointId);
+                if (
+                    neighbor.GCost
+                    >= bestCostToState.GetValueOrDefault(neighborStateKey, float.MaxValue)
+                )
+                {
+                    continue;
+                }
+
+                bestCostToState[neighborStateKey] = neighbor.GCost;
                 explorationSet.Enqueue(neighbor, neighbor.FCost);
             }
         }
@@ -185,43 +192,67 @@ public class AStarPathing
     {
         var result = new List<AStarNode>();
 
+        List<int> availableEndpoints = null;
+        if (
+            currentNode.FromEndpointId != null
+            && currentNode.GraphNode.EndpointConnections.TryGetValue(
+                (int)currentNode.FromEndpointId,
+                out var endpointCandidates
+            )
+        )
+        {
+            availableEndpoints = endpointCandidates;
+        }
+
+        NetLaneEndpoint sourceEndpoint = null;
+        if (currentNode.FromEndpointId != null)
+        {
+            sourceEndpoint = GetEndpointById(
+                currentNode.GraphNode,
+                (int)currentNode.FromEndpointId
+            );
+            if (sourceEndpoint == null)
+            {
+                return result;
+            }
+        }
+
         foreach (var connection in currentNode.GraphNode.ConnectedNodes)
         {
             int neighborId = connection.Key;
             var neighborGraphNode = graph.GetNode(neighborId);
             var route = connection.Value;
 
-            var availableEndpoints =
-                currentNode.FromEndpointId != null
-                    ? currentNode.GraphNode.EndpointConnections[(int)currentNode.FromEndpointId]
-                    : null;
-
-            var filteredViaPoints = route
-                .Via.Where(via => availableEndpoints == null || availableEndpoints.Contains(via))
-                .Where(via => forcedEndpoint == null || via == forcedEndpoint)
-                .Where(via =>
-                {
-                    if (currentNode.FromEndpointId == null)
-                        return true;
-
-                    var sourceEndpoint = currentNode.GraphNode.Endpoints.FirstOrDefault(e =>
-                        e.Id == currentNode.FromEndpointId
-                    );
-
-                    if (sourceEndpoint == null)
-                        return false;
-
-                    var allowedVehicles = sourceEndpoint.ConnectionsExt.ContainsKey(via)
-                        ? sourceEndpoint.ConnectionsExt[via].AllowedVehicles
-                        : new List<VehicleCategory>();
-
-                    return allowedVehicles.Count == 0 || allowedVehicles.Contains(vehicleType);
-                })
-                .ToList();
-
-            foreach (var viaPoint in filteredViaPoints)
+            foreach (var viaPoint in route.Via)
             {
-                currentNode.NodeRouteKey = $"{currentNode.NodeId}_{neighborId}_{viaPoint}";
+                if (availableEndpoints != null && !availableEndpoints.Contains(viaPoint))
+                {
+                    continue;
+                }
+
+                if (forcedEndpoint != null && viaPoint != forcedEndpoint)
+                {
+                    continue;
+                }
+
+                if (currentNode.FromEndpointId != null)
+                {
+                    var allowedVehicles = sourceEndpoint.ConnectionsExt.TryGetValue(
+                        viaPoint,
+                        out var connectionExt
+                    )
+                        ? connectionExt.AllowedVehicles
+                        : null;
+
+                    if (
+                        allowedVehicles != null
+                        && allowedVehicles.Count > 0
+                        && !allowedVehicles.Contains(vehicleType)
+                    )
+                    {
+                        continue;
+                    }
+                }
 
                 currentNode.ToEndpointId = viaPoint;
 
@@ -260,11 +291,26 @@ public class AStarPathing
                 current.NodeId,
                 current.Parent.ToEndpointId ?? -1
             );
-            path.Insert(0, step);
+            path.Add(step);
             current = current.Parent;
         }
 
+        path.Reverse();
+
         return path;
+    }
+
+    private static NetLaneEndpoint GetEndpointById(GraphNode node, int endpointId)
+    {
+        foreach (var endpoint in node.Endpoints)
+        {
+            if (endpoint.Id == endpointId)
+            {
+                return endpoint;
+            }
+        }
+
+        return null;
     }
 
     private static HashSet<int> GetNodesInPath(AStarNode solution)

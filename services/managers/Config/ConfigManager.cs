@@ -5,7 +5,7 @@ namespace PT.Services.Managers.Config;
 [GlobalClass]
 public partial class ConfigManager : RefCounted
 {
-    public int PathingWorkerCount { get; } = 2;
+    public int PathingWorkerCount { get; } = 6;
 
     public bool AutoQuickLoad { get; } = false;
 
