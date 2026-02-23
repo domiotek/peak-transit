@@ -77,7 +77,18 @@ offset_right = -25.0
 offset_bottom = -327.0
 grow_horizontal = 0
 
-[node name="ShortcutsView" parent="UI" index="6" unique_id=1669315732 instance=ExtResource("8_7mnik")]
+[node name="GameObjectStatsView" parent="UI" index="6" unique_id=370954596 instance=ExtResource("16_5a2l0")]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 55.0
+offset_top = 5.0
+offset_right = 101.0
+offset_bottom = 43.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="ShortcutsView" parent="UI" index="7" unique_id=1669315732 instance=ExtResource("8_7mnik")]
 anchors_preset = 9
 anchor_right = 0.0
 offset_left = 5.0
@@ -86,7 +97,7 @@ offset_right = 37.0
 offset_bottom = 5.0
 grow_horizontal = 1
 
-[node name="GameClockView" parent="UI" index="7" unique_id=1639813193 instance=ExtResource("9_djhi3")]
+[node name="GameClockView" parent="UI" index="8" unique_id=1639813193 instance=ExtResource("9_djhi3")]
 visible = false
 anchors_preset = 5
 anchor_left = 0.5
@@ -97,7 +108,7 @@ offset_right = 68.0
 offset_bottom = 37.0
 grow_horizontal = 2
 
-[node name="GameSpeedView" parent="UI" index="8" unique_id=1893889895 instance=ExtResource("10_l24ln")]
+[node name="GameSpeedView" parent="UI" index="9" unique_id=1893889895 instance=ExtResource("10_l24ln")]
 visible = false
 anchors_preset = 2
 anchor_top = 1.0
@@ -108,7 +119,7 @@ offset_right = 200.0
 offset_bottom = -10.0
 grow_vertical = 0
 
-[node name="ScoreView" parent="UI" index="9" unique_id=1088070806 instance=ExtResource("11_ana5o")]
+[node name="ScoreView" parent="UI" index="10" unique_id=1088070806 instance=ExtResource("11_ana5o")]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -119,7 +130,7 @@ offset_right = 200.0
 offset_bottom = -60.0
 grow_vertical = 0
 
-[node name="ScoreOverview" parent="UI" index="10" unique_id=469312537 instance=ExtResource("12_1ix0a")]
+[node name="ScoreOverview" parent="UI" index="11" unique_id=469312537 instance=ExtResource("12_1ix0a")]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -130,7 +141,7 @@ offset_right = 200.0
 offset_bottom = 0.0
 grow_vertical = 0
 
-[node name="LinesView" parent="UI" index="11" unique_id=1761076753 instance=ExtResource("11_aq2b7")]
+[node name="LinesView" parent="UI" index="12" unique_id=1761076753 instance=ExtResource("11_aq2b7")]
 anchors_preset = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
@@ -141,7 +152,7 @@ offset_bottom = 505.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="BusesView" parent="UI" index="12" unique_id=1748358346 instance=ExtResource("12_bxmbd")]
+[node name="BusesView" parent="UI" index="13" unique_id=1748358346 instance=ExtResource("12_bxmbd")]
 anchors_preset = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
@@ -152,7 +163,7 @@ offset_bottom = 505.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="BrigadesView" parent="UI" index="13" unique_id=2106210955 instance=ExtResource("13_xppfi")]
+[node name="BrigadesView" parent="UI" index="14" unique_id=2106210955 instance=ExtResource("13_xppfi")]
 anchors_preset = 9
 anchor_right = 0.0
 offset_left = 40.0
@@ -160,17 +171,6 @@ offset_top = 5.0
 offset_right = 540.0
 offset_bottom = -43.0
 grow_horizontal = 1
-
-[node name="GameObjectStatsView" parent="UI" index="17" unique_id=370954596 instance=ExtResource("16_5a2l0")]
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 55.0
-offset_top = 5.0
-offset_right = 55.0
-offset_bottom = 5.0
-grow_horizontal = 1
-grow_vertical = 1
 
 [node name="RLAgent" type="Node2D" parent="." index="4" unique_id=1436141329 groups=["AGENT"]]
 script = ExtResource("14_re2os")
