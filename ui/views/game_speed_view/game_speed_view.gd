@@ -21,6 +21,7 @@ func _ready() -> void:
 	ui_manager.register_ui_view(VIEW_NAME, self)
 
 	game_manager.game_speed_changed.connect(_on_game_speed_changed)
+	game_manager.rl_mode_toggled.connect(_on_rl_mode_toggled)
 
 	pause_button.pressed.connect(_on_pause_button_pressed)
 	low_button.pressed.connect(_on_low_button_pressed)
@@ -35,6 +36,10 @@ func _exit_tree() -> void:
 
 func _on_game_speed_changed(_new_speed: Enums.GameSpeed) -> void:
 	_update_buttons()
+
+
+func _on_rl_mode_toggled(enabled: bool) -> void:
+	visible = not enabled
 
 
 func _on_pause_button_pressed() -> void:

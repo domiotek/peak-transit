@@ -16,6 +16,7 @@ var _peron_passenger_spawners: Array = []
 var _tracks = { }
 var _vehicles_on_tracks: Dictionary = { }
 var _tracks_in_use: Dictionary = { }
+var _last_departure_times_per_line: Dictionary[int, TimeOfDay] = { }
 
 var _collision_shape: CollisionPolygon2D
 
@@ -38,6 +39,7 @@ var _collision_shape: CollisionPolygon2D
 @onready var map_pickable_area: Area2D = $PickableArea
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
+@onready var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
 
 
 func _ready() -> void:
@@ -56,10 +58,17 @@ func _ready() -> void:
 		_collision_shape.polygon = get_collision_polygon()
 		map_pickable_area.add_child(_collision_shape)
 
+	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
+
 
 func _process(delta: float) -> void:
 	for spawner in _peron_passenger_spawners:
 		spawner.process(delta)
+
+func _on_vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleManager.VehicleType) -> void:
+	if vehicle_type != VehicleManager.VehicleType.BUS and vehicle_type != VehicleManager.VehicleType.ARTICULATED_BUS:
+		return
+	notify_vehicle_left_terminal(vehicle_id)
 
 
 func setup_terminal(new_id: int, terminal_data: TerminalDefinition, demand_preset: DemandPresetDefinition) -> void:
@@ -129,6 +138,10 @@ func get_peron_for_line(line_id) -> int:
 	return _line_id_to_peron.get(line_id, -1)
 
 
+func get_last_departure_time(line_id: int) -> TimeOfDay:
+	return _last_departure_times_per_line.get(line_id)
+
+
 func get_line_curves(line_id: int, is_out: bool) -> Array:
 	var peron_index = _line_id_to_peron.get(line_id, -1)
 	if peron_index == -1:
@@ -161,6 +174,10 @@ func get_lines_at_peron(peron_index: int) -> Array:
 		if _line_id_to_peron[line_id] == peron_index:
 			lines.append(line_id)
 	return lines
+
+
+func get_current_bus_count() -> int:
+	return _vehicles_on_tracks.size()
 
 
 func try_enter(vehicle_id: int) -> Path2D:
@@ -295,6 +312,15 @@ func notify_vehicle_left_terminal(vehicle_id: int) -> void:
 	if current_track_id != "":
 		_tracks_in_use.erase(current_track_id)
 		_vehicles_on_tracks.erase(vehicle_id)
+
+
+func update_line_departure(line_id: int) -> void:
+	var current_time = game_manager.clock.get_time().to_time_of_day()
+	_last_departure_times_per_line[line_id] = current_time
+
+
+func get_departure_time_for_line(line_id: int) -> TimeOfDay:
+	return _last_departure_times_per_line.get(line_id)
 
 
 func supports_routed_leaving() -> bool:

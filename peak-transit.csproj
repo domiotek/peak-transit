@@ -1,4 +1,4 @@
-<Project Sdk="Godot.NET.Sdk/4.4.1">
+<Project Sdk="Godot.NET.Sdk/4.6.1">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <CodeAnalysisRuleSet>f:\my-code\current\peak-transit\.vscode\ruleset.xml</CodeAnalysisRuleSet>
@@ -8,5 +8,6 @@
 
   <ItemGroup>
 	<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	<PackageReference Include="Microsoft.ML.OnnxRuntime.GPU" Version="1.23.2" />
   </ItemGroup>
 </Project>

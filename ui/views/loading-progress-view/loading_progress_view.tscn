@@ -1,0 +1,45 @@
+[gd_scene load_steps=3 format=3 uid="uid://bgd2p3knyefxr"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_bby08"]
+[ext_resource type="Script" uid="uid://berthvll886ui" path="res://ui/views/loading-progress-view/loading_progress_view.gd" id="2_syitj"]
+
+[node name="LoadingProgressView" type="PanelContainer"]
+custom_minimum_size = Vector2(450, 100)
+theme_override_styles/panel = ExtResource("1_bby08")
+script = ExtResource("2_syitj")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="MainFlowContainer" type="BoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+vertical = true
+
+[node name="HeaderBoxContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/MainFlowContainer/HeaderBoxContainer"]
+layout_mode = 2
+text = "Loading process"
+
+[node name="MainContentContainer" type="BoxContainer" parent="MarginContainer/MainFlowContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 9
+vertical = true
+
+[node name="ActionName" type="Label" parent="MarginContainer/MainFlowContainer/MainContentContainer"]
+layout_mode = 2
+text = "Loading something..."
+
+[node name="ActionProgress" type="ProgressBar" parent="MarginContainer/MainFlowContainer/MainContentContainer"]
+visible = false
+layout_mode = 2
+step = 1.0

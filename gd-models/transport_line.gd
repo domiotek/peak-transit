@@ -15,6 +15,8 @@ var _step_def_to_path_map: Dictionary = { }
 var _route_steps: Dictionary = { }
 var _terminals: Array = []
 var _route_stops: Dictionary = { }
+var _route_lanes: Dictionary = { }
+var _step_idx_to_route_lane_map: Dictionary = { }
 
 var _brigade_ids: Array = []
 
@@ -38,6 +40,7 @@ func trace_routes() -> bool:
 
 		_route_steps[route_idx] = []
 		_route_stops[route_idx] = []
+		_route_lanes[route_idx] = []
 		var path = []
 		var route_curves = []
 		var start_out_options = TransportHelper.resolve_starting_node_from_line_step(transport_manager, route_def[0])
@@ -86,6 +89,10 @@ func trace_routes() -> bool:
 			var curves = _get_curves_of_step(route_def, i)
 			route_curves.append_array(curves)
 
+			var lanes = TransportHelper.get_lanes_of_path(network_manager, _pathfinder_result.Path)
+			_route_lanes[route_idx].append_array(lanes)
+			_step_idx_to_route_lane_map[i] = _route_lanes[route_idx].size() - 1
+
 			_route_steps[route_idx].append(TransportHelper.resolve_route_step_data(step_def, line_helper.get_curves_total_length(curves)))
 
 			start_out_options = [
@@ -103,6 +110,7 @@ func trace_routes() -> bool:
 		_step_def_to_path_map[route_def.size() - 1] = path.size() - 1
 
 		_traced_paths.append(path)
+		_route_lanes[route_idx] = TransportHelper.get_lanes_of_path(network_manager, path)
 		_route_curves[route_idx] = route_curves
 		_start_node_to_path_map[path[0]["FromNodeId"]] = _traced_paths.size() - 1
 		var waypoint_to_curve_map = _get_waypoints_to_curve_map(route_def, path)
@@ -166,6 +174,18 @@ func get_route_curves(route_idx: int) -> Array:
 		return _route_curves[route_idx]
 
 	push_error("No route curves for route index %d in line ID %d" % [route_idx, id])
+	return []
+
+
+func get_route_lanes(route_idx: int, step_idx: int = -1) -> Array:
+	if _route_lanes.has(route_idx):
+		if _step_idx_to_route_lane_map.has(step_idx):
+			var lane_idx = _step_idx_to_route_lane_map[step_idx]
+			return _route_lanes[route_idx].slice(lane_idx, lane_idx + 1)
+
+		return _route_lanes[route_idx]
+
+	push_error("No route lanes for route index %d in line ID %d" % [route_idx, id])
 	return []
 
 
@@ -357,7 +377,7 @@ func _find_departure_times_with_step(
 	return target_dep_times
 
 
-func _on_pathfinder_result(path: Variant) -> void:
+func _on_pathfinder_result(_request_id: int, path: Variant) -> void:
 	_pathfinder_result = path
 	emit_signal("pathfinder_resolved", path)
 

@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://cqukavpqyb46k"]
+
+[ext_resource type="StyleBox" uid="uid://dwxqhhtunho3f" path="res://ui/resources/dialog_styles.tres" id="1_t0kik"]
+[ext_resource type="Texture2D" uid="uid://dq1b7l61weyi8" path="res://assets/ui_icons/challenge_mode/episode_score.png" id="2_kdx0e"]
+[ext_resource type="Script" uid="uid://42caoxnutgme" path="res://ui/views/challenge-mode/score-overview/score_overview.gd" id="2_oxj0a"]
+[ext_resource type="Texture2D" uid="uid://b0lqwhq384gyv" path="res://assets/ui_icons/challenge_mode/step_score.png" id="3_oxj0a"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_80c3b"]
+font_size = 9
+font_color = Color(0.601223, 0.601223, 0.601223, 1)
+
+[node name="ScoreOverview" type="Panel" unique_id=469312537]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -752.0
+offset_bottom = -593.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_t0kik")
+script = ExtResource("2_oxj0a")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1221235468]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="BoxContainer" type="BoxContainer" parent="MarginContainer" unique_id=438083434]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="CurrentStep" type="BoxContainer" parent="MarginContainer/BoxContainer" unique_id=1946041022]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+vertical = true
+
+[node name="Label" type="Label" parent="MarginContainer/BoxContainer/CurrentStep" unique_id=698352986]
+layout_mode = 2
+text = "Current step:"
+label_settings = SubResource("LabelSettings_80c3b")
+
+[node name="BoxContainer" type="BoxContainer" parent="MarginContainer/BoxContainer/CurrentStep" unique_id=858832037]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MarginContainer/BoxContainer/CurrentStep/BoxContainer" unique_id=1237636235]
+layout_mode = 2
+texture = ExtResource("2_kdx0e")
+
+[node name="StepScore" type="Label" parent="MarginContainer/BoxContainer/CurrentStep/BoxContainer" unique_id=542801130]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100"
+horizontal_alignment = 2
+
+[node name="CurrentEpisode" type="BoxContainer" parent="MarginContainer/BoxContainer" unique_id=23805831]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+vertical = true
+
+[node name="Label" type="Label" parent="MarginContainer/BoxContainer/CurrentEpisode" unique_id=1819673081]
+layout_mode = 2
+text = "Current episode:"
+label_settings = SubResource("LabelSettings_80c3b")
+
+[node name="BoxContainer" type="BoxContainer" parent="MarginContainer/BoxContainer/CurrentEpisode" unique_id=479724061]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MarginContainer/BoxContainer/CurrentEpisode/BoxContainer" unique_id=608169036]
+layout_mode = 2
+texture = ExtResource("3_oxj0a")
+
+[node name="EpisodeScore" type="Label" parent="MarginContainer/BoxContainer/CurrentEpisode/BoxContainer" unique_id=1891217735]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100"
+horizontal_alignment = 2
+
+[node name="Overall" type="BoxContainer" parent="MarginContainer/BoxContainer" unique_id=359155593]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+vertical = true
+
+[node name="Label" type="Label" parent="MarginContainer/BoxContainer/Overall" unique_id=1880021711]
+layout_mode = 2
+text = "Overall:"
+label_settings = SubResource("LabelSettings_80c3b")
+
+[node name="BoxContainer" type="BoxContainer" parent="MarginContainer/BoxContainer/Overall" unique_id=1482835816]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="MarginContainer/BoxContainer/Overall/BoxContainer" unique_id=2007811855]
+layout_mode = 2
+texture = ExtResource("3_oxj0a")
+
+[node name="OverallScore" type="Label" parent="MarginContainer/BoxContainer/Overall/BoxContainer" unique_id=427762507]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100"
+horizontal_alignment = 2

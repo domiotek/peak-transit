@@ -17,6 +17,13 @@ func add_passengers_for_line(line_id: int, count: int) -> void:
 	_line_passenger_map[line_id] += count
 
 
+func get_passengers_for_line(line_id: int) -> int:
+	if not _line_passenger_map.has(line_id):
+		return 0
+
+	return _line_passenger_map[line_id]
+
+
 func take_passengers_for_line(line_id: int, count: int) -> int:
 	if not _line_passenger_map.has(line_id):
 		return 0

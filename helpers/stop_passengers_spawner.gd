@@ -11,6 +11,7 @@ var _lines: Array[TransportLine] = []
 
 var _game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 var _transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
+var _score_manager: ScoreManager = null
 
 
 func _init(target_id: int, is_terminal: bool, lines: Array, demand_preset: DemandPresetDefinition, max_passenger_count: int) -> void:
@@ -19,10 +20,35 @@ func _init(target_id: int, is_terminal: bool, lines: Array, demand_preset: Deman
 	_demand_preset = demand_preset
 	_max_passenger_count = max_passenger_count
 
+	_game_manager.rl_mode_toggled.connect(Callable(self, "_on_rl_mode_toggled"))
+	_game_manager.clock.clock_reset.connect(Callable(self, "_on_clock_reset"))
+
 	for line_id in lines:
 		var line = _transport_manager.get_line(line_id)
 		if line != null:
 			_lines.append(line)
+
+
+func _on_rl_mode_toggled(enabled: bool) -> void:
+	if enabled:
+		_score_manager = _game_manager.get_game_controller().score_manager()
+		return
+
+	_score_manager = null
+
+
+func _on_clock_reset() -> void:
+	_buckets.clear()
+	_spawn_timer = TransportConstants.PASSENGER_SPAWN_INTERVAL_DELTA
+
+
+func get_waiting_passengers_for_line(line_id: int) -> int:
+	var total: int = 0
+
+	for bucket in _buckets:
+		total += bucket.get_passengers_for_line(line_id)
+
+	return total
 
 
 func get_total_waiting() -> int:
@@ -32,6 +58,10 @@ func get_total_waiting() -> int:
 		total += bucket.get_total_passengers()
 
 	return total
+
+
+func get_max_waiting() -> int:
+	return _max_passenger_count
 
 
 func get_lowest_till_bored_time(clock: ClockTime) -> int:
@@ -44,6 +74,8 @@ func get_lowest_till_bored_time(clock: ClockTime) -> int:
 	var current_time = clock.to_time_of_day()
 
 	var minutes_waited = current_time.to_minutes() - creation_time.to_minutes()
+	if minutes_waited < 0:
+		minutes_waited += 1440
 
 	return max(0, get_boredom_time() - int(minutes_waited))
 
@@ -115,6 +147,8 @@ func _check_for_bored_passengers(clock: ClockTime) -> void:
 	var first_bucket: PassengerBucketEntry = _buckets[0] if _buckets.size() > 0 else null
 
 	if first_bucket != null:
+		var bored_passengers = first_bucket.get_total_passengers()
+		_apply_boredom_penalty(bored_passengers)
 		_buckets.remove_at(0)
 
 
@@ -189,3 +223,10 @@ func _get_next_departure(line: TransportLine, clock: TimeOfDay) -> StopDeparture
 		return departures[0] as StopDeparture
 
 	return null
+
+
+func _apply_boredom_penalty(bored_passengers: int) -> void:
+	if _score_manager == null:
+		return
+
+	_score_manager.update_score(ChallengeEnums.ScoreReason.BORED_PASSENGER, bored_passengers)

@@ -5,11 +5,12 @@ class_name BaseGameController
 @onready var camera: Camera2D = $Camera
 @onready var map: Map = $Map
 @onready var debug_layer: Node2D = $DebugLayer
+@onready var rl_mode_tag: Label = $UI/RLModeTag
 
 var camera_bounds: Rect2
 var camera_projection_offset := Vector2(2, 1.35)
 var camera_speed := 500.0
-var camera_zoom_bounds: Array[Vector2] = [Vector2(0.5, 0.5), Vector2(6, 6)]
+var camera_zoom_bounds: Array[Vector2] = [Vector2(0.2, 0.2), Vector2(6, 6)]
 
 var ui_manager: UIManager
 var config_manager: ConfigManager
@@ -32,6 +33,11 @@ func _ready() -> void:
 	game_manager.setup(self)
 
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+	game_manager.rl_mode_toggled.connect(_show_rl_tag)
+
+
+func get_mode() -> Enums.GameMode:
+	return Enums.GameMode.UNSPECIFIED
 
 
 func get_map() -> Map:
@@ -47,7 +53,7 @@ func get_camera_bounds() -> Rect2:
 
 
 func get_camera_zoom_bounds() -> Array[Vector2]:
-	return camera_zoom_bounds
+	return camera.get_camera_zoom_bounds()
 
 
 func get_max_game_speed() -> Enums.GameSpeed:
@@ -115,7 +121,7 @@ func _process(delta):
 
 	simulation_manager.step_simulation(delta)
 
-	if Input.is_action_just_pressed("toggle_game_menu"):
+	if Input.is_action_just_pressed("toggle_game_menu") and not game_manager.is_rl_mode():
 		game_manager.toggle_game_menu()
 		return
 
@@ -173,3 +179,7 @@ func _load_world_from_file_path(file_path: String) -> WorldDefinition:
 		return
 
 	return WorldDefinition.deserialize(world_def.definition)
+
+
+func _show_rl_tag(state: bool) -> void:
+	rl_mode_tag.visible = state

@@ -53,6 +53,10 @@ func is_forward() -> bool:
 	return _data.route_id == 0
 
 
+func get_route_id() -> int:
+	return _data.route_id
+
+
 func get_stops() -> Array:
 	return _line.get_route_stops(_data.route_id)
 

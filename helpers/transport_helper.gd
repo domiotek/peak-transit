@@ -396,6 +396,7 @@ static func draw_route(
 		var line2d = Line2D.new()
 		line2d.width = 2
 		line2d.default_color = color_hex
+		line2d.z_index = 3
 
 		var curve_length = curve.get_baked_length()
 		if curve_length > 0:
@@ -435,6 +436,7 @@ static func draw_route(
 			triangle.color = color_hex.lerp(Color.WHITE, 0.3)
 			triangle.position = position
 			triangle.rotation = tangent.angle()
+			triangle.z_index = 4
 
 			layer.add_child(triangle)
 
@@ -503,6 +505,24 @@ static func get_container_layer_for_route(map: Map, line_id: int, route_idx: int
 	return route_layer
 
 
+static func get_lanes_of_path(network_manager: NetworkManager, path: Array) -> Array:
+	var lanes = []
+
+	for step in path:
+		var endpoint = network_manager.get_lane_endpoint(step.ViaEndpointId)
+
+		if not endpoint:
+			continue
+
+		var segment = network_manager.get_segment(endpoint.SegmentId)
+		var lane = segment.get_lane(endpoint.LaneId)
+
+		if lane:
+			lanes.append(lane)
+
+	return lanes
+
+
 static func get_bus_capacity(vehicle_type: VehicleManager.VehicleType) -> int:
 	match vehicle_type:
 		VehicleManager.VehicleType.BUS:
@@ -511,3 +531,29 @@ static func get_bus_capacity(vehicle_type: VehicleManager.VehicleType) -> int:
 			return TransportConstants.ARTICULATED_BUS_MAX_CAPACITY
 		_:
 			return 0
+
+
+static func get_total_bus_availability(depots: Array) -> Dictionary:
+	var total_availability = {
+		"regular": 0,
+		"articulated": 0,
+	}
+
+	for depot in depots:
+		total_availability["regular"] += depot.get_max_bus_capacity(false)
+		total_availability["articulated"] += depot.get_max_bus_capacity(true)
+
+	return total_availability
+
+
+static func get_total_deployed_buses(depots: Array) -> Dictionary:
+	var total_deployed = {
+		"regular": 0,
+		"articulated": 0,
+	}
+
+	for depot in depots:
+		total_deployed["regular"] += depot.get_current_bus_count(false)
+		total_deployed["articulated"] += depot.get_current_bus_count(true)
+
+	return total_deployed

@@ -39,6 +39,8 @@ func _ready() -> void:
 	if config_manager.AutoFillDepotStopsOnLoad and game_manager.get_game_mode() == Enums.GameMode.CHALLENGE:
 		_fill_bus_stops()
 
+	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
+
 
 func setup_depot(new_id: int, depot_data: DepotDefinition) -> void:
 	depot_id = new_id
@@ -93,20 +95,20 @@ func get_anchor() -> Node2D:
 	return building
 
 
-func try_spawn(is_articulated: bool, ignore_constraints: bool = false) -> bool:
+func try_spawn(is_articulated: bool, ignore_constraints: bool = false) -> Vehicle:
 	if not ignore_constraints and not _check_spawn_constraints(is_articulated):
-		return false
+		return null
 
 	var track_id = _get_free_track()
 	if track_id == -1:
-		return false
+		return null
 
-	_do_spawn(track_id, is_articulated)
+	var bus = _do_spawn(track_id, is_articulated)
 
 	_current_articulated_bus_count = clamp(_current_articulated_bus_count - (1 if is_articulated else 0), 0, INF)
 	_current_bus_count = clamp(_current_bus_count - (1 if not is_articulated else 0), 0, INF)
 
-	return true
+	return bus
 
 
 func try_enter(vehicle: Vehicle) -> Path2D:
@@ -140,7 +142,7 @@ static func get_collision_polygon() -> PackedVector2Array:
 	return BuildingConstants.DEPOT_COLLISION_POLYGON
 
 
-func _do_spawn(track_id: int, is_articulated: bool) -> void:
+func _do_spawn(track_id: int, is_articulated: bool) -> Vehicle:
 	var veh_type = VehicleManager.VehicleType.ARTICULATED_BUS if is_articulated else VehicleManager.VehicleType.BUS
 
 	var vehicle = vehicle_manager.create_vehicle(veh_type)
@@ -157,6 +159,8 @@ func _do_spawn(track_id: int, is_articulated: bool) -> void:
 	_vehicles_on_tracks[track_id] = vehicle.id
 
 	vehicle.trip_ended.connect(Callable(self, "_on_vehicle_left"), ConnectFlags.CONNECT_ONE_SHOT)
+
+	return vehicle
 
 
 func _check_spawn_constraints(is_articulated: bool) -> bool:
@@ -181,6 +185,18 @@ func _get_connection_endpoints() -> Dictionary:
 func _on_input_event(_viewport, event, _shape_idx) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		game_manager.set_selection(self, GameManager.SelectionType.DEPOT)
+
+
+func _on_vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleManager.VehicleType) -> void:
+	if vehicle_type != VehicleManager.VehicleType.BUS and vehicle_type != VehicleManager.VehicleType.ARTICULATED_BUS:
+		return
+
+	if not vehicle_id in _buses:
+		return
+
+	_increase_bus_count(vehicle_type == VehicleManager.VehicleType.ARTICULATED_BUS)
+	_clear_vehicle_from_tracks(vehicle_id)
+	_buses.erase(vehicle_id)
 
 
 func _process_tracks() -> void:

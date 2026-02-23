@@ -34,6 +34,7 @@ var transport_manager: TransportManager
 
 var _game_controller: BaseGameController
 var _game_mode: Enums.GameMode
+var _rl_mode: bool = false
 
 var world_definition: WorldDefinition
 
@@ -43,12 +44,15 @@ var game_menu_visible: bool = false
 var clock = ClockManager.new()
 
 signal game_controller_registration(controller: BaseGameController)
+signal game_initialized(success: bool)
 signal game_speed_changed(new_speed: Enums.GameSpeed)
 signal world_loading_progress(action: String, progress: float)
+signal rl_mode_toggled(enabled: bool)
 
 
 func setup(game_controller: BaseGameController) -> void:
 	_game_controller = game_controller
+	_game_mode = game_controller.get_mode()
 
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager
@@ -83,6 +87,7 @@ func initialize_game(mode: Enums.GameMode, world_file_path: String = "") -> void
 	set_game_speed(Enums.GameSpeed.PAUSE)
 
 	initialized = await _game_controller.initialize_game(world_file_path)
+	game_initialized.emit(initialized)
 
 	if not initialized:
 		push_error("Failed to initialize game controller")
@@ -166,15 +171,17 @@ func set_game_speed(speed: Enums.GameSpeed) -> void:
 		Enums.GameSpeed.PAUSE:
 			Engine.time_scale = 0.0
 		Enums.GameSpeed.LOW:
-			Engine.time_scale = 1.0
+			Engine.time_scale = SimulationConstants.SPEED_1_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_1_PHYSICS_TICKS_PER_SECOND
 		Enums.GameSpeed.MEDIUM:
-			Engine.time_scale = 5.0
+			Engine.time_scale = SimulationConstants.SPEED_2_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_2_PHYSICS_TICKS_PER_SECOND
 		Enums.GameSpeed.HIGH:
-			Engine.time_scale = 10.0
-			Engine.physics_ticks_per_second = 120
+			Engine.time_scale = SimulationConstants.SPEED_3_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_3_PHYSICS_TICKS_PER_SECOND
 		Enums.GameSpeed.TURBO:
-			Engine.time_scale = 20.0
-			Engine.physics_ticks_per_second = 180
+			Engine.time_scale = SimulationConstants.SPEED_TURBO_PROCESS_MULTIPLIER
+			Engine.physics_ticks_per_second = SimulationConstants.SPEED_TURBO_PHYSICS_TICKS_PER_SECOND
 
 	game_speed_changed.emit(game_speed)
 
@@ -305,6 +312,15 @@ func clear_state() -> void:
 	network_manager.clear_state()
 	buildings_manager.clear_state()
 	transport_manager.clear_state()
+
+
+func set_rl_mode() -> void:
+	_rl_mode = true
+	rl_mode_toggled.emit(true)
+
+
+func is_rl_mode() -> bool:
+	return _rl_mode
 
 
 func _create_game_controller(mode: Enums.GameMode) -> BaseGameController:

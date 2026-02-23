@@ -13,6 +13,7 @@ signal trip_started(vehicle_id)
 signal trip_completed(vehicle_id)
 signal trip_abandoned(vehicle_id)
 signal trip_ended(vehicle_id, completed: bool)
+signal destroyed(vehicle_id)
 
 @onready var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 @onready var simulation_manager: SimulationManager = GDInjector.inject("SimulationManager") as SimulationManager
@@ -83,6 +84,10 @@ func _ready():
 				"articulation_angle": 0.0,
 			},
 		)
+
+
+func _exit_tree() -> void:
+	destroyed.emit(id)
 
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
@@ -322,6 +327,7 @@ func _get_vehicle_config() -> Variant:
 
 func _on_lights_state_change(should_be_on: bool) -> void:
 	driver.set_headlights_enabled(should_be_on, false)
+
 
 func _on_debug_toggle_changed(toggle_name: String, value: bool) -> void:
 	if toggle_name == "UseVehicleDebugIndicators":

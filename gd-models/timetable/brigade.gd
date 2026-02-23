@@ -34,6 +34,9 @@ func _init(_id: int, _transport_line_id: int, schedule: BrigadeSchedule, _line_t
 	_end_time = _schedule.trips[_schedule.trips.size() - 1].arrival_time
 
 	var game_manager = GDInjector.inject("GameManager") as GameManager
+	var vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
+
+	vehicle_manager.connect("vehicle_destroyed", Callable(self, "_on_vehicle_destroyed"))
 
 	clock_manager = game_manager.clock
 
@@ -47,6 +50,46 @@ func get_schedule() -> BrigadeSchedule:
 
 func get_trip(index: int) -> BrigadeTrip:
 	return _trips[index]
+
+
+func get_ongoing_trip(current_time: TimeOfDay) -> BrigadeTrip:
+	var current_minutes = current_time.to_minutes()
+
+	for trip in _trips:
+		var departure_minutes = trip.get_departure_time().to_minutes()
+		var arrival_minutes = trip.get_arrival_time().to_minutes()
+		var adjusted_current = current_minutes
+		var adjusted_arrival = arrival_minutes
+
+		if arrival_minutes < departure_minutes:
+			adjusted_arrival += 1440
+			if adjusted_current < departure_minutes:
+				adjusted_current += 1440
+
+		if adjusted_current >= departure_minutes and adjusted_current <= adjusted_arrival:
+			return trip
+
+	return null
+
+
+func get_next_trip(current_time: TimeOfDay) -> BrigadeTrip:
+	var current_trip = get_ongoing_trip(current_time)
+
+	if current_trip != null:
+		var current_index = current_trip.idx
+		var next_index = current_index + 1
+
+		if next_index >= _trips.size():
+			next_index = 0
+
+		return _trips[next_index]
+
+	var current_minutes = current_time.to_minutes()
+	for trip in _trips:
+		if trip.get_departure_time().to_minutes() >= current_minutes:
+			return trip
+
+	return _trips[0]
 
 
 func get_trips() -> Array:
@@ -178,3 +221,11 @@ func _get_next_unassigned_trip_index() -> int:
 			return i
 
 	return -1
+
+
+func _on_vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleManager.VehicleType) -> void:
+	if vehicle_type != VehicleManager.VehicleType.BUS and vehicle_type != VehicleManager.VehicleType.ARTICULATED_BUS:
+		return
+
+	if _vehicles.erase(vehicle_id):
+		vehicle_unassigned.emit(vehicle_id)

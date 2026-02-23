@@ -71,6 +71,10 @@ func get_vehicle(vehicle_id: int) -> Vehicle:
 	return null
 
 
+func vehicle_exists(vehicle_id: int) -> bool:
+	return vehicles.has(vehicle_id)
+
+
 func remove_vehicle(vehicle_id: int) -> void:
 	if not vehicles.has(vehicle_id):
 		push_error("Vehicle with ID %d not found." % vehicle_id)

@@ -7,18 +7,21 @@ var accumulated_minutes: float = 0.0 # Track fractional minutes
 
 signal time_changed(new_time: ClockTime)
 signal day_night_changed(is_day: bool)
+signal clock_reset()
 
 
 func _init() -> void:
 	reset()
 
 
-func reset() -> void:
+func reset(preserve_day: bool = false) -> void:
 	current_hour = 0
 	current_minute = 0
-	current_day = Enums.Day.MONDAY
+	if not preserve_day:
+		current_day = Enums.Day.MONDAY
 	accumulated_minutes = 0.0
 	emit_signal("time_changed", get_time())
+	emit_signal("clock_reset")
 
 
 func advance_time(delta: float) -> void:

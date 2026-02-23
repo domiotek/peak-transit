@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://cs0xhapsmdgen"]
+[gd_scene load_steps=8 format=3 uid="uid://cs0xhapsmdgen"]
 
 [ext_resource type="Script" uid="uid://5yada0arowup" path="res://game-objects/window/window.gd" id="1_quggc"]
 [ext_resource type="PackedScene" uid="uid://bwpts6ndy6nvr" path="res://ui/main-menu/main_menu.tscn" id="2_yjkk1"]
 [ext_resource type="PackedScene" uid="uid://qu065xlgavcj" path="res://ui/views/new-name-save-dialog/new_name_save_dialog.tscn" id="4_3cim5"]
 [ext_resource type="PackedScene" uid="uid://bfd25756i44bm" path="res://ui/views/message-box-view/message_box_view.tscn" id="4_ma1do"]
 [ext_resource type="PackedScene" uid="uid://cg08v2krfwd0v" path="res://ui/views/confirm-overwrite-dialog/confirm_overwrite_dialog.tscn" id="5_3cim5"]
+[ext_resource type="PackedScene" uid="uid://bgd2p3knyefxr" path="res://ui/views/loading-progress-view/loading_progress_view.tscn" id="6_051y8"]
+[ext_resource type="Script" uid="uid://cih2mtyiaf376" path="res://game-objects/rl/rl_sync.gd" id="6_uooga"]
 
 [node name="Window" type="Node2D"]
 script = ExtResource("1_quggc")
@@ -13,6 +15,19 @@ script = ExtResource("1_quggc")
 layer = 2
 
 [node name="MainMenu" parent="UI" instance=ExtResource("2_yjkk1")]
+
+[node name="LoadingProgressView" parent="UI" instance=ExtResource("6_051y8")]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -225.0
+offset_top = -50.0
+offset_right = 225.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="MessageBoxView" parent="UI" instance=ExtResource("4_ma1do")]
 z_as_relative = false
@@ -24,3 +39,7 @@ offset_bottom = 0.0
 [node name="ConfirmOverwriteDialog" parent="UI" instance=ExtResource("5_3cim5")]
 offset_right = 0.0
 offset_bottom = 0.0
+
+[node name="RLSync" type="Node" parent="."]
+script = ExtResource("6_uooga")
+metadata/_custom_type_script = "uid://cih2mtyiaf376"

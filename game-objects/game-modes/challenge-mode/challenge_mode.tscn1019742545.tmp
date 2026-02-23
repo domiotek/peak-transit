@@ -1,0 +1,153 @@
+[gd_scene format=3 uid="uid://bi6roixagfde8"]
+
+[ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game-modes/base-mode/base_mode.tscn" id="1_iv1ck"]
+[ext_resource type="Script" uid="uid://c8hjp8kiushca" path="res://game-objects/game-modes/challenge-mode/challenge_mode.gd" id="2_hwci8"]
+[ext_resource type="PackedScene" uid="uid://d4e2qlngqhdac" path="res://ui/views/spawner_building_popup_view/spawner_building_popup_view.tscn" id="3_su5cv"]
+[ext_resource type="PackedScene" uid="uid://lo5teb063msv" path="res://ui/views/stop-popup-view/stop_popup_view.tscn" id="4_re2os"]
+[ext_resource type="PackedScene" uid="uid://brwd6nhl0me2h" path="res://ui/views/depot-popup-view/depot_popup_view.tscn" id="5_ana5o"]
+[ext_resource type="PackedScene" uid="uid://c0y2ihbntdkuc" path="res://ui/views/vehicle_popup_view/vehicle_popup_view.tscn" id="6_1ix0a"]
+[ext_resource type="PackedScene" uid="uid://ebb720gj6a3y" path="res://ui/views/debug_intersections_view/debug_intersections_view.tscn" id="7_5a2l0"]
+[ext_resource type="PackedScene" uid="uid://17v128p3voi0" path="res://ui/views/shortcuts-view/shortcuts_view.tscn" id="8_7mnik"]
+[ext_resource type="PackedScene" uid="uid://6ipl1lxu6eyw" path="res://ui/views/game-clock-view/game_clock_view.tscn" id="9_djhi3"]
+[ext_resource type="PackedScene" uid="uid://vy0ji1ac0ru5" path="res://ui/views/game_speed_view/game_speed_view.tscn" id="10_l24ln"]
+[ext_resource type="PackedScene" uid="uid://dpvlrockvjk3t" path="res://ui/views/challenge-mode/score-view/score_view.tscn" id="11_ana5o"]
+[ext_resource type="PackedScene" uid="uid://c7qjs6bf61f2l" path="res://ui/views/lines-view/lines_view.tscn" id="11_aq2b7"]
+[ext_resource type="PackedScene" uid="uid://bwlmiyrdnnjft" path="res://ui/views/buses-view/buses_view.tscn" id="12_bxmbd"]
+[ext_resource type="PackedScene" uid="uid://c5jn0klrj2752" path="res://ui/views/brigades-view/brigades_view.tscn" id="13_xppfi"]
+[ext_resource type="Script" uid="uid://c7nf0f31odlbt" path="res://game-objects/rl/challenge_controller.gd" id="14_re2os"]
+
+[node name="Challenge" unique_id=1974875111 instance=ExtResource("1_iv1ck")]
+script = ExtResource("2_hwci8")
+
+[node name="SpawnerBuildingPopupView" parent="UI" index="0" unique_id=1095457466 instance=ExtResource("3_su5cv")]
+visible = false
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_top = 0.0
+offset_right = 400.0
+offset_bottom = 240.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="StopPopupView" parent="UI" index="1" unique_id=332537074 instance=ExtResource("4_re2os")]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 40.0
+offset_top = 5.0
+offset_right = 405.0
+offset_bottom = 333.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="DepotPopupView" parent="UI" index="2" unique_id=1568452292 instance=ExtResource("5_ana5o")]
+visible = false
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_top = 0.0
+offset_right = 400.0
+offset_bottom = 240.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="VehiclePopupView" parent="UI" index="3" unique_id=553467379 instance=ExtResource("6_1ix0a")]
+visible = false
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_right = 500.0
+offset_bottom = 330.0
+grow_horizontal = 1
+grow_vertical = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DebugIntersectionsView" parent="UI" index="5" unique_id=994860733 instance=ExtResource("7_5a2l0")]
+custom_minimum_size = Vector2(350, 50)
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+offset_left = -375.0
+offset_top = -613.0
+offset_right = -25.0
+offset_bottom = -327.0
+grow_horizontal = 0
+
+[node name="ShortcutsView" parent="UI" index="6" unique_id=1669315732 instance=ExtResource("8_7mnik")]
+anchors_preset = 9
+anchor_right = 0.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 37.0
+offset_bottom = 5.0
+grow_horizontal = 1
+
+[node name="GameClockView" parent="UI" index="7" unique_id=1639813193 instance=ExtResource("9_djhi3")]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -68.0
+offset_top = 5.0
+offset_right = 68.0
+offset_bottom = 37.0
+grow_horizontal = 2
+
+[node name="GameSpeedView" parent="UI" index="8" unique_id=1893889895 instance=ExtResource("10_l24ln")]
+visible = false
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -42.0
+offset_right = 200.0
+offset_bottom = -10.0
+grow_vertical = 0
+
+[node name="ScoreView" parent="UI" index="9" unique_id=1088070806 instance=ExtResource("11_ana5o")]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+offset_left = -2.5
+offset_top = -5.0
+offset_right = 2.5
+offset_bottom = 0.0
+grow_vertical = 0
+
+[node name="LinesView" parent="UI" index="10" unique_id=1761076753 instance=ExtResource("11_aq2b7")]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 40.0
+offset_top = 5.0
+offset_right = 390.0
+offset_bottom = 505.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="BusesView" parent="UI" index="11" unique_id=1748358346 instance=ExtResource("12_bxmbd")]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 40.0
+offset_top = 5.0
+offset_right = 390.0
+offset_bottom = 505.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="BrigadesView" parent="UI" index="12" unique_id=2106210955 instance=ExtResource("13_xppfi")]
+anchors_preset = 9
+anchor_right = 0.0
+offset_left = 40.0
+offset_top = 5.0
+offset_right = 540.0
+offset_bottom = -43.0
+grow_horizontal = 1
+
+[node name="RLAgent" type="Node2D" parent="." index="4" unique_id=1436141329 groups=["AGENT"]]
+script = ExtResource("14_re2os")
+metadata/_custom_type_script = "uid://c7nf0f31odlbt"

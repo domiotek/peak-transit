@@ -31,6 +31,11 @@ func get_next_node_id() -> int:
 	return _node_ids.occupy_next_id()
 
 
+func get_index_in_nodes(node_id: int) -> int:
+	var keys = nodes.keys()
+	return keys.find(node_id) if keys.has(node_id) else -1
+
+
 func get_nodes() -> Array:
 	return nodes.values()
 

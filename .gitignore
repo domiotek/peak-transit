@@ -1,6 +1,8 @@
 # Godot 4+ specific ignores
 .godot/
+.vscode/
 /android/
 .env
 .vscode/settings.json
 readme-images/*.import
+exports/
