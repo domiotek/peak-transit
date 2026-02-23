@@ -400,7 +400,7 @@ func _draw_stop_lines() -> void:
 				Enums.IntersectionPriority.STOP:
 					line_helper.draw_solid_line(perpendicular_line, line_markings_layer, 3.0, Color.GRAY)
 				Enums.IntersectionPriority.YIELD:
-					line_helper.draw_dash_line(perpendicular_line, line_markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+					line_helper.draw_textured_dash_line(perpendicular_line, line_markings_layer, 3.0, Color.GRAY)
 
 
 func _fill_segment_priorities(print_warnings: bool = true) -> void:

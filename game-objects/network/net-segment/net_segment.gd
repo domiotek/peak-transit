@@ -399,7 +399,7 @@ func _update_markings_layer() -> void:
 
 	if relations.size() == 2:
 		if lanes.size() == 2:
-			line_helper.draw_dash_line(curve_shape, markings_layer)
+			line_helper.draw_textured_dash_line(curve_shape, markings_layer)
 		else:
 			line_helper.draw_solid_line(curve_shape, markings_layer)
 
@@ -410,7 +410,7 @@ func _update_markings_layer() -> void:
 		for i in range(relation.get_lane_count() - 1):
 			var offset = (i + 1) * NetworkConstants.LANE_WIDTH * midline_side
 			var path = line_helper.get_curve_with_offset(curve_shape, offset)
-			line_helper.draw_dash_line(path, markings_layer)
+			line_helper.draw_textured_dash_line(path, markings_layer)
 
 
 func _update_debug_layer() -> void:

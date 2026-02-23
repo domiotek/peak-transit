@@ -1,5 +1,8 @@
 class_name LineHelper
 
+var dash_texture: Texture = preload("res://assets/road_markers/dash_line.png")
+
+
 func calc_curve(start_pos: Vector2, target_pos: Vector2, strength: float, direction: NetSegmentInfo.CurveDirection) -> Curve2D:
 	var line_vector = target_pos - start_pos
 	var line_length = line_vector.length()
@@ -150,6 +153,23 @@ func draw_dash_line(
 			target_layer.add_child(dash_line)
 
 		drawing_dash = !drawing_dash
+
+
+func draw_textured_dash_line(
+		curve: Curve2D,
+		target_layer: Node2D,
+		line_width: float = NetworkConstants.LINE_WIDTH,
+		line_color: Color = NetworkConstants.DASH_COLOR,
+) -> void:
+	var dash_line = Line2D.new()
+	dash_line.texture = dash_texture
+	dash_line.texture_mode = Line2D.LineTextureMode.LINE_TEXTURE_TILE
+	dash_line.texture_repeat = CanvasItem.TextureRepeat.TEXTURE_REPEAT_ENABLED
+	dash_line.modulate = line_color
+	dash_line.width = line_width
+	dash_line.antialiased = true
+	dash_line.points = curve.get_baked_points()
+	target_layer.add_child(dash_line)
 
 
 func draw_solid_line(
