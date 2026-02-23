@@ -161,7 +161,7 @@ func set_action(action) -> void:
 func reset():
 	super.reset()
 	vehicle_manager.clear_all_vehicles()
-	game_manager.clock.reset()
+	game_manager.clock.reset(true)
 
 	if _technical_reset_done:
 		_score_manager.end_episode()
