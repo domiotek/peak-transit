@@ -5,7 +5,10 @@ class_name Camera
 var camera_speed
 var bounds: Rect2
 var bounds_offset: Vector2
+var camera_zoom_base_bounds: Array[Vector2]
 var camera_zoom_bounds: Array[Vector2]
+var camera_zoom_reference_map_size := Vector2(5000, 5000)
+var camera_zoom_out_floor: float = 0.02
 var dragging = false
 var drag_start_pos = Vector2.ZERO
 var last_mouse_pos = Vector2.ZERO
@@ -27,7 +30,8 @@ func set_camera_props(new_bounds: Rect2, projection_offset: Vector2, zoom_bounds
 
 	position = pos
 	bounds_offset = projection_offset
-	camera_zoom_bounds = zoom_bounds
+	camera_zoom_base_bounds = zoom_bounds
+	_recalculate_zoom_bounds()
 	camera_speed = speed
 
 
@@ -37,13 +41,18 @@ func set_camera_position(new_position: Vector2) -> void:
 
 func update_camera_bounds(new_bounds: Rect2) -> void:
 	bounds = new_bounds
+	_recalculate_zoom_bounds()
+
+
+func get_camera_zoom_bounds() -> Array[Vector2]:
+	return camera_zoom_bounds
 
 
 func _process(delta):
 	if not game_manager.is_game_initialized():
 		return
 
-	var movement = Vector2.ZERO
+	var movement := Vector2.ZERO
 
 	if Input.is_action_pressed("move_viewport_right"):
 		movement.x += 1
@@ -97,8 +106,8 @@ func _input(event):
 
 
 func _update_camera_position(new_pos: Vector2):
-	var min_bounds = bounds.position
-	var max_bounds = bounds.position + bounds.size
+	var min_bounds := bounds.position
+	var max_bounds := bounds.position + bounds.size
 
 	if zoom.x == camera_zoom_bounds[0].x:
 		min_bounds = Vector2(
@@ -113,3 +122,19 @@ func _update_camera_position(new_pos: Vector2):
 
 	position = new_pos.clamp(min_bounds, max_bounds)
 	get_parent().queue_redraw()
+
+
+func _recalculate_zoom_bounds() -> void:
+	if camera_zoom_base_bounds == null or camera_zoom_base_bounds.size() < 2:
+		return
+
+	var reference_diagonal = max(camera_zoom_reference_map_size.length(), 1.0)
+	var current_diagonal = max(bounds.size.length(), 1.0)
+
+	var base_zoom_out = camera_zoom_base_bounds[0].x
+	var max_zoom_in = camera_zoom_base_bounds[1].x
+	var scaled_zoom_out = base_zoom_out * (reference_diagonal / current_diagonal)
+	scaled_zoom_out = clamp(scaled_zoom_out, camera_zoom_out_floor, max_zoom_in)
+
+	camera_zoom_bounds = [Vector2(scaled_zoom_out, scaled_zoom_out), Vector2(max_zoom_in, max_zoom_in)]
+	zoom = zoom.clamp(camera_zoom_bounds[0], camera_zoom_bounds[1])

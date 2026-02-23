@@ -10,7 +10,7 @@ class_name BaseGameController
 var camera_bounds: Rect2
 var camera_projection_offset := Vector2(2, 1.35)
 var camera_speed := 500.0
-var camera_zoom_bounds: Array[Vector2] = [Vector2(0.5, 0.5), Vector2(6, 6)]
+var camera_zoom_bounds: Array[Vector2] = [Vector2(0.2, 0.2), Vector2(6, 6)]
 
 var ui_manager: UIManager
 var config_manager: ConfigManager
@@ -53,7 +53,7 @@ func get_camera_bounds() -> Rect2:
 
 
 func get_camera_zoom_bounds() -> Array[Vector2]:
-	return camera_zoom_bounds
+	return camera.get_camera_zoom_bounds()
 
 
 func get_max_game_speed() -> Enums.GameSpeed:
