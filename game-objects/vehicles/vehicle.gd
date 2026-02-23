@@ -97,6 +97,8 @@ func _ready():
 
 func _exit_tree() -> void:
 	destroyed.emit(id)
+	main_path_follower.queue_free()
+	main_path_follower = null
 
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
