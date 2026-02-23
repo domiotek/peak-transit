@@ -377,7 +377,7 @@ func _find_departure_times_with_step(
 	return target_dep_times
 
 
-func _on_pathfinder_result(path: Variant) -> void:
+func _on_pathfinder_result(_request_id: int, path: Variant) -> void:
 	_pathfinder_result = path
 	emit_signal("pathfinder_resolved", path)
 
