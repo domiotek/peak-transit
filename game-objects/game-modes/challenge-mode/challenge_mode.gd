@@ -3,7 +3,6 @@ extends BaseGameController
 class_name ChallengeGameController
 
 var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
-var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
 var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
 
 var _vehicle_with_path_drawn: Vehicle = null

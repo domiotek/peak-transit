@@ -78,3 +78,10 @@ enum BlinkersState {
 	LEFT,
 	RIGHT,
 }
+
+enum LODLevel {
+	VERY_LOW,
+	LOW,
+	MEDIUM,
+	HIGH,
+}

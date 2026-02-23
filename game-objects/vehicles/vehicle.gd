@@ -30,6 +30,8 @@ var _trailer_states: Array[Dictionary] = []
 var _previous_front_rotation: float = 0.0
 var _previous_front_position: Vector2 = Vector2.ZERO
 var _smoothed_curvature: float = 0.0
+var _bodies_visuals: Array[Node2D] = []
+var _bodies_lights_visuals: Array[Node2D] = []
 
 
 func _ready():
@@ -74,6 +76,13 @@ func _ready():
 	for collision_area in config["collision_areas"]:
 		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
 
+	for body_segment in config.body_segments:
+		_bodies_visuals.append(body_segment.get_node("Visuals") as Node2D)
+		_bodies_lights_visuals.append(body_segment.get_node("Lights") as Node2D)
+
+	if config.visibility_notifier:
+		config.visibility_notifier.connect("screen_entered", _on_screen_entered)
+		config.visibility_notifier.connect("screen_exited", _on_screen_exited)
 	for trailer_def in config.trailers:
 		var trailer_body = trailer_def["body"]
 
@@ -158,6 +167,36 @@ func assign_to_path(path: Path2D, progress: float) -> void:
 func recolor(new_color: Color) -> void:
 	for body in config.body_segments:
 		body.color = new_color
+
+
+func set_lod(level_of_detail: Enums.LODLevel) -> void:
+	if level_of_detail == Enums.LODLevel.VERY_LOW:
+		visible = false
+		return
+
+	visible = true
+
+	if level_of_detail == Enums.LODLevel.HIGH:
+		for visuals in _bodies_visuals:
+			visuals.visible = true
+		for lights_visuals in _bodies_lights_visuals:
+			lights_visuals.visible = true
+
+		return
+
+	if level_of_detail == Enums.LODLevel.MEDIUM:
+		for visuals in _bodies_visuals:
+			visuals.visible = true
+		for lights_visuals in _bodies_lights_visuals:
+			lights_visuals.visible = false
+		return
+
+	if level_of_detail == Enums.LODLevel.LOW:
+		for visuals in _bodies_visuals:
+			visuals.visible = false
+		for lights_visuals in _bodies_lights_visuals:
+			lights_visuals.visible = false
+		return
 
 
 func _physics_process(_delta: float) -> void:
@@ -264,6 +303,8 @@ func _on_trip_started() -> void:
 
 	emit_signal("trip_started", id)
 	config["id_label"].text = str(id)
+	var current_lod = game_manager.get_game_controller().get_lod()
+	call_deferred("set_lod", current_lod)
 
 
 func _on_trip_ended(completed: bool, trip_data: Dictionary) -> void:
@@ -340,3 +381,13 @@ func _toggle_debug_indicators(enabled: bool) -> void:
 
 	config.blockade_indicator.visible = enabled
 	config.id_label.visible = enabled
+
+
+func _on_screen_entered() -> void:
+	for body in config.body_segments:
+		body.visible = true
+
+
+func _on_screen_exited() -> void:
+	for body in config.body_segments:
+		body.visible = false

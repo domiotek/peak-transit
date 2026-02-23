@@ -362,6 +362,34 @@ func revalidate_intersection_priorities() -> void:
 		intersection_manager.switch_intersection_type(Enums.IntersectionType.DEFAULT)
 
 
+func set_lod(lod: Enums.LODLevel) -> void:
+	if lod == Enums.LODLevel.HIGH:
+		markings_layer.visible = true
+		coating_layer.visible = true
+		line_markings_layer.visible = true
+		top_layer.visible = true
+		return
+
+	if lod == Enums.LODLevel.MEDIUM:
+		markings_layer.visible = true
+		coating_layer.visible = false
+		line_markings_layer.visible = true
+		top_layer.visible = true
+		return
+
+	if lod == Enums.LODLevel.LOW:
+		markings_layer.visible = true
+		coating_layer.visible = false
+		line_markings_layer.visible = false
+		top_layer.visible = false
+		return
+
+	markings_layer.visible = false
+	coating_layer.visible = false
+	line_markings_layer.visible = false
+	top_layer.visible = false
+
+
 func _setup_connections() -> void:
 	if connected_segments.size() == 0:
 		return

@@ -107,6 +107,10 @@ func get_vehicles_by_types(vehicle_types: Array[VehicleType]) -> Array[Vehicle]:
 	return result
 
 
+func get_vehicles() -> Array[Vehicle]:
+	return vehicles.values()
+
+
 func get_vehicle_from_area(area: Area2D) -> Vehicle:
 	if not area:
 		return null

@@ -36,7 +36,7 @@ func get_index_in_nodes(node_id: int) -> int:
 	return keys.find(node_id) if keys.has(node_id) else -1
 
 
-func get_nodes() -> Array:
+func get_nodes() -> Array[RoadNode]:
 	return nodes.values()
 
 
@@ -71,7 +71,7 @@ func unregister_segment(segment: NetSegment) -> void:
 		_endpoint_ids.release_id(endpoint_id)
 
 
-func get_segments() -> Array:
+func get_segments() -> Array[NetSegment]:
 	return segments.values()
 
 

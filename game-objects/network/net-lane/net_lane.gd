@@ -286,6 +286,14 @@ func update_speed_limit(new_speed_limit: int) -> void:
 	_update_debug_layer()
 
 
+func set_lod(lod: Enums.LODLevel) -> void:
+	main_layer.visible = lod == Enums.LODLevel.HIGH
+
+
+func hide_reflective_surface() -> void:
+	main_layer.visible = false
+
+
 func _update_lane_usage() -> void:
 	var stats = get_vehicles_stats()
 

@@ -46,5 +46,6 @@ func _get_vehicle_config() -> Variant:
 	_config.collision_areas = [main_collision_area, trailer_collision_area] as Array[Area2D]
 	_config.blockade_indicator = $FrontBody/Line2D
 	_config.body_segments = [$FrontBody, $Trailer/TrailerBody] as Array[Polygon2D]
+	_config.visibility_notifier = $VisibilityNotifier
 
 	return _config

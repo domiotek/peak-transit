@@ -23,8 +23,11 @@ var endpoints_mappings: Dictionary[int, int] = { }
 
 var _lane_ids = IDManager.new()
 
+var _day_night_cycle_enabled: bool = false
+
 @onready var main_road_layer: Line2D = $MainLayer
 @onready var debug_layer: Node2D = $DebugLayer
+@onready var main_markings_layer: Node2D = $MainMarkingsLayer
 @onready var markings_layer: Node2D = $MarkingsLayer
 @onready var roadside_layer: Node2D = $RoadSideLayer
 
@@ -44,6 +47,8 @@ func _ready() -> void:
 
 	main_road_layer.texture = ImageTexture.create_from_image(img)
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
+
+	_on_debug_toggles_changed("UseDayNightCycle", config_manager.DebugToggles.UseDayNightCycle)
 
 	var game_manager = GDInjector.inject("GameManager") as GameManager
 
@@ -130,7 +135,7 @@ func update_visuals() -> void:
 	if collision_shape:
 		collision_shape.polygon = line_helper.convert_curve_to_polygon(main_layer_curve, main_road_layer.width)
 
-	_update_markings_layer()
+	_update_markings_layers()
 	_update_debug_layer()
 
 
@@ -384,14 +389,36 @@ func reposition_roadside_objects(target_relation_idx: int) -> void:
 				segment_helper.position_along_the_edge(self, child, def["offset"], target_relation_idx, def["horizontal_offset"])
 
 
+func set_lod(lod: Enums.LODLevel) -> void:
+	if _day_night_cycle_enabled:
+		for lane in lanes.values():
+			lane.set_lod(lod)
+
+	if lod >= Enums.LODLevel.MEDIUM:
+		markings_layer.visible = true
+		main_markings_layer.visible = true
+		return
+
+	if lod == Enums.LODLevel.LOW:
+		main_markings_layer.visible = true
+		markings_layer.visible = false
+		return
+
+	markings_layer.visible = false
+	main_markings_layer.visible = false
+
+
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes.values():
 		lane.update_trail_shape(curve_shape)
 		endpoints_mappings[lane.from_endpoint] = lane.to_endpoint
 
 
-func _update_markings_layer() -> void:
+func _update_markings_layers() -> void:
 	for child in markings_layer.get_children():
+		child.queue_free()
+
+	for child in main_markings_layer.get_children():
 		child.queue_free()
 
 	if not curve_shape:
@@ -399,9 +426,9 @@ func _update_markings_layer() -> void:
 
 	if relations.size() == 2:
 		if lanes.size() == 2:
-			line_helper.draw_textured_dash_line(curve_shape, markings_layer)
+			line_helper.draw_textured_dash_line(curve_shape, main_markings_layer)
 		else:
-			line_helper.draw_solid_line(curve_shape, markings_layer)
+			line_helper.draw_solid_line(curve_shape, main_markings_layer)
 
 	for relation in relations:
 		var starts_from_end = relation.start_node == nodes[1]
@@ -465,5 +492,13 @@ func _update_debug_layer() -> void:
 		debug_layer.add_child(arrow_polygon)
 
 
-func _on_debug_toggles_changed(_name, _state) -> void:
+func _on_debug_toggles_changed(_name: String, state: bool) -> void:
+	if _name == "UseDayNightCycle":
+		_day_night_cycle_enabled = state
+		if not state:
+			for lane in lanes.values():
+				lane.hide_reflective_surface()
+
+		return
+
 	_update_debug_layer()

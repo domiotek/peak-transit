@@ -1,29 +1,30 @@
-[gd_scene load_steps=3 format=3 uid="uid://dj5w2fj5756kr"]
+[gd_scene format=3 uid="uid://dj5w2fj5756kr"]
 
 [ext_resource type="Script" uid="uid://d0lyllvgjckpi" path="res://game-objects/network/net-lane/net_lane.gd" id="1_1nvuj"]
 
 [sub_resource type="Curve2D" id="Curve2D_csds3"]
 
-[node name="NetLane" type="Node2D"]
+[node name="NetLane" type="Node2D" unique_id=515350137]
 script = ExtResource("1_1nvuj")
 
-[node name="MainLayer" type="Node2D" parent="."]
+[node name="MainLayer" type="Node2D" parent="." unique_id=1474551528]
+visible = false
 
-[node name="PathingTrail" type="Path2D" parent="."]
+[node name="PathingTrail" type="Path2D" parent="." unique_id=1544990586]
 curve = SubResource("Curve2D_csds3")
 
-[node name="DebugLayer" type="Node2D" parent="."]
+[node name="DebugLayer" type="Node2D" parent="." unique_id=967552801]
 z_index = 1
 z_as_relative = false
 
-[node name="UsageIndicator" type="Line2D" parent="."]
+[node name="UsageIndicator" type="Line2D" parent="." unique_id=1766411059]
 visible = false
 width = 16.0
 default_color = Color(1, 0.518123, 0.45217, 1)
 
-[node name="UsageTimer" type="Timer" parent="."]
+[node name="UsageTimer" type="Timer" parent="." unique_id=82174373]
 
-[node name="PickableArea" type="Area2D" parent="."]
+[node name="PickableArea" type="Area2D" parent="." unique_id=662130823]
 process_mode = 3
 collision_layer = 64
 collision_mask = 0
