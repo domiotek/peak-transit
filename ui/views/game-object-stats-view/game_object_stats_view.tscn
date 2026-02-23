@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://c5u24vprs3pbe"]
+
+[ext_resource type="Script" uid="uid://bet17vvfpvdku" path="res://ui/views/game-object-stats-view/game_object_stats_view.gd" id="1_dvveb"]
+[ext_resource type="PackedScene" uid="uid://c04rhuwgif41s" path="res://ui/components/value_list_item/value_list_item.tscn" id="2_dvveb"]
+
+[node name="GameObjectStatsView" type="BoxContainer" unique_id=370954596]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+vertical = true
+script = ExtResource("1_dvveb")
+
+[node name="PathingRequests" parent="." unique_id=1689835063 instance=ExtResource("2_dvveb")]
+layout_mode = 2
+init_label_text = "Pathing requests:"
+
+[node name="VehiclesCount" parent="." unique_id=1322008099 instance=ExtResource("2_dvveb")]
+layout_mode = 2
+init_label_text = "Vehicles:"

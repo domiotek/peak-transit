@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" uid="uid://bwlmiyrdnnjft" path="res://ui/views/buses-view/buses_view.tscn" id="12_bxmbd"]
 [ext_resource type="PackedScene" uid="uid://c5jn0klrj2752" path="res://ui/views/brigades-view/brigades_view.tscn" id="13_xppfi"]
 [ext_resource type="Script" uid="uid://c7nf0f31odlbt" path="res://game-objects/rl/challenge_controller.gd" id="14_re2os"]
+[ext_resource type="PackedScene" uid="uid://c5u24vprs3pbe" path="res://ui/views/game-object-stats-view/game_object_stats_view.tscn" id="16_5a2l0"]
 
 [node name="Challenge" unique_id=1974875111 instance=ExtResource("1_iv1ck")]
 script = ExtResource("2_hwci8")
@@ -159,6 +160,17 @@ offset_top = 5.0
 offset_right = 540.0
 offset_bottom = -43.0
 grow_horizontal = 1
+
+[node name="GameObjectStatsView" parent="UI" index="17" unique_id=370954596 instance=ExtResource("16_5a2l0")]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 55.0
+offset_top = 5.0
+offset_right = 55.0
+offset_bottom = 5.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="RLAgent" type="Node2D" parent="." index="4" unique_id=1436141329 groups=["AGENT"]]
 script = ExtResource("14_re2os")

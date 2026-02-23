@@ -39,6 +39,8 @@ public partial class DebugToggles : RefCounted
 
     public bool UseVehicleDebugIndicators { get; private set; } = false;
 
+    public bool ShowDebugCounters { get; private set; } = false;
+
     public void SetToggle(string toggleName, bool value)
     {
         var property = GetType()
