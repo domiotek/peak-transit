@@ -24,6 +24,7 @@ var vehicles_layer: Node2D
 
 var vehicles: Dictionary[int, Vehicle] = { }
 var _vehicles_by_type: Dictionary[int, Dictionary] = { }
+var _vehicle_spawn_budget: int = SimulationConstants.VEHICLE_FRAME_SPAWN_BUDGET
 
 var freed_ids_pool: Array[int] = []
 var next_fresh_id: int = 0
@@ -39,6 +40,11 @@ func _init() -> void:
 	_vehicles_by_type[VehicleType.ARTICULATED_BUS] = { }
 
 
+func inject_dependencies() -> void:
+	var simulation_manager = GDInjector.inject("SimulationManager") as SimulationManager
+	simulation_manager.desired_world_lights_state_changed.connect(_on_desired_world_lights_state_changed)
+
+
 func set_vehicles_layer(layer: Node2D) -> void:
 	vehicles_layer = layer
 
@@ -48,6 +54,9 @@ func set_vehicles_layer(layer: Node2D) -> void:
 func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
 	if not vehicles_layer:
 		push_error("Vehicles layer is not set. Cannot create vehicle.")
+		return null
+
+	if _vehicle_spawn_budget <= 0:
 		return null
 
 	if vehicle_type < 0 or vehicle_type >= _vehicle_scenes.size():
@@ -70,6 +79,7 @@ func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
 	if type_bucket != null:
 		type_bucket[vehicle.id] = vehicle
 	vehicle_created.emit(vehicle)
+	_vehicle_spawn_budget -= 1
 	return vehicle
 
 
@@ -92,10 +102,10 @@ func remove_vehicle(vehicle_id: int) -> void:
 		push_error("Vehicle with ID %d not found." % vehicle_id)
 		return
 
-	# var selection := game_manager.get_selection()
+	var selection := game_manager.get_selection()
 
-	# if selection.type == GameManager.SelectionType.VEHICLE and selection.object == vehicle:
-	# 	game_manager.clear_selection()
+	if selection.type == GameManager.SelectionType.VEHICLE and selection.object == vehicle:
+		game_manager.clear_selection()
 
 	vehicles.erase(vehicle_id)
 	_despawn_vehicle(vehicle)
@@ -159,6 +169,10 @@ func clear_all_vehicles() -> void:
 			_despawn_vehicle(vehicle)
 
 
+func reset_vehicle_spawn_budget() -> void:
+	_vehicle_spawn_budget = SimulationConstants.VEHICLE_FRAME_SPAWN_BUDGET
+
+
 func clear_state() -> void:
 	vehicles.clear()
 	for bucket in _vehicles_by_type.values():
@@ -167,6 +181,7 @@ func clear_state() -> void:
 	freed_ids_pool.clear()
 	next_fresh_id = 0
 	vehicles_layer = null
+	_vehicle_spawn_budget = SimulationConstants.VEHICLE_FRAME_SPAWN_BUDGET
 
 
 func _generate_vehicle_id() -> int:
@@ -186,3 +201,8 @@ func _despawn_vehicle(vehicle: Vehicle) -> void:
 	vehicle.queue_free()
 	freed_ids_pool.append(vehicle_id)
 	vehicle_destroyed.emit(vehicle_id, vehicle.type)
+
+
+func _on_desired_world_lights_state_changed(new_state: bool) -> void:
+	for vehicle in vehicles.values():
+		vehicle.driver.set_headlights_enabled(new_state)

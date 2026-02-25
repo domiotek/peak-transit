@@ -55,6 +55,9 @@ func spawn_vehicle() -> void:
 
 	var vehicle = vehicle_manager.create_vehicle(VehicleManager.VehicleType.CAR)
 
+	if not vehicle:
+		return
+
 	vehicle.trip_abandoned.connect(Callable(self, "_vehicle_routing_failed"))
 
 	vehicle_leaving = vehicle

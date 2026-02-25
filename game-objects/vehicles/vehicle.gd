@@ -40,27 +40,21 @@ func _ready():
 
 	driver.set_owner(self)
 
-	var vehicle_config = _get_vehicle_config() as VehicleConfig
+	var vehicle_config := _get_vehicle_config() as VehicleConfig
 
 	if not vehicle_config:
 		push_error("Vehicle ID %d has no config assigned!" % id)
 		return
 	config = vehicle_config
 
-	if config.body_color:
-		recolor(config.body_color)
-
-	config_manager.DebugToggles.connect("ToggleChanged", Callable(self, "_on_debug_toggle_changed"))
-	_toggle_debug_indicators(config_manager.DebugToggles.UseVehicleDebugIndicators)
-
 	main_path_follower = config.path_follower
 
-	config["ai"].bind(self)
+	config.ai.bind(self)
 	driver.set_navigator(navigator)
 	driver.set_lights(config.head_lights, config.brake_lights, config.left_blinker_nodes, config.right_blinker_nodes)
-	driver.set_casters(config["casters"])
+	driver.set_casters(config.casters)
 
-	driver.set_blockade_observer(config["blockade_observer"])
+	driver.set_blockade_observer(config.blockade_observer)
 
 	driver.connect("caster_state_changed", Callable(self, "_on_caster_state_changed"))
 	driver.connect("state_changed", Callable(self, "_on_driver_state_changed"))
@@ -69,23 +63,9 @@ func _ready():
 	navigator.connect("trip_ended", Callable(self, "_on_trip_ended"))
 	navigator.setup(self)
 
-	simulation_manager.desired_world_lights_state_changed.connect(Callable(self, "_on_lights_state_change"))
-
-	for body_area in config["body_areas"]:
-		body_area.set_meta("vehicle_ref", self)
-		body_area.connect("input_event", Callable(self, "_on_input_event"))
-
-	for collision_area in config["collision_areas"]:
-		collision_area.set_meta("vehicle_ref", self)
-		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
-
 	for body_segment in config.body_segments:
 		_bodies_visuals.append(body_segment.get_node("Visuals") as Node2D)
 		_bodies_lights_visuals.append(body_segment.get_node("Lights") as Node2D)
-
-	if config.visibility_notifier:
-		config.visibility_notifier.connect("screen_entered", _on_screen_entered)
-		config.visibility_notifier.connect("screen_exited", _on_screen_exited)
 
 	_has_trailers = config.trailers.size() > 0
 
@@ -300,7 +280,29 @@ func _update_position(delta: float, current_speed: float) -> void:
 	_previous_front_position = self.global_position
 
 
+func _finish_initialization() -> void:
+	if config.body_color:
+		recolor(config.body_color)
+
+	config_manager.DebugToggles.connect("ToggleChanged", Callable(self, "_on_debug_toggle_changed"))
+	_toggle_debug_indicators(config_manager.DebugToggles.UseVehicleDebugIndicators)
+
+	for body_area in config.body_areas:
+		body_area.set_meta("vehicle_ref", self)
+		body_area.connect("input_event", Callable(self, "_on_input_event"))
+
+	for collision_area in config.collision_areas:
+		collision_area.set_meta("vehicle_ref", self)
+		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
+
+	if config.visibility_notifier:
+		config.visibility_notifier.connect("screen_entered", _on_screen_entered)
+		config.visibility_notifier.connect("screen_exited", _on_screen_exited)
+
+
 func _on_trip_started() -> void:
+	_finish_initialization()
+
 	var current_step := navigator.get_current_step()
 	var starts_at_building := current_step.type == Navigator.StepType.BUILDING
 
@@ -384,10 +386,6 @@ func _check_for_building_entry() -> bool:
 
 func _get_vehicle_config() -> Variant:
 	return null
-
-
-func _on_lights_state_change(should_be_on: bool) -> void:
-	driver.set_headlights_enabled(should_be_on, false)
 
 
 func _on_debug_toggle_changed(toggle_name: String, value: bool) -> void:
