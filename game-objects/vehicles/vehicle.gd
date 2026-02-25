@@ -219,6 +219,8 @@ func _process(delta: float) -> void:
 		print("Debug pick triggered for vehicle ID %d" % id)
 		breakpoint
 
+	driver.invalidate_blocking_objects_cache()
+
 	ai.process(delta)
 
 	driver.tick_lights(delta)

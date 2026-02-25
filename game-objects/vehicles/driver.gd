@@ -63,6 +63,9 @@ var _blinkers_state_change_ticks_counter: float = 0.0
 var _stop_at_distance: float = 0.0
 var _slow_down_threshold: float = 0.0
 var _stop_at_callback: Callable
+var _blocking_objects_cache: Array = []
+var _blocking_objects_cache_frame: int = -1
+var _blocking_objects_cache_valid: bool = false
 var _colliding_casters: Dictionary[CasterCollection.CasterID, bool] = {
 	CasterCollection.CasterID.CLOSE: false,
 	CasterCollection.CasterID.MEDIUM: false,
@@ -134,15 +137,23 @@ func get_state() -> VehicleState:
 
 func get_blocking_objects() -> Array:
 	if not blockade_observer.monitoring:
+		invalidate_blocking_objects_cache()
 		return []
+
+	var frame := Engine.get_process_frames()
+	if _blocking_objects_cache_valid and _blocking_objects_cache_frame == frame:
+		return _blocking_objects_cache
 
 	var overlapping_areas := blockade_observer.get_overlapping_areas()
 	if overlapping_areas.size() > 0:
-		return overlapping_areas
+		_blocking_objects_cache = overlapping_areas
+		_blocking_objects_cache_frame = frame
+		_blocking_objects_cache_valid = true
+		return _blocking_objects_cache
 
 	_set_casters_enabled(true)
 
-	var colliders = []
+	var colliders: Array = []
 	for caster_id in casters.keys():
 		if caster_id not in BLOCKING_CASTERS:
 			continue
@@ -153,7 +164,17 @@ func get_blocking_objects() -> Array:
 			if collider:
 				colliders.append(collider)
 
-	return colliders
+	_blocking_objects_cache = colliders
+	_blocking_objects_cache_frame = frame
+	_blocking_objects_cache_valid = true
+
+	return _blocking_objects_cache
+
+
+func invalidate_blocking_objects_cache() -> void:
+	_blocking_objects_cache.clear()
+	_blocking_objects_cache_frame = -1
+	_blocking_objects_cache_valid = false
 
 
 func emergency_stop() -> void:
@@ -320,6 +341,7 @@ func check_blockade_cleared(delta: float) -> bool:
 
 	if unblocked:
 		blockade_observer.monitoring = false
+		invalidate_blocking_objects_cache()
 		if no_caster_allowance_time == 0.0:
 			_set_casters_enabled(true)
 		state = VehicleState.IDLE
@@ -463,7 +485,7 @@ func _get_colliding_casters(current_step: NavigationStep) -> Dictionary[CasterCo
 				continue
 
 			var other_vehicle: Vehicle = vehicle_manager.get_vehicle_from_area(collider)
-			var other_vehicle_current_step := other_vehicle.navigator.get_current_step() as NavigationStep if other_vehicle else null
+			var other_vehicle_current_step := other_vehicle.navigator.get_current_step() as NodeNavigationStep if other_vehicle else null
 
 			_colliding_casters[CASTERS_CHECK_ORDER[idx]] = _check_angled_caster(collider, current_step, other_vehicle, other_vehicle_current_step)
 
@@ -537,15 +559,31 @@ func _check_forward_caster(target_collider: Object, current_step: NavigationStep
 	return true
 
 
-func _check_angled_caster(target_collider: Object, current_step: NavigationStep, other_vehicle: Vehicle, other_vehicle_current_step: NavigationStep) -> bool:
-	if other_vehicle and line_helper.curves_intersect(current_step.path, other_vehicle_current_step.path, 10):
-		return true
-
+func _check_angled_caster(
+		target_collider: Object,
+		current_step: NodeNavigationStep,
+		other_vehicle: Vehicle,
+		other_vehicle_current_step: NavigationStep,
+) -> bool:
 	var blockade := target_collider as LaneStopper
 	if blockade and blockade.endpoint.Id == current_step.from_endpoint:
 		return true
 
-	return false
+	if not other_vehicle or not other_vehicle_current_step:
+		return false
+
+	var my_node: RoadNode = current_step.node
+	var other_node: RoadNode = other_vehicle_current_step.node
+
+	if other_node != my_node:
+		return false
+
+	return my_node.are_connection_curves_crossing(
+		current_step.from_endpoint,
+		current_step.to_endpoint,
+		other_vehicle_current_step.from_endpoint,
+		other_vehicle_current_step.to_endpoint,
+	)
 
 
 func _apply_caster_colliding(caster_id: CasterCollection.CasterID, colliding_casters: Dictionary) -> void:
@@ -582,11 +620,13 @@ func _set_casters_enabled(enabled: bool) -> void:
 	casters_state = enabled
 
 	casters.set_all_enabled(enabled)
+	invalidate_blocking_objects_cache()
 
 
 func _on_blockade_area_exited(_area: Area2D) -> void:
 	_set_casters_enabled(true)
 	blockade_observer.set_deferred("monitoring", false)
+	invalidate_blocking_objects_cache()
 	if state == VehicleState.BLOCKED:
 		state = VehicleState.IDLE
 		time_blocked = 0.0

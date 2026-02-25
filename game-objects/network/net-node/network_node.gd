@@ -20,6 +20,7 @@ var outgoing_endpoints: Array = []
 var connection_paths: Dictionary = { }
 var connection_directions: Dictionary = { }
 var _connection_curve_crossings: Dictionary = { }
+var _source_endpoints_by_destination: Dictionary = { }
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
@@ -113,6 +114,7 @@ func update_visuals() -> void:
 
 func late_update_visuals() -> void:
 	_setup_connections()
+	_rebuild_source_endpoints_cache()
 	_rebuild_connection_curve_crossing_cache()
 
 	intersection_manager.setup_intersection(self)
@@ -149,6 +151,7 @@ func reset_visuals() -> void:
 	connection_paths.clear()
 	connection_directions.clear()
 	_connection_curve_crossings.clear()
+	_source_endpoints_by_destination.clear()
 	corner_points = []
 	connected_segments = []
 	segment_directions.clear()
@@ -301,10 +304,10 @@ func get_segment_directions(segment_id: int) -> Array:
 
 
 func get_source_endpoints(to_endpoint_id: int) -> Array:
-	var sources: Array = []
-	for source_id in connections.keys():
-		if connections[source_id].has(to_endpoint_id):
-			sources.append(source_id)
+	var sources: Array = _source_endpoints_by_destination.get(to_endpoint_id, null)
+	if sources == null:
+		return []
+
 	return sources
 
 
@@ -411,6 +414,17 @@ func _setup_connections() -> void:
 		connections_helper.setup_two_segment_connections(self)
 	else:
 		connections_helper.setup_mutli_segment_connections(self)
+
+
+func _rebuild_source_endpoints_cache() -> void:
+	_source_endpoints_by_destination.clear()
+
+	for source_id in connections.keys():
+		for destination_id in connections[source_id]:
+			if not _source_endpoints_by_destination.has(destination_id):
+				_source_endpoints_by_destination[destination_id] = []
+
+			(_source_endpoints_by_destination[destination_id] as Array).append(source_id)
 
 
 func _rebuild_connection_curve_crossing_cache() -> void:
