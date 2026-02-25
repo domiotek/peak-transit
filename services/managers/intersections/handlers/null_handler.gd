@@ -2,10 +2,10 @@ extends RefCounted
 
 class_name NullIntersectionHandler
 
-var CLASS_NAME = "NullIntersection"
+const CLASS_NAME = "NullIntersection"
 
-var CONFLICT_ZONE_OFFSET = 50.0
-var SPACE_AHEAD_REQUIRED = 50.0
+const CONFLICT_ZONE_OFFSET = 50.0
+const SPACE_AHEAD_REQUIRED = 50.0
 
 var network_manager: NetworkManager
 var game_manager: GameManager
@@ -39,32 +39,31 @@ func process_stopper(stopper: LaneStopper) -> bool:
 		print("Debug pick triggered for stopper at endpoint ID %d" % stopper.endpoint.Id)
 		breakpoint
 
-	var lane = stopper.get_lane()
-	var approaching_vehicle = lane.get_first_vehicle()
+	var lane := stopper.get_lane()
+	var approaching_vehicle := lane.get_first_vehicle()
 
 	if approaching_vehicle:
-		var current_step = approaching_vehicle.navigator.get_current_step()
+		var current_step := approaching_vehicle.navigator.get_current_step()
 		if not approaching_vehicle.navigator.has_trip():
 			return false
 
-		var step_type = current_step["type"]
-		if step_type == Navigator.StepType.NODE or step_type == Navigator.StepType.BUILDING:
+		if not current_step is SegmentNavigationStep:
 			return false
 
-		var next_node = current_step["next_node"]
+		var next_node := (current_step as SegmentNavigationStep).next_node
 
-		var from_endpoint_id = next_node.get("from", null)
-		var to_endpoint_id = next_node.get("to", null)
+		var from_endpoint_id := next_node.from
+		var to_endpoint_id := next_node.to
 
-		if to_endpoint_id == null:
+		if to_endpoint_id == -1:
 			return false
 
 		var from_endpoint = network_manager.get_lane_endpoint(from_endpoint_id)
 		var to_endpoint = network_manager.get_lane_endpoint(to_endpoint_id)
 
-		var other_endpoints = node.get_source_endpoints(to_endpoint_id)
+		var other_endpoints := node.get_source_endpoints(to_endpoint_id)
 		var target_endpoint = network_manager.get_lane_endpoint(to_endpoint_id)
-		var target_lane = network_manager.get_segment(target_endpoint["SegmentId"]).get_lane(target_endpoint["LaneId"])
+		var target_lane := network_manager.get_segment(target_endpoint["SegmentId"]).get_lane(target_endpoint["LaneId"])
 
 		if from_endpoint["LaneNumber"] != to_endpoint["LaneNumber"]:
 			if _handle_changing_lane(approaching_vehicle, from_endpoint, to_endpoint, other_endpoints, target_lane):
@@ -78,9 +77,7 @@ func process_stopper(stopper: LaneStopper) -> bool:
 
 
 func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: Dictionary, to_endpoint: Dictionary, other_endpoints: Array, target_lane: NetLane) -> bool:
-	var crossing_vehicles = node.intersection_manager.get_vehicles_crossing(from_endpoint.Id, to_endpoint.Id)
-
-	if crossing_vehicles.size() > 0:
+	if node.intersection_manager.has_vehicles_crossing(from_endpoint.Id, to_endpoint.Id):
 		return true
 
 	for other_endpoint_id in other_endpoints:
@@ -90,9 +87,7 @@ func _handle_changing_lane(target_vehicle: Vehicle, from_endpoint: Dictionary, t
 		var other_endpoint = network_manager.get_lane_endpoint(other_endpoint_id)
 		var other_lane = network_manager.get_segment(other_endpoint["SegmentId"]).get_lane(other_endpoint["LaneId"])
 
-		crossing_vehicles = node.intersection_manager.get_vehicles_crossing(other_endpoint_id, to_endpoint.Id)
-
-		if crossing_vehicles.size() > 0:
+		if node.intersection_manager.has_vehicles_crossing(other_endpoint_id, to_endpoint.Id):
 			return true
 
 		var other_vehicle = other_lane.get_first_vehicle()
@@ -115,27 +110,24 @@ func _handle_straight_lane(from_endpoint: Dictionary, to_endpoint: Dictionary, o
 		if other_endpoint_id == from_endpoint.Id:
 			continue
 
-		var crossing_vehicle = node.intersection_manager.get_vehicles_crossing(other_endpoint_id, to_endpoint.Id)
-
-		if crossing_vehicle.size() > 0:
+		if node.intersection_manager.has_vehicles_crossing(other_endpoint_id, to_endpoint.Id):
 			return true
 
 	return false
 
 
 func _get_next_endpoint(vehicle: Vehicle) -> int:
-	var current_step = vehicle.navigator.get_current_step()
+	var current_step := vehicle.navigator.get_current_step()
 
-	if current_step["type"] == Navigator.StepType.SEGMENT:
-		var next_node = current_step["next_node"]
-		var to_endpoint_id = next_node.get("to", null)
+	if current_step is SegmentNavigationStep:
+		var next_node: NextNodeInfo = current_step.next_node
 
-		if to_endpoint_id != null:
-			return to_endpoint_id
+		if next_node.to != -1:
+			return next_node.to
 
 		return -1
 
-	if current_step["type"] == Navigator.StepType.BUILDING:
+	if current_step is BuildingNavigationStep:
 		return -1
 
-	return current_step["to_endpoint"]
+	return current_step.to_endpoint

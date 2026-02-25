@@ -201,11 +201,11 @@ func get_end_nodes() -> Array:
 func get_curves_of_path(path: Array, starting_building: BaseBuilding = null, ending_building: BaseBuilding = null) -> Array:
 	var curves: Array = []
 
-	var first_building_connection: Dictionary
+	var first_building_connection: BuildingConnectionInfo
 
 	if starting_building != null:
 		first_building_connection = starting_building.get_out_connection_from_in_endpoint(path[0].ViaEndpointId)
-		curves.append(line_helper.convert_curve_local_to_global(first_building_connection["path"].curve, starting_building))
+		curves.append(line_helper.convert_curve_local_to_global(first_building_connection.path.curve, starting_building))
 
 	for step_idx in range(path.size()):
 		var step = path[step_idx]
@@ -221,15 +221,15 @@ func get_curves_of_path(path: Array, starting_building: BaseBuilding = null, end
 			curves.append(line_helper.convert_curve_local_to_global(node_path.curve, node))
 
 	if ending_building != null:
-		var last_building_connection: Dictionary
+		var last_building_connection: BuildingConnectionInfo
 
 		last_building_connection = ending_building.get_in_connection(path[path.size() - 1].ViaEndpointId)
-		curves.append(line_helper.convert_curve_local_to_global(last_building_connection["path"].curve, ending_building))
+		curves.append(line_helper.convert_curve_local_to_global(last_building_connection.path.curve, ending_building))
 
-		curves[curves.size() - 2] = segment_helper.trim_curve_to_building_connection(curves[curves.size() - 2], last_building_connection["lane_point"], false)
+		curves[curves.size() - 2] = segment_helper.trim_curve_to_building_connection(curves[curves.size() - 2], last_building_connection.lane_point, false)
 
 	if starting_building != null:
-		curves[1] = segment_helper.trim_curve_to_building_connection(curves[1], first_building_connection["lane_point"], true)
+		curves[1] = segment_helper.trim_curve_to_building_connection(curves[1], first_building_connection.lane_point, true)
 
 	return curves
 

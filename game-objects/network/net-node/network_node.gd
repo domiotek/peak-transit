@@ -19,6 +19,7 @@ var outgoing_endpoints: Array = []
 
 var connection_paths: Dictionary = { }
 var connection_directions: Dictionary = { }
+var _connection_curve_crossings: Dictionary = { }
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
@@ -112,6 +113,7 @@ func update_visuals() -> void:
 
 func late_update_visuals() -> void:
 	_setup_connections()
+	_rebuild_connection_curve_crossing_cache()
 
 	intersection_manager.setup_intersection(self)
 
@@ -146,6 +148,7 @@ func reset_visuals() -> void:
 	connections.clear()
 	connection_paths.clear()
 	connection_directions.clear()
+	_connection_curve_crossings.clear()
 	corner_points = []
 	connected_segments = []
 	segment_directions.clear()
@@ -244,6 +247,14 @@ func get_connection_direction(in_id: int, out_id: int) -> Enums.Direction:
 func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
 	var from_segment_id = network_manager.get_lane_endpoint(in_id).SegmentId
 	return segment_priorities.get(from_segment_id, Enums.IntersectionPriority.YIELD)
+
+
+func are_connection_curves_crossing(first_in_id: int, first_out_id: int, second_in_id: int, second_out_id: int) -> bool:
+	var first_connection_key := _compose_connection_key(first_in_id, first_out_id)
+	var second_connection_key := _compose_connection_key(second_in_id, second_out_id)
+	var pair_key := _compose_connection_pair_key(first_connection_key, second_connection_key)
+
+	return _connection_curve_crossings.get(pair_key, false)
 
 
 func get_connection_details(in_id: int, out_id: int) -> Dictionary:
@@ -400,6 +411,47 @@ func _setup_connections() -> void:
 		connections_helper.setup_two_segment_connections(self)
 	else:
 		connections_helper.setup_mutli_segment_connections(self)
+
+
+func _rebuild_connection_curve_crossing_cache() -> void:
+	_connection_curve_crossings.clear()
+
+	var connection_entries: Array = []
+	for in_id in connections.keys():
+		for out_id in connections[in_id]:
+			var path := get_connection_path(in_id, out_id)
+			if path == null or path.curve == null:
+				continue
+
+			connection_entries.append(
+				{
+					"in_id": in_id,
+					"out_id": out_id,
+					"curve": path.curve,
+				},
+			)
+
+	for i in range(connection_entries.size()):
+		var first_entry = connection_entries[i]
+		var first_connection_key := _compose_connection_key(first_entry["in_id"], first_entry["out_id"])
+
+		for j in range(i + 1, connection_entries.size()):
+			var second_entry = connection_entries[j]
+			var second_connection_key := _compose_connection_key(second_entry["in_id"], second_entry["out_id"])
+			var pair_key := _compose_connection_pair_key(first_connection_key, second_connection_key)
+
+			_connection_curve_crossings[pair_key] = line_helper.curves_intersect(first_entry["curve"], second_entry["curve"], 10)
+
+
+func _compose_connection_key(in_id: int, out_id: int) -> int:
+	return (in_id << 32) | (out_id & 0xFFFFFFFF)
+
+
+func _compose_connection_pair_key(first_connection_key: int, second_connection_key: int) -> String:
+	if first_connection_key < second_connection_key:
+		return "%d|%d" % [first_connection_key, second_connection_key]
+
+	return "%d|%d" % [second_connection_key, first_connection_key]
 
 
 func _draw_stop_lines() -> void:

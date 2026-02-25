@@ -299,9 +299,9 @@ func remove_terminal(terminal: Terminal) -> void:
 
 
 func place_depot(depot: Depot) -> void:
-	var new_depot_offset = depot.get_position_offset()
-	var relation = get_relation_with_starting_node(depot.get_incoming_node_id()) as NetRelation
-	var starts_from_end = depot.get_incoming_node_id() == nodes[1].id
+	var new_depot_offset := depot.get_position_offset()
+	var relation := get_relation_with_starting_node(depot.get_incoming_node_id()) as NetRelation
+	var starts_from_end := depot.get_incoming_node_id() == nodes[1].id
 
 	relation.register_building(depot.id, depot.get_position_offset(), depot.type)
 

@@ -19,6 +19,7 @@ var handler: RefCounted
 var _handler_type: IntersectionHandlerType = IntersectionHandlerType.NULL
 
 var crossing_vehicles: Dictionary = { }
+var _crossing_vehicles_total: int = 0
 
 
 func setup_intersection(assigned_node: RoadNode) -> void:
@@ -67,6 +68,7 @@ func dispose_intersection() -> void:
 	handler = null
 	node = null
 	crossing_vehicles.clear()
+	_crossing_vehicles_total = 0
 
 
 func switch_intersection_type(new_type: Enums.IntersectionType) -> void:
@@ -94,37 +96,47 @@ func process_tick(delta: float) -> void:
 
 
 func register_crossing_vehicle(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
 
 	if not crossing_vehicles.has(key):
-		crossing_vehicles[key] = []
+		crossing_vehicles[key] = { }
 
-	if vehicle_id not in crossing_vehicles[key]:
-		crossing_vehicles[key].append(vehicle_id)
+	var crossing_set = crossing_vehicles[key] as Dictionary
+	if not crossing_set.has(vehicle_id):
+		crossing_set[vehicle_id] = true
+		_crossing_vehicles_total += 1
 
 
 func mark_vehicle_left(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
 
 	if crossing_vehicles.has(key):
-		crossing_vehicles[key].erase(vehicle_id)
-		if crossing_vehicles[key].size() == 0:
+		var crossing_set = crossing_vehicles[key] as Dictionary
+		if crossing_set.erase(vehicle_id):
+			_crossing_vehicles_total = max(0, _crossing_vehicles_total - 1)
+
+		if crossing_set.size() == 0:
 			crossing_vehicles.erase(key)
 
 
 func get_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> Array:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
+	if not crossing_vehicles.has(key):
+		return []
 
-	return crossing_vehicles.get(key, [])
+	return (crossing_vehicles[key] as Dictionary).keys()
+
+
+func has_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> bool:
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
+	if not crossing_vehicles.has(key):
+		return false
+
+	return (crossing_vehicles[key] as Dictionary).size() > 0
 
 
 func get_vehicles_crossing_count() -> int:
-	var total = 0
-
-	for key in crossing_vehicles.keys():
-		total += crossing_vehicles[key].size()
-
-	return total
+	return _crossing_vehicles_total
 
 
 func get_used_intersection_type() -> String:
@@ -160,3 +172,7 @@ func _choose_intersection_handler(override: IntersectionHandlerType = Intersecti
 			_handler_type = IntersectionHandlerType.TRAFFIC_LIGHTS
 			return TrafficLightsIntersectionHandler.new()
 	return TrafficLightsIntersectionHandler.new()
+
+
+func _compose_crossing_key(from_endpoint_id: int, to_endpoint_id: int) -> int:
+	return (from_endpoint_id << 32) | (to_endpoint_id & 0xFFFFFFFF)

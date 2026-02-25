@@ -16,7 +16,8 @@ func set_active(_active: bool) -> void:
 	active = _active
 	self.monitorable = _active
 	shape.set_deferred("disabled", not _active)
-	_toggle_debug_visuals()
+	if indicator.visible:
+		_toggle_debug_visuals()
 
 func set_debug_visuals_enabled(enabled: bool) -> void:
 	indicator.visible = enabled

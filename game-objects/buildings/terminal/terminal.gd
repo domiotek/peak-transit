@@ -499,10 +499,10 @@ func _update_debug_visuals() -> void:
 		line_helper.draw_solid_line(bypass_out_track.curve, debug_layer, 2.0, Color.ORANGE)
 
 
-func _get_connection_endpoints() -> Dictionary:
+func _get_connection_endpoints() -> Dictionary[BuildingConnectionInfo.BuildingConnectionType, Vector2]:
 	return {
-		"in": to_global(Vector2(10, -15)),
-		"out": to_global(Vector2(-10, -15)),
+		BuildingConnectionInfo.BuildingConnectionType.IN: to_global(Vector2(10, -15)),
+		BuildingConnectionInfo.BuildingConnectionType.OUT: to_global(Vector2(-10, -15)),
 	}
 
 

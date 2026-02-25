@@ -17,9 +17,17 @@ func _get_vehicle_config() -> Variant:
 	_config.category = VehicleManager.VehicleCategory.PUBLIC_TRANSPORT
 	_config.blockade_observer = forward_blockage_area
 	_config.head_lights = [$FrontBody/Lights/LeftBeam, $FrontBody/Lights/RightBeam] as Array[Headlight]
-	_config.brake_lights = [$Trailer/TrailerBody/Lights/LeftBrakeLight, $Trailer/TrailerBody/Lights/RightBrakeLight] as Array[Node2D]
-	_config.left_blinker_nodes = [$FrontBody/Lights/Blinkers/LeftFront, $FrontBody/Lights/Blinkers/LeftSide, $Trailer/TrailerBody/Lights/Blinkers/LeftRear] as Array[Node2D]
-	_config.right_blinker_nodes = [$FrontBody/Lights/Blinkers/RightFront, $FrontBody/Lights/Blinkers/RightSide, $Trailer/TrailerBody/Lights/Blinkers/RightRear] as Array[Node2D]
+	_config.brake_lights = [$Trailer/TrailerBody/Lights/LeftBrakeLight, $Trailer/TrailerBody/Lights/RightBrakeLight] as Array[Light]
+	_config.left_blinker_nodes = [
+		$FrontBody/Lights/Blinkers/LeftFront,
+		$FrontBody/Lights/Blinkers/LeftSide,
+		$Trailer/TrailerBody/Lights/Blinkers/LeftRear,
+	] as Array[Light]
+	_config.right_blinker_nodes = [
+		$FrontBody/Lights/Blinkers/RightFront,
+		$FrontBody/Lights/Blinkers/RightSide,
+		$Trailer/TrailerBody/Lights/Blinkers/RightRear,
+	] as Array[Light]
 	_config.casters = CasterCollection.new(
 		$FrontBody/CloseRayCaster,
 		$FrontBody/MediumRayCaster,

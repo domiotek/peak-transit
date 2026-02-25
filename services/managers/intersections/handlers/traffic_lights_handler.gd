@@ -111,15 +111,15 @@ func process_stopper(stopper: LaneStopper, directions: Array) -> bool:
 	if not approaching_vehicle:
 		return false
 
-	var vehicle_current_step = approaching_vehicle.navigator.get_current_step()
+	var vehicle_current_step := approaching_vehicle.navigator.get_current_step() as NavigationStep
 
-	var step_type = vehicle_current_step["type"]
+	var step_type = vehicle_current_step.type
 	if step_type == Navigator.StepType.NODE or step_type == Navigator.StepType.BUILDING:
 		return false
 
-	var next_endpoint = approaching_vehicle.navigator.get_current_step()["next_node"]["to"]
+	var next_endpoint = vehicle_current_step.next_node.to
 
-	if next_endpoint == null:
+	if next_endpoint == -1:
 		return false
 
 	var direction = node.get_connection_direction(stopper.endpoint.Id, next_endpoint)

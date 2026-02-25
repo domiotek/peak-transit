@@ -27,6 +27,7 @@ var config: VehicleConfig
 var main_path_follower: PathFollow2D
 
 var _trailer_states: Array[Dictionary] = []
+var _has_trailers: bool = false
 var _previous_front_rotation: float = 0.0
 var _previous_front_position: Vector2 = Vector2.ZERO
 var _smoothed_curvature: float = 0.0
@@ -71,9 +72,11 @@ func _ready():
 	simulation_manager.desired_world_lights_state_changed.connect(Callable(self, "_on_lights_state_change"))
 
 	for body_area in config["body_areas"]:
+		body_area.set_meta("vehicle_ref", self)
 		body_area.connect("input_event", Callable(self, "_on_input_event"))
 
 	for collision_area in config["collision_areas"]:
+		collision_area.set_meta("vehicle_ref", self)
 		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
 
 	for body_segment in config.body_segments:
@@ -83,6 +86,9 @@ func _ready():
 	if config.visibility_notifier:
 		config.visibility_notifier.connect("screen_entered", _on_screen_entered)
 		config.visibility_notifier.connect("screen_exited", _on_screen_exited)
+
+	_has_trailers = config.trailers.size() > 0
+
 	for trailer_def in config.trailers:
 		var trailer_body = trailer_def["body"]
 
@@ -97,8 +103,9 @@ func _ready():
 
 func _exit_tree() -> void:
 	destroyed.emit(id)
-	main_path_follower.queue_free()
-	main_path_follower = null
+	if main_path_follower:
+		main_path_follower.queue_free()
+		main_path_follower = null
 
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
@@ -137,7 +144,7 @@ func get_popup_data() -> Dictionary:
 	if navigator.has_trip():
 		from_node = navigator.trip_points[0]
 		to_node = navigator.trip_points[-1]
-		step_type = Navigator.StepType.keys()[navigator.get_current_step().get("type")]
+		step_type = Navigator.StepType.keys()[navigator.get_current_step().type]
 
 	var data = {
 		"speed": driver.get_current_speed(),
@@ -229,17 +236,23 @@ func _process(delta: float) -> void:
 
 	var current_speed = driver.tick_speed(delta, main_path_follower.progress)
 
-	_update_position(delta, current_speed)
+	if current_speed > 0 and delta > 0:
+		_update_position(delta, current_speed)
 
 	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
 		navigator.complete_current_step()
 
 
 func _update_position(delta: float, current_speed: float) -> void:
-	var trail_length = navigator.get_current_step()["length"]
+	main_path_follower.progress += delta * current_speed
+	navigator.update_progress(main_path_follower.progress)
 
-	main_path_follower.progress_ratio += delta * current_speed / trail_length
-	self.global_transform = main_path_follower.global_transform
+	var new_xform: Transform2D = main_path_follower.global_transform
+	if !global_transform.is_equal_approx(new_xform):
+		global_transform = new_xform
+
+	if not _has_trailers:
+		return
 
 	var front_pos: Vector2 = self.global_position
 	var front_rot: float = self.global_rotation
@@ -286,15 +299,17 @@ func _update_position(delta: float, current_speed: float) -> void:
 
 
 func _on_trip_started() -> void:
-	var starts_at_building = navigator.current_step["type"] == Navigator.StepType.BUILDING
+	var current_step := navigator.get_current_step()
+	var starts_at_building := current_step.type == Navigator.StepType.BUILDING
 
 	if starts_at_building:
-		var building_pos = navigator.current_step["connection"]["from"]
+		var connection := (current_step as BuildingNavigationStep).connection
+		var building_pos := connection.from
 		self.position = building_pos
-		var lane = navigator.current_step["connection"]["lane"] as NetLane
+		var lane := connection.lane as NetLane
 		self.rotation = line_helper.rotate_perpendicular_to_curve(lane.get_curve(), building_pos)
 	else:
-		self.position = (navigator.get_current_step()["path"] as Curve2D).get_point_position(0)
+		self.global_transform = main_path_follower.global_transform
 	set_deferred("visible", true)
 	driver.set_headlights_enabled(simulation_manager.get_desired_world_lights_state(), true)
 
@@ -356,10 +371,11 @@ func _on_driver_state_changed(new_state: Driver.VehicleState) -> void:
 
 
 func _check_for_building_entry() -> bool:
-	if not navigator.current_step.has("building_to_enter"):
+	var current_step := navigator.get_current_step()
+	if not current_step is SegmentNavigationStep or current_step.building_to_enter == null:
 		return false
 
-	var trigger_distance = navigator.current_step["building_to_enter"]["trigger_distance"]
+	var trigger_distance: float = current_step.building_to_enter.trigger_distance
 
 	return main_path_follower.progress >= trigger_distance
 

@@ -29,10 +29,7 @@ var trip_step_index: int = 0
 var first_step_forced_endpoint: int = -1
 var last_step_forced_endpoint: int = -1
 
-var current_step: Dictionary = {
-	"type": StepType.NONE,
-	"progress": 0.0,
-}
+var current_step: NavigationStep = NavigationStep.create_empty_step()
 var step_ready: bool = false
 
 var traveled_distance_till_current_step: float = 0.0
@@ -92,14 +89,14 @@ func setup_trip_between_buildings(from_building: BaseBuilding, to_building: Base
 		return
 
 	step_ready = false
-	var out_connections = from_building.get_out_connections()
-	var in_connections = to_building.get_in_connections()
+	var out_connections := from_building.get_out_connections()
+	var in_connections := to_building.get_in_connections()
 
 	var combinations = []
 	for out_conn in out_connections:
 		for in_conn in in_connections:
-			var out_endpoint = out_conn["lane"].get_endpoint_by_type(true)
-			var in_endpoint = in_conn["lane"].get_endpoint_by_type(false)
+			var out_endpoint = out_conn.lane.get_endpoint_by_type(true)
+			var in_endpoint = in_conn.lane.get_endpoint_by_type(false)
 			combinations.append(
 				{
 					"from_node": out_endpoint.NodeId,
@@ -200,7 +197,7 @@ func reroute_to_node(node_id: int, to_endpoint_id: int = -1, path: Array = []) -
 			node_id,
 			Callable(self, "_on_pathfinder_result"),
 			vehicle.config.category,
-			current_step["from_endpoint"],
+			current_step.from_endpoint,
 			to_endpoint_id,
 		)
 		_pathing_request_id = pathing_request_id
@@ -225,7 +222,7 @@ func reroute_to_building(building: BaseBuilding, path: Array = []) -> void:
 			{
 				"State": 1,
 				"Path": synced_path,
-				"ForcedStartEndpointId": current_step["from_endpoint"],
+				"ForcedStartEndpointId": current_step.from_endpoint,
 				"ForcedEndEndpointId": network_manager.get_opposite_lane_endpoint(synced_path[-1].ViaEndpointId).Id,
 			},
 		)
@@ -234,19 +231,19 @@ func reroute_to_building(building: BaseBuilding, path: Array = []) -> void:
 			push_error("Navigator: Cannot reroute to building while another pathing request is pending.")
 			return
 
-		var building_connections = building.get_in_connections()
+		var building_connections := building.get_in_connections()
 
 		var combinations = []
 		for conn in building_connections:
-			var endpoint = conn["lane"].get_endpoint_by_type(false)
+			var endpoint = conn.lane.get_endpoint_by_type(false)
 
-			var current_node = current_step["prev_node"] if current_step["type"] == StepType.SEGMENT else current_step["node"].id
+			var current_node: int = current_step.prev_node if current_step is SegmentNavigationStep else current_step.node.id
 
 			combinations.append(
 				{
 					"from_node": current_node,
 					"to_node": endpoint.NodeId,
-					"from_endpoint": current_step["from_endpoint"],
+					"from_endpoint": current_step.from_endpoint,
 					"to_endpoint": endpoint.Id,
 				},
 			)
@@ -260,22 +257,27 @@ func has_trip() -> bool:
 	return trip_path.size() > 0
 
 
-func get_current_step() -> Dictionary:
-	current_step["progress"] = path_follower.progress - _progress_offset
-
+func get_current_step() -> NavigationStep:
 	return current_step
 
 
+func update_progress(new_progress: float) -> void:
+	if current_step.type == Navigator.StepType.NONE:
+		return
+
+	current_step.progress = new_progress - _progress_offset
+
+
 func get_step_distance_left() -> float:
-	return current_step["length"] - current_step["progress"]
+	return current_step.length - current_step.progress
 
 
 func get_distance_left() -> float:
-	return total_trip_distance - (traveled_distance_till_current_step + current_step["progress"])
+	return total_trip_distance - (traveled_distance_till_current_step + current_step.progress)
 
 
 func get_distance_traveled() -> float:
-	return traveled_distance_till_current_step + current_step["progress"]
+	return traveled_distance_till_current_step + current_step.progress
 
 
 func can_advance(delta: float) -> bool:
@@ -294,21 +296,22 @@ func complete_current_step() -> void:
 	step_ready = false
 
 	_progress_offset = 0.0
-	traveled_distance_till_current_step += current_step["progress"]
+	traveled_distance_till_current_step += current_step.progress
 
-	if current_step["type"] == StepType.NODE:
-		for trigger in _location_triggers["node"]:
-			if current_step["node"].id == trigger["node_id"]:
-				if current_step["to_endpoint"] == trigger["endpoint_id"] or trigger["endpoint_id"] == -1:
+	if current_step is NodeNavigationStep:
+		for i in range(_location_triggers["node"].size() - 1, -1, -1):
+			var trigger = _location_triggers["node"][i]
+			if current_step.node.id == trigger["node_id"]:
+				if current_step.to_endpoint == trigger["endpoint_id"] or trigger["endpoint_id"] == -1:
 					var callable = trigger["callback"] as Callable
-					callable.call_deferred(vehicle, current_step["node"].id, current_step["to_endpoint"])
-					_location_triggers["node"].erase(trigger)
+					callable.call_deferred(vehicle, current_step.node.id, current_step.to_endpoint)
+					_location_triggers["node"].remove_at(i)
 
 	if trip_step_index + 1 >= trip_path.size():
-		if current_step.has("building_to_enter"):
+		if current_step is SegmentNavigationStep and current_step.building_to_enter != null:
 			_enter_building()
 		else:
-			if current_step.has("target_building") and current_step["target_building"].has_method("notify_vehicle_entered"):
+			if current_step is BuildingNavigationStep and current_step.target_building.has_method("notify_vehicle_entered"):
 				current_step["target_building"].notify_vehicle_entered(vehicle)
 
 			var event_data = {
@@ -322,10 +325,10 @@ func complete_current_step() -> void:
 
 			emit_signal("trip_ended", true, event_data)
 
-	elif current_step["type"] == StepType.NODE:
+	elif current_step is NodeNavigationStep:
 		trip_step_index += 1
 		_assign_to_step(trip_path[trip_step_index])
-	elif current_step["type"] == StepType.BUILDING:
+	elif current_step is BuildingNavigationStep:
 		_leave_building()
 	else:
 		_pass_node()
@@ -334,21 +337,21 @@ func complete_current_step() -> void:
 func clean_up() -> void:
 	_location_triggers.clear()
 
-	if current_step and current_step["type"] == StepType.SEGMENT:
+	if current_step is SegmentNavigationStep:
 		var step = trip_path[trip_step_index]
 		var endpoint_id = step.ViaEndpointId
 		var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 
-		var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
+		var lane := network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 		lane.remove_vehicle(vehicle)
-	elif current_step["type"] == StepType.NODE:
-		var node = current_step["node"]
-		node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
-	elif current_step["type"] == StepType.BUILDING:
-		if current_step["is_leaving"]:
-			current_step["target_building"].notify_vehicle_left()
+	elif current_step is NodeNavigationStep:
+		var node: RoadNode = current_step.node
+		node.intersection_manager.mark_vehicle_left(vehicle.id, current_step.from_endpoint, current_step.to_endpoint)
+	elif current_step is BuildingNavigationStep:
+		if current_step.is_leaving:
+			current_step.target_building.notify_vehicle_left()
 		else:
-			current_step["target_building"].notify_vehicle_entered(vehicle)
+			current_step.target_building.notify_vehicle_entered(vehicle)
 
 
 func abandon_trip() -> void:
@@ -375,7 +378,7 @@ func reroute(force: bool = false) -> void:
 
 		return
 
-	if current_step["type"] != StepType.SEGMENT and current_step["type"] != StepType.NODE:
+	if not current_step is SegmentNavigationStep and not current_step is NodeNavigationStep:
 		return
 
 	if not force and reroute_cooldown > 0.0:
@@ -385,8 +388,8 @@ func reroute(force: bool = false) -> void:
 
 	step_ready = false
 
-	var current_node = current_step["prev_node"] if current_step["type"] == StepType.SEGMENT else current_step["node"].id
-	var new_trip = [current_node, trip_points[1]]
+	var current_node: int = current_step.prev_node if current_step is SegmentNavigationStep else current_step.node.id
+	var new_trip: Array[int] = [current_node, trip_points[1]]
 	var finish_endpoint = segment_helper.get_other_endpoint_in_lane(last_step_forced_endpoint) if last_step_forced_endpoint != -1 else null
 
 	var pathing_request_id = pathing_manager.find_path(
@@ -394,7 +397,7 @@ func reroute(force: bool = false) -> void:
 		new_trip[1],
 		Callable(self, "_on_pathfinder_result"),
 		vehicle.config.category,
-		current_step["from_endpoint"],
+		current_step.from_endpoint,
 		finish_endpoint.Id if finish_endpoint else -1,
 	)
 	_pathing_request_id = pathing_request_id
@@ -426,15 +429,15 @@ func get_total_progress() -> float:
 	if total_trip_distance == 0:
 		return 0.0
 
-	return (traveled_distance_till_current_step + current_step["progress"]) / total_trip_distance
+	return (traveled_distance_till_current_step + current_step.progress) / total_trip_distance
 
 
 func get_trip_curves() -> Array:
 	if trip_curves_cache.size() > 0:
 		return trip_curves_cache
 
-	var starting_building = trip_buildings[0] if trip_buildings.size() > 0 else null
-	var ending_building = trip_buildings[1] if trip_buildings.size() > 1 else null
+	var starting_building: BaseBuilding = trip_buildings[0] if trip_buildings.size() > 0 else null
+	var ending_building: BaseBuilding = trip_buildings[1] if trip_buildings.size() > 1 else null
 
 	trip_curves_cache = network_manager.get_curves_of_path(trip_path, starting_building, ending_building)
 
@@ -442,19 +445,11 @@ func get_trip_curves() -> Array:
 
 
 func set_custom_step(path: Path2D, max_speed: float = 0.0) -> void:
-	if current_step["type"] != StepType.NONE:
+	if current_step.type != Navigator.StepType.NONE:
 		push_error("Navigator: Cannot set custom step while another trip is in progress.")
 		return
 
-	current_step = {
-		"type": StepType.CUSTOM,
-		"path": path.curve,
-		"length": path.curve.get_baked_length(),
-		"progress": 0.0,
-	}
-
-	if max_speed > 0.0:
-		current_step["max_speed"] = max_speed
+	current_step = NavigationStep.create_custom_step(path, max_speed)
 
 	step_ready = true
 	vehicle.assign_to_path(path, 0.0)
@@ -491,17 +486,18 @@ func _tick_segment_triggers() -> void:
 	if _location_triggers["segment"].size() == 0:
 		return
 
-	if current_step["type"] == StepType.SEGMENT:
-		var segment_id = current_step["segment_id"]
-		var lane_id = current_step["lane_id"]
-		var progress = current_step["progress"]
+	if current_step is SegmentNavigationStep:
+		var segment_id = current_step.segment_id
+		var lane_id = current_step.lane_id
+		var progress = current_step.progress
 
-		for trigger in _location_triggers["segment"]:
+		for i in range(_location_triggers["segment"].size() - 1, -1, -1):
+			var trigger = _location_triggers["segment"][i]
 			if trigger["segment_id"] == segment_id and (trigger["lane_id"] == lane_id or trigger["lane_id"] == -1):
 				if progress >= trigger["distance"]:
 					var callable = trigger["callback"] as Callable
 					callable.call_deferred(vehicle, segment_id, lane_id)
-					_location_triggers["segment"].erase(trigger)
+					_location_triggers["segment"].remove_at(i)
 
 
 func _on_pathfinder_result(request_id: int, path: Variant) -> void:
@@ -569,7 +565,7 @@ func _handle_reroute(path: Variant) -> void:
 		step_ready = true
 		return # Failed to find a new path, continue current trip
 
-	var is_at_node = current_step["type"] == StepType.NODE
+	var is_at_node = current_step is NodeNavigationStep
 
 	var existing_path = trip_path.slice(0, trip_step_index + 1)
 	var remaining_existing_path = trip_path.slice(trip_step_index + 1, trip_path.size())
@@ -627,7 +623,7 @@ func _start_trip() -> void:
 	var start_step = trip_path[0]
 
 	if trip_buildings.size() > 0 and trip_buildings[0] != null:
-		var starting_step = _create_building_step(trip_buildings[0], trip_buildings[0].get_out_connection(first_step_forced_endpoint))
+		var starting_step = BuildingNavigationStep.create(trip_buildings[0], trip_buildings[0].get_out_connection(first_step_forced_endpoint))
 		_assign_to_building_step(starting_step)
 	else:
 		_assign_to_step(start_step)
@@ -640,7 +636,7 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 
 	if current_step and current_step["type"] == StepType.NODE:
 		var _node = current_step["node"]
-		_node.intersection_manager.mark_vehicle_left(vehicle.id, current_step["from_endpoint"], current_step["to_endpoint"])
+		_node.intersection_manager.mark_vehicle_left(vehicle.id, current_step.from_endpoint, current_step.to_endpoint)
 
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 	if not leave_progress:
@@ -650,12 +646,8 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 	current_step = _create_segment_step(lane, 0.0)
 
 	if trip_step_index == trip_path.size() - 1 and trip_buildings[1] != null:
-		var building_in_connection = trip_buildings[1].get_in_connection(last_step_forced_endpoint)
-		current_step["building_to_enter"] = {
-			"building": trip_buildings[1],
-			"connection": building_in_connection,
-			"trigger_distance": line_helper.get_distance_from_point(lane.trail.curve, building_in_connection["lane_point"]),
-		}
+		var building_in_connection: BuildingConnectionInfo = trip_buildings[1].get_in_connection(last_step_forced_endpoint)
+		current_step.set_building_to_enter(trip_buildings[1], building_in_connection)
 
 	step_ready = true
 
@@ -665,25 +657,16 @@ func _pass_node(leave_progress: bool = false) -> void:
 	var endpoint_id = step.ViaEndpointId
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 
-	var node = current_step["next_node"].node
-	var new_path = node.get_connection_path(current_step["next_node"].from, current_step["next_node"].to)
+	var next_node_info: NextNodeInfo = current_step.next_node
+	var node := next_node_info.node
+	var new_path := node.get_connection_path(next_node_info.from, next_node_info.to)
 
 	if not leave_progress:
-		var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
+		var lane := network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 		lane.remove_vehicle(vehicle)
-		node.intersection_manager.register_crossing_vehicle(vehicle.id, current_step["next_node"].from, current_step["next_node"].to)
+		node.intersection_manager.register_crossing_vehicle(vehicle.id, next_node_info.from, next_node_info.to)
 
-	current_step = {
-		"type": StepType.NODE,
-		"path": line_helper.convert_curve_local_to_global(new_path.curve, node),
-		"length": new_path.curve.get_baked_length(),
-		"progress": 0.0,
-		"node": node,
-		"from_endpoint": current_step["next_node"].from,
-		"to_endpoint": current_step["next_node"].to,
-		"is_intersection": node.connected_segments.size() > 2,
-		"direction": current_step["next_node"].direction,
-	}
+	current_step = NodeNavigationStep.create(node, new_path, next_node_info)
 
 	if not leave_progress:
 		vehicle.assign_to_path(new_path, 0.0)
@@ -691,37 +674,21 @@ func _pass_node(leave_progress: bool = false) -> void:
 	step_ready = true
 
 
-func _create_building_step(building: BaseBuilding, connection: Dictionary) -> Dictionary:
-	return {
-		"type": StepType.BUILDING,
-		"path": connection["path"].curve,
-		"length": connection["path"].curve.get_baked_length(),
-		"progress": 0.0,
-		"target_building": building,
-		"connection": connection,
-		"target_lane": connection["lane"],
-		"lane_point": connection["lane_point"],
-		"next_node": null,
-		"is_entering": connection["relation"] == "in",
-		"is_leaving": connection["relation"] == "out",
-	}
-
-
-func _assign_to_building_step(step: Dictionary) -> void:
-	vehicle.assign_to_path(step["connection"]["path"], 0.0)
+func _assign_to_building_step(step: BuildingNavigationStep) -> void:
+	vehicle.assign_to_path(step.connection.path, 0.0)
 
 	current_step = step
 	step_ready = true
 
 
 func _leave_building() -> void:
-	var building_step = current_step
-	var lane = building_step["target_lane"]
+	var building_step: BuildingNavigationStep = current_step
+	var lane := building_step.target_lane
 
-	if building_step["target_building"].has_method("notify_vehicle_left"):
-		building_step["target_building"].notify_vehicle_left()
+	if building_step.target_building.has_method("notify_vehicle_left"):
+		building_step.target_building.notify_vehicle_left()
 
-	var offset = line_helper.get_distance_from_point(lane.trail.curve, building_step["lane_point"])
+	var offset := line_helper.get_distance_from_point(lane.trail.curve, building_step.lane_point)
 
 	vehicle.assign_to_path(lane.trail, offset)
 	current_step = _create_segment_step(lane, offset)
@@ -732,55 +699,42 @@ func _leave_building() -> void:
 
 
 func _enter_building() -> void:
-	var building_data = current_step["building_to_enter"]
+	var building_data := current_step.building_to_enter as BuildingToEnterInfo
 
 	var step = trip_path[trip_step_index]
 	var endpoint_id = step.ViaEndpointId
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 
-	if building_data["building"].has_method("notify_vehicle_entering"):
-		building_data["building"].notify_vehicle_entering(vehicle)
+	if building_data.building.has_method("notify_vehicle_entering"):
+		building_data.building.notify_vehicle_entering(vehicle)
 
 	var lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId) as NetLane
 	lane.remove_vehicle(vehicle)
 
-	var next_step = _create_building_step(building_data["building"], building_data["connection"])
+	var next_step = BuildingNavigationStep.create(building_data.building, building_data.connection)
 
 	_assign_to_building_step(next_step)
 
 
-func _create_segment_step(lane: NetLane, progress_offset: float) -> Dictionary:
+func _create_segment_step(lane: NetLane, progress_offset: float) -> SegmentNavigationStep:
 	var finish_endpoint = lane.get_endpoint_by_type(false)
 
-	var prev_node_id = lane.segment.get_other_node_id(finish_endpoint.NodeId)
+	var prev_node_id := lane.segment.get_other_node_id(finish_endpoint.NodeId)
 
-	var step = {
-		"type": StepType.SEGMENT,
-		"segment_id": lane.segment.id,
-		"lane_id": lane.id,
-		"path": lane.trail.curve,
-		"length": lane.trail.curve.get_baked_length(),
-		"progress": 0.0,
-		"max_speed": lane.get_max_allowed_speed(),
-		"prev_node": prev_node_id,
-		"from_endpoint": lane.from_endpoint,
-		"to_endpoint": finish_endpoint.Id,
-	}
+	var step := SegmentNavigationStep.create(lane, prev_node_id, finish_endpoint.Id)
+
 	_progress_offset = progress_offset
 
-	var node = network_manager.get_node(finish_endpoint.NodeId)
+	var node := network_manager.get_node(finish_endpoint.NodeId)
 
 	if node:
-		var next_target_endpoint_id = trip_path[trip_step_index + 1].ViaEndpointId if trip_step_index + 1 < trip_path.size() else null
-		var next_direction = node.get_connection_direction(finish_endpoint.Id, next_target_endpoint_id) if next_target_endpoint_id != null else Enums.Direction.UNSPECIFIED
+		var next_target_endpoint_id = trip_path[trip_step_index + 1].ViaEndpointId if trip_step_index + 1 < trip_path.size() else -1
+		var next_direction = node.get_connection_direction(
+			finish_endpoint.Id,
+			next_target_endpoint_id,
+		) if next_target_endpoint_id != null else Enums.Direction.UNSPECIFIED
 
-		step["next_node"] = {
-			"node": node,
-			"is_intersection": node.connected_segments.size() > 2,
-			"from": finish_endpoint.Id,
-			"to": next_target_endpoint_id,
-			"direction": next_direction,
-		}
+		step.set_next_node_info(node, next_target_endpoint_id, next_direction)
 
 	return step
 
@@ -789,8 +743,8 @@ func _fast_forward_path_to_current_step(path: Array) -> Array:
 	var advanced_path = []
 	var found_current_step = false
 
-	var current_node = current_step["prev_node"] if current_step["type"] == StepType.SEGMENT else current_step["node"].id
-	var current_endpoint = current_step["from_endpoint"]
+	var current_node = current_step.prev_node if current_step is SegmentNavigationStep else current_step.node.id
+	var current_endpoint = current_step.from_endpoint
 
 	for step in path:
 		if not found_current_step:
@@ -812,10 +766,7 @@ func _reset_state() -> void:
 	first_step_forced_endpoint = -1
 	last_step_forced_endpoint = -1
 
-	current_step = {
-		"type": StepType.NONE,
-		"progress": 0.0,
-	}
+	current_step = NavigationStep.create_empty_step()
 	step_ready = false
 
 	traveled_distance_till_current_step = 0.0

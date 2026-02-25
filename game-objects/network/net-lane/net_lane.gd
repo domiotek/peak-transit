@@ -25,12 +25,16 @@ var to_endpoint: int
 var direction: Enums.Direction = Enums.Direction.UNSPECIFIED
 var bus_lane_direction: Enums.BaseDirection = Enums.BaseDirection.UNSPECIFIED
 
-var assigned_vehicles: Array
+var assigned_vehicles: Array = []
+var _assigned_vehicle_ids: Dictionary[int, bool] = { }
+var _from_node_id: int = -1
+var _to_node_id: int = -1
 
 var lane_usage_ema: float = 0.0
 
 var _constructed: bool = false
 var _original_curve: Curve2D = null
+var _length_cache: float = 0.0
 
 @onready var map_pickable_area: Area2D = $PickableArea
 var collision_shape: CollisionPolygon2D = null
@@ -96,13 +100,16 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 		if is_outgoing:
 			from_endpoint = endpoint_id
+			_from_node_id = node.id
 			points[0] = point_global
 		else:
 			to_endpoint = endpoint_id
+			_to_node_id = node.id
 			points[1] = point_global
 
 	new_curve = line_helper.trim_curve(new_curve, points[0], points[1])
 	trail.curve = new_curve
+	_length_cache = new_curve.get_baked_length()
 	usage_indicator.points = new_curve.tessellate()
 	_populate_main_layer()
 
@@ -137,12 +144,13 @@ func get_segment_relation() -> NetRelation:
 
 
 func assign_vehicle(vehicle: Vehicle) -> void:
-	if vehicle in assigned_vehicles:
+	if _assigned_vehicle_ids.has(vehicle.id):
 		push_warning("Trying to assign vehicle ID %d to lane ID %d, but it is already assigned to this lane." % [vehicle.id, id])
 		breakpoint
 		return
 
 	assigned_vehicles.append(vehicle)
+	_assigned_vehicle_ids[vehicle.id] = true
 
 
 func remove_vehicle(vehicle: Vehicle) -> void:
@@ -150,83 +158,93 @@ func remove_vehicle(vehicle: Vehicle) -> void:
 		push_warning("Trying to remove a null vehicle from lane ID %d." % id)
 		return
 
-	if vehicle not in assigned_vehicles:
+	if not _assigned_vehicle_ids.has(vehicle.id):
 		push_warning("Trying to remove vehicle ID %d from lane ID %d, but it is not assigned to this lane." % [vehicle.id, id])
 		return
 
 	assigned_vehicles.erase(vehicle)
+	_assigned_vehicle_ids.erase(vehicle.id)
 
 
 func get_remaining_space() -> float:
-	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1] if assigned_vehicles.size() > 0 else null
+	while assigned_vehicles.size() > 0:
+		var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
+		if is_instance_valid(last_vehicle):
+			return last_vehicle.main_path_follower.progress
 
-	if last_vehicle and not is_instance_valid(last_vehicle):
 		assigned_vehicles.pop_back()
-		return get_remaining_space()
 
-	return last_vehicle.main_path_follower.progress if last_vehicle else trail.curve.get_baked_length()
+	return trail.curve.get_baked_length()
 
 
 func get_first_vehicle() -> Vehicle:
-	var first_vehicle = assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
+	while assigned_vehicles.size() > 0:
+		var first_vehicle = assigned_vehicles[0]
+		if is_instance_valid(first_vehicle):
+			return first_vehicle
 
-	if assigned_vehicles.size() > 0 and not is_instance_valid(first_vehicle):
 		assigned_vehicles.pop_front()
-		return get_first_vehicle()
 
-	return assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
+	return null
 
 
 func get_last_vehicle() -> Vehicle:
-	if assigned_vehicles.size() == 0:
-		return null
+	while assigned_vehicles.size() > 0:
+		var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
+		if is_instance_valid(last_vehicle):
+			return last_vehicle
 
-	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
-	if is_instance_valid(last_vehicle):
-		return last_vehicle
+		assigned_vehicles.pop_back()
 
-	assigned_vehicles.pop_back()
-	return get_last_vehicle()
+	return null
 
 
 func get_vehicle_count(only_waiting: bool = false) -> int:
 	if not only_waiting:
 		return assigned_vehicles.size()
 
-	return assigned_vehicles.filter(func(v): return v.driver.get_state() == Driver.VehicleState.BLOCKED).size()
+	var waiting_count: int = 0
+	for vehicle in assigned_vehicles:
+		if not is_instance_valid(vehicle):
+			continue
+
+		if vehicle.driver.get_state() == Driver.VehicleState.BLOCKED:
+			waiting_count += 1
+
+	return waiting_count
 
 
 func get_vehicles_stats() -> Dictionary:
-	var stats = {
-		"total": 0,
-		"waiting": 0,
-		"moving": 0,
-	}
+	var waiting: int = 0
+	var moving: int = 0
 
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle):
 			continue
 
 		if vehicle.driver.get_state() == Driver.VehicleState.BLOCKED:
-			stats["waiting"] += 1
+			waiting += 1
 		else:
-			stats["moving"] += 1
+			moving += 1
 
-	stats["total"] += stats["waiting"] + stats["moving"]
-
-	return stats
+	return {
+		"total": waiting + moving,
+		"waiting": waiting,
+		"moving": moving,
+	}
 
 
 func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 	var count = 0
 
-	var is_node_at_start = get_endpoint_by_id(from_endpoint).NodeId == node_id
+	var is_node_at_start = _from_node_id == node_id
+	var lane_length = _length_cache
 
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle):
 			continue
 
-		var vehicle_distance = vehicle.main_path_follower.progress if is_node_at_start else trail.curve.get_baked_length() - vehicle.main_path_follower.progress
+		var vehicle_distance = vehicle.main_path_follower.progress if is_node_at_start else lane_length - vehicle.main_path_follower.progress
 		if vehicle_distance <= distance:
 			count += 1
 
@@ -242,10 +260,7 @@ func get_lane_usage() -> float:
 
 
 func get_length() -> float:
-	if trail.curve == null:
-		return 0.0
-
-	return trail.curve.get_baked_length()
+	return _length_cache
 
 
 func reposition_endpoint(of_node: RoadNode, type: String) -> void:
@@ -272,6 +287,7 @@ func reposition_endpoint(of_node: RoadNode, type: String) -> void:
 
 	var trimmed = line_helper.trim_curve(_original_curve, points[0], points[1])
 	trail.curve = trimmed
+	_length_cache = trimmed.get_baked_length()
 	usage_indicator.points = trimmed.tessellate()
 
 
@@ -369,6 +385,11 @@ func _on_debug_toggles_changed(_name, _state) -> void:
 
 
 func _on_vehicle_destroyed(vehicle_id: int, _vehicle_type: VehicleManager.VehicleType) -> void:
+	if not _assigned_vehicle_ids.has(vehicle_id):
+		return
+
+	_assigned_vehicle_ids.erase(vehicle_id)
+
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle) or vehicle.id == vehicle_id:
 			assigned_vehicles.erase(vehicle)

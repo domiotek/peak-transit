@@ -175,10 +175,10 @@ func _check_spawn_constraints(is_articulated: bool) -> bool:
 	return _current_bus_count > 0
 
 
-func _get_connection_endpoints() -> Dictionary:
+func _get_connection_endpoints() -> Dictionary[BuildingConnectionInfo.BuildingConnectionType, Vector2]:
 	return {
-		"in": to_global(Vector2(10, -25)),
-		"out": to_global(Vector2(-10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.IN: to_global(Vector2(10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.OUT: to_global(Vector2(-10, -25)),
 	}
 
 

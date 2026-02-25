@@ -126,10 +126,10 @@ func _get_shape_color() -> Color:
 	return Color.GRAY
 
 
-func _get_connection_endpoints() -> Dictionary:
+func _get_connection_endpoints() -> Dictionary[BuildingConnectionInfo.BuildingConnectionType, Vector2]:
 	return {
-		"in": to_global(Vector2(10, -25)),
-		"out": to_global(Vector2(-10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.IN: to_global(Vector2(10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.OUT: to_global(Vector2(-10, -25)),
 	}
 
 
