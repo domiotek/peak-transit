@@ -1,29 +1,119 @@
 class_name NodeLayerHelper
 
+const CORNER_SCAN_DISTANCE: float = 140.0
+
 var line_helper = GDInjector.inject("LineHelper") as LineHelper
 var segment_helper = GDInjector.inject("SegmentHelper") as SegmentHelper
 
 
-func find_intersection_corners(segments: Array) -> PackedVector2Array:
+func find_intersection_corners(target_node: RoadNode, segments: Array) -> PackedVector2Array:
 	if segments.size() < 3:
 		return []
 
-	var intersection_points = []
+	var intersection_points: PackedVector2Array = []
+	var segment_edges: Array = []
 
-	for segmentA in segments:
-		for segmentB in segments:
-			if segmentA == segmentB:
+	for segment in segments:
+		var edges: Array = []
+		var is_at_start: bool = segment.nodes[0].id == target_node.id
+		for edge in [segment.left_edge_curve, segment.right_edge_curve]:
+			if edge == null:
 				continue
 
-			var sement_a_edges = [segmentA.left_edge_curve, segmentA.right_edge_curve]
-			var segment_b_edges = [segmentB.left_edge_curve, segmentB.right_edge_curve]
+			var baked_points: PackedVector2Array = _get_points_near_node(edge, is_at_start, CORNER_SCAN_DISTANCE)
+			if baked_points.size() < 2:
+				continue
 
-			for edgeA in sement_a_edges:
-				for edgeB in segment_b_edges:
-					var points = line_helper.find_curve_curve_intersections(edgeA.get_baked_points(), edgeB.get_baked_points())
-					intersection_points.append_array(points)
+			edges.append(
+				{
+					"points": baked_points,
+					"bounds": _calculate_points_bounds(baked_points),
+				},
+			)
+
+		segment_edges.append(edges)
+
+	for i in range(segments.size() - 1):
+		for j in range(i + 1, segments.size()):
+			var edges_a: Array = segment_edges[i]
+			var edges_b: Array = segment_edges[j]
+
+			if edges_a.is_empty() or edges_b.is_empty():
+				continue
+
+			for edge_a in edges_a:
+				for edge_b in edges_b:
+					if not _rects_overlap(edge_a["bounds"], edge_b["bounds"], 0.01):
+						continue
+
+					var points = line_helper.find_curve_curve_intersections(edge_a["points"], edge_b["points"], false)
+					if points.size() > 0:
+						intersection_points.append_array(points)
 
 	return line_helper.remove_duplicate_points(intersection_points)
+
+
+func _get_points_near_node(curve: Curve2D, is_at_start: bool, max_distance: float) -> PackedVector2Array:
+	var points: PackedVector2Array = curve.get_baked_points()
+	if points.size() < 2 or max_distance <= 0.0:
+		return points
+
+	if is_at_start:
+		var from_start: PackedVector2Array = []
+		var traversed := 0.0
+		from_start.append(points[0])
+
+		for i in range(points.size() - 1):
+			var next_point: Vector2 = points[i + 1]
+			traversed += points[i].distance_to(next_point)
+			from_start.append(next_point)
+
+			if traversed >= max_distance:
+				break
+
+		return from_start
+
+	var from_end_reversed: PackedVector2Array = []
+	var traversed_from_end := 0.0
+	from_end_reversed.append(points[points.size() - 1])
+
+	for i in range(points.size() - 1, 0, -1):
+		var prev_point: Vector2 = points[i - 1]
+		traversed_from_end += points[i].distance_to(prev_point)
+		from_end_reversed.append(prev_point)
+
+		if traversed_from_end >= max_distance:
+			break
+
+	from_end_reversed.reverse()
+	return from_end_reversed
+
+
+func _calculate_points_bounds(points: PackedVector2Array) -> Rect2:
+	if points.is_empty():
+		return Rect2()
+
+	var min_x = INF
+	var min_y = INF
+	var max_x = -INF
+	var max_y = -INF
+
+	for point in points:
+		min_x = min(min_x, point.x)
+		min_y = min(min_y, point.y)
+		max_x = max(max_x, point.x)
+		max_y = max(max_y, point.y)
+
+	return Rect2(Vector2(min_x, min_y), Vector2(max_x - min_x, max_y - min_y))
+
+
+func _rects_overlap(a: Rect2, b: Rect2, padding: float = 0.0) -> bool:
+	return (
+		a.position.x <= b.end.x + padding
+		and a.end.x + padding >= b.position.x
+		and a.position.y <= b.end.y + padding
+		and a.end.y + padding >= b.position.y
+	)
 
 
 func create_simple_intersection(target_node: RoadNode, segments: Array, node_width: float, node_height: float) -> PackedVector2Array:

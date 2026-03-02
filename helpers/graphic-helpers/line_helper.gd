@@ -189,7 +189,11 @@ func draw_solid_line(
 	target_layer.add_child(solid_line)
 
 
-func find_curve_curve_intersections(curve1_points: PackedVector2Array, curve2_points: PackedVector2Array) -> PackedVector2Array:
+func find_curve_curve_intersections(
+		curve1_points: PackedVector2Array,
+		curve2_points: PackedVector2Array,
+		remove_duplicates: bool = true,
+) -> PackedVector2Array:
 	var intersections: PackedVector2Array = []
 
 	for i in range(curve1_points.size() - 1):
@@ -210,7 +214,10 @@ func find_curve_curve_intersections(curve1_points: PackedVector2Array, curve2_po
 			if intersection != null:
 				intersections.append(intersection)
 
-	return remove_duplicate_points(intersections)
+	if remove_duplicates:
+		return remove_duplicate_points(intersections)
+
+	return intersections
 
 
 func find_curve_polygon_intersections(curve_points: PackedVector2Array, polygon: PackedVector2Array, offset_tolerance: float = 5.0) -> PackedVector2Array:
