@@ -78,21 +78,23 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 	var new_curve = line_helper.get_curve_with_offset(curve, offset)
 	_original_curve = new_curve
+	var path_start_node_id: int = segment.nodes[0].id
+
+	var first_point = _get_endpoint_for_node(segment.nodes[0], new_curve)
+	var first_road_side = segment_helper.get_road_side_at_endpoint(segment, first_point)
+	if first_road_side != SegmentHelper.RoadSide.Left:
+		new_curve = line_helper.reverse_curve(new_curve)
+		_original_curve = new_curve
+		path_start_node_id = segment.nodes[1].id
 
 	var points = { }
 
 	for node in segment.nodes:
 		var point = _get_endpoint_for_node(node, new_curve)
-		var road_side = segment_helper.get_road_side_at_endpoint(segment, point)
 		var point_global = to_global(point)
 
-		var is_outgoing = road_side == SegmentHelper.RoadSide.Left
-		var is_at_path_start = segment.nodes[0] == node
-
-		if is_outgoing and not is_at_path_start:
-			new_curve = line_helper.reverse_curve(new_curve)
-			_original_curve = new_curve # Update if reversed
-			is_at_path_start = true
+		var is_at_path_start = node.id == path_start_node_id
+		var is_outgoing = is_at_path_start
 
 		lane_number = _calc_lane_number()
 
