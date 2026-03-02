@@ -340,32 +340,6 @@ z_index = 100
 z_as_relative = false
 position = Vector2(34, 5)
 
-[node name="Blinkers" type="Node2D" parent="FrontBody/Lights" index="2" unique_id=1799689254]
-
-[node name="LeftFront" parent="FrontBody/Lights/Blinkers" index="0" unique_id=48754290 instance=ExtResource("3_xwv6l")]
-position = Vector2(34, -11)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="LeftSide" parent="FrontBody/Lights/Blinkers" index="1" unique_id=1575920494 instance=ExtResource("3_xwv6l")]
-position = Vector2(24, -12)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="RightSide" parent="FrontBody/Lights/Blinkers" index="2" unique_id=784794808 instance=ExtResource("3_xwv6l")]
-position = Vector2(24, 10)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="RightFront" parent="FrontBody/Lights/Blinkers" index="3" unique_id=1543692683 instance=ExtResource("3_xwv6l")]
-position = Vector2(34, 9)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
 [node name="Trailer" type="Node2D" parent="." index="1" unique_id=2101740618]
 position = Vector2(-28, 0)
 
@@ -511,20 +485,6 @@ active_color = Color(1, 0, 0, 1)
 radius = 0.5
 backlight_energy = 15.0
 ilumination_scale = 0.25
-
-[node name="Blinkers" type="Node2D" parent="Trailer/TrailerBody/Lights" index="2" unique_id=594572081]
-
-[node name="LeftRear" parent="Trailer/TrailerBody/Lights/Blinkers" index="0" unique_id=1694534942 instance=ExtResource("3_xwv6l")]
-position = Vector2(-24, -10)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="RightRear" parent="Trailer/TrailerBody/Lights/Blinkers" index="1" unique_id=222710172 instance=ExtResource("3_xwv6l")]
-position = Vector2(-24, 10)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
 
 [node name="CollisionArea" type="Area2D" parent="Trailer" index="1" unique_id=206462194]
 position = Vector2(-23, 0)

@@ -46,9 +46,6 @@ var state: VehicleState = VehicleState.IDLE
 
 var beam_light_nodes: Array[Headlight] = []
 var brake_light_nodes: Array[Light] = []
-var left_blinker_nodes: Array[Light] = []
-var right_blinker_nodes: Array[Light] = []
-var _all_blinker_nodes: Array[Light] = []
 var casters: CasterCollection
 var blockade_observer: Area2D
 var time_blocked: float = 0.0
@@ -95,14 +92,9 @@ func set_owner(vehicle: Vehicle) -> void:
 	owner = vehicle
 
 
-func set_lights(beam_nodes: Array, brake_nodes: Array, _left_blinker_nodes: Array, _right_blinker_nodes: Array) -> void:
+func set_lights(beam_nodes: Array, brake_nodes: Array) -> void:
 	beam_light_nodes = beam_nodes
 	brake_light_nodes = brake_nodes
-	left_blinker_nodes = _left_blinker_nodes
-	right_blinker_nodes = _right_blinker_nodes
-	_all_blinker_nodes.clear()
-	_all_blinker_nodes.append_array(left_blinker_nodes)
-	_all_blinker_nodes.append_array(right_blinker_nodes)
 
 
 func set_casters(used_casters: CasterCollection) -> void:
@@ -277,8 +269,6 @@ func tick_lights(delta: float) -> void:
 		_headlights_state_change_ticks_counter -= delta
 		if _headlights_state_change_ticks_counter <= 0:
 			set_headlights_enabled(not _headlights_state, true)
-
-	_handle_blinkers_state(delta)
 
 
 func check_blockade_cleared(delta: float) -> bool:
@@ -659,34 +649,3 @@ func _check_if_is_leaving_target_building(other_vehicle: Vehicle, my_step: Build
 			return true
 
 	return false
-
-
-func _handle_blinkers_state(delta: float) -> void:
-	if delta <= 0.0:
-		return
-
-	if _blinkers_state == Enums.BlinkersState.OFF and not _hazardous_lights_enabled:
-		_blinkers_state_change_ticks_counter = SimulationConstants.VEHICLE_BLINKERS_STATE_CHANGE_TICKS_OFFSET
-		_toggle_blinkers_active(_all_blinker_nodes, false)
-		return
-
-	var target_blinkers: Array = _all_blinker_nodes if _hazardous_lights_enabled else []
-
-	if not _hazardous_lights_enabled:
-		match _blinkers_state:
-			Enums.BlinkersState.LEFT:
-				target_blinkers = left_blinker_nodes
-			Enums.BlinkersState.RIGHT:
-				target_blinkers = right_blinker_nodes
-
-	_blinkers_state_change_ticks_counter -= delta
-	if _blinkers_state_change_ticks_counter <= 0.0:
-		_blinkers_state_change_ticks_counter = SimulationConstants.VEHICLE_BLINKERS_STATE_CHANGE_TICKS_OFFSET
-		_toggle_blinkers_active(target_blinkers)
-
-
-func _toggle_blinkers_active(target_blinkers: Array, force_state = null) -> void:
-	var active = force_state if force_state != null else not target_blinkers[0].is_active if target_blinkers.size() > 0 else false
-
-	for blinker in target_blinkers:
-		blinker.set_active(active)

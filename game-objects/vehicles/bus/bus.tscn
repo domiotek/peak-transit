@@ -264,45 +264,6 @@ radius = 0.5
 backlight_energy = 15.0
 ilumination_scale = 0.25
 
-[node name="Blinkers" type="Node2D" parent="Body/Lights" index="4" unique_id=1679444735]
-position = Vector2(-74, 44)
-
-[node name="LeftFront" parent="Body/Lights/Blinkers" index="0" unique_id=601904222 instance=ExtResource("2_ioive")]
-position = Vector2(34, -10)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="LeftRear" parent="Body/Lights/Blinkers" index="1" unique_id=1472535706 instance=ExtResource("2_ioive")]
-position = Vector2(-34, -10)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="RightRear" parent="Body/Lights/Blinkers" index="2" unique_id=85884138 instance=ExtResource("2_ioive")]
-position = Vector2(-34, 10)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="LeftSide" parent="Body/Lights/Blinkers" index="3" unique_id=975961333 instance=ExtResource("2_ioive")]
-position = Vector2(24, -11)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="RightSide" parent="Body/Lights/Blinkers" index="4" unique_id=951117855 instance=ExtResource("2_ioive")]
-position = Vector2(24, 11)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
-[node name="RightFront" parent="Body/Lights/Blinkers" index="5" unique_id=736185688 instance=ExtResource("2_ioive")]
-position = Vector2(34, 10)
-inactive_color = Color(0.44826746, 0.36732015, 1.92523e-07, 1)
-active_color = Color(0.9398218, 0.7844111, 4.235506e-06, 1)
-radius = 0.5
-
 [node name="CollisionArea" type="Area2D" parent="." index="1" unique_id=421902494]
 position = Vector2(-12, 0)
 collision_layer = 6
