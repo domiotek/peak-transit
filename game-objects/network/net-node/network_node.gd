@@ -29,7 +29,6 @@ var segment_priorities: Dictionary = { }
 var is_priority_based: bool = false
 
 var _visuals_initialized: bool = false
-
 var intersection_manager: IntersectionManager = IntersectionManager.new()
 
 @onready var debug_layer: Node2D = $DebugLayer
@@ -108,7 +107,6 @@ func update_visuals() -> void:
 				node_width,
 				NetworkConstants.LANE_WIDTH,
 			)
-
 	_update_debug_layer()
 
 
@@ -174,6 +172,10 @@ func get_definition() -> NetNodeInfo:
 func remove_segment(segment: NetSegment) -> void:
 	if not connected_segments.has(segment):
 		return
+
+	var removed_destination_node_id = segment.get_other_node_id(id)
+	definition.priority_segments.erase(removed_destination_node_id)
+	definition.stop_segments.erase(removed_destination_node_id)
 
 	connected_segments.erase(segment)
 
