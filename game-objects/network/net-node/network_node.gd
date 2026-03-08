@@ -82,7 +82,7 @@ func update_visuals() -> void:
 		var node_width = max_lanes * NetworkConstants.LANE_WIDTH
 
 		if connected_segments.size() > 2:
-			corner_points = layer_helper.find_intersection_corners(connected_segments)
+			corner_points = layer_helper.find_intersection_corners(self, connected_segments)
 
 			main_layer.polygon = layer_helper.create_precise_intersection_layer(self, connected_segments, corner_points)
 			var coatings = line_helper.get_polygon_chunks(main_layer, NetworkConstants.LANE_WIDTH)

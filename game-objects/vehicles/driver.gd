@@ -53,10 +53,6 @@ var time_blocked: float = 0.0
 var _headlights_state = false
 var _headlights_state_change_ticks_counter: float = 0
 
-var _hazardous_lights_enabled: bool = false
-var _blinkers_state: Enums.BlinkersState = Enums.BlinkersState.OFF
-var _blinkers_state_change_ticks_counter: float = 0.0
-
 var _stop_at_distance: float = 0.0
 var _slow_down_threshold: float = 0.0
 var _stop_at_callback: Callable
@@ -71,7 +67,6 @@ var _colliding_casters: Dictionary[CasterCollection.CasterID, bool] = {
 	CasterCollection.CasterID.RIGHT: false,
 }
 
-signal caster_state_changed(caster_id: String, is_colliding: bool)
 signal state_changed(new_state: VehicleState)
 
 
@@ -223,14 +218,6 @@ func set_headlights_enabled(enabled: bool, set_instant: bool) -> void:
 		beam_light.set_enabled(enabled)
 
 
-func set_hazardous_lights_enabled(enabled: bool) -> void:
-	_hazardous_lights_enabled = enabled
-
-
-func set_blinkers_state(new_state: Enums.BlinkersState) -> void:
-	_blinkers_state = new_state
-
-
 func set_idle() -> void:
 	current_speed = 0.0
 	target_speed = 0.0
@@ -292,6 +279,10 @@ func check_blockade_cleared(delta: float) -> bool:
 
 	var is_entering_building: bool = current_step.type == Navigator.StepType.BUILDING and current_step.is_entering
 	var is_leaving_building: bool = current_step.type == Navigator.StepType.BUILDING and current_step.is_leaving
+
+	if (is_entering_building or is_leaving_building) and time_blocked >= MAX_BLOCK_TIME:
+		unblocked = true
+		no_caster_allowance_time = 1.0
 
 	if not unblocked and colliders.size() > 0:
 		for collider in colliders:
@@ -358,27 +349,20 @@ func _handle_approaching_intersection(current_step: NavigationStep) -> void:
 		match direction:
 			Enums.Direction.LEFT:
 				target_speed = constants["INTERSECTION_SLOWDOWN"]
-				set_blinkers_state(Enums.BlinkersState.LEFT)
 				return
 			Enums.Direction.RIGHT:
 				target_speed = constants["INTERSECTION_SLOWDOWN"]
-				set_blinkers_state(Enums.BlinkersState.RIGHT)
 				return
-
-	set_blinkers_state(Enums.BlinkersState.OFF)
 
 
 func _handle_building_step(current_step: NavigationStep) -> void:
 	if not current_step or current_step.type != Navigator.StepType.BUILDING:
 		return
 
-	var is_opposite_relation: bool = current_step.connection.is_opposite_relation
 	var is_entering: bool = current_step.is_entering
 
 	if is_entering:
 		target_speed = constants["BUILDING_ENTRY_SPEED"]
-
-	set_blinkers_state(Enums.BlinkersState.LEFT if is_opposite_relation else Enums.BlinkersState.RIGHT)
 
 
 func _apply_slowdown_to_distance(current_distance: float) -> void:

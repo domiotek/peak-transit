@@ -3,9 +3,7 @@ extends Node2D
 class_name BaseBuilding
 
 const LightScene = preload("res://game-objects/light/light.tscn")
-const CollisionZoneScene = preload("res://game-objects/buildings/collision-zone/collision_zone.tscn")
-const StopperScene = preload("res://game-objects/buildings/building-stopper/building_stopper.tscn")
-const SympatheticStopperScene = preload("res://game-objects/buildings/sympathetic-stopper/sympathetic_stopper.tscn")
+const BUILDING_ENTERING_CHECK_INTERVAL_SEC: float = 0.2
 
 var id: int
 var building_info: BuildingInfo
@@ -18,14 +16,7 @@ var is_setup: bool = false
 
 var connections: BuildingConnectionInfo.BuildingConnectionCollection = BuildingConnectionInfo.BuildingConnectionCollection.new()
 
-var collision_zones: Dictionary = { }
-var out_connection_zones_mapping: Dictionary = { }
-var _target_relation_collision_zone: CollisionZone = null
-var out_stopper: BuildingStopper
-var sympathetic_stopper: SympatheticStopper = null
-
 var debug_visuals_enabled: bool = false
-var sympathy_without_benefit_timer: float = 0.0
 
 var vehicle_leaving: Vehicle = null
 var vehicles_entering: Array[Vehicle] = []
@@ -40,15 +31,6 @@ var buildings_manager: BuildingsManager = GDInjector.inject("BuildingsManager") 
 
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
-
-
-func _physics_process(delta: float) -> void:
-	if not is_setup:
-		return
-
-	_check_stopper()
-	_check_entering_vehicles(delta)
-	_check_leaving_vehicle()
 
 
 func setup(relation_id: int, _segment: NetSegment, _building_info: BuildingInfo) -> void:
@@ -89,30 +71,6 @@ func setup_connections() -> void:
 
 			_create_single_connection(opposite_relation_lane, endpoint, is_out_direction, false)
 
-	for connection in connections.get_collection_by_key(BuildingConnectionInfo.BuildingConnectionType.IN).values():
-		_create_collision_zone(connection)
-
-	for connection in (connections.get_collection_by_key(BuildingConnectionInfo.BuildingConnectionType.OUT).values()) as Array[BuildingConnectionInfo]:
-		if not out_stopper:
-			_create_out_stopper(connection)
-
-		var zones = []
-		var is_on_other_relation := target_relation_idx != connection.lane.relation_id
-
-		var same_lane_source_endpoint = segment_helper.get_other_endpoint_in_lane(connection.next_endpoint)
-		zones.append(collision_zones.get(same_lane_source_endpoint.Id, null))
-
-		if is_on_other_relation:
-			var other_lane = edge_lanes[target_relation_idx]
-			var endpoint = other_lane.get_endpoint_by_type(true)
-			zones.append(collision_zones.get(endpoint.Id, null))
-			_create_sympathetic_stopper(get_in_connection(endpoint.Id))
-
-		out_connection_zones_mapping[connection.next_endpoint] = zones
-
-	var target_zones = out_connection_zones_mapping.get(target_relation_dest_endpoint_id, [])
-	_target_relation_collision_zone = target_zones[0] if target_zones.size() > 0 else null
-
 	call_deferred("_update_debug_visuals")
 	is_setup = true
 
@@ -144,18 +102,6 @@ func get_out_connection_from_in_endpoint(endpoint_id: int) -> BuildingConnection
 	return get_out_connection(other_endpoint.Id)
 
 
-func toggle_debug_visuals() -> void:
-	debug_visuals_enabled = not debug_visuals_enabled
-
-	out_stopper.set_debug_visuals_enabled(debug_visuals_enabled)
-
-	for zone in collision_zones.values():
-		zone.set_debug_visuals_enabled(debug_visuals_enabled)
-
-	if sympathetic_stopper:
-		sympathetic_stopper.set_debug_visuals_enabled(debug_visuals_enabled)
-
-
 func are_debug_visuals_enabled() -> bool:
 	return debug_visuals_enabled
 
@@ -166,81 +112,6 @@ func supports_routed_leaving() -> bool:
 
 static func get_collision_polygon() -> PackedVector2Array:
 	return PackedVector2Array()
-
-
-func _check_stopper() -> void:
-	if vehicle_leaving == null or not vehicle_leaving.navigator.step_ready:
-		out_stopper.set_active(false)
-		return
-
-	var current_step := vehicle_leaving.navigator.get_current_step() as BuildingNavigationStep
-	if not current_step:
-		out_stopper.set_active(false)
-		return
-
-	var target_endpoint_id = current_step.connection.next_endpoint
-
-	var zones = out_connection_zones_mapping.get(target_endpoint_id, [])
-	var activated = false
-	for zone in zones:
-		if zone and zone.has_vehicles_inside(vehicle_leaving):
-			activated = true
-			break
-
-	out_stopper.set_active(activated)
-
-
-func _check_entering_vehicles(delta: float) -> void:
-	if not sympathetic_stopper:
-		return
-
-	if vehicles_entering.size() == 0:
-		sympathetic_stopper.set_active(false)
-		sympathy_without_benefit_timer = 0.0
-		return
-
-	for i in range(vehicles_entering.size() - 1, -1, -1):
-		var vehicle = vehicles_entering[i]
-		if not is_instance_valid(vehicle):
-			vehicles_entering.remove_at(i)
-			continue
-
-		var current_step := vehicle.navigator.get_current_step() as BuildingNavigationStep
-		if not current_step:
-			continue
-
-		var is_on_other_relation = current_step.connection.lane.relation_id != target_relation_idx
-
-		if not is_on_other_relation:
-			continue
-
-		if vehicle.driver.get_time_blocked() > BuildingConstants.BUILDING_SOFT_ENTRY_BLOCKADE_TIME:
-			sympathetic_stopper.set_active(true)
-
-			if _target_relation_collision_zone and not _target_relation_collision_zone.has_vehicles_inside(vehicle):
-				sympathy_without_benefit_timer += delta
-
-			if (sympathy_without_benefit_timer > BuildingConstants.BUILDING_SYMPATHY_WITHOUT_BENEFIT_TIMEOUT
-				or vehicle.driver.get_time_blocked() > BuildingConstants.BUILDING_MAX_ENTERING_VEHICLE_BLOCKADE_TIME ):
-				vehicle.driver.grant_no_caster_allowance(2.0)
-
-			return
-
-
-func _check_leaving_vehicle() -> void:
-	if vehicle_leaving == null:
-		return
-
-	if vehicle_leaving.driver.state != Driver.VehicleState.BLOCKED:
-		return
-
-	var current_step := vehicle_leaving.navigator.get_current_step() as NavigationStep
-
-	var path_progress_percent = current_step.progress / current_step.length * 100.0
-
-	if (path_progress_percent > BuildingConstants.BUILDING_VEHICLE_LEFT_PREMISE_PROGRESS_THRESHOLD
-		and vehicle_leaving.driver.get_time_blocked() > BuildingConstants.BUILDING_MAX_LEAVING_VEHICLE_BLOCKADE_TIME ):
-		vehicle_leaving.navigator.abandon_trip()
 
 
 func _create_single_connection(lane: NetLane, endpoint: Vector2, is_out_direction: bool, is_same_relation: bool) -> void:
@@ -308,40 +179,6 @@ func _create_connection(lane: NetLane, building_endpoint: Vector2, is_forward: b
 		connection_point,
 		is_same_relation,
 	)
-
-
-func _create_collision_zone(connection: BuildingConnectionInfo) -> void:
-	var collision_zone := CollisionZoneScene.instantiate() as CollisionZone
-
-	var is_on_other_relation := target_relation_idx != connection.lane.relation_id
-
-	var final_position := connection.lane_point
-
-	var lane_curve := connection.lane.get_curve()
-	var distance_on_curve := lane_curve.get_closest_offset(connection.lane_point)
-	var offset := -10 if is_on_other_relation else 5
-	var new_point_on_curve := lane_curve.sample_baked(distance_on_curve + offset)
-	final_position = new_point_on_curve
-
-	collision_zone.position = to_local(final_position)
-	collision_zone.rotation_degrees = 180.0 if is_on_other_relation else 0.0
-	collision_zone.set_size_scale(4.0 if is_on_other_relation else 1.0)
-	add_child(collision_zone)
-	collision_zones[connection.from_endpoint] = collision_zone
-
-
-func _create_out_stopper(connection: BuildingConnectionInfo) -> void:
-	var stopper := StopperScene.instantiate() as BuildingStopper
-
-	stopper.position = to_local(connection.from)
-	add_child(stopper)
-	out_stopper = stopper
-
-
-func _create_sympathetic_stopper(connection: BuildingConnectionInfo) -> void:
-	sympathetic_stopper = SympatheticStopperScene.instantiate() as SympatheticStopper
-	sympathetic_stopper.position = to_local(connection.lane_point)
-	add_child(sympathetic_stopper)
 
 
 func _update_debug_visuals() -> void:
