@@ -62,7 +62,7 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 
 
 func _create_node(node_info: NetNodeInfo) -> RoadNode:
-	var id = network_manager.get_next_node_id()
+	var id = node_info.id if node_info.id >= 0 else network_manager.get_next_node_id()
 	var road_node = NetworkNodeScene.instantiate()
 	road_node.definition = node_info
 	road_node.set_id(id)

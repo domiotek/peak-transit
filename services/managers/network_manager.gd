@@ -19,6 +19,11 @@ var segment_helper: SegmentHelper = GDInjector.inject("SegmentHelper") as Segmen
 
 
 func register_node(node: RoadNode):
+	if nodes.has(node.id) and nodes[node.id] != node:
+		push_error("Node ID collision detected for ID %d" % node.id)
+		return
+
+	_node_ids.reserve_id(node.id)
 	nodes[node.id] = node
 
 

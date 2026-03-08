@@ -1,5 +1,6 @@
 class_name DepotDefinition
 
+var id: int = -1
 var name: String = ""
 var bus_id_prefix: String = ""
 var position: SegmentPosDefinition = SegmentPosDefinition.new()
@@ -10,6 +11,7 @@ var articulated_bus_capacity: int
 static func deserialize(data: Dictionary) -> DepotDefinition:
 	var depot_def = DepotDefinition.new()
 
+	depot_def.id = data.get("id", -1) as int
 	depot_def.name = data["name"] as String
 	depot_def.bus_id_prefix = data["busIdPrefix"] as String
 	depot_def.position = SegmentPosDefinition.deserialize(data["pos"] as Dictionary)
@@ -21,6 +23,7 @@ static func deserialize(data: Dictionary) -> DepotDefinition:
 
 func serialize() -> Dictionary:
 	var data: Dictionary = { }
+	data["id"] = id
 	data["name"] = name
 	data["busIdPrefix"] = bus_id_prefix
 	data["pos"] = position.serialize()

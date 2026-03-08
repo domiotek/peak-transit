@@ -70,7 +70,12 @@ func register_stop(stop_def: StopDefinition) -> bool:
 		push_error("Invalid stop definition: %s - %s" % [stop_def.name, validation_error])
 		return false
 
-	var idx = _stop_ids.occupy_next_id()
+	var idx = stop_def.id if stop_def.id >= 0 else _stop_ids.occupy_next_id()
+	if _stops.has(idx):
+		push_error("Stop ID collision detected for ID %d" % idx)
+		return false
+	_stop_ids.reserve_id(idx)
+	stop_def.id = idx
 
 	if not stop_def.name or stop_def.name == "":
 		stop_def.name = "Stop %d" % idx
@@ -126,7 +131,12 @@ func register_terminal(terminal_def: TerminalDefinition) -> bool:
 		push_error("Invalid terminal definition: %s - %s" % [terminal_def.name, validation_error])
 		return false
 
-	var idx = _terminal_ids.occupy_next_id()
+	var idx = terminal_def.id if terminal_def.id >= 0 else _terminal_ids.occupy_next_id()
+	if _terminals.has(idx):
+		push_error("Terminal ID collision detected for ID %d" % idx)
+		return false
+	_terminal_ids.reserve_id(idx)
+	terminal_def.id = idx
 
 	if not terminal_def.name or terminal_def.name == "":
 		terminal_def.name = "Terminal %d" % idx
@@ -201,7 +211,12 @@ func register_depot(depot_def: DepotDefinition) -> bool:
 		push_error("Invalid depot definition: %s - %s" % [depot_def.name, validation_error])
 		return false
 
-	var idx = _depot_ids.occupy_next_id()
+	var idx = depot_def.id if depot_def.id >= 0 else _depot_ids.occupy_next_id()
+	if _depots.has(idx):
+		push_error("Depot ID collision detected for ID %d" % idx)
+		return false
+	_depot_ids.reserve_id(idx)
+	depot_def.id = idx
 
 	if not depot_def.name or depot_def.name == "":
 		depot_def.name = "Depot %d" % idx

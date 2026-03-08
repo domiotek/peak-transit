@@ -120,6 +120,7 @@ func get_outgoing_node_id() -> int:
 
 func get_definition() -> TerminalDefinition:
 	var terminal_def = TerminalDefinition.new()
+	terminal_def.id = terminal_id
 	terminal_def.name = _terminal_data.name
 	terminal_def.position = _terminal_data.position
 	terminal_def.demand_preset = _terminal_data.demand_preset

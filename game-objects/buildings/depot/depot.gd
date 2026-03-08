@@ -50,6 +50,7 @@ func setup_depot(new_id: int, depot_data: DepotDefinition) -> void:
 
 
 func get_definition() -> DepotDefinition:
+	_depot_data.id = depot_id
 	return _depot_data
 
 

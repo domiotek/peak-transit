@@ -13,8 +13,8 @@ public enum IntersectionType
 
 public class NetNodeInfo
 {
-    [JsonIgnore]
-    public int Id { get; set; }
+    [JsonProperty("id")]
+    public int Id { get; set; } = -1;
 
     [
         JsonProperty("pos", Required = Required.Always),
@@ -47,7 +47,7 @@ public class NetNodeInfo
     {
         return new NetNodeInfo
         {
-            Id = data.TryGetValue("id", out var id) ? (int)id : 0,
+            Id = data.TryGetValue("id", out var id) ? (int)id : -1,
             Position = data.TryGetValue("pos", out var pos)
                 ? new Vector2(((Godot.Vector2)pos).X, ((Godot.Vector2)pos).Y)
                 : new Vector2(0, 0),

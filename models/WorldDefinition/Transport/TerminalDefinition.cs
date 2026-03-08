@@ -4,6 +4,9 @@ namespace PT.Models.WorldDefinition.Transport;
 
 public class TerminalDefinition : IDefinition<TerminalDefinition>
 {
+    [JsonProperty("id")]
+    public int Id { get; set; } = -1;
+
     [JsonProperty("name")]
     public required string Name { get; set; } = string.Empty;
 
@@ -17,6 +20,7 @@ public class TerminalDefinition : IDefinition<TerminalDefinition>
     {
         var dict = new Godot.Collections.Dictionary
         {
+            ["id"] = Id,
             ["name"] = Name,
             ["pos"] = Position.Serialize(),
             ["demandPreset"] = DemandPresetIndex,
@@ -28,6 +32,7 @@ public class TerminalDefinition : IDefinition<TerminalDefinition>
     {
         var terminalDefinition = new TerminalDefinition
         {
+            Id = data.ContainsKey("id") ? data["id"].AsInt32() : -1,
             Name = data["name"].AsString() ?? string.Empty,
             Position = SegmentPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
             DemandPresetIndex = data["demandPreset"].As<int>(),

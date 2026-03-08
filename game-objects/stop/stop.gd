@@ -73,8 +73,10 @@ func get_outgoing_node_id() -> int:
 func get_definition() -> StopDefinition:
 	var stop_def = StopDefinition.new()
 
+	stop_def.id = id
 	stop_def.name = _data.name
 	stop_def.position = _data.position
+	stop_def.demand_preset = _data.demand_preset
 	stop_def.draw_stripes = _data.draw_stripes
 	stop_def.can_wait = _data.can_wait
 

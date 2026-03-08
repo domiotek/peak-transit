@@ -4,6 +4,9 @@ namespace PT.Models.WorldDefinition.Transport;
 
 public class StopDefinition : IDefinition<StopDefinition>
 {
+    [JsonProperty("id")]
+    public int Id { get; set; } = -1;
+
     [JsonProperty("name")]
     public required string Name { get; set; } = string.Empty;
 
@@ -23,6 +26,7 @@ public class StopDefinition : IDefinition<StopDefinition>
     {
         var dict = new Godot.Collections.Dictionary
         {
+            ["id"] = Id,
             ["name"] = Name,
             ["pos"] = Position.Serialize(),
             ["demandPreset"] = DemandPresetIndex,
@@ -36,6 +40,7 @@ public class StopDefinition : IDefinition<StopDefinition>
     {
         var stopDefinition = new StopDefinition
         {
+            Id = data.ContainsKey("id") ? data["id"].AsInt32() : -1,
             Name = data["name"].AsString() ?? string.Empty,
             Position = SegmentPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),
             DemandPresetIndex = data["demandPreset"].AsInt32(),
