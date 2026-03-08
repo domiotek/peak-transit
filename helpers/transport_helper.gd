@@ -8,38 +8,45 @@ static func load_transport_definition(
 	var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 	var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
+	var batch_size = SimulationConstants.MAP_LOAD_PROGRESS_BATCH_SIZE
+
 	if transport_def.demand_presets.size() == 0:
 		var default_preset = DemandPresetDefinition.get_default_definition()
 		transport_def.demand_presets.append(default_preset)
 
 	for i in range(transport_def.demand_presets.size()):
 		game_manager.push_loading_progress("Loading demand presets...", i / float(transport_def.demand_presets.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var preset_def = transport_def.demand_presets[i]
 		transport_manager.register_demand_preset(preset_def)
 
 	for i in range(transport_def.depots.size()):
 		game_manager.push_loading_progress("Placing transport depots...", i / float(transport_def.depots.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var depot_def = transport_def.depots[i]
 		transport_manager.register_depot(depot_def)
 
 	for i in range(transport_def.terminals.size()):
 		game_manager.push_loading_progress("Placing transport terminals...", i / float(transport_def.terminals.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var terminal_def = transport_def.terminals[i]
 		transport_manager.register_terminal(terminal_def)
 
 	for i in range(transport_def.stops.size()):
 		game_manager.push_loading_progress("Placing transport stops...", i / float(transport_def.stops.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var stop_def = transport_def.stops[i]
 		transport_manager.register_stop(stop_def)
 
 	if register_lines:
 		for i in range(transport_def.lines.size()):
 			game_manager.push_loading_progress("Setting up transport lines...", i / float(transport_def.lines.size()))
-			await game_manager.wait_frame()
+			if (i + 1) % batch_size == 0:
+				await game_manager.wait_frame()
 			var line_def = transport_def.lines[i]
 			await transport_manager.register_line(line_def)
 
@@ -48,7 +55,8 @@ static func load_transport_definition(
 			for line_id in range(lines.size()):
 				var transport_line = lines[line_id] as TransportLine
 				game_manager.push_loading_progress("Generating schedules...", line_id / float(lines.size()))
-				await game_manager.wait_frame()
+				if (line_id + 1) % batch_size == 0:
+					await game_manager.wait_frame()
 				transport_manager.generate_line_schedule(transport_line)
 
 

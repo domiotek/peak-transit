@@ -1,5 +1,6 @@
 class_name SimulationConstants
 
+const MAP_LOAD_PROGRESS_BATCH_SIZE = 25 # number of nodes/segments/buildings to process before yielding to the engine during map loading
 const SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE = 18.0
 const SIMULATION_LIGHTS_ON_THRESHOLD = 19.0 / 24.0
 const SIMULATION_LIGHTS_OFF_THRESHOLD = 6.0 / 24.0
