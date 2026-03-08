@@ -43,6 +43,9 @@ func spawn_vehicle() -> void:
 	if vehicle_leaving:
 		return
 
+	if vehicle_manager.vehicles_count() >= config_manager.DummyCarSpawnMaxTotalVehicles:
+		return
+
 	var target_building_type = buildings_manager.get_random_building_type(self.type, _get_target_building_roll_weights())
 	var target_building = buildings_manager.get_random_building_with_constraints(target_building_type, self.id)
 

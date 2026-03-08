@@ -17,6 +17,8 @@ public partial class ConfigManager : RefCounted
 
     public bool AutoFillDepotStopsOnLoad { get; } = true;
 
+    public int DummyCarSpawnMaxTotalVehicles { get; } = 300;
+
     public bool UseRlLogger { get; } = true;
 
     public DebugToggles DebugToggles { get; } = new DebugToggles();
