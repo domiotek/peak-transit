@@ -41,5 +41,6 @@ offset_right = 0.0
 offset_bottom = 0.0
 
 [node name="RLSync" type="Node" parent="." unique_id=540036774]
+process_mode = 4
 script = ExtResource("6_uooga")
 metadata/_custom_type_script = "uid://cih2mtyiaf376"

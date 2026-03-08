@@ -8,7 +8,7 @@ var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
 var _vehicle_with_path_drawn: Vehicle = null
 var _score_manager: ScoreManager
 
-@onready var ai_controller: ChallengeAiController = $RLAgent as ChallengeAiController
+var ai_controller: ChallengeAiController
 
 
 func _ready() -> void:
@@ -18,6 +18,13 @@ func _ready() -> void:
 	map.create_drawing_layer("LinesRoutesLayer")
 
 	_score_manager = ScoreManager.new()
+
+	if not game_manager.is_rl_mode():
+		return
+
+	ai_controller = ChallengeAiController.new()
+	ai_controller.add_to_group("AGENT")
+	add_child(ai_controller)
 
 
 func get_mode() -> Enums.GameMode:
@@ -99,7 +106,8 @@ func _on_initialize_game(world: WorldDefinition) -> void:
 
 
 func _after_initialize_game() -> void:
-	ai_controller.setup()
+	if ai_controller:
+		ai_controller.setup()
 
 	ui_manager.show_ui_view(GameSpeedView.VIEW_NAME)
 	ui_manager.show_ui_view(GameClockView.VIEW_NAME)

@@ -71,6 +71,7 @@ func _handle_autoload() -> void:
 
 
 func _setup_rl_session() -> void:
+	rl_sync.process_mode = Node.PROCESS_MODE_INHERIT
 	print("Starting RL session...")
 
 	var agents = get_tree().get_nodes_in_group("AGENT")
