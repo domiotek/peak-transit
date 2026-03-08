@@ -179,7 +179,6 @@ func _populate_trip_view(trip: BrigadeTrip) -> void:
 	await self.get_tree().process_frame
 
 	var route = trip.get_stops()
-	var stop_times = trip.get_stop_times()
 
 	for step_idx in range(route.size()):
 		var route_step = route[step_idx] as LineStop
@@ -187,7 +186,7 @@ func _populate_trip_view(trip: BrigadeTrip) -> void:
 		var step_item = list_item.instantiate() as TripStepListItem
 		step_item.init_item(route_step.target_name)
 		step_item.set_step_idx(route_step.stop_idx)
-		step_item.set_departure_time(stop_times[step_idx])
+		step_item.set_departure_time(trip.get_departure_time_at_stop(step_idx))
 
 		steps_list.add_child(step_item)
 
