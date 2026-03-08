@@ -217,6 +217,10 @@ func get_route_path(route_idx: int) -> Array:
 	return _traced_paths[route_idx]
 
 
+func get_definition() -> LineDefinition:
+	return _line_def
+
+
 func assign_brigades(ids: Array) -> void:
 	_brigade_ids = ids
 

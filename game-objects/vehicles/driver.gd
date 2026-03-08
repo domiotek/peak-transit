@@ -67,6 +67,7 @@ var _colliding_casters: Dictionary[CasterCollection.CasterID, bool] = {
 	CasterCollection.CasterID.RIGHT: false,
 }
 
+signal caster_state_changed(caster_id: String, is_colliding: bool)
 signal state_changed(new_state: VehicleState)
 
 
@@ -358,7 +359,7 @@ func _handle_approaching_intersection(current_step: NavigationStep) -> void:
 func _handle_building_step(current_step: NavigationStep) -> void:
 	if not current_step or current_step.type != Navigator.StepType.BUILDING:
 		return
-
+		
 	var is_entering: bool = current_step.is_entering
 
 	if is_entering:
@@ -431,6 +432,9 @@ func _check_for_obstacles(current_step: NavigationStep) -> void:
 		if colliding_casters[caster_id]:
 			_apply_caster_colliding(caster_id, colliding_casters)
 			return
+
+		if false:
+			caster_state_changed.emit(caster_id, colliding_casters[caster_id])
 
 	if target_speed == 0:
 		current_brake_force = constants["DEFAULT_BRAKING"]

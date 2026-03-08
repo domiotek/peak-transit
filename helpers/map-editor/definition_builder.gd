@@ -112,4 +112,8 @@ func _collect_transport_definition() -> TransportDefinition:
 		var stop_def = stop.get_definition()
 		transport_definition.stops.append(stop_def)
 
+	for line in transport_manager.get_lines():
+		var line_def = line.get_definition()
+		transport_definition.lines.append(line_def)
+
 	return transport_definition
