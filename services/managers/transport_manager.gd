@@ -281,7 +281,7 @@ func register_line(line_def: LineDefinition) -> bool:
 	var validation_error = TransportHelper.validate_line_definition(self, _network_manager, line_def)
 
 	if validation_error.length() > 0:
-		push_error("Invalid line definition: %s - %s" % [line_def.name, validation_error])
+		push_error("Invalid line definition: %s - %s" % [line_def.display_number, validation_error])
 		return false
 
 	var idx = _get_next_idx(_lines)

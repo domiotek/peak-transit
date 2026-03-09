@@ -153,23 +153,23 @@ static func validate_line_definition(transport_manager: TransportManager, networ
 				Enums.TransportRouteStepType.TERMINAL:
 					var terminal_exists = transport_manager.terminal_exists(target_id)
 					if not terminal_exists:
-						return "Terminal ID not found in line '%s': %d" % [line_def.name, target_id]
+						return "Terminal ID not found in line '%s': %d" % [line_def.display_number, target_id]
 				Enums.TransportRouteStepType.STOP:
 					var stop_exists = transport_manager.stop_exists(target_id)
 					if not stop_exists:
-						return "Stop ID not found in line '%s': %d" % [line_def.name, target_id]
+						return "Stop ID not found in line '%s': %d" % [line_def.display_number, target_id]
 				Enums.TransportRouteStepType.WAYPOINT:
 					var node = network_manager.get_node(target_id)
 					if not node:
-						return "Node ID not found in line '%s': %d" % [line_def.name, target_id]
+						return "Node ID not found in line '%s': %d" % [line_def.display_number, target_id]
 				_:
-					return "Unknown step type in line '%s'" % line_def.name
+					return "Unknown step type in line '%s'" % line_def.display_number
 
 		if route[0].step_type != Enums.TransportRouteStepType.TERMINAL:
-			return "First step of route must be a terminal in line '%s'" % line_def.name
+			return "First step of route must be a terminal in line '%s'" % line_def.display_number
 
 		if route[route.size() - 1].step_type != Enums.TransportRouteStepType.TERMINAL:
-			return "Last step of route must be a terminal in line '%s'" % line_def.name
+			return "Last step of route must be a terminal in line '%s'" % line_def.display_number
 
 	return ""
 
