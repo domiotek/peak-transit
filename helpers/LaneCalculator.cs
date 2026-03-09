@@ -115,7 +115,12 @@ public partial class LaneCalculator : RefCounted
             || direction == LaneDirection.LeftRight
         )
         {
-            connections.AddRange(MapToNTargetEndpoints(rightEndpoints, laneEndpoint, n));
+            var rightConnections = MapToNTargetEndpoints(rightEndpoints, laneEndpoint, n, false);
+            if (rightConnections.Count == 0 && rightEndpoints.Count > 0)
+            {
+                rightConnections.Add(rightEndpoints.MaxBy(x => x.LaneNumber).Id);
+            }
+            connections.AddRange(rightConnections);
         }
 
         if (direction == LaneDirection.Backward)
@@ -129,18 +134,26 @@ public partial class LaneCalculator : RefCounted
     private List<int> MapToNTargetEndpoints(
         List<NetLaneEndpoint> targetEndpoints,
         NetLaneEndpoint laneEndpoint,
-        int n = 2
+        int n = 2,
+        bool forceFallbackToClosest = true
     )
     {
-        if (targetEndpoints.Count != 0)
-            return
-            [
-                .. targetEndpoints
-                    .Where(x => Math.Abs(x.LaneNumber - laneEndpoint.LaneNumber) < n)
-                    .Select(x => x.Id),
-            ];
+        if (targetEndpoints.Count == 0)
+            return [];
 
-        return [];
+        var matches = targetEndpoints
+            .Where(x => Math.Abs(x.LaneNumber - laneEndpoint.LaneNumber) < n)
+            .Select(x => x.Id)
+            .ToList();
+
+        if (matches.Count > 0 || !forceFallbackToClosest)
+            return matches;
+
+        var closest = targetEndpoints
+            .OrderBy(x => Math.Abs(x.LaneNumber - laneEndpoint.LaneNumber))
+            .First();
+
+        return [closest.Id];
     }
 
     private List<int> MapToNLaneEndpointFromCenter(
@@ -150,6 +163,8 @@ public partial class LaneCalculator : RefCounted
     {
         if (targetEndpoints.Count == 0)
             return [];
+
+        laneNumber = Math.Clamp(laneNumber, 0, targetEndpoints.Count - 1);
 
         return [.. targetEndpoints.Where(x => x.LaneNumber == laneNumber).Select(x => x.Id)];
     }
