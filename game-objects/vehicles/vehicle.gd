@@ -34,6 +34,8 @@ var _smoothed_curvature: float = 0.0
 var _bodies_visuals: Array[Node2D] = []
 var _bodies_lights_visuals: Array[Node2D] = []
 
+var _initialized: bool = false
+
 
 func _ready():
 	self.visible = false
@@ -301,7 +303,10 @@ func _finish_initialization() -> void:
 
 
 func _on_trip_started() -> void:
-	_finish_initialization()
+	if not _initialized:
+		_finish_initialization()
+		_initialized = true
+
 
 	var current_step := navigator.get_current_step()
 	var starts_at_building := current_step.type == Navigator.StepType.BUILDING
