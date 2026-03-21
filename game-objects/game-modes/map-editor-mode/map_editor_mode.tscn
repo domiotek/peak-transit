@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://xllvlhj63lst"]
+[gd_scene format=3 uid="uid://xllvlhj63lst"]
 
 [ext_resource type="PackedScene" uid="uid://ccncdb455yrno" path="res://game-objects/game-modes/base-mode/base_mode.tscn" id="1_wmy76"]
 [ext_resource type="Script" uid="uid://ck2irsw61l388" path="res://game-objects/game-modes/map-editor-mode/map_editor_mode.gd" id="2_kssn7"]
@@ -10,10 +10,10 @@
 [ext_resource type="PackedScene" uid="uid://ddm1k7v6m2wfs" path="res://ui/views/map-editor/intersection-tool-panel/intersection_tool_panel.tscn" id="8_5p2bh"]
 [ext_resource type="PackedScene" uid="uid://c736fpqckxwt3" path="res://ui/views/map-editor/object-configuration-panel/object_configuration_panel.tscn" id="9_7mm8k"]
 
-[node name="MapEditor" instance=ExtResource("1_wmy76")]
+[node name="MapEditor" unique_id=2077566856 instance=ExtResource("1_wmy76")]
 script = ExtResource("2_kssn7")
 
-[node name="LaneDirectionSelector" parent="UI" index="1" instance=ExtResource("3_wg35x")]
+[node name="LaneDirectionSelector" parent="UI" index="1" unique_id=1631958467 instance=ExtResource("3_wg35x")]
 anchors_preset = 0
 anchor_right = 0.0
 anchor_bottom = 0.0
@@ -22,7 +22,7 @@ offset_bottom = 41.0
 grow_horizontal = 1
 grow_vertical = 1
 
-[node name="ToolsBar" parent="UI" index="2" instance=ExtResource("3_vfrew")]
+[node name="ToolsBar" parent="UI" index="2" unique_id=1523833545 instance=ExtResource("3_vfrew")]
 custom_minimum_size = Vector2(300, 30)
 anchors_preset = 7
 anchor_left = 0.5
@@ -34,7 +34,7 @@ offset_right = 150.0
 offset_bottom = -13.0
 grow_vertical = 0
 
-[node name="RoadToolPanel" parent="UI" index="3" instance=ExtResource("4_axg7b")]
+[node name="RoadToolPanel" parent="UI" index="3" unique_id=1362601769 instance=ExtResource("4_axg7b")]
 custom_minimum_size = Vector2(190, 100)
 anchors_preset = 7
 anchor_left = 0.5
@@ -46,7 +46,7 @@ offset_right = 39.0
 offset_bottom = -48.0
 grow_vertical = 0
 
-[node name="EditRoadToolPanel" parent="UI" index="4" instance=ExtResource("5_lg3d2")]
+[node name="EditRoadToolPanel" parent="UI" index="4" unique_id=1469051162 instance=ExtResource("5_lg3d2")]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -57,7 +57,7 @@ offset_right = 168.0
 offset_bottom = -49.0
 grow_vertical = 0
 
-[node name="RoadsideObjectPanel" parent="UI" index="5" instance=ExtResource("7_sodbg")]
+[node name="RoadsideObjectPanel" parent="UI" index="5" unique_id=789487557 instance=ExtResource("7_sodbg")]
 custom_minimum_size = Vector2(312, 90)
 anchors_preset = 7
 anchor_left = 0.5
@@ -69,7 +69,7 @@ offset_right = 175.0
 offset_bottom = -55.0
 grow_vertical = 0
 
-[node name="IntersectionToolPanel" parent="UI" index="6" instance=ExtResource("8_5p2bh")]
+[node name="IntersectionToolPanel" parent="UI" index="6" unique_id=1161846787 instance=ExtResource("8_5p2bh")]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -80,7 +80,7 @@ offset_right = 175.0
 offset_bottom = -55.0
 grow_vertical = 0
 
-[node name="ObjectConfigurationPanel" parent="UI" index="7" instance=ExtResource("9_7mm8k")]
+[node name="ObjectConfigurationPanel" parent="UI" index="7" unique_id=875469027 instance=ExtResource("9_7mm8k")]
 anchors_preset = 11
 anchor_left = 1.0
 offset_left = -24.0
