@@ -18,6 +18,8 @@ enum TrafficLightPosition {
 }
 
 const CLASS_NAME: String = "TrafficLightsIntersection"
+const FLOW_BLOCKED_BONUS_CAP = 3
+const FLOW_BLOCKED_BONUS_WEIGHT = 0.5
 
 var game_manager: GameManager
 var segment_helper: SegmentHelper
@@ -74,14 +76,18 @@ func process_tick(_delta: float) -> void:
 	if phase_timer >= min_phase_duration:
 		flow_ratio = _measure_current_flow_ratio()
 		current_flow_ratio = flow_ratio
-	else:
-		current_flow_ratio = -1.0
 
 	var first_cycle_after_change = false
 
 	if is_first_cycle || phase_timer >= active_phase.duration || flow_ratio < NetworkConstants.TRAFFIC_LIGHTS_LOW_FLOW_THRESHOLD:
+		var new_phase_index = _find_next_phase_index()
+		if new_phase_index == current_phase_index:
+			phase_timer = 0.0
+			return
+
 		is_first_cycle = false
-		current_phase_index = (current_phase_index + 1) % phases.size()
+		current_phase_index = new_phase_index
+
 		phase_timer = 0.0
 		_set_stoppers_active(active_phase.stoppers, true, active_phase["directions"])
 		_set_stoppers_active(active_phase.exception_stoppers, true, [Enums.Direction.RIGHT])
@@ -322,20 +328,25 @@ func _set_stoppers_active(_stoppers: Array, _active: bool, _directions: Array) -
 
 
 func _measure_current_flow_ratio() -> float:
-	var total_waiting = 0
-	var waiting_on_open_lanes = 0
+	var total_waiting = 0.0
+	var waiting_on_open_lanes = 0.0
 
 	for stopper in stoppers:
 		var lane = stopper.get_lane()
-		var vehicle_count = lane.count_vehicles_within_distance(node.id, NetworkConstants.TRAFFIC_LIGHTS_FLOW_SCAN_DISTANCE)
-		total_waiting += vehicle_count
+		var near_count = lane.count_vehicles_within_distance(node.id, NetworkConstants.TRAFFIC_LIGHTS_FLOW_SCAN_DISTANCE)
+		var blocked_count = lane.get_vehicle_count(true)
+		var blocked_bonus = min(blocked_count, FLOW_BLOCKED_BONUS_CAP) * FLOW_BLOCKED_BONUS_WEIGHT
+		var lane_demand = float(near_count) + blocked_bonus
+
+		total_waiting += lane_demand
 
 		if not stopper.is_active():
-			waiting_on_open_lanes += vehicle_count
+			waiting_on_open_lanes += lane_demand
 
 	var vehicles_crossing = node.intersection_manager.get_vehicles_crossing_count()
 
-	return (float(vehicles_crossing) + float(waiting_on_open_lanes)) / float(total_waiting) * 100 if total_waiting > 0 else 100.0
+	var ratio = (float(vehicles_crossing) + float(waiting_on_open_lanes)) / float(total_waiting) * 100 if total_waiting > 0 else 100.0
+	return clamp(ratio, 0.0, 100.0)
 
 
 func _create_traffic_light_visuals() -> void:
@@ -422,3 +433,26 @@ func _create_traffic_light_assembly(ref_stopper: LaneStopper, configuration: Tra
 		assembly.add_child(arrow_instance)
 		arrow_instance.position = Vector2(8.5, 7)
 		ref_stopper.traffic_lights[Enums.Direction.RIGHT] = arrow_instance
+
+func _find_next_phase_index() -> int:
+	var has_any_vehicles_nearby := false
+	
+	var current_index := current_phase_index
+
+	while not has_any_vehicles_nearby:
+		current_index = (current_index + 1) % phases.size()
+
+		if current_index == current_phase_index:
+			break
+
+		var phase_stoppers = phases[current_index].stoppers
+
+		for stopper in phase_stoppers as Array[LaneStopper]:
+			var first_vehicle := stopper.get_lane().get_first_vehicle()
+
+			if first_vehicle and first_vehicle.navigator.get_step_distance_left() < 400.0:
+				has_any_vehicles_nearby = true
+				break
+		
+
+	return current_index
