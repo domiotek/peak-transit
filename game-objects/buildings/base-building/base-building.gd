@@ -16,8 +16,6 @@ var is_setup: bool = false
 
 var connections: BuildingConnectionInfo.BuildingConnectionCollection = BuildingConnectionInfo.BuildingConnectionCollection.new()
 
-var debug_visuals_enabled: bool = false
-
 var vehicle_leaving: Vehicle = null
 var vehicles_entering: Array[Vehicle] = []
 
@@ -100,10 +98,6 @@ func get_out_connection_from_in_endpoint(endpoint_id: int) -> BuildingConnection
 	var other_endpoint = lane.get_endpoint_by_type(false)
 
 	return get_out_connection(other_endpoint.Id)
-
-
-func are_debug_visuals_enabled() -> bool:
-	return debug_visuals_enabled
 
 
 func supports_routed_leaving() -> bool:

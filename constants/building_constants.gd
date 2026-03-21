@@ -96,9 +96,9 @@ static var DEPOT_COLLISION_POLYGON = PackedVector2Array(
 # gdlint-ignore-next-line variable-name
 static var SPAWNER_BUILDING_COLLISION_POLYGON = PackedVector2Array(
 	[
-		Vector2(-25, -50),
-		Vector2(26, -50),
-		Vector2(26, -16),
-		Vector2(-25, -16),
+		Vector2(-75, -118),
+		Vector2(78, -118),
+		Vector2(78, -16),
+		Vector2(-75, -16),
 	],
 )
