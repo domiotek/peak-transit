@@ -111,6 +111,9 @@ func init_map(world: WorldDefinition) -> void:
 func get_game_menu_buttons() -> Array[GameMenuButton]:
 	return []
 
+func init_rl_agents() -> bool:
+	return false
+
 
 func _draw() -> void:
 	for child in debug_layer.get_children():

@@ -41,7 +41,7 @@ func _on_game_loaded(success: bool) -> void:
 
 func _handle_autoload() -> void:
 	var game_mode = _args.get("mode", "").to_lower()
-	var world_name = _args.get("world", "")
+	var world_name = _args.get("world", "").replace("\"", "")
 
 	if game_mode == "" or world_name == "":
 		if config_manager.AutoQuickLoad:
@@ -74,10 +74,19 @@ func _setup_rl_session() -> void:
 	rl_sync.process_mode = Node.PROCESS_MODE_INHERIT
 	print("Starting RL session...")
 
+	var initialized = game_manager.get_game_controller().init_rl_agents()
+
+	if not initialized:
+		push_error("This game mode doesn't have any agents to train. Cannot start RL session.")
+		_quit()
+		return
+
+	await game_manager.wait_frame()
+
 	var agents = get_tree().get_nodes_in_group("AGENT")
 
 	if agents.size() == 0:
-		push_error("This game mode doesn't have any agents to train. Cannot start RL session.")
+		push_error("None of declared agents initialized properly. Cannot start RL session.")
 		_quit()
 		return
 
