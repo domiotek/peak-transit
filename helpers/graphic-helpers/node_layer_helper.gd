@@ -172,42 +172,86 @@ func create_simple_intersection(target_node: RoadNode, segments: Array, node_wid
 
 
 func create_precise_intersection_layer(target_node: RoadNode, segments: Array, corners: PackedVector2Array) -> PackedVector2Array:
-	var all_edge_points = []
-	var used_corners = []
+	var edge_points_local: Array = []
 
 	for segment in segments:
 		var edge_info = segment_helper.get_segment_edge_points_at_node(segment, target_node.id, 50.0)
-		var left_edge_local = target_node.to_local(edge_info.left_edge)
-		var right_edge_local = target_node.to_local(edge_info.right_edge)
+		edge_points_local.append(target_node.to_local(edge_info.left_edge))
+		edge_points_local.append(target_node.to_local(edge_info.right_edge))
 
-		var closest_corner_left = _find_closest_unused_corner(target_node, left_edge_local, corners, used_corners, 32.0)
-		if closest_corner_left != Vector2.ZERO:
-			all_edge_points.append(target_node.to_local(closest_corner_left))
-			used_corners.append(closest_corner_left)
-		else:
-			all_edge_points.append(left_edge_local)
+	var corner_matches_by_edge = _match_corners_to_edges(target_node, edge_points_local, corners, 40.0)
+	var all_edge_points: Array = []
 
-		var closest_corner_right = _find_closest_unused_corner(target_node, right_edge_local, corners, used_corners, 32.0)
-		if closest_corner_right != Vector2.ZERO:
-			all_edge_points.append(target_node.to_local(closest_corner_right))
-			used_corners.append(closest_corner_right)
+	for edge_index in range(edge_points_local.size()):
+		if corner_matches_by_edge.has(edge_index):
+			all_edge_points.append(target_node.to_local(corner_matches_by_edge[edge_index]))
 		else:
-			all_edge_points.append(right_edge_local)
+			all_edge_points.append(edge_points_local[edge_index])
 
 	if all_edge_points.size() >= 3:
-		var center = Vector2.ZERO
-		for point in all_edge_points:
-			center += point
-		center /= all_edge_points.size()
+		var unique_points = _remove_near_duplicate_points(all_edge_points, 0.75)
+		if unique_points.size() < 3:
+			return PackedVector2Array()
 
-		all_edge_points.sort_custom(
+		# Convex hull keeps the outer boundary and removes accidental inner picks.
+		var hull = Geometry2D.convex_hull(PackedVector2Array(unique_points))
+		if hull.size() >= 3:
+			return hull
+
+		var center = Vector2.ZERO
+		for point in unique_points:
+			center += point
+		center /= unique_points.size()
+
+		unique_points.sort_custom(
 			func(a, b):
 				return (a - center).angle() < (b - center).angle()
 		)
 
-		return PackedVector2Array(all_edge_points)
+		return PackedVector2Array(unique_points)
 
 	return PackedVector2Array()
+
+
+func _match_corners_to_edges(node: RoadNode, edge_points_local: Array, corners: PackedVector2Array, max_distance: float) -> Dictionary:
+	var candidates: Array = []
+
+	for edge_index in range(edge_points_local.size()):
+		var edge_point: Vector2 = edge_points_local[edge_index]
+		for corner_index in range(corners.size()):
+			var corner_global: Vector2 = corners[corner_index]
+			var corner_local = node.to_local(corner_global)
+			var distance = edge_point.distance_to(corner_local)
+
+			if distance <= max_distance:
+				candidates.append({
+					"edge_index": edge_index,
+					"corner_index": corner_index,
+					"distance": distance,
+				})
+
+	if candidates.is_empty():
+		return {}
+
+	candidates.sort_custom(
+		func(a, b):
+			return a.distance < b.distance
+	)
+
+	var matches: Dictionary = {}
+	var used_corner_indices: Dictionary = {}
+
+	for candidate in candidates:
+		var edge_index: int = candidate.edge_index
+		var corner_index: int = candidate.corner_index
+
+		if matches.has(edge_index) or used_corner_indices.has(corner_index):
+			continue
+
+		matches[edge_index] = corners[corner_index]
+		used_corner_indices[corner_index] = true
+
+	return matches
 
 
 func create_rectangle_underlayer(target_node: RoadNode, segments: Array, width: float, height: float) -> void:
@@ -287,18 +331,17 @@ func create_trapezoid_underlayer(target_node: RoadNode, segments: Array) -> void
 		target_node.under_layer.polygon = PackedVector2Array([wider_right_local, wider_left_local, narrow_left_local, narrow_right_local])
 
 
-func _find_closest_unused_corner(node: RoadNode, edge_point: Vector2, corners: PackedVector2Array, used_corners: Array, max_distance: float) -> Vector2:
-	var closest_corner: Vector2
-	var closest_distance = max_distance
-	var found = false
+func _remove_near_duplicate_points(points: Array, min_distance: float) -> Array:
+	var result: Array = []
 
-	for corner in corners:
-		var corner_local = node.to_local(corner)
-		var distance = edge_point.distance_to(corner_local)
+	for point in points:
+		var is_duplicate = false
+		for existing in result:
+			if point.distance_to(existing) <= min_distance:
+				is_duplicate = true
+				break
 
-		if distance <= max_distance and not used_corners.has(corner) and distance < closest_distance:
-			closest_corner = corner
-			closest_distance = distance
-			found = true
+		if not is_duplicate:
+			result.append(point)
 
-	return closest_corner if found else Vector2.ZERO
+	return result
