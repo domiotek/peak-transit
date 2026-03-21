@@ -159,9 +159,13 @@ func _get_target_building_roll_weights() -> Dictionary:
 	}
 
 
-# 5AM to 8:30AM
+# 4:30AM to 7AM
+func _is_early_morning(time_of_day: float) -> bool:
+	return time_of_day >= 0.1865 and time_of_day < 0.292
+
+# 7AM to 8:30AM
 func _is_morning_rush_hour(time_of_day: float) -> bool:
-	return time_of_day >= 0.2 and time_of_day < 0.35
+	return time_of_day >= 0.292 and time_of_day < 0.35
 
 
 # 8:30AM to 3PM
@@ -169,14 +173,17 @@ func _is_midday(time_of_day: float) -> bool:
 	return time_of_day >= 0.35 and time_of_day < 0.6
 
 
-# 3PM to 7PM
-func _is_evening_rush_hour(time_of_day: float) -> bool:
-	return time_of_day >= 0.6 and time_of_day < 0.8
+# 3PM to 6PM
+func _is_afternoon_rush_hour(time_of_day: float) -> bool:
+	return time_of_day >= 0.6 and time_of_day < 0.75
 
+# 6PM to 8:30PM
+func _is_evening(time_of_day: float) -> bool:
+	return time_of_day >= 0.75 and time_of_day < 0.85
 
-# 7PM to 10PM
+# 8:30PM to 10PM
 func _is_late_evening(time_of_day: float) -> bool:
-	return time_of_day >= 0.8 and time_of_day < 1.0
+	return time_of_day >= 0.85 and time_of_day < 0.9
 
 
 # 10PM to 5AM
