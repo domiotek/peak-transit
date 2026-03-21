@@ -295,6 +295,17 @@ func check_blockade_cleared(delta: float) -> bool:
 					no_caster_allowance_time = 1.0
 					break
 
+				if current_step.type == Navigator.StepType.NODE and not current_step.is_intersection:
+					var their_step = other_vehicle.navigator.get_current_step() as NodeNavigationStep
+
+					if their_step and not current_step.node.are_connection_curves_crossing(
+						current_step.from_endpoint, current_step.to_endpoint,
+						their_step.from_endpoint, their_step.to_endpoint):
+						unblocked = true
+						no_caster_allowance_time = 1.0
+						break
+
+
 				var their_colliders := other_vehicle.driver.get_blocking_objects()
 
 				for their_collider in their_colliders:
@@ -309,11 +320,8 @@ func check_blockade_cleared(delta: float) -> bool:
 						break
 
 			var lane_stopper := collider as LaneStopper
-			if lane_stopper && not lane_stopper.is_active() && current_step.type == Navigator.StepType.NODE:
-				unblocked = true
-
-			var building_stopper := collider as BuildingStopper
-			if building_stopper && not is_leaving_building:
+			var my_endpoint_id = _extract_endpoint_id(current_step)
+			if lane_stopper and lane_stopper.endpoint.Id != my_endpoint_id:
 				unblocked = true
 
 			if unblocked:
@@ -491,12 +499,7 @@ func _get_max_allowed_speed_for_step(current_step: NavigationStep) -> float:
 
 
 func _check_forward_caster(target_collider: Object, current_step: NavigationStep, other_vehicle: Vehicle, other_vehicle_current_step: NavigationStep) -> bool:
-	var my_endpoint_id: int = -1
-
-	if current_step.type == Navigator.StepType.SEGMENT:
-		my_endpoint_id = current_step.next_node.from
-	elif current_step.type == Navigator.StepType.NODE:
-		my_endpoint_id = current_step.from_endpoint
+	var my_endpoint_id: int = _extract_endpoint_id(current_step)
 
 	var lane_stopper := target_collider as LaneStopper
 	if lane_stopper:
@@ -528,11 +531,6 @@ func _check_forward_caster(target_collider: Object, current_step: NavigationStep
 		if current_step.type == Navigator.StepType.BUILDING and other_vehicle_current_step.type == Navigator.StepType.BUILDING:
 			if _check_if_is_leaving_target_building(other_vehicle, current_step as BuildingNavigationStep):
 				return false
-
-	var building_stopper := target_collider as BuildingStopper
-	if building_stopper:
-		if current_step.type != Navigator.StepType.BUILDING or not current_step.is_leaving:
-			return false
 
 	return true
 
@@ -640,3 +638,12 @@ func _check_if_is_leaving_target_building(other_vehicle: Vehicle, my_step: Build
 			return true
 
 	return false
+
+func _extract_endpoint_id(step: NavigationStep) -> int:
+	var endpoint_id = -1
+	if step.type == Navigator.StepType.SEGMENT:
+		endpoint_id = step.next_node.from
+	elif step.type == Navigator.StepType.NODE:
+		endpoint_id = step.from_endpoint
+	
+	return endpoint_id

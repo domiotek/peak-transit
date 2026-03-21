@@ -44,7 +44,7 @@ var _passenger_buckets: Array = []
 var _boarding_timer: float = 0.0
 var _stop_syncing_timer: float = 0.0
 
-var _finalizing_previous_step: Dictionary = { }
+var _finalizing_previous_step: NavigationStep
 
 var _score_manager: ScoreManager = null
 
@@ -69,7 +69,7 @@ func get_constants() -> Dictionary:
 		"CLOSE_BRAKING_LOW_SPEED_THRESHOLD": 30.0,
 		"MEDIUM_BRAKING": 120.0,
 		"LIGHT_BRAKING": 80.0,
-		"MAX_SPEED": 80.0,
+		"MAX_SPEED": 100.0,
 		"INTERSECTION_SLOWDOWN_THRESHOLD": 300.0,
 		"INTERSECTION_SLOWDOWN": 50.0,
 		"BUILDING_ENTRY_SPEED": 40.0,
@@ -180,7 +180,11 @@ func get_time_difference_to_schedule(current_time: TimeOfDay) -> int:
 
 	var scheduled_departure_time = current_trip.get_departure_time_at_stop(_brigade_trip_current_stop_idx)
 
-	if scheduled_departure_time.to_minutes() < current_time.to_minutes() and current_trip.is_future_trip() and _brigade_trip_current_stop_idx == 0:
+	# If the scheduled departure time in minutes is earlier than current time
+	# but the next occurrence of this trip is still in the future (e.g. nightline),
+	# shift the scheduled time to the next day. Use get_time_till_departure() to
+	# detect next-occurrence horizon instead of relying on is_future_trip().
+	if scheduled_departure_time.to_minutes() < current_time.to_minutes() and current_trip.get_time_till_departure() > 0 and _brigade_trip_current_stop_idx == 0:
 		scheduled_departure_time = scheduled_departure_time.as_next_day()
 
 	var estimated_arrival_time = current_time.add_minutes(int(ceil(estimate_time_to_next_destination())))
@@ -276,11 +280,16 @@ func drive_to_terminal(id: int) -> void:
 	if not terminal_building:
 		return
 
+	_sync_current_terminal_reference()
+
 	_state = BusState.TRANSFERING_TO_TERMINAL
 	_target_terminal = terminal_building
 
 	if terminal_building == _current_terminal:
 		_is_entering_building = false
+		# Do not cancel an active leave flow, otherwise terminal track cleanup may never run.
+		if _is_leaving_building and _is_at_terminal:
+			return
 		_is_leaving_building = false
 		return
 
@@ -299,6 +308,7 @@ func process(delta: float) -> void:
 	if _state == BusState.IDLE or _state == BusState.CONFUSED:
 		return
 
+	_sync_current_terminal_reference()
 	var current_trip = get_current_trip()
 
 	match _state:
@@ -348,9 +358,9 @@ func process(delta: float) -> void:
 
 					return
 
-			if _finalizing_previous_step.is_empty() == false:
+			if _finalizing_previous_step != null:
 				_drive_to_depot()
-				_finalizing_previous_step = { }
+				_finalizing_previous_step = null
 				return
 
 			_remove_vehicle()
@@ -362,15 +372,16 @@ func process(delta: float) -> void:
 			if _is_leaving_building and _handle_leaving_building():
 				return
 
-			if _is_entering_building and _handle_entering_terminal():
+			if _is_entering_building:
+				_handle_entering_terminal()
 				return
 
 			if _is_at_terminal and _handle_at_terminal(current_trip, delta):
 				return
 
-			if _finalizing_previous_step.is_empty() == false:
+			if _finalizing_previous_step != null:
 				_drive_to_terminal()
-				_finalizing_previous_step = { }
+				_finalizing_previous_step = null
 				return
 		BusState.TRANSFERING_TO_STOP:
 			if _has_navigation_set:
@@ -408,6 +419,7 @@ func process(delta: float) -> void:
 			_handle_stop(current_trip, delta)
 			return
 
+	breakpoint
 	_state = BusState.CONFUSED
 
 
@@ -420,9 +432,8 @@ func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
 	if _state == BusState.TRANSFERING_TO_STOP:
 		return
 
-	if not _is_at_depot and not _is_at_terminal and _finalizing_previous_step.is_empty():
+	if not _is_at_depot and not _is_at_terminal and _finalizing_previous_step == null:
 		_is_entering_building = true
-
 
 func can_drive() -> bool:
 	return _state != BusState.IDLE and _state != BusState.CONFUSED
@@ -463,7 +474,7 @@ func _drive_to_terminal() -> void:
 	if not _is_at_depot and not _is_at_terminal:
 		var start_node_data: Array
 
-		if _finalizing_previous_step.is_empty() == false:
+		if _finalizing_previous_step != null:
 			start_node_data = _get_start_node_of_network_location(_finalizing_previous_step)
 
 		else:
@@ -478,6 +489,7 @@ func _drive_to_terminal() -> void:
 
 		_vehicle.init_trip_to_building(start_node, _target_terminal, start_endpoint)
 		_has_navigation_set = true
+		_vehicle.driver.resume_driving()
 		return
 
 	var source_building = _origin_depot as BaseBuilding if _is_at_depot else _current_terminal as BaseBuilding
@@ -485,12 +497,14 @@ func _drive_to_terminal() -> void:
 	if current_trip and _state == BusState.EN_ROUTE:
 		_init_line_path_trip()
 		_has_navigation_set = true
+		_vehicle.driver.resume_driving()
 
 	elif _target_terminal != source_building:
 		_is_leaving_building = true
 		if _is_ready_to_leave_building:
 			_vehicle.init_trip(source_building, _target_terminal)
 			_has_navigation_set = true
+			_vehicle.driver.resume_driving()
 
 
 func _join_trip(hot_join: bool) -> void:
@@ -521,9 +535,8 @@ func _join_trip(hot_join: bool) -> void:
 
 	var line_stop = current_trip.get_stop(stop_idx)
 	if line_stop.is_terminal:
-		_target_terminal = current_trip.get_departure_terminal()
 		_brigade_trip_current_stop_idx = stop_idx
-		_drive_to_terminal()
+		drive_to_terminal(current_trip.get_departure_terminal().terminal_id)
 		_prepare_passenger_buckets()
 		return
 
@@ -560,7 +573,8 @@ func _drive_to_next_stop() -> void:
 		_check_for_leftover_passengers()
 
 	if _brigade_trip_current_stop_idx + 1 >= current_trip.get_stops().size():
-		var trip_idx = _brigade.assign_next_trip(_vehicle.id, _brigade_trip_idx)
+		var departure_terminal_id = _current_terminal.terminal_id if _is_at_terminal and _current_terminal != null else -1
+		var trip_idx = _brigade.assign_next_trip(_vehicle.id, _brigade_trip_idx, departure_terminal_id)
 		if trip_idx == -1:
 			_state = BusState.TRANSFERING_TO_TERMINAL
 			unassign_brigade()
@@ -613,6 +627,16 @@ func _trace_route_to_next_stop() -> void:
 		var start_node = start_node_data[0]
 		var start_endpoint = start_node_data[1]
 
+		if start_node == target_node:
+			push_warning(
+				"Bus %s skipping zero-length route to stop %s (node %d). Treating as immediate arrival."
+				% [_vehicle.ai.get_custom_identifier(), line_stop.target_name, target_node],
+			)
+			_state = BusState.EN_ROUTE
+			_arrived_at_stop = true
+			_has_navigation_set = false
+			return
+
 		_vehicle.init_simple_trip(start_node, target_node, start_endpoint, target_endpoint)
 
 	_has_navigation_set = true
@@ -646,7 +670,7 @@ func _init_line_path_trip() -> void:
 		_vehicle.navigator.set_node_location_trigger(stop.get_incoming_node_id(), endpoint_id, Callable(self, "_on_location_trigger_reached"))
 
 
-func _get_start_node_of_network_location(step: Dictionary) -> Array:
+func _get_start_node_of_network_location(step: NavigationStep) -> Array:
 	match step["type"]:
 		Navigator.StepType.NODE:
 			return [step["node"].id, step["to_endpoint"]]
@@ -670,6 +694,42 @@ func _remove_vehicle() -> void:
 
 	if _current_terminal:
 		_current_terminal.notify_vehicle_left_terminal(_vehicle.id)
+
+
+func _sync_current_terminal_reference() -> void:
+	if not _is_at_terminal:
+		return
+
+	if _current_terminal != null and _current_terminal.has_vehicle(_vehicle.id):
+		return
+
+	var synced_terminal: Terminal = null
+	for terminal in _transport_manager.get_terminals():
+		if terminal != null and terminal.has_vehicle(_vehicle.id):
+			synced_terminal = terminal
+			break
+
+	if synced_terminal != null:
+		if _current_terminal != synced_terminal:
+			push_warning(
+				"Bus %s terminal reference desynced; fixing current terminal from %s to %s."
+				% [
+					_vehicle.ai.get_custom_identifier(),
+					_current_terminal.get_terminal_name() if _current_terminal != null else "<none>",
+					synced_terminal.get_terminal_name(),
+				],
+			)
+
+		_current_terminal = synced_terminal
+		return
+
+	push_warning(
+		"Bus %s marked as at terminal but is not registered on any terminal track; clearing terminal state."
+		% [_vehicle.ai.get_custom_identifier()],
+	)
+	_current_terminal = null
+	_is_at_terminal = false
+	_is_leaving_building = false
 
 
 func _handle_entering_terminal() -> bool:
@@ -701,12 +761,20 @@ func _handle_leaving_building() -> bool:
 					_trace_route_to_next_stop()
 				else:
 					_drive_to_terminal()
+
+				# If a reassignment happened while leaving and the target is the same terminal,
+				# restart enter flow from outside instead of ending with no active navigation.
+				var should_reenter_same_terminal = _state == BusState.TRANSFERING_TO_TERMINAL and _target_terminal == _current_terminal
 				_current_terminal.notify_vehicle_left_terminal(_vehicle.id)
 				_current_terminal = null
 				_is_at_terminal = false
 				_is_leaving_building = false
 				_is_ready_to_leave_building = false
-				_has_navigation_set = true
+				if should_reenter_same_terminal:
+					_is_entering_building = true
+					_has_navigation_set = false
+				else:
+					_has_navigation_set = true
 				_vehicle.driver.enable_casters()
 				return true
 
@@ -766,6 +834,22 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 				if leftover_passengers > 0:
 					_push_score_event(ChallengeEnums.ScoreReason.BUS_CHANGED_STATE_WITH_PASSENGERS_ONBOARD)
 				return true
+
+			# Buses reassigned while carrying passengers must go to peron first to unload,
+			# but after unloading they may still be too early and should return to wait tracks.
+			if current_trip.is_future_trip():
+
+				if _current_passengers > 0:
+					_unload_passengers()
+					_push_score_event(ChallengeEnums.ScoreReason.BUS_CHANGED_STATE_WITH_PASSENGERS_ONBOARD)
+
+				var is_last_stop = _brigade_trip_current_stop_idx + 1 >= current_trip.get_stops().size()
+				var time_to_dep = current_trip.get_time_till_departure()
+				
+				if not is_last_stop and time_to_dep > TransportConstants.BUS_OCCUPY_PERON_THRESHOLD:
+					_state = BusState.TRANSFERING_TO_TERMINAL
+					_has_navigation_set = false
+					return true
 
 			_handle_stop(current_trip, delta)
 
@@ -831,6 +915,9 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 func _on_location_trigger_reached(vehicle: Vehicle, _node_id: int, _endpoint_id: int) -> void:
 	var current_line_stop = get_current_trip().get_stop(_brigade_trip_current_stop_idx)
 
+	if current_line_stop.is_terminal:
+		return
+
 	var stop_obj = _transport_manager.get_stop(current_line_stop.target_id)
 
 	var is_articulated = vehicle.type == VehicleManager.VehicleType.ARTICULATED_BUS
@@ -842,6 +929,7 @@ func _on_location_trigger_reached(vehicle: Vehicle, _node_id: int, _endpoint_id:
 		func():
 			if _state == BusState.TRANSFERING_TO_STOP:
 				_init_line_path_trip()
+				_state = BusState.EN_ROUTE
 
 			_arrived_at_stop = true
 	)

@@ -6,6 +6,11 @@ var length: float
 var progress: float
 var max_speed: float = INF
 
+func get_percent_complete() -> float:
+	if length == 0.0:
+		return 1.0
+	return progress / length
+
 
 static func create_empty_step() -> NavigationStep:
 	var step = NavigationStep.new()

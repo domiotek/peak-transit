@@ -181,6 +181,10 @@ func get_current_bus_count() -> int:
 	return _vehicles_on_tracks.size()
 
 
+func has_vehicle(vehicle_id: int) -> bool:
+	return _vehicles_on_tracks.has(vehicle_id)
+
+
 func try_enter(vehicle_id: int) -> Path2D:
 	if _tracks_in_use.has("in"):
 		return null
