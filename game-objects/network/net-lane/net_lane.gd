@@ -303,6 +303,11 @@ func set_lod(lod: Enums.LODLevel) -> void:
 func hide_reflective_surface() -> void:
 	main_layer.visible = false
 
+func reset_state() -> void:
+	assigned_vehicles.clear()
+	_assigned_vehicle_ids.clear()
+	_mark_vehicle_order_cache_dirty()
+
 
 func _update_lane_usage() -> void:
 	var stats = get_vehicles_stats()

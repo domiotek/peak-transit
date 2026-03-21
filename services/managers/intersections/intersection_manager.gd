@@ -163,6 +163,10 @@ func get_custom_data() -> Dictionary:
 		return handler.get_custom_data()
 	return { }
 
+func reset_state() -> void:
+	if handler and handler.has_method("reset_state"):
+		handler.reset_state()
+
 
 func _choose_intersection_handler(override: IntersectionHandlerType = IntersectionHandlerType.NULL) -> RefCounted:
 	if node.connected_segments.size() <= 2:

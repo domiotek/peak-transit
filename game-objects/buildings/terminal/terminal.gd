@@ -327,6 +327,14 @@ func get_departure_time_for_line(line_id: int) -> TimeOfDay:
 func supports_routed_leaving() -> bool:
 	return true
 
+func reset_state() -> void:
+	_vehicles_on_tracks.clear()
+	_tracks_in_use.clear()
+	_last_departure_times_per_line.clear()
+
+	for spawner in _peron_passenger_spawners:
+		spawner.reset()
+
 
 static func get_visual_polygon() -> PackedVector2Array:
 	return BuildingConstants.TERMINAL_VISUAL_POLYGON

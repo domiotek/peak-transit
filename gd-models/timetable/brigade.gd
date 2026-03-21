@@ -192,6 +192,11 @@ func get_vehicle_of_trip(trip_idx: int) -> int:
 
 	return -1
 
+func reset_state() -> void:
+	_vehicles.clear()
+	_last_assigned_trip_index = -1
+	_last_scheduled_trip_index = 0
+
 
 func _get_next_trip_index(current_index: int) -> int:
 	var next_index = current_index + 1

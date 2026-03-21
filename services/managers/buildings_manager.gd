@@ -116,6 +116,11 @@ func get_random_building_type(other_than: BuildingInfo.BuildingType, weights: Di
 	var random_index = randi() % types.size()
 	return types[random_index]
 
+func reset_spawner_buildings() -> void:
+	for building in buildings.values():
+		if building is SpawnerBuilding:
+			(building as SpawnerBuilding).reset()
+
 
 func clear_state() -> void:
 	buildings.clear()

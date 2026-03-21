@@ -238,6 +238,17 @@ func get_curves_of_path(path: Array, starting_building: BaseBuilding = null, end
 
 	return curves
 
+func reset_network() -> void:
+	reset_intersections()
+	reset_lanes()
+
+func reset_intersections() -> void:
+	for node in nodes.values():
+		node.intersection_manager.reset_state()
+
+func reset_lanes() -> void:
+	for segment in segments.values():
+		segment.reset_lane_states()
 
 func clear_state() -> void:
 	nodes.clear()

@@ -467,6 +467,25 @@ func are_all_lines_drawn() -> bool:
 func are_no_lines_drawn() -> bool:
 	return _drawn_lines.size() == 0
 
+func reset_state() -> void:
+	reset_terminals()
+	reset_depots()
+	reset_stops()
+	brigades.reset_state()
+
+
+func reset_terminals() -> void:
+	for terminal in _terminals.values() as Array[Terminal]:
+		terminal.reset_state()
+
+func reset_depots() -> void:
+	for depot in _depots.values() as Array[Depot]:
+		depot.reset_state()
+
+func reset_stops() -> void:
+	for stop in _stops.values() as Array[Stop]:
+		stop.reset_state()
+
 
 func clear_state() -> void:
 	_demand_presets.clear()

@@ -107,6 +107,9 @@ func register_line(line_id: int) -> void:
 func get_lines() -> Array[int]:
 	return _lines
 
+func reset_state() -> void:
+	_passengers_spawner.reset()
+
 
 static func get_visual_polygon() -> PackedVector2Array:
 	return BuildingConstants.STOP_VISUAL_POLYGON

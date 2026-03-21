@@ -407,6 +407,10 @@ func set_lod(lod: Enums.LODLevel) -> void:
 	markings_layer.visible = false
 	main_markings_layer.visible = false
 
+func reset_lane_states() -> void:
+	for lane in lanes.values():
+		lane.reset_state()
+
 
 func _update_lanes_pathing_shape() -> void:
 	for lane in lanes.values():

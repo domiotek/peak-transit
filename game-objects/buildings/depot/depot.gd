@@ -136,6 +136,16 @@ func insta_return_bus(vehicle_id: int) -> void:
 
 	_on_vehicle_entered(vehicle_id, true)
 
+func reset_state() -> void:
+	for track_id in _vehicles_on_tracks.keys():
+		_vehicles_on_tracks[track_id] = -1
+
+	_known_bus_ids["regular"].clear()
+	_known_bus_ids["articulated"].clear()
+	_next_bus_number = 1
+	_current_bus_count = _depot_data.regular_bus_capacity
+	_current_articulated_bus_count = _depot_data.articulated_bus_capacity
+
 
 static func get_collision_polygon() -> PackedVector2Array:
 	return BuildingConstants.DEPOT_COLLISION_POLYGON

@@ -167,6 +167,12 @@ func get_custom_data() -> Dictionary:
 
 	return data
 
+func reset_state() -> void:
+	current_phase_index = 0
+	phase_timer = 0.0
+	is_first_cycle = true
+	current_flow_ratio = 100.0
+
 
 func _find_flows() -> Array:
 	var flows = []

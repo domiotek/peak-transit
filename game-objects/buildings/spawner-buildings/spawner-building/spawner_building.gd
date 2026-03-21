@@ -79,6 +79,11 @@ func get_popup_data() -> Dictionary:
 		"spawn_roll_cooldown": int(_roll_cooldown),
 	}
 
+func reset() -> void:
+	vehicles_pool = _get_starting_vehicles_pool()
+	_roll_cooldown = 0.0
+	vehicle_leaving = null
+	vehicles_entering.clear()
 
 static func get_collision_polygon() -> PackedVector2Array:
 	return BuildingConstants.SPAWNER_BUILDING_COLLISION_POLYGON

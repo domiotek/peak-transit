@@ -65,6 +65,8 @@ func get_max_waiting() -> int:
 
 
 func get_lowest_till_bored_time(clock: ClockTime) -> int:
+	_cleanup_empty_buckets()
+
 	var first_bucket: PassengerBucketEntry = _buckets[0] if _buckets.size() > 0 else null
 
 	if first_bucket == null:
@@ -114,6 +116,8 @@ func take_passengers_for_line(line_id: int, max_count: int) -> int:
 		total_taken += taken_from_bucket
 		remaining_to_take -= taken_from_bucket
 
+	_cleanup_empty_buckets()
+
 	return total_taken
 
 
@@ -137,8 +141,13 @@ func process(_delta: float) -> void:
 	if float(random_value) < spawn_chance:
 		_spawn_passengers(clock)
 
+func reset() -> void:
+	_buckets.clear()
+	_spawn_timer = TransportConstants.PASSENGER_SPAWN_INTERVAL_DELTA
 
 func _check_for_bored_passengers(clock: ClockTime) -> void:
+	_cleanup_empty_buckets()
+
 	var lowest_time_till_bored = get_lowest_till_bored_time(clock)
 
 	if lowest_time_till_bored > 0:
@@ -150,6 +159,7 @@ func _check_for_bored_passengers(clock: ClockTime) -> void:
 		var bored_passengers = first_bucket.get_total_passengers()
 		_apply_boredom_penalty(bored_passengers)
 		_buckets.remove_at(0)
+		_cleanup_empty_buckets()
 
 
 func _spawn_passengers(clock: ClockTime) -> void:
@@ -178,7 +188,21 @@ func _spawn_passengers(clock: ClockTime) -> void:
 
 		bucket.add_passengers_for_line(line.id, passengers_per_line)
 
+	if bucket.get_total_passengers() <= 0:
+		return
+
 	_buckets.append(bucket)
+
+
+func _cleanup_empty_buckets() -> void:
+	while _buckets.size() > 0:
+		var first_bucket: PassengerBucketEntry = _buckets[0] as PassengerBucketEntry
+
+		if first_bucket == null or first_bucket.get_total_passengers() <= 0:
+			_buckets.remove_at(0)
+			continue
+
+		break
 
 
 func _get_frame_for_hour(clock: ClockTime) -> PresetFrameDefinition:

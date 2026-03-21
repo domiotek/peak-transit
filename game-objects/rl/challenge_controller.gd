@@ -161,6 +161,9 @@ func set_action(action) -> void:
 func reset():
 	super.reset()
 	vehicle_manager.clear_all_vehicles()
+	buildings_manager.reset_spawner_buildings()
+	network_manager.reset_network()
+	transport_manager.reset_state()
 	game_manager.clock.reset(true)
 
 	if _technical_reset_done:

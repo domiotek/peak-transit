@@ -108,6 +108,9 @@ func process_stopper(stopper: LaneStopper, delta: float) -> bool:
 
 	return false
 
+func reset_state() -> void:
+	halted_vehicles.clear()
+
 
 func _fill_curves() -> void:
 	for stopper in stoppers:

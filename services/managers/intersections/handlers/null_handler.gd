@@ -92,6 +92,10 @@ func process_stopper(stopper: LaneStopper) -> bool:
 
 	return false
 
+func reset_state() -> void:
+	_stuck_priority_source_by_target.clear()
+	_stuck_priority_ttl_by_target.clear()
+
 
 func _handle_changing_lane(
 		target_vehicle: Vehicle,
