@@ -269,7 +269,7 @@ func update_progress(new_progress: float) -> void:
 
 
 func get_step_distance_left() -> float:
-	return current_step.length - current_step.progress
+	return current_step.length - vehicle.main_path_follower.progress
 
 
 func get_distance_left() -> float:
@@ -478,6 +478,9 @@ func set_segment_location_trigger(segment_id: int, lane_id: int, distance: float
 
 
 func clear_location_triggers() -> void:
+	if _location_triggers.size() == 0:
+		return
+		
 	_location_triggers["node"].clear()
 	_location_triggers["segment"].clear()
 
@@ -623,8 +626,12 @@ func _start_trip() -> void:
 	var start_step = trip_path[0]
 
 	if trip_buildings.size() > 0 and trip_buildings[0] != null:
-		var starting_step = BuildingNavigationStep.create(trip_buildings[0], trip_buildings[0].get_out_connection(first_step_forced_endpoint))
-		_assign_to_building_step(starting_step)
+		var connection = trip_buildings[0].get_out_connection(first_step_forced_endpoint)
+		if connection:
+			var starting_step = BuildingNavigationStep.create(trip_buildings[0], connection)
+			_assign_to_building_step(starting_step)
+		else:
+			_assign_to_step(start_step)
 	else:
 		_assign_to_step(start_step)
 	emit_signal("trip_started")
@@ -653,8 +660,7 @@ func _assign_to_step(step: Variant, leave_progress: bool = false) -> void:
 
 
 func _pass_node(leave_progress: bool = false) -> void:
-	var step = trip_path[trip_step_index]
-	var endpoint_id = step.ViaEndpointId
+	var endpoint_id = current_step.from_endpoint
 	var endpoint = network_manager.get_lane_endpoint(endpoint_id)
 
 	var next_node_info: NextNodeInfo = current_step.next_node

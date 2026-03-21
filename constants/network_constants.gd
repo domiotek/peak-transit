@@ -37,3 +37,6 @@ const TRAFFIC_LIGHTS_SHORT_PHASE_DURATION = (60.0 / SimulationConstants.SIMULATI
 const TRAFFIC_LIGHTS_MIN_PHASE_DURATION_SCALER = 0.3 # scaler to determine minimum phase duration based on traffic flow
 const TRAFFIC_LIGHTS_LOW_FLOW_THRESHOLD = 10 # vehicle count threshold to consider traffic flow as low
 const TRAFFIC_LIGHTS_FLOW_SCAN_DISTANCE = 250.0 # distance in pixels to scan for traffic flow
+
+# Safety buffer subtracted from free lane entry space to account for vehicle footprint and jitter.
+const LANE_ENTRY_CLEARANCE_MARGIN = 28.0

@@ -5,6 +5,9 @@ class_name NetLane
 var speed_limit_sign_scene = preload("res://game-objects/network/speed-limit-sign/speed_limit_sign.tscn")
 
 const LANE_USAGE_EMA_ALPHA: float = 0.1
+const LANE_USAGE_WAITING_WEIGHT: float = 0.6
+const LANE_USAGE_OCCUPANCY_WEIGHT: float = 0.4
+const LANE_USAGE_OCCUPANCY_SPACING: float = 64.0
 
 @onready var main_layer: Node2D = $MainLayer
 @onready var trail: Path2D = $PathingTrail
@@ -29,6 +32,11 @@ var assigned_vehicles: Array = []
 var _assigned_vehicle_ids: Dictionary[int, bool] = { }
 var _from_node_id: int = -1
 var _to_node_id: int = -1
+var _vehicle_order_cache_dirty: bool = true
+var _vehicle_order_cache_frame: int = -1
+var _cached_first_vehicle: Vehicle = null
+var _cached_last_vehicle: Vehicle = null
+var _cached_remaining_space: float = 0.0
 
 var lane_usage_ema: float = 0.0
 
@@ -153,6 +161,7 @@ func assign_vehicle(vehicle: Vehicle) -> void:
 
 	assigned_vehicles.append(vehicle)
 	_assigned_vehicle_ids[vehicle.id] = true
+	_mark_vehicle_order_cache_dirty()
 
 
 func remove_vehicle(vehicle: Vehicle) -> void:
@@ -166,39 +175,22 @@ func remove_vehicle(vehicle: Vehicle) -> void:
 
 	assigned_vehicles.erase(vehicle)
 	_assigned_vehicle_ids.erase(vehicle.id)
+	_mark_vehicle_order_cache_dirty()
 
 
 func get_remaining_space() -> float:
-	while assigned_vehicles.size() > 0:
-		var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
-		if is_instance_valid(last_vehicle):
-			return last_vehicle.main_path_follower.progress
-
-		assigned_vehicles.pop_back()
-
-	return trail.curve.get_baked_length()
+	_ensure_vehicle_order_cache()
+	return _cached_remaining_space
 
 
 func get_first_vehicle() -> Vehicle:
-	while assigned_vehicles.size() > 0:
-		var first_vehicle = assigned_vehicles[0]
-		if is_instance_valid(first_vehicle):
-			return first_vehicle
-
-		assigned_vehicles.pop_front()
-
-	return null
+	_ensure_vehicle_order_cache()
+	return _cached_first_vehicle
 
 
 func get_last_vehicle() -> Vehicle:
-	while assigned_vehicles.size() > 0:
-		var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
-		if is_instance_valid(last_vehicle):
-			return last_vehicle
-
-		assigned_vehicles.pop_back()
-
-	return null
+	_ensure_vehicle_order_cache()
+	return _cached_last_vehicle
 
 
 func get_vehicle_count(only_waiting: bool = false) -> int:
@@ -315,7 +307,13 @@ func hide_reflective_surface() -> void:
 func _update_lane_usage() -> void:
 	var stats = get_vehicles_stats()
 
-	var usage_ratio = stats["waiting"] / max(stats["total"], 1)
+	var waiting_ratio = stats["waiting"] / max(stats["total"], 1)
+	var expected_capacity = max(_length_cache / LANE_USAGE_OCCUPANCY_SPACING, 1.0)
+	var occupancy_ratio = clamp(float(stats["total"]) / expected_capacity, 0.0, 1.0)
+	var usage_ratio = (
+		waiting_ratio * LANE_USAGE_WAITING_WEIGHT
+		+ occupancy_ratio * LANE_USAGE_OCCUPANCY_WEIGHT
+	)
 
 	lane_usage_ema = (LANE_USAGE_EMA_ALPHA * usage_ratio) + ((1.0 - LANE_USAGE_EMA_ALPHA) * lane_usage_ema)
 
@@ -395,4 +393,48 @@ func _on_vehicle_destroyed(vehicle_id: int, _vehicle_type: VehicleManager.Vehicl
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle) or vehicle.id == vehicle_id:
 			assigned_vehicles.erase(vehicle)
+			_mark_vehicle_order_cache_dirty()
 			break
+
+
+func _mark_vehicle_order_cache_dirty() -> void:
+	_vehicle_order_cache_dirty = true
+
+
+func _ensure_vehicle_order_cache() -> void:
+	var frame = Engine.get_physics_frames()
+	if not _vehicle_order_cache_dirty and _vehicle_order_cache_frame == frame:
+		return
+
+	_cached_first_vehicle = null
+	_cached_last_vehicle = null
+	_cached_remaining_space = _length_cache if _length_cache > 0.0 else trail.curve.get_baked_length() if trail and trail.curve else 0.0
+
+	var best_front_progress := -INF
+	var best_back_progress := INF
+	var valid_vehicles: Array = []
+
+	for vehicle in assigned_vehicles:
+		if not is_instance_valid(vehicle):
+			continue
+
+		valid_vehicles.append(vehicle)
+
+		var progress = vehicle.main_path_follower.progress
+
+		if progress > best_front_progress:
+			best_front_progress = progress
+			_cached_first_vehicle = vehicle
+
+		if progress < best_back_progress:
+			best_back_progress = progress
+			_cached_last_vehicle = vehicle
+
+	if valid_vehicles.size() != assigned_vehicles.size():
+		assigned_vehicles = valid_vehicles
+
+	if _cached_last_vehicle != null:
+		_cached_remaining_space = max(0.0, best_back_progress - NetworkConstants.LANE_ENTRY_CLEARANCE_MARGIN)
+
+	_vehicle_order_cache_frame = frame
+	_vehicle_order_cache_dirty = false

@@ -22,7 +22,7 @@ const BLOCKING_CASTERS: Array[CasterCollection.CasterID] = [
 	CasterCollection.CasterID.LEFT,
 	CasterCollection.CasterID.RIGHT,
 ]
-const MAX_BLOCK_TIME = 5.0
+const MAX_BLOCK_TIME = 0.5
 
 var line_helper: LineHelper
 var vehicle_manager: VehicleManager
@@ -309,7 +309,7 @@ func check_blockade_cleared(delta: float) -> bool:
 						break
 
 			var lane_stopper := collider as LaneStopper
-			if lane_stopper && lane_stopper.is_active() && current_step.type == Navigator.StepType.NODE:
+			if lane_stopper && not lane_stopper.is_active() && current_step.type == Navigator.StepType.NODE:
 				unblocked = true
 
 			var building_stopper := collider as BuildingStopper
@@ -602,12 +602,15 @@ func _set_casters_enabled(enabled: bool) -> void:
 
 
 func _on_blockade_area_exited(_area: Area2D) -> void:
+	invalidate_blocking_objects_cache()
+
+	# While blocked, do not force state reset on transient area-exit events.
+	# Block resolution is handled in check_blockade_cleared().
+	if state == VehicleState.BLOCKED:
+		return
+
 	_set_casters_enabled(true)
 	blockade_observer.set_deferred("monitoring", false)
-	invalidate_blocking_objects_cache()
-	if state == VehicleState.BLOCKED:
-		state = VehicleState.IDLE
-		time_blocked = 0.0
 
 
 func _try_to_reroute(time_spent_blocked: float) -> void:
