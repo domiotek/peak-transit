@@ -56,7 +56,7 @@ func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
 		push_error("Vehicles layer is not set. Cannot create vehicle.")
 		return null
 
-	if _vehicle_spawn_budget <= 0:
+	if vehicle_type == VehicleType.CAR and _vehicle_spawn_budget <= 0:
 		return null
 
 	if vehicle_type < 0 or vehicle_type >= _vehicle_scenes.size():
@@ -69,10 +69,12 @@ func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
 		push_error("Failed to instantiate vehicle scene for type: %d" % vehicle_type)
 		return null
 
-	vehicles_layer.add_child(vehicle)
-
 	vehicle.id = _generate_vehicle_id()
 	vehicle.type = vehicle_type
+
+	vehicles_layer.add_child(vehicle)
+
+
 
 	vehicles[vehicle.id] = vehicle
 	var type_bucket = _vehicles_by_type.get(vehicle_type, null) as Dictionary
