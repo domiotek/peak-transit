@@ -154,10 +154,8 @@ func late_update_visuals() -> void:
 func get_definition() -> NetSegmentInfo:
 	var def = NetSegmentInfo.new()
 
-	var network_manager = GDInjector.inject("NetworkManager") as NetworkManager
-
-	def.nodes.append(network_manager.get_index_in_nodes(nodes[0].id))
-	def.nodes.append(network_manager.get_index_in_nodes(nodes[1].id))
+	def.nodes.append(nodes[0].id)
+	def.nodes.append(nodes[1].id)
 
 	def.curve_strength = data.curve_strength
 	def.curve_direction = data.curve_direction
