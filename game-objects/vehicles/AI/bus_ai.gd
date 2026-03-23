@@ -426,6 +426,7 @@ func process(delta: float) -> void:
 			_handle_stop(current_trip, delta)
 			return
 
+	_log_confused_snapshot(current_trip)
 	breakpoint
 	_state = BusState.CONFUSED
 
@@ -444,6 +445,44 @@ func on_trip_finished(completed: bool, _trip_data: Dictionary) -> void:
 
 func can_drive() -> bool:
 	return _state != BusState.IDLE and _state != BusState.CONFUSED
+
+
+func _log_confused_snapshot(current_trip: BrigadeTrip) -> void:
+	var time_text = _game_manager.clock.get_time().get_formatted() if _game_manager != null and _game_manager.clock != null else "<no-clock>"
+	var current_terminal_name = _current_terminal.get_terminal_name() if _current_terminal != null else "<none>"
+	var target_terminal_name = _target_terminal.get_terminal_name() if _target_terminal != null else "<none>"
+
+	var trip_text = "<none>"
+	if current_trip != null:
+		trip_text = "idx=%d route=%d dep=%s arr=%s" % [
+			current_trip.idx,
+			current_trip.get_route_id(),
+			current_trip.get_departure_time().format(),
+			current_trip.get_arrival_time().format(),
+		]
+
+	push_warning(
+		("Bus %s entering CONFUSED. state=%s time=%s brigade=%s trip=%s stop_idx=%d "
+			+ "is_at_terminal=%s is_at_depot=%s leaving=%s entering=%s has_nav=%s arrived=%s "
+			+ "current_terminal=%s target_terminal=%s finalizing_step=%s")
+			% [
+				_vehicle.ai.get_custom_identifier(),
+				str(_state),
+				time_text,
+				str(_brigade.id) if _brigade != null else "<none>",
+				trip_text,
+				_brigade_trip_current_stop_idx,
+				str(_is_at_terminal),
+				str(_is_at_depot),
+				str(_is_leaving_building),
+				str(_is_entering_building),
+				str(_has_navigation_set),
+				str(_arrived_at_stop),
+				current_terminal_name,
+				target_terminal_name,
+				str(_finalizing_previous_step != null),
+			],
+	)
 
 
 func _drive_to_depot() -> void:
