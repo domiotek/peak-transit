@@ -225,9 +225,9 @@ func _find_target_lines(clock: ClockTime) -> Array[TransportLine]:
 		if next_departure == null:
 			continue
 
-		var time_till_departure = next_departure.departure_time.to_minutes() - current_time.to_minutes()
+		var time_till_departure = current_time.minutes_until(next_departure.departure_time)
 
-		if time_till_departure < 0 or time_till_departure > TransportConstants.PASSENGER_BEFORE_BUS_ARRIVAL_TIME:
+		if time_till_departure > TransportConstants.PASSENGER_BEFORE_BUS_ARRIVAL_TIME:
 			continue
 
 		target_lines.append(line)

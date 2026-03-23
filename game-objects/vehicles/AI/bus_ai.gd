@@ -180,11 +180,9 @@ func get_time_difference_to_schedule(current_time: TimeOfDay) -> int:
 
 	var scheduled_departure_time = current_trip.get_departure_time_at_stop(_brigade_trip_current_stop_idx)
 
-	# If the scheduled departure time in minutes is earlier than current time
-	# but the next occurrence of this trip is still in the future (e.g. nightline),
-	# shift the scheduled time to the next day. Use get_time_till_departure() to
-	# detect next-occurrence horizon instead of relying on is_future_trip().
-	if scheduled_departure_time.to_minutes() < current_time.to_minutes() and current_trip.get_time_till_departure() > 0 and _brigade_trip_current_stop_idx == 0:
+	# For first stop, align to next day only when the trip itself is still
+	# considered future for current clock time.
+	if _brigade_trip_current_stop_idx == 0 and current_trip.is_future_trip() and scheduled_departure_time.to_minutes() < current_time.to_minutes():
 		scheduled_departure_time = scheduled_departure_time.as_next_day()
 
 	var estimated_arrival_time = current_time.add_minutes(int(ceil(estimate_time_to_next_destination())))

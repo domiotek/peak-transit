@@ -350,10 +350,13 @@ func _find_departure_times_with_step(
 			if trip.route_id != route_idx:
 				continue
 
-			var time = trip.stop_times[step_idx]
+			var time = trip.stop_times[step_idx] as TimeOfDay
+			var departure_time = time
+			var departure_minutes = time.to_minutes()
 
-			if after != null and time.to_minutes() < after.to_minutes():
-				continue
+			if after != null:
+				departure_minutes = _align_to_next_occurrence_minutes(time.to_minutes(), after.to_minutes())
+				departure_time = TimeOfDay.new(time.hour, time.minute, departure_minutes)
 
 			if limit != -1 and trips_taken >= limit:
 				break
@@ -367,7 +370,7 @@ func _find_departure_times_with_step(
 					get_route_destination_name(route_idx),
 					brigade.id,
 					brigade.get_identifier(),
-					time,
+					departure_time,
 				),
 			)
 			trips_taken += 1
@@ -379,6 +382,17 @@ func _find_departure_times_with_step(
 		)
 
 	return target_dep_times
+
+
+func _align_to_next_occurrence_minutes(value: int, reference_minutes: int) -> int:
+	var normalized_value = posmod(value, 1440)
+	var normalized_reference = posmod(reference_minutes, 1440)
+	var delta = normalized_value - normalized_reference
+
+	if delta < 0:
+		delta += 1440
+
+	return reference_minutes + delta
 
 
 func _on_pathfinder_result(_request_id: int, path: Variant) -> void:
