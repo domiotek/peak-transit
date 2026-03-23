@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name VehicleManager
 
+
 var CarScene = preload("res://game-objects/vehicles/car/car.tscn")
 var BusScene = preload("res://game-objects/vehicles/bus/bus.tscn")
 var ArticulatedBusScene = preload("res://game-objects/vehicles/articulated-bus/articulated_bus.tscn")
@@ -28,6 +29,7 @@ var _vehicle_spawn_budget: int = SimulationConstants.VEHICLE_FRAME_SPAWN_BUDGET
 
 var freed_ids_pool: Array[int] = []
 var next_fresh_id: int = 0
+var _warning_suppress_until_frame: int = -1
 
 signal vehicle_created(vehicle: Vehicle)
 signal vehicle_destroyed(vehicle_id: int, vehicle_type: VehicleType)
@@ -49,6 +51,8 @@ func set_vehicles_layer(layer: Node2D) -> void:
 	vehicles_layer = layer
 
 	game_manager = GDInjector.inject("GameManager") as GameManager
+	if not game_manager.clock.clock_reset.is_connected(Callable(self, "_on_clock_reset")):
+		game_manager.clock.clock_reset.connect(Callable(self, "_on_clock_reset"))
 
 
 func create_vehicle(vehicle_type: VehicleType) -> Vehicle:
@@ -101,6 +105,9 @@ func remove_vehicle(vehicle_id: int) -> void:
 	var vehicle := vehicles.get(vehicle_id) as Vehicle
 
 	if not vehicle:
+		if _is_warning_suppressed():
+			return
+
 		push_error("Vehicle with ID %d not found." % vehicle_id)
 		return
 
@@ -208,3 +215,11 @@ func _despawn_vehicle(vehicle: Vehicle) -> void:
 func _on_desired_world_lights_state_changed(new_state: bool) -> void:
 	for vehicle in vehicles.values():
 		vehicle.driver.set_headlights_enabled(new_state)
+
+
+func _on_clock_reset() -> void:
+	_warning_suppress_until_frame = Engine.get_process_frames() + SimulationConstants.RESET_WARNING_SUPPRESS_FRAMES
+
+
+func _is_warning_suppressed() -> bool:
+	return Engine.get_process_frames() <= _warning_suppress_until_frame

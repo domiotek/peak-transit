@@ -47,6 +47,7 @@ var _stop_syncing_timer: float = 0.0
 var _finalizing_previous_step: NavigationStep
 
 var _score_manager: ScoreManager = null
+var _warning_suppress_frames_left: int = 0
 
 
 func bind(vehicle: Vehicle) -> void:
@@ -56,8 +57,13 @@ func bind(vehicle: Vehicle) -> void:
 	_vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 	_transport_manager = GDInjector.inject("TransportManager") as TransportManager
 	_game_manager = GDInjector.inject("GameManager") as GameManager
+	_game_manager.clock.clock_reset.connect(Callable(self, "_on_clock_reset"))
 	_score_manager = _game_manager.get_game_controller().score_manager() if _game_manager.get_game_mode() == Enums.GameMode.CHALLENGE else null
 	_max_passengers = TransportHelper.get_bus_capacity(_vehicle.type)
+
+
+func _on_clock_reset() -> void:
+	_warning_suppress_frames_left = SimulationConstants.RESET_WARNING_SUPPRESS_FRAMES
 
 
 func get_constants() -> Dictionary:
@@ -303,6 +309,9 @@ func get_target_terminal() -> Terminal:
 
 
 func process(delta: float) -> void:
+	if _warning_suppress_frames_left > 0:
+		_warning_suppress_frames_left -= 1
+
 	if _state == BusState.IDLE or _state == BusState.CONFUSED:
 		return
 
@@ -349,7 +358,7 @@ func process(delta: float) -> void:
 					_is_at_depot = true
 					_is_entering_building = false
 					if _current_passengers > 0:
-						push_warning(
+						_warn(
 							("Bus %s has leftover passengers (%d) after returning to depot %s."
 								% [_vehicle.ai.get_custom_identifier(), _current_passengers, _origin_depot.get_depot_name()] ),
 						)
@@ -626,7 +635,7 @@ func _trace_route_to_next_stop() -> void:
 		var start_endpoint = start_node_data[1]
 
 		if start_node == target_node:
-			push_warning(
+			_warn(
 				"Bus %s skipping zero-length route to stop %s (node %d). Treating as immediate arrival."
 				% [_vehicle.ai.get_custom_identifier(), line_stop.target_name, target_node],
 			)
@@ -709,7 +718,7 @@ func _sync_current_terminal_reference() -> void:
 
 	if synced_terminal != null:
 		if _current_terminal != synced_terminal:
-			push_warning(
+			_warn(
 				"Bus %s terminal reference desynced; fixing current terminal from %s to %s."
 				% [
 					_vehicle.ai.get_custom_identifier(),
@@ -721,7 +730,7 @@ func _sync_current_terminal_reference() -> void:
 		_current_terminal = synced_terminal
 		return
 
-	push_warning(
+	_warn(
 		"Bus %s marked as at terminal but is not registered on any terminal track; clearing terminal state."
 		% [_vehicle.ai.get_custom_identifier()],
 	)
@@ -911,7 +920,11 @@ func _handle_stop(current_trip: BrigadeTrip, delta: float) -> void:
 
 
 func _on_location_trigger_reached(vehicle: Vehicle, _node_id: int, _endpoint_id: int) -> void:
-	var current_line_stop = get_current_trip().get_stop(_brigade_trip_current_stop_idx)
+	var current_trip = get_current_trip()
+	if current_trip == null:
+		return
+
+	var current_line_stop = current_trip.get_stop(_brigade_trip_current_stop_idx)
 
 	if current_line_stop.is_terminal:
 		return
@@ -996,6 +1009,13 @@ func _push_score_event(reason: ChallengeEnums.ScoreReason, count: int = 1) -> vo
 		return
 
 	_score_manager.update_score(reason, count)
+
+
+func _warn(message: String) -> void:
+	if _warning_suppress_frames_left > 0:
+		return
+
+	push_warning(message)
 
 
 func _determine_arrival_score() -> ChallengeEnums.ScoreReason:

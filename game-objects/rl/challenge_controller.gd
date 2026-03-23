@@ -573,7 +573,6 @@ func _set_state_action(bus_idx: int, state: RLEnums.BusStateRequest, reserve_ter
 
 			if is_target_terminal_same_as_current:
 				_score_manager.update_score(ChallengeEnums.ScoreReason.BUS_ALREADY_IN_RESERVE_SAME_TERMINAL)
-				return
 
 			bus_ai.drive_to_terminal(target_terminal_id)
 

@@ -39,6 +39,7 @@ var _cached_last_vehicle: Vehicle = null
 var _cached_remaining_space: float = 0.0
 
 var lane_usage_ema: float = 0.0
+var _warning_suppress_until_frame: int = -1
 
 var _constructed: bool = false
 var _original_curve: Curve2D = null
@@ -63,6 +64,7 @@ func _ready() -> void:
 	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
 
 	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
+	game_manager.clock.clock_reset.connect(Callable(self, "_on_clock_reset"))
 
 	if game_manager.get_game_mode() == Enums.GameMode.MAP_EDITOR:
 		collision_shape = CollisionPolygon2D.new()
@@ -155,8 +157,7 @@ func get_segment_relation() -> NetRelation:
 
 func assign_vehicle(vehicle: Vehicle) -> void:
 	if _assigned_vehicle_ids.has(vehicle.id):
-		push_warning("Trying to assign vehicle ID %d to lane ID %d, but it is already assigned to this lane." % [vehicle.id, id])
-		breakpoint
+		_warn("Trying to assign vehicle ID %d to lane ID %d, but it is already assigned to this lane." % [vehicle.id, id])
 		return
 
 	assigned_vehicles.append(vehicle)
@@ -166,11 +167,11 @@ func assign_vehicle(vehicle: Vehicle) -> void:
 
 func remove_vehicle(vehicle: Vehicle) -> void:
 	if vehicle == null:
-		push_warning("Trying to remove a null vehicle from lane ID %d." % id)
+		_warn("Trying to remove a null vehicle from lane ID %d." % id)
 		return
 
 	if not _assigned_vehicle_ids.has(vehicle.id):
-		push_warning("Trying to remove vehicle ID %d from lane ID %d, but it is not assigned to this lane." % [vehicle.id, id])
+		_warn("Trying to remove vehicle ID %d from lane ID %d, but it is not assigned to this lane." % [vehicle.id, id])
 		return
 
 	assigned_vehicles.erase(vehicle)
@@ -255,6 +256,21 @@ func get_lane_usage() -> float:
 
 func get_length() -> float:
 	return _length_cache
+
+
+func _on_clock_reset() -> void:
+	_warning_suppress_until_frame = Engine.get_process_frames() + SimulationConstants.RESET_WARNING_SUPPRESS_FRAMES
+
+
+func _is_warning_suppressed() -> bool:
+	return Engine.get_process_frames() <= _warning_suppress_until_frame
+
+
+func _warn(message: String) -> void:
+	if _is_warning_suppressed():
+		return
+
+	push_warning(message)
 
 
 func reposition_endpoint(of_node: RoadNode, type: String) -> void:
