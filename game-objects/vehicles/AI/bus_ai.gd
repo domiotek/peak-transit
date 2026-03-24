@@ -420,8 +420,10 @@ func process(delta: float) -> void:
 				_handle_stop(current_trip, delta)
 				return
 
-			if _has_navigation_set:
-				return
+			if not _has_navigation_set:
+				_trace_route_to_next_stop()
+
+			return
 		BusState.BOARDING_PASSENGERS, BusState.SYNCING_WITH_SCHEDULE:
 			_handle_stop(current_trip, delta)
 			return
