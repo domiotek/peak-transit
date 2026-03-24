@@ -74,10 +74,12 @@ func _setup_rl_session() -> void:
 	rl_sync.process_mode = Node.PROCESS_MODE_INHERIT
 	print("Starting RL session...")
 
-	var initialized = game_manager.get_game_controller().init_rl_agents()
+	var agent_mode := RLEnums.parse_agent_mode(_args.get("agent_mode", "train"))
+
+	var initialized = game_manager.get_game_controller().init_rl_agents(agent_mode, _args.get("model_path", ""))
 
 	if not initialized:
-		push_error("This game mode doesn't have any agents to train. Cannot start RL session.")
+		push_error("This game mode doesn't have any agents. Cannot start RL session.")
 		_quit()
 		return
 
@@ -90,18 +92,19 @@ func _setup_rl_session() -> void:
 		_quit()
 		return
 
-	ui_manager.show_ui_view(
-		LoadingProgressView.VIEW_NAME,
-		{
-			"title": "Starting RL Session",
-			"action": "Connecting with RL framework...",
-			"show_progress_bar": false,
-		},
-	)
+	if agent_mode == RLEnums.AgentMode.TRAIN:
+		ui_manager.show_ui_view(
+			LoadingProgressView.VIEW_NAME,
+			{
+				"title": "Starting RL Session",
+				"action": "Connecting with RL framework...",
+				"show_progress_bar": false,
+			},
+		)
 
 	await game_manager.wait_frame()
 
-	var connected = rl_sync.setup()
+	var connected = rl_sync.setup(agent_mode)
 
 	await game_manager.wait_frame()
 
@@ -112,7 +115,7 @@ func _setup_rl_session() -> void:
 		_quit()
 		return
 
-	game_manager.set_rl_mode()
+	game_manager.set_rl_mode(agent_mode)
 	game_manager.set_game_speed(Enums.GameSpeed.TURBO)
 
 

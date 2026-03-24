@@ -35,6 +35,7 @@ var transport_manager: TransportManager
 var _game_controller: BaseGameController
 var _game_mode: Enums.GameMode
 var _rl_mode: bool = false
+var _rl_agent_mode: RLEnums.AgentMode
 
 var world_definition: WorldDefinition
 
@@ -314,13 +315,17 @@ func clear_state() -> void:
 	transport_manager.clear_state()
 
 
-func set_rl_mode() -> void:
+func set_rl_mode(agent_mode: RLEnums.AgentMode) -> void:
 	_rl_mode = true
+	_rl_agent_mode = agent_mode
 	rl_mode_toggled.emit(true)
 
 
 func is_rl_mode() -> bool:
 	return _rl_mode
+
+func get_rl_agent_mode() -> RLEnums.AgentMode:
+	return _rl_agent_mode
 
 
 func _create_game_controller(mode: Enums.GameMode) -> BaseGameController:

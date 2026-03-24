@@ -111,7 +111,7 @@ func init_map(world: WorldDefinition) -> void:
 func get_game_menu_buttons() -> Array[GameMenuButton]:
 	return []
 
-func init_rl_agents() -> bool:
+func init_rl_agents(_agent_mode: RLEnums.AgentMode, _onnx_path: String="") -> bool:
 	return false
 
 
@@ -201,6 +201,7 @@ func _load_world_from_file_path(file_path: String) -> WorldDefinition:
 
 func _show_rl_tag(state: bool) -> void:
 	rl_mode_tag.visible = state
+	rl_mode_tag.text = "Connected to RL Framework" if game_manager.get_rl_agent_mode() == RLEnums.AgentMode.TRAIN else "RL Inference Mode"
 
 
 func _on_camera_zoom_changed(zoom: float) -> void:

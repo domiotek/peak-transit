@@ -91,10 +91,15 @@ func score_manager() -> ScoreManager:
 	return _score_manager
 
 
-func init_rl_agents() -> bool:
+func init_rl_agents(agent_mode: RLEnums.AgentMode, onnx_path: String="") -> bool:
 	ai_controller = ChallengeAiController.new()
 	ai_controller.add_to_group("AGENT")
 	add_child(ai_controller)
+
+	if agent_mode == RLEnums.AgentMode.INFERENCE:
+		ai_controller.onnx_model_path = "user://models/%s" % onnx_path
+		ai_controller.control_mode = AIController2D.ControlModes.ONNX_INFERENCE
+
 	ai_controller.setup()
 
 	return true
