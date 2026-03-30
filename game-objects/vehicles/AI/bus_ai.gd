@@ -185,10 +185,11 @@ func get_time_difference_to_schedule(current_time: TimeOfDay) -> int:
 		return 0
 
 	var scheduled_departure_time = current_trip.get_departure_time_at_stop(_brigade_trip_current_stop_idx)
+	var force_next_day = _brigade != null and _brigade.is_exhausted_for_day()
 
-	# For first stop, align to next day only when the trip itself is still
-	# considered future for current clock time.
-	if _brigade_trip_current_stop_idx == 0 and current_trip.is_future_trip() and scheduled_departure_time.to_minutes() < current_time.to_minutes():
+	# When brigade service is exhausted for current day, treat assignment as next-day occurrence.
+	if (force_next_day or (_brigade_trip_current_stop_idx == 0 and current_trip.is_future_trip())) \
+			and scheduled_departure_time.to_minutes() < current_time.to_minutes():
 		scheduled_departure_time = scheduled_departure_time.as_next_day()
 
 	var estimated_arrival_time = current_time.add_minutes(int(ceil(estimate_time_to_next_destination())))
@@ -560,11 +561,13 @@ func _join_trip(hot_join: bool) -> void:
 	if not current_trip:
 		return
 
+	var force_next_day = _brigade != null and _brigade.is_exhausted_for_day()
+
 	_arrived_at_stop = false
 	_vehicle.navigator.clear_location_triggers()
 	_vehicle.driver.resume_driving()
 
-	if current_trip.is_future_trip():
+	if force_next_day or current_trip.is_future_trip():
 		drive_to_terminal(current_trip.get_departure_terminal().terminal_id)
 		_brigade_trip_current_stop_idx = 0
 		_prepare_passenger_buckets()
@@ -849,11 +852,13 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 		return true
 
 	var is_driving_to_departure = false
+	var force_next_day = _brigade != null and _brigade.is_exhausted_for_day()
+	var is_last_stop = _brigade_trip_current_stop_idx + 1 >= current_trip.get_stops().size() if current_trip else false
 
 	if _brigade != null:
 		var peron_index = _current_terminal.get_peron_for_line(_brigade.line_id)
 
-		if current_trip.is_future_trip() && _current_passengers == 0:
+		if (force_next_day or current_trip.is_future_trip()) && _current_passengers == 0 and not is_last_stop:
 			var time_to_dep = current_trip.get_time_till_departure()
 			if time_to_dep > TransportConstants.BUS_OCCUPY_PERON_THRESHOLD || current_trip.is_past_trip():
 				result = _current_terminal.wait_at_terminal(_vehicle.id)
@@ -885,13 +890,12 @@ func _handle_at_terminal(current_trip: BrigadeTrip, delta: float) -> bool:
 
 			# Buses reassigned while carrying passengers must go to peron first to unload,
 			# but after unloading they may still be too early and should return to wait tracks.
-			if current_trip.is_future_trip():
+			if (force_next_day or current_trip.is_future_trip()) and not is_last_stop:
 
 				if _current_passengers > 0:
 					_unload_passengers()
 					_push_score_event(ChallengeEnums.ScoreReason.BUS_CHANGED_STATE_WITH_PASSENGERS_ONBOARD)
 
-				var is_last_stop = _brigade_trip_current_stop_idx + 1 >= current_trip.get_stops().size()
 				var time_to_dep = current_trip.get_time_till_departure()
 				
 				if not is_last_stop and time_to_dep > TransportConstants.BUS_OCCUPY_PERON_THRESHOLD:

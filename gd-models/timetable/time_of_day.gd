@@ -41,6 +41,7 @@ func serialize() -> Dictionary:
 	return {
 		"hour": hour,
 		"minute": minute,
+		"totalMinutes": total_minutes,
 	}
 
 
