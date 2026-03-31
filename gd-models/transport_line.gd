@@ -343,8 +343,6 @@ func _find_departure_times_with_step(
 	for brigade in brigades as Array[Brigade]:
 		var trips = brigade.get_schedule().trips
 
-		var trips_taken = 0
-
 		for trip_idx in range(trips.size()):
 			var trip = trips[trip_idx] as Trip
 			if trip.route_id != route_idx:
@@ -358,9 +356,6 @@ func _find_departure_times_with_step(
 				departure_minutes = _align_to_next_occurrence_minutes(time.to_minutes(), after.to_minutes())
 				departure_time = TimeOfDay.new(time.hour, time.minute, departure_minutes)
 
-			if limit != -1 and trips_taken >= limit:
-				break
-
 			target_dep_times.append(
 				StopDeparture.new(
 					id,
@@ -373,13 +368,15 @@ func _find_departure_times_with_step(
 					departure_time,
 				),
 			)
-			trips_taken += 1
 
 	if sort:
 		target_dep_times.sort_custom(
 			func(a: StopDeparture, b: StopDeparture) -> bool:
 				return a.departure_time.to_minutes() < b.departure_time.to_minutes()
 		)
+
+	if limit != -1 and target_dep_times.size() > limit:
+		target_dep_times = target_dep_times.slice(0, limit)
 
 	return target_dep_times
 

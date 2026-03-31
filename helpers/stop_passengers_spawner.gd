@@ -179,14 +179,20 @@ func _spawn_passengers(clock: ClockTime) -> void:
 	if target_lines.size() == 0:
 		return
 
-	var passengers_per_line = int(num_passengers / target_lines.size())
+	var base_passengers_per_line = int(num_passengers / target_lines.size())
+	var remainder_passengers = num_passengers % target_lines.size()
 
 	var bucket = PassengerBucketEntry.new(clock.to_time_of_day())
 
 	for i in target_lines.size():
 		var line = target_lines[i]
+		var passengers_for_line = base_passengers_per_line
 
-		bucket.add_passengers_for_line(line.id, passengers_per_line)
+		if i < remainder_passengers:
+			passengers_for_line += 1
+
+		if passengers_for_line > 0:
+			bucket.add_passengers_for_line(line.id, passengers_for_line)
 
 	if bucket.get_total_passengers() <= 0:
 		return
@@ -207,12 +213,30 @@ func _cleanup_empty_buckets() -> void:
 
 func _get_frame_for_hour(clock: ClockTime) -> PresetFrameDefinition:
 	var current_time_of_day = clock.to_time_of_day()
+	var current_minutes = current_time_of_day.to_minutes()
+
+	var selected_frame: PresetFrameDefinition = null
+	var best_minutes = -1
 
 	for frame_def in _demand_preset.frames as Array[PresetFrameDefinition]:
-		if frame_def.hour.to_minutes() <= current_time_of_day.to_minutes():
-			return frame_def
+		var frame_minutes = frame_def.hour.to_minutes()
 
-	return null
+		if frame_minutes <= current_minutes and frame_minutes >= best_minutes:
+			best_minutes = frame_minutes
+			selected_frame = frame_def
+
+	if selected_frame != null:
+		return selected_frame
+
+	# Wrap to the last frame of the day if all frame hours are after current time.
+	for frame_def in _demand_preset.frames as Array[PresetFrameDefinition]:
+		var frame_minutes = frame_def.hour.to_minutes()
+
+		if frame_minutes >= best_minutes:
+			best_minutes = frame_minutes
+			selected_frame = frame_def
+
+	return selected_frame
 
 
 func _find_target_lines(clock: ClockTime) -> Array[TransportLine]:
@@ -239,12 +263,28 @@ func _get_next_departure(line: TransportLine, clock: TimeOfDay) -> StopDeparture
 	var departures: Array = []
 
 	if _is_terminal:
-		departures = line.get_departures_at_terminal(_target_id, clock, 1, true)
+		departures = line.get_departures_at_terminal(_target_id, clock, -1, false)
 	else:
-		departures = line.get_departures_at_stop(_target_id, clock, 1, true)
+		departures = line.get_departures_at_stop(_target_id, clock, -1, false)
 
-	if departures.size() > 0:
-		return departures[0] as StopDeparture
+	if departures.size() == 0:
+		return null
+
+	var best_departure: StopDeparture = null
+	var best_minutes: int = 1441
+
+	for departure in departures:
+		var stop_departure = departure as StopDeparture
+		if stop_departure == null:
+			continue
+
+		var minutes_to_departure = clock.minutes_until(stop_departure.departure_time)
+		if minutes_to_departure < best_minutes:
+			best_minutes = minutes_to_departure
+			best_departure = stop_departure
+
+	if best_departure != null:
+		return best_departure
 
 	return null
 
