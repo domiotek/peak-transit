@@ -61,6 +61,12 @@ _data = {
 }
 point_count = 9
 
+[sub_resource type="Curve2D" id="Curve2D_i5knn"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 64, -84, 0, 0, 0, 0, 83, -84, 0, 0, 0, 0, 102, -83, 0, 0, 0, 0, 122, -84, 0, 0, 0, 0, 138, -91, 0, 0, 0, 0, 157, -104, 0, 0, 0, 0, 177, -117, 0, 0, 0, 0, 191, -132, 0, 0, 0, 0, 198, -142, 0, 0, 0, 0, 206, -157)
+}
+point_count = 10
+
 [sub_resource type="Curve2D" id="Curve2D_lqlte"]
 _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 168, -170, 0, 0, 0, 0, 181, -188, 0, 0, 0, 0, 188, -200, 0, 0, 0, 0, 197, -218, 0, 0, 0, 0, 204, -236, 0, 0, 0, 0, 207, -246, 0, 0, 0, 0, 209, -255, 0, 0, 0, 0, 208, -266, 0, 0, 0, 0, 204, -271, 0, 0, 0, 0, 194, -277, 0, 0, 0, 0, 184, -280, 0, 0, 0, 0, 151, -282, 0, 0, 0, 0, 127, -285, 0, 0, 0, 0, 84, -292, 0, 0, 0, 0, 54, -296, 0, 0, 0, 0, 2, -302)
@@ -78,6 +84,12 @@ _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 116, -214, 0, 0, 0, 0, 126, -226, 0, 0, 0, 0, 129, -235, 0, 0, 0, 0, 130, -248, 0, 0, 0, 0, 130, -259, 0, 0, 0, 0, 121, -275, 0, 0, 0, 0, 108, -288, 0, 0, 0, 0, 91, -291, 0, 0, 0, 0, 58, -296, 0, 0, 0, 0, 32, -299, 0, 0, 0, 0, 2, -302)
 }
 point_count = 11
+
+[sub_resource type="Curve2D" id="Curve2D_18y68"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 206, -157, 0, 0, 0, 0, 212, -171, 0, 0, 0, 0, 219, -186, 0, 0, 0, 0, 223, -198, 0, 0, 0, 0, 226, -216, 0, 0, 0, 0, 228, -233, 0, 0, 0, 0, 229, -244, 0, 0, 0, 0, 227, -262, 0, 0, 0, 0, 216, -272, 0, 0, 0, 0, 195, -278, 0, 0, 0, 0, 176, -281, 0, 0, 0, 0, 150, -282, 0, 0, 0, 0, 133, -284, 0, 0, 0, 0, 114, -287, 0, 0, 0, 0, 100, -289, 0, 0, 0, 0, 64, -295, 0, 0, 0, 0, 48, -297, 0, 0, 0, 0, 25, -300, 0, 0, 0, 0, 2, -302)
+}
+point_count = 19
 
 [sub_resource type="Curve2D" id="Curve2D_bjbyl"]
 _data = {
@@ -156,7 +168,7 @@ script = ExtResource("2_t1vnh")
 
 [node name="Terrain" type="Polygon2D" parent="." index="1" unique_id=387920769]
 color = Color(0.223103, 0.223103, 0.223103, 1)
-polygon = PackedVector2Array(-146, -297.999, -129, -308, -112, -316, -86, -322.001, -59, -324.001, 192, -297.999, 207, -293, 217, -287, 225, -278.999, 230, -270, 234, -259.999, 233, -246, 230, -235, 225, -219, 218, -201, 205, -178, 139, -92, 126, -83, 115, -75, 105, -67, 96, -62, 85, -56, 57, -45, 49, -39, 41, -32, 22, 1, -19, 1, -34, -15, -45, -23, -91, -27, -140, -32, -168, -42, -184, -52, -203, -67, -207, -76, -209, -88, -209, -109, -205, -141, -197, -172, -191, -194, -181, -231, -174, -249, -167, -265.001, -157, -280.999)
+polygon = PackedVector2Array(-146, -297.999, -129, -308, -112, -316, -86, -322.001, -59, -324.001, 192, -297.999, 207, -293, 217, -287, 225, -282, 233, -275, 239, -267, 241, -253, 241, -240, 241, -224, 241, -201, 238, -182, 234, -163, 227, -140, 219, -127, 210, -117, 171, -87, 148, -73, 127, -66, 103, -57, 85, -53, 57, -45, 49, -39, 41, -32, 22, 1, -19, 1, -34, -15, -45, -23, -91, -27, -140, -32, -168, -42, -184, -52, -203, -67, -207, -76, -209, -88, -209, -109, -205, -141, -197, -172, -191, -194, -181, -231, -174, -249, -167, -265.001, -157, -280.999)
 
 [node name="Building" type="Polygon2D" parent="." index="2" unique_id=2067028981]
 color = Color(0.326338, 0.295587, 0.362915, 1)
@@ -237,6 +249,9 @@ curve = SubResource("Curve2D_iro6f")
 [node name="Wait2Track" type="Path2D" parent="WaitTracks/InTracks" index="2" unique_id=1822689681]
 curve = SubResource("Curve2D_1fpwg")
 
+[node name="Wait3Track" type="Path2D" parent="WaitTracks/InTracks" index="3" unique_id=1017491074]
+curve = SubResource("Curve2D_i5knn")
+
 [node name="OutTracks" type="Node2D" parent="WaitTracks" index="1" unique_id=1249158571]
 
 [node name="Wait0Track" type="Path2D" parent="WaitTracks/OutTracks" index="0" unique_id=952036156]
@@ -247,6 +262,9 @@ curve = SubResource("Curve2D_23m65")
 
 [node name="Wait2Track" type="Path2D" parent="WaitTracks/OutTracks" index="2" unique_id=649026309]
 curve = SubResource("Curve2D_c3mnv")
+
+[node name="Wait3Track" type="Path2D" parent="WaitTracks/OutTracks" index="3" unique_id=1465149145]
+curve = SubResource("Curve2D_18y68")
 
 [node name="PeronTracks" type="Node2D" parent="." index="14" unique_id=1144206206]
 
