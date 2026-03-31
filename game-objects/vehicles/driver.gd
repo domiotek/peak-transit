@@ -49,6 +49,7 @@ var brake_light_nodes: Array[Light] = []
 var casters: CasterCollection
 var blockade_observer: Area2D
 var time_blocked: float = 0.0
+var _last_stuck_removal_roll_unit: int = -1
 
 var _headlights_state = false
 var _headlights_state_change_ticks_counter: float = 0
@@ -339,8 +340,20 @@ func check_blockade_cleared(delta: float) -> bool:
 		_try_to_reroute(time_blocked)
 
 		time_blocked = 0.0
+		_last_stuck_removal_roll_unit = -1
 	else:
 		time_blocked += delta
+		var blocked_units = int(time_blocked)
+
+		if owner != null \
+				and owner.type == VehicleManager.VehicleType.CAR \
+				and blocked_units >= SimulationConstants.CAR_STUCK_REMOVAL_TIME_BLOCKED_UNITS \
+				and blocked_units != _last_stuck_removal_roll_unit:
+			_last_stuck_removal_roll_unit = blocked_units
+
+			if randf() < SimulationConstants.CAR_STUCK_REMOVAL_CHANCE_PER_BLOCKED_UNIT:
+				owner.navigator.abandon_trip()
+				return true
 
 	return unblocked
 
