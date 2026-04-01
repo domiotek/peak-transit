@@ -5,6 +5,9 @@ namespace PT.Models.WorldDefinition.Transport;
 
 public class DepotDefinition : IDefinition<DepotDefinition>
 {
+    [JsonProperty("id")]
+    public int Id { get; set; } = -1;
+
     [JsonProperty("name")]
     public required string Name { get; set; } = string.Empty;
 
@@ -24,6 +27,7 @@ public class DepotDefinition : IDefinition<DepotDefinition>
     {
         var dict = new Dictionary
         {
+            ["id"] = Id,
             ["name"] = Name,
             ["pos"] = Position.Serialize(),
             ["busCount"] = RegularBusCapacity,
@@ -37,6 +41,7 @@ public class DepotDefinition : IDefinition<DepotDefinition>
     {
         var depotDefinition = new DepotDefinition
         {
+            Id = data.ContainsKey("id") ? data["id"].AsInt32() : -1,
             Name = data["name"].AsString() ?? string.Empty,
             BusIdPrefix = data["busIdPrefix"].AsString() ?? string.Empty,
             Position = SegmentPosDefinition.Deserialize(data["pos"].AsGodotDictionary() ?? []),

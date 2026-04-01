@@ -2,19 +2,21 @@ extends Camera2D
 
 class_name Camera
 
-var camera_speed
+var camera_speed: float
 var bounds: Rect2
 var bounds_offset: Vector2
 var camera_zoom_base_bounds: Array[Vector2]
 var camera_zoom_bounds: Array[Vector2]
 var camera_zoom_reference_map_size := Vector2(5000, 5000)
 var camera_zoom_out_floor: float = 0.02
-var dragging = false
+var dragging: bool = false
 var drag_start_pos = Vector2.ZERO
 var last_mouse_pos = Vector2.ZERO
 
 var ui_manager: UIManager
 var game_manager: GameManager
+
+signal zoom_changed(zoom: float)
 
 
 func _ready() -> void:
@@ -80,12 +82,16 @@ func _input(event):
 			if ui_manager.is_mouse_over_ui(mouse_pos):
 				return
 
+		var prev_zoom := zoom
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			zoom *= 1.1
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			zoom *= 0.9
 
 		zoom = zoom.clamp(camera_zoom_bounds[0], camera_zoom_bounds[1])
+
+		if zoom != prev_zoom:
+			zoom_changed.emit(zoom.x)
 
 		if event.button_index == MOUSE_BUTTON_MIDDLE:
 			if event.pressed:

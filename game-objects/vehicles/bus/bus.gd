@@ -15,9 +15,7 @@ func _get_vehicle_config() -> Variant:
 	_config.category = VehicleManager.VehicleCategory.PUBLIC_TRANSPORT
 	_config.blockade_observer = forward_blockage_area
 	_config.head_lights = [$Body/Lights/LeftBeam, $Body/Lights/RightBeam] as Array[Headlight]
-	_config.brake_lights = [$Body/Lights/LeftBrakeLight, $Body/Lights/RightBrakeLight] as Array[Node2D]
-	_config.left_blinker_nodes = [$Body/Lights/Blinkers/LeftFront, $Body/Lights/Blinkers/LeftSide, $Body/Lights/Blinkers/LeftRear] as Array[Node2D]
-	_config.right_blinker_nodes = [$Body/Lights/Blinkers/RightFront, $Body/Lights/Blinkers/RightSide, $Body/Lights/Blinkers/RightRear] as Array[Node2D]
+	_config.brake_lights = [$Body/Lights/LeftBrakeLight, $Body/Lights/RightBrakeLight] as Array[Light]
 	_config.casters = CasterCollection.new(
 		$CloseRayCaster,
 		$MediumRayCaster,
@@ -38,5 +36,6 @@ func _get_vehicle_config() -> Variant:
 	_config.collision_areas = [collision_area] as Array[Area2D]
 	_config.blockade_indicator = $Body/Line2D
 	_config.body_segments = [$Body] as Array[Polygon2D]
+	_config.visibility_notifier = $VisibilityNotifier
 
 	return _config

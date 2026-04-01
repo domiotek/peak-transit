@@ -77,17 +77,22 @@ func get_random_building() -> BaseBuilding:
 
 
 func get_random_building_with_constraints(of_type: BuildingInfo.BuildingType, other_than: int) -> BaseBuilding:
-	var building_list = buildings.values()
-	if building_list.size() == 0:
+	if buildings.size() == 0:
 		return null
 
-	var filtered_list = building_list.filter(func(building): return building.type == of_type and building.id != other_than)
+	var selected: BaseBuilding = null
+	var match_count: int = 0
 
-	if filtered_list.size() == 0:
-		return null
+	for building in buildings.values():
+		if building.type != of_type or building.id == other_than:
+			continue
 
-	var random_index = randi() % filtered_list.size()
-	return filtered_list[random_index]
+		match_count += 1
+
+		if (randi() % match_count) == 0:
+			selected = building
+
+	return selected
 
 
 func get_random_building_type(other_than: BuildingInfo.BuildingType, weights: Dictionary = { }) -> BuildingInfo.BuildingType:
@@ -110,6 +115,11 @@ func get_random_building_type(other_than: BuildingInfo.BuildingType, weights: Di
 
 	var random_index = randi() % types.size()
 	return types[random_index]
+
+func reset_spawner_buildings() -> void:
+	for building in buildings.values():
+		if building is SpawnerBuilding:
+			(building as SpawnerBuilding).reset()
 
 
 func clear_state() -> void:

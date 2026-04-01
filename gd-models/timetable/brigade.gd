@@ -8,6 +8,9 @@ var _schedule: BrigadeSchedule
 var _index: int
 var _start_time: TimeOfDay
 var _end_time: TimeOfDay
+var _last_arrival_minutes: int = 0
+var _service_exhausted_today: bool = false
+var _last_clock_minute_seen: int = -1
 var _last_scheduled_trip_index: int = 0
 var _last_assigned_trip_index: int = -1
 
@@ -32,6 +35,7 @@ func _init(_id: int, _transport_line_id: int, schedule: BrigadeSchedule, _line_t
 
 	_start_time = _schedule.trips[0].departure_time
 	_end_time = _schedule.trips[_schedule.trips.size() - 1].arrival_time
+	_last_arrival_minutes = _normalize_day_minutes(_end_time.to_minutes())
 
 	var game_manager = GDInjector.inject("GameManager") as GameManager
 	var vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
@@ -39,6 +43,8 @@ func _init(_id: int, _transport_line_id: int, schedule: BrigadeSchedule, _line_t
 	vehicle_manager.connect("vehicle_destroyed", Callable(self, "_on_vehicle_destroyed"))
 
 	clock_manager = game_manager.clock
+	clock_manager.time_changed.connect(Callable(self, "_on_clock_time_changed"))
+	_on_clock_time_changed(clock_manager.get_time())
 
 	for trip_idx in range(_schedule.trips.size()):
 		_trips.append(BrigadeTrip.new(trip_idx, line_id, _schedule.trips[trip_idx]))
@@ -53,20 +59,8 @@ func get_trip(index: int) -> BrigadeTrip:
 
 
 func get_ongoing_trip(current_time: TimeOfDay) -> BrigadeTrip:
-	var current_minutes = current_time.to_minutes()
-
 	for trip in _trips:
-		var departure_minutes = trip.get_departure_time().to_minutes()
-		var arrival_minutes = trip.get_arrival_time().to_minutes()
-		var adjusted_current = current_minutes
-		var adjusted_arrival = arrival_minutes
-
-		if arrival_minutes < departure_minutes:
-			adjusted_arrival += 1440
-			if adjusted_current < departure_minutes:
-				adjusted_current += 1440
-
-		if adjusted_current >= departure_minutes and adjusted_current <= adjusted_arrival:
+		if trip.get_status(current_time) == BrigadeTrip.TripStatus.ONGOING:
 			return trip
 
 	return null
@@ -130,14 +124,21 @@ func get_vehicle_count() -> int:
 
 func assign_vehicle(vehicle_id: int) -> int:
 	var current_time = clock_manager.get_time().to_time_of_day()
+	_update_service_day_state(current_time)
 
 	var scheduled_trip_idx = _get_next_scheduled_trip_index(current_time)
+	if _service_exhausted_today:
+		scheduled_trip_idx = 0
 
 	var trip_idx = 0
-	if _vehicles.size() == 0:
+	if _service_exhausted_today:
+		trip_idx = 0
+	elif _vehicles.size() == 0:
 		trip_idx = scheduled_trip_idx
 	else:
-		trip_idx = _get_next_trip_index(_last_assigned_trip_index)
+		trip_idx = _find_next_non_past_trip_index(_last_assigned_trip_index, true)
+		if trip_idx == -1:
+			trip_idx = scheduled_trip_idx
 
 	_vehicles.set(vehicle_id, trip_idx)
 	_last_assigned_trip_index = trip_idx
@@ -169,10 +170,13 @@ func switch_trip(vehicle_id: int, new_trip_idx: int) -> bool:
 	return true
 
 
-func assign_next_trip(vehicle_id: int, current_index: int) -> int:
-	var next_index = _get_next_trip_index(current_index)
+func assign_next_trip(vehicle_id: int, current_index: int, departure_terminal_id: int = -1) -> int:
+	_update_service_day_state(clock_manager.get_time().to_time_of_day())
+	if _service_exhausted_today:
+		return -1
 
-	if next_index < current_index:
+	var next_index = _find_next_non_past_trip_index(current_index, false, departure_terminal_id)
+	if next_index == -1:
 		return -1
 
 	if _vehicles.values().has(next_index):
@@ -192,6 +196,18 @@ func get_vehicle_of_trip(trip_idx: int) -> int:
 
 	return -1
 
+func reset_state() -> void:
+	_vehicles.clear()
+	_last_assigned_trip_index = -1
+	_last_scheduled_trip_index = 0
+	_service_exhausted_today = false
+	_last_clock_minute_seen = -1
+
+
+func is_exhausted_for_day() -> bool:
+	_update_service_day_state(clock_manager.get_time().to_time_of_day())
+	return _service_exhausted_today
+
 
 func _get_next_trip_index(current_index: int) -> int:
 	var next_index = current_index + 1
@@ -204,11 +220,80 @@ func _get_next_trip_index(current_index: int) -> int:
 func _get_next_scheduled_trip_index(current_time: TimeOfDay) -> int:
 	for i in range(_last_scheduled_trip_index, get_trip_count()):
 		var trip = _schedule.trips[i]
-		if trip.departure_time.to_minutes() >= current_time.to_minutes():
+		var trip_status = (_trips[i] as BrigadeTrip).get_status(current_time)
+
+		if trip.departure_time.to_minutes() >= current_time.to_minutes() and trip_status != BrigadeTrip.TripStatus.PAST:
+			_last_scheduled_trip_index = i
+			return i
+
+	for i in range(0, get_trip_count()):
+		var trip_status = (_trips[i] as BrigadeTrip).get_status(current_time)
+		if trip_status != BrigadeTrip.TripStatus.PAST:
 			_last_scheduled_trip_index = i
 			return i
 
 	return 0
+
+func _is_trip_past_for_sequence(trip: BrigadeTrip, current_time: TimeOfDay) -> bool:
+	return trip.get_status(current_time) == BrigadeTrip.TripStatus.PAST
+
+
+func _update_service_day_state(current_time: TimeOfDay) -> void:
+	var minute_of_day = _normalize_day_minutes(current_time.to_minutes())
+
+	if _last_clock_minute_seen != -1 and minute_of_day < _last_clock_minute_seen:
+		_service_exhausted_today = false
+
+	if minute_of_day >= _last_arrival_minutes:
+		_service_exhausted_today = true
+
+	_last_clock_minute_seen = minute_of_day
+
+
+func _on_clock_time_changed(new_time: ClockTime) -> void:
+	if new_time == null:
+		return
+
+	_update_service_day_state(new_time.to_time_of_day())
+
+
+func _normalize_day_minutes(minutes: int) -> int:
+	return posmod(minutes, 1440)
+
+
+func _find_next_non_past_trip_index(current_index: int, allow_wrap: bool, departure_terminal_id: int = -1) -> int:
+	var start_index = current_index + 1
+	if start_index < 0:
+		start_index = 0
+
+	var current_time = clock_manager.get_time().to_time_of_day()
+
+	for i in range(start_index, get_trip_count()):
+		var trip = _trips[i] as BrigadeTrip
+		if not _is_trip_past_for_sequence(trip, current_time) and _trip_matches_departure_terminal(i, departure_terminal_id):
+			return i
+
+	if not allow_wrap:
+		return -1
+
+	for i in range(0, start_index):
+		var trip = _trips[i] as BrigadeTrip
+		if not _is_trip_past_for_sequence(trip, current_time) and _trip_matches_departure_terminal(i, departure_terminal_id):
+			return i
+
+	return -1
+
+
+func _trip_matches_departure_terminal(trip_idx: int, departure_terminal_id: int) -> bool:
+	if departure_terminal_id == -1:
+		return true
+
+	var trip = _trips[trip_idx] as BrigadeTrip
+	var departure_terminal = trip.get_departure_terminal()
+	if departure_terminal == null:
+		return false
+
+	return departure_terminal.terminal_id == departure_terminal_id
 
 
 func _get_next_unassigned_trip_index() -> int:

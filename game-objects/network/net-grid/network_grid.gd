@@ -12,6 +12,8 @@ var NetworkSegmentScene = preload("res://game-objects/network/net-segment/net_se
 
 
 func load_network_definition(network_def: NetworkDefinition) -> void:
+	var batch_size = SimulationConstants.MAP_LOAD_PROGRESS_BATCH_SIZE
+
 	for i in range(network_def.nodes.size()):
 		var node = network_def.nodes[i]
 		var road_node = _create_node(node)
@@ -19,7 +21,9 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 		network_manager.register_node(road_node)
 
 		game_manager.push_loading_progress("Creating network nodes...", i / float(network_def.nodes.size()))
-		await get_tree().process_frame
+
+		if (i + 1) % batch_size == 0:
+			await get_tree().process_frame
 
 	for i in range(network_def.segments.size()):
 		var segment_info = network_def.segments[i]
@@ -29,32 +33,42 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 		segment.update_visuals()
 
 		game_manager.push_loading_progress("Creating network segments...", i / float(network_def.segments.size()))
-		await get_tree().process_frame
+		
+		if (i + 1) % batch_size == 0:
+			await get_tree().process_frame
 
 	var nodes = network_manager.get_nodes()
 	for i in range(nodes.size()):
 		nodes[i].update_visuals()
 
 		game_manager.push_loading_progress("Updating network nodes...", i / float(nodes.size()))
-		await get_tree().process_frame
+		
+		if (i + 1) % batch_size == 0:
+			await get_tree().process_frame
 
 	var segments = network_manager.get_segments()
 	for i in range(segments.size()):
 		segments[i].late_update_visuals()
 
 		game_manager.push_loading_progress("Finalizing network segments...", i / float(segments.size()))
-		await get_tree().process_frame
+		
+		if (i + 1) % batch_size == 0:
+			await get_tree().process_frame
 
 	for i in range(nodes.size()):
 		nodes[i].late_update_visuals()
 		game_manager.push_loading_progress("Finalizing network nodes...", i / float(nodes.size()))
-		await get_tree().process_frame
+		
+		if (i + 1) % batch_size == 0:
+			await get_tree().process_frame
 
 	var buildings = buildings_manager.get_buildings()
 	for i in range(buildings.size()):
 		buildings[i].setup_connections()
 		game_manager.push_loading_progress("Setting up building connections...", i / float(buildings.size()))
-		await get_tree().process_frame
+	
+		if (i + 1) % batch_size == 0:
+			await get_tree().process_frame
 
 	game_manager.push_loading_progress("Building pathfinding graph...", 0.0)
 	path_finder.BuildGraph(network_manager.get_nodes())
@@ -62,7 +76,7 @@ func load_network_definition(network_def: NetworkDefinition) -> void:
 
 
 func _create_node(node_info: NetNodeInfo) -> RoadNode:
-	var id = network_manager.get_next_node_id()
+	var id = node_info.id if node_info.id >= 0 else network_manager.get_next_node_id()
 	var road_node = NetworkNodeScene.instantiate()
 	road_node.definition = node_info
 	road_node.set_id(id)

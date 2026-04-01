@@ -12,6 +12,14 @@ grow_vertical = 2
 vertical = true
 script = ExtResource("1_dvveb")
 
+[node name="Fps" parent="." unique_id=568246111 instance=ExtResource("2_dvveb")]
+layout_mode = 2
+init_label_text = "FPS:"
+
+[node name="FrameTime" parent="." unique_id=1067803164 instance=ExtResource("2_dvveb")]
+layout_mode = 2
+init_label_text = "Frame time:"
+
 [node name="PathingRequests" parent="." unique_id=1689835063 instance=ExtResource("2_dvveb")]
 layout_mode = 2
 init_label_text = "Pathing requests:"
@@ -19,3 +27,7 @@ init_label_text = "Pathing requests:"
 [node name="VehiclesCount" parent="." unique_id=1322008099 instance=ExtResource("2_dvveb")]
 layout_mode = 2
 init_label_text = "Vehicles:"
+
+[node name="Lod" parent="." unique_id=918339734 instance=ExtResource("2_dvveb")]
+layout_mode = 2
+init_label_text = "LOD:"

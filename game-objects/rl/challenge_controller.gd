@@ -2,11 +2,15 @@ extends "res://addons/godot_rl_agents/controller/ai_controller_2d.gd"
 
 class_name ChallengeAiController
 
+const BRIGADE_DEMAND_HORIZON_STOPS: int = 3
+const BRIGADE_DEMAND_HORIZON_MINUTES: float = 15.0
+
 var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 var config_manager: ConfigManager = GDInjector.inject("ConfigManager") as ConfigManager
 var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 var network_manager: NetworkManager = GDInjector.inject("NetworkManager") as NetworkManager
 var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
+var buildings_manager: BuildingsManager = GDInjector.inject("BuildingsManager") as BuildingsManager
 
 var _logger: GDLogger = GDLogger.DummyGDLogger.new()
 
@@ -48,21 +52,16 @@ func gather_features() -> Dictionary:
 	var brigade_features = _gather_brigade_features(brigades)
 	var terminal_features = _gather_terminal_features(_terminals)
 
-	return {
+	var features = {
 		"time_of_day": time_of_day,
-		"bus_state_onehot": bus_features["bus_state_onehot"],
-		"bus_type_onehot": bus_features["bus_type_onehot"],
-		"bus_availability": bus_features["bus_availability"],
-		"bus_load_ratio": bus_features["bus_load_ratio"],
-		"bus_delay": bus_features["bus_delay"],
-		"brigade_bus_count": brigade_features["brigade_bus_count"],
-		"brigade_unserved_demand": brigade_features["brigade_unserved_demand"],
-		"brigade_spillover_risk": brigade_features["brigade_spillover_risk"],
-		"brigade_traffic_intensity": brigade_features["brigade_traffic_intensity"],
-		"brigade_time_to_next_departure": brigade_features["brigade_time_to_next_departure"],
-		"brigade_gap_ahead_norm": brigade_features["brigade_gap_ahead_norm"],
-		"terminal_bus_count": terminal_features["terminal_bus_count"],
 	}
+	for key in bus_features.keys():
+		features[key] = bus_features[key]
+	for key in brigade_features.keys():
+		features[key] = brigade_features[key]
+	for key in terminal_features.keys():
+		features[key] = terminal_features[key]
+	return features
 
 
 func get_obs() -> Dictionary:
@@ -161,6 +160,9 @@ func set_action(action) -> void:
 func reset():
 	super.reset()
 	vehicle_manager.clear_all_vehicles()
+	buildings_manager.reset_spawner_buildings()
+	network_manager.reset_network()
+	transport_manager.reset_state()
 	game_manager.clock.reset(true)
 
 	if _technical_reset_done:
@@ -170,44 +172,78 @@ func reset():
 		_technical_reset_done = true
 
 
+func _safe_ratio(numerator: float, denominator: float) -> float:
+	return numerator / max(denominator, 1.0)
+
+
+func _is_bus_delay_valid(bus: Vehicle, bus_state: int) -> bool:
+	if bus == null:
+		return false
+
+	var bus_ai = bus.ai as BusAI
+
+	if bus_ai == null:
+		return false
+
+	return bus_state == RLEnums.BusState.EN_ROUTE
+
+
 func _gather_bus_features(buses: Array) -> Dictionary:
 	var features = {
 		"bus_state_onehot": [],
 		"bus_type_onehot": [],
-		"bus_availability": [],
+		"bus_utilization": [],
+		"bus_exists": [],
 		"bus_load_ratio": [],
+		"bus_load_valid": [],
 		"bus_delay": [],
+		"bus_delay_valid": [],
 	}
 
 	var current_bus_counts = TransportHelper.get_total_deployed_buses(_depots)
 
-	features["bus_availability"] = [
-		current_bus_counts["regular"] / float(_buses_available["regular"]),
-		current_bus_counts["articulated"] / float(_buses_available["articulated"]),
+	features["bus_utilization"] = [
+		_safe_ratio(current_bus_counts["regular"], _buses_available["regular"]),
+		_safe_ratio(current_bus_counts["articulated"], _buses_available["articulated"]),
 	]
 
 	for bus_idx in range(buses.size()):
 		var bus = buses[bus_idx] as Vehicle
 		var bus_type = RLEnums.BusType.ARTICULATED if _is_bus_articulated(bus_idx) else RLEnums.BusType.REGULAR
-
 		features["bus_type_onehot"].append_array(_onehot_encode(bus_type, RLEnums.BusType.size()))
 
 		if bus == null:
+			features["bus_exists"].append(0.0)
 			features["bus_state_onehot"].append_array(_onehot_encode(RLEnums.BusState.AT_DEPOT, RLEnums.BusState.size()))
-			features["bus_load_ratio"].append(1.0)
+			features["bus_load_ratio"].append(0.0)
+			features["bus_load_valid"].append(0.0)
 			features["bus_delay"].append(0.0)
+			features["bus_delay_valid"].append(0.0)
 			continue
 
-		var bus_ai = bus.ai as BusAI
+		features["bus_exists"].append(1.0)
 
+		var bus_ai = bus.ai as BusAI
 		var bus_state = _get_bus_state(bus)
 		features["bus_state_onehot"].append_array(_onehot_encode(bus_state, RLEnums.BusState.size()))
 
-		var passenger_stats = bus_ai.get_passenger_counts()
-		features["bus_load_ratio"].append(passenger_stats.current_passengers / max(passenger_stats.max_passengers, 1))
+		if bus_ai != null:
+			var passenger_stats = bus_ai.get_passenger_counts()
+			features["bus_load_ratio"].append(
+				_safe_ratio(passenger_stats.current_passengers, passenger_stats.max_passengers)
+			)
+			features["bus_load_valid"].append(1.0)
+		else:
+			features["bus_load_ratio"].append(0.0)
+			features["bus_load_valid"].append(0.0)
 
-		var time_diff = bus_ai.get_time_difference_to_schedule(game_manager.clock.get_time().to_time_of_day())
-		features["bus_delay"].append(time_diff / (60.0 * 24.0))
+		if _is_bus_delay_valid(bus, bus_state):
+			var time_diff = bus_ai.get_time_difference_to_schedule(game_manager.clock.get_time().to_time_of_day())
+			features["bus_delay"].append(time_diff / 1440.0)
+			features["bus_delay_valid"].append(1.0)
+		else:
+			features["bus_delay"].append(0.0)
+			features["bus_delay_valid"].append(0.0)
 
 	return features
 
@@ -216,69 +252,92 @@ func _gather_brigade_features(brigades: Array) -> Dictionary:
 	var features = {
 		"brigade_bus_count": [],
 		"brigade_unserved_demand": [],
-		"brigade_spillover_risk": [],
+		"brigade_immediate_pressure_std": [],
+		"brigade_zone_pressure_std": [],
+		"brigade_zone_pressure_artic": [],
 		"brigade_traffic_intensity": [],
 		"brigade_time_to_next_departure": [],
 		"brigade_gap_ahead_norm": [],
+		"brigade_active": [],
+		"brigade_has_assigned_bus": [],
+		"brigade_gap_valid": [],
 	}
 
 	var total_buses = _buses_available["regular"] + _buses_available["articulated"]
 	var current_time = game_manager.clock.get_time().to_time_of_day()
 
 	for brigade in brigades as Array[Brigade]:
-		features["brigade_bus_count"].append(brigade.get_vehicle_count() / float(total_buses))
+		features["brigade_bus_count"].append(_safe_ratio(brigade.get_vehicle_count(), total_buses))
 
 		var next_trip = brigade.get_next_trip(current_time)
-		features["brigade_time_to_next_departure"].append(next_trip.get_time_till_departure() / (60.0 * 24.0))
+		var time_to_next_departure = 0.0
+		if next_trip != null:
+			time_to_next_departure = next_trip.get_time_till_departure() / 1440.0
+		features["brigade_time_to_next_departure"].append(time_to_next_departure)
 
 		var ongoing_trip = BrigadeHelper.get_ongoing_trip(brigade, current_time)
 
 		if ongoing_trip["ongoing_trip"] == null:
+			features["brigade_active"].append(0.0)
+			features["brigade_has_assigned_bus"].append(0.0)
 			features["brigade_unserved_demand"].append(0.0)
-			features["brigade_spillover_risk"].append(1.0)
+			features["brigade_immediate_pressure_std"].append(0.0)
+			features["brigade_zone_pressure_std"].append(0.0)
+			features["brigade_zone_pressure_artic"].append(0.0)
 			features["brigade_traffic_intensity"].append(0.0)
-			features["brigade_gap_ahead_norm"].append(1.0)
+			features["brigade_gap_ahead_norm"].append(0.0)
+			features["brigade_gap_valid"].append(0.0)
 			continue
 
-		var waiting_passengers_ahead = BrigadeHelper.get_waiting_passengers(brigade, ongoing_trip["ongoing_trip"], ongoing_trip["next_stop_idx"])
+		features["brigade_active"].append(1.0)
+
+		var waiting_passengers_ahead = BrigadeHelper.get_waiting_passengers(
+			brigade,
+			ongoing_trip["ongoing_trip"],
+			ongoing_trip["next_stop_idx"]
+		)
 
 		var serving_vehicle = ongoing_trip["assigned_bus"] as Vehicle
 		var bus_ai = serving_vehicle.ai as BusAI if serving_vehicle != null else null
+		features["brigade_has_assigned_bus"].append(1.0 if bus_ai != null else 0.0)
 
-		var unserved_demand = waiting_passengers_ahead["own_waiting"] / float(max(waiting_passengers_ahead["max_waiting"], 1))
+		var unserved_demand = _safe_ratio(
+			waiting_passengers_ahead["own_waiting"],
+			waiting_passengers_ahead["max_waiting"]
+		)
 		features["brigade_unserved_demand"].append(unserved_demand)
 
-		if bus_ai != null:
-			var passenger_stats = bus_ai.get_passenger_counts()
-			var next_bus_capacity = passenger_stats.max_passengers - passenger_stats.current_passengers
+		var demand_pressure = _estimate_brigade_demand_pressure(
+			brigade,
+			ongoing_trip["ongoing_trip"],
+			ongoing_trip["next_stop_idx"],
+			current_time,
+			waiting_passengers_ahead
+		)
 
-			features["brigade_spillover_risk"].append(
-				clamp(
-					(waiting_passengers_ahead["own_waiting_next_stop"] - next_bus_capacity) / float(max(waiting_passengers_ahead["max_waiting_next_stop"], 1)),
-					0.0,
-					1.0,
-				),
-			)
-		else:
-			features["brigade_spillover_risk"].append(1.0)
+		features["brigade_immediate_pressure_std"].append(demand_pressure["immediate_pressure_std"])
+		features["brigade_zone_pressure_std"].append(demand_pressure["zone_pressure_std"])
+		features["brigade_zone_pressure_artic"].append(demand_pressure["zone_pressure_artic"])
 
 		var transport_line = transport_manager.get_line(brigade.line_id) as TransportLine
-
 		features["brigade_traffic_intensity"].append(
 			BrigadeHelper.get_average_traffic(
 				network_manager,
 				transport_line,
 				ongoing_trip["ongoing_trip"],
 				ongoing_trip["next_stop_idx"],
-				ongoing_trip["assigned_bus"],
-			),
+				ongoing_trip["assigned_bus"]
+			)
 		)
 
 		var departure_time = ongoing_trip["ongoing_trip"].get_departure_terminal().get_departure_time_for_line(brigade.line_id)
 
 		if departure_time == null:
-			features["brigade_gap_ahead_norm"].append(1.0)
+			features["brigade_gap_ahead_norm"].append(0.0)
+			features["brigade_gap_valid"].append(0.0)
 			continue
+
+		features["brigade_gap_valid"].append(1.0)
 
 		var gap_ahead = current_time.to_minutes() - departure_time.to_minutes()
 		if gap_ahead < 0:
@@ -288,6 +347,123 @@ func _gather_brigade_features(brigades: Array) -> Dictionary:
 		features["brigade_gap_ahead_norm"].append(clamp(gap_ahead / normalization, 0.0, 1.0))
 
 	return features
+
+
+func _estimate_brigade_demand_pressure(
+		brigade: Brigade,
+		trip: BrigadeTrip,
+		next_stop_idx: int,
+		current_time: TimeOfDay,
+		waiting_passengers_ahead: Dictionary
+) -> Dictionary:
+	if next_stop_idx < 0:
+		return {
+			"immediate_pressure_std": 0.0,
+			"zone_pressure_std": 0.0,
+			"zone_pressure_artic": 0.0,
+		}
+
+	var line = transport_manager.get_line(brigade.line_id) as TransportLine
+
+	if line == null:
+		return {
+			"immediate_pressure_std": 0.0,
+			"zone_pressure_std": 0.0,
+			"zone_pressure_artic": 0.0,
+		}
+
+	var stops = trip.get_stops()
+	if stops.size() == 0:
+		return {
+			"immediate_pressure_std": 0.0,
+			"zone_pressure_std": 0.0,
+			"zone_pressure_artic": 0.0,
+		}
+
+	var start_idx = clamp(next_stop_idx, 0, stops.size() - 1)
+	var end_idx = min(stops.size(), start_idx + BRIGADE_DEMAND_HORIZON_STOPS)
+
+	var expected_zone_arrivals = 0.0
+	var expected_immediate_arrivals = 0.0
+
+	for stop_idx in range(start_idx, end_idx):
+		var line_stop = stops[stop_idx] as LineStop
+		if line_stop == null:
+			continue
+
+		var stop_selection = line_stop.get_stop_selection() as StopSelection
+		if stop_selection == null:
+			continue
+
+		var time_to_relief = _get_minutes_to_next_departure(stop_selection, line, current_time)
+		var horizon_minutes = min(time_to_relief, BRIGADE_DEMAND_HORIZON_MINUTES)
+		var expected_arrivals = _estimate_expected_arrivals(stop_selection, horizon_minutes)
+
+		expected_zone_arrivals += expected_arrivals
+
+		if stop_idx == start_idx:
+			expected_immediate_arrivals = expected_arrivals
+
+	var immediate_predicted_boardings = waiting_passengers_ahead["own_waiting_next_stop"] + expected_immediate_arrivals
+	var zone_predicted_boardings = waiting_passengers_ahead["own_waiting"] + expected_zone_arrivals
+
+	return {
+		"immediate_pressure_std": _capacity_pressure(immediate_predicted_boardings, TransportConstants.BUS_MAX_CAPACITY),
+		"zone_pressure_std": _capacity_pressure(zone_predicted_boardings, TransportConstants.BUS_MAX_CAPACITY),
+		"zone_pressure_artic": _capacity_pressure(zone_predicted_boardings, TransportConstants.ARTICULATED_BUS_MAX_CAPACITY),
+	}
+
+
+func _capacity_pressure(predicted_demand: float, capacity: float) -> float:
+	if capacity <= 0.0:
+		return 0.0
+
+	return clamp((predicted_demand - capacity) / capacity, -1.0, 2.0)
+
+
+func _estimate_expected_arrivals(stop_selection: StopSelection, horizon_minutes: float) -> float:
+	if horizon_minutes <= 0.0:
+		return 0.0
+
+	var passenger_spawner = stop_selection.get_passengers()
+	if passenger_spawner == null:
+		return 0.0
+
+	var current_clock_time = game_manager.clock.get_time()
+	var spawn_chance = passenger_spawner.get_effective_spawn_chance(current_clock_time) / 100.0
+	var spawn_range = passenger_spawner.get_effective_passenger_spawn_range(current_clock_time)
+
+	if spawn_range.size() < 2:
+		return 0.0
+
+	var average_spawn_size = (float(spawn_range[0]) + float(spawn_range[1])) * 0.5
+	var spawn_interval_minutes = TransportConstants.PASSENGER_SPAWN_INTERVAL_DELTA / 60.0
+	var spawn_rolls = horizon_minutes / max(spawn_interval_minutes, 0.0001)
+
+	# Approximate line share when a stop is served by multiple lines.
+	var stop_lines = stop_selection.get_lines()
+	var per_line_share = 1.0 / max(float(stop_lines.size()), 1.0)
+
+	return spawn_rolls * spawn_chance * average_spawn_size * per_line_share
+
+
+func _get_minutes_to_next_departure(stop_selection: StopSelection, line: TransportLine, current_time: TimeOfDay) -> float:
+	var departures = stop_selection.get_departures(line, current_time)
+
+	if departures.size() == 0:
+		return BRIGADE_DEMAND_HORIZON_MINUTES
+
+	var next_departure = departures[0] as StopDeparture
+
+	if next_departure == null:
+		return BRIGADE_DEMAND_HORIZON_MINUTES
+
+	var delta = next_departure.departure_time.to_minutes() - current_time.to_minutes()
+	if delta < 0:
+		delta += 1440
+
+	return float(delta)
+
 
 
 func _gather_terminal_features(terminals: Array) -> Dictionary:
@@ -397,7 +573,6 @@ func _set_state_action(bus_idx: int, state: RLEnums.BusStateRequest, reserve_ter
 
 			if is_target_terminal_same_as_current:
 				_score_manager.update_score(ChallengeEnums.ScoreReason.BUS_ALREADY_IN_RESERVE_SAME_TERMINAL)
-				return
 
 			bus_ai.drive_to_terminal(target_terminal_id)
 

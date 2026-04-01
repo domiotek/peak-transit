@@ -8,15 +8,20 @@ const VIEW_NAME = "GameObjectStatsView"
 @onready var _pathing_manager: PathingManager = GDInjector.inject("PathingManager") as PathingManager
 @onready var _vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
 @onready var _config_manager: ConfigManager = GDInjector.inject("ConfigManager") as ConfigManager
+@onready var _game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
+@onready var fps: ValueListItem = $Fps
+@onready var frame_time: ValueListItem = $FrameTime
 @onready var pathing_requests: ValueListItem = $PathingRequests
 @onready var vehicles_count: ValueListItem = $VehiclesCount
+@onready var lod: ValueListItem = $Lod
 
 
 func _ready() -> void:
 	visible = false
 	_ui_manager.register_ui_view(VIEW_NAME, self)
 	_config_manager.DebugToggles.ToggleChanged.connect(Callable(self, "_on_debug_toggles_changed"))
+	_on_debug_toggles_changed("ShowDebugCounters", _config_manager.DebugToggles.ShowDebugCounters)
 
 
 func _exit_tree() -> void:
@@ -26,9 +31,13 @@ func _exit_tree() -> void:
 func _process(_delta: float) -> void:
 	if not visible:
 		return
-
+	fps.set_value(str(Engine.get_frames_per_second()))
+	var frame_s := Performance.get_monitor(Performance.TIME_PROCESS)
+	var frame_ms := frame_s * 1000.0
+	frame_time.set_value("%.2f ms" % frame_ms, true)
 	pathing_requests.set_value(str(_pathing_manager.get_request_count()))
 	vehicles_count.set_value(str(_vehicle_manager.vehicles_count()))
+	lod.set_value(Enums.LODLevel.keys()[_game_manager.get_game_controller().get_lod()], true)
 
 
 func _on_debug_toggles_changed(toggle_name: String, value: bool) -> void:

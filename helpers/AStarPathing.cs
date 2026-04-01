@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using PT.DependencyProvider;
 using PT.Models.Mappings;
@@ -14,7 +13,6 @@ namespace PT.Helpers;
 class AStarNode(int nodeId)
 {
     public int NodeId { get; set; } = nodeId;
-    public string NodeRouteKey { get; set; }
     public float GCost { get; set; } = float.MaxValue;
     public float HCost { get; set; } = 0;
     public float FCost => GCost + HCost;
@@ -25,11 +23,6 @@ class AStarNode(int nodeId)
 
     public int? FromEndpointId { get; set; } = null;
     public int? ToEndpointId { get; set; } = null;
-
-    public AStarNode Clone()
-    {
-        return MemberwiseClone() as AStarNode;
-    }
 }
 
 public class AStarPathing
@@ -39,10 +32,16 @@ public class AStarPathing
     );
 
     private static readonly ConcurrentDictionary<int, NetSegment> _segmentCache = new();
+    private static readonly ConcurrentDictionary<int, NetLaneEndpoint> _endpointCache = new();
+    private static readonly ConcurrentDictionary<int, NetLane> _laneByEndpointCache = new();
+    private static readonly ConcurrentDictionary<int, float> _speedBonusByEndpointCache = new();
 
     public static void ClearCache()
     {
         _segmentCache.Clear();
+        _endpointCache.Clear();
+        _laneByEndpointCache.Clear();
+        _speedBonusByEndpointCache.Clear();
     }
 
     public static (List<PathStep> path, float totalCost) FindPathAStar(
@@ -76,9 +75,7 @@ public class AStarPathing
         }
 
         var explorationSet = new PriorityQueue<AStarNode, float>();
-        var bestCostToState = new Dictionary<string, double>();
-        var visitedNodes = new HashSet<int>();
-        var bestSolutionNodes = new HashSet<int>();
+        var bestCostToState = new Dictionary<(int nodeId, int? fromEndpointId), float>();
         AStarNode bestSolution = null;
 
         var startNode = new AStarNode(startNodeId)
@@ -88,6 +85,7 @@ public class AStarPathing
             HCost = CalculateHeuristic(startGraphNode, endGraphNode),
         };
 
+        bestCostToState[(startNode.NodeId, startNode.FromEndpointId)] = startNode.GCost;
         explorationSet.Enqueue(startNode, startNode.FCost);
 
         while (explorationSet.Count > 0)
@@ -95,16 +93,21 @@ public class AStarPathing
             cancellationToken.ThrowIfCancellationRequested();
 
             var currentNode = explorationSet.Dequeue();
-            string currentStateKey = $"{currentNode.NodeId}_{currentNode.FromEndpointId}";
+            var currentStateKey = (currentNode.NodeId, currentNode.FromEndpointId);
             if (
                 currentNode.GCost
-                > bestCostToState.GetValueOrDefault(currentStateKey, double.MaxValue)
+                > bestCostToState.GetValueOrDefault(currentStateKey, float.MaxValue)
             )
             {
                 continue;
             }
 
-            bestCostToState[currentStateKey] = currentNode.GCost;
+            // Safe branch-and-bound: with non-negative edge costs, any continuation from
+            // this state cannot improve a solution that already has a lower/equal G cost.
+            if (bestSolution != null && currentNode.GCost >= bestSolution.GCost)
+            {
+                continue;
+            }
 
             if (currentNode.NodeId == endNodeId)
             {
@@ -116,33 +119,12 @@ public class AStarPathing
                     if (bestSolution == null || currentNode.GCost < bestSolution.GCost)
                     {
                         bestSolution = currentNode;
-                        bestSolutionNodes = GetNodesInPath(bestSolution);
                     }
                     else
                     {
                         continue;
                     }
                 }
-            }
-
-            if (
-                bestSolution != null
-                && visitedNodes.Contains(currentNode.NodeId)
-                && !bestSolutionNodes.Contains(currentNode.NodeId)
-            )
-            {
-                continue;
-            }
-
-            visitedNodes.Add(currentNode.NodeId);
-
-            if (
-                bestSolution != null
-                && !bestSolutionNodes.Contains(currentNode.NodeId)
-                && currentNode.FCost >= bestSolution.GCost
-            )
-            {
-                continue;
             }
 
             var graphNode = graph.GetNode(currentNode.NodeId);
@@ -154,13 +136,24 @@ public class AStarPathing
                 currentNode,
                 endGraphNode,
                 vehicleType,
-                forcedStartEndpointId
+                forcedStartEndpointId,
+                bestSolution?.GCost
             );
 
             forcedStartEndpointId = null;
 
             foreach (var neighbor in neighborNodes)
             {
+                var neighborStateKey = (neighbor.NodeId, neighbor.FromEndpointId);
+                if (
+                    neighbor.GCost
+                    >= bestCostToState.GetValueOrDefault(neighborStateKey, float.MaxValue)
+                )
+                {
+                    continue;
+                }
+
+                bestCostToState[neighborStateKey] = neighbor.GCost;
                 explorationSet.Enqueue(neighbor, neighbor.FCost);
             }
         }
@@ -180,10 +173,36 @@ public class AStarPathing
         AStarNode currentNode,
         GraphNode endNode,
         VehicleCategory vehicleType,
-        int? forcedEndpoint
+        int? forcedEndpoint,
+        float? bestSolutionCost
     )
     {
         var result = new List<AStarNode>();
+
+        HashSet<int> availableEndpoints = null;
+        if (
+            currentNode.FromEndpointId != null
+            && currentNode.GraphNode.EndpointConnections.TryGetValue(
+                (int)currentNode.FromEndpointId,
+                out var endpointCandidates
+            )
+        )
+        {
+            availableEndpoints = new HashSet<int>(endpointCandidates);
+        }
+
+        NetLaneEndpoint sourceEndpoint = null;
+        if (currentNode.FromEndpointId != null)
+        {
+            sourceEndpoint = GetEndpointById(
+                currentNode.GraphNode,
+                (int)currentNode.FromEndpointId
+            );
+            if (sourceEndpoint == null)
+            {
+                return result;
+            }
+        }
 
         foreach (var connection in currentNode.GraphNode.ConnectedNodes)
         {
@@ -191,41 +210,45 @@ public class AStarPathing
             var neighborGraphNode = graph.GetNode(neighborId);
             var route = connection.Value;
 
-            var availableEndpoints =
-                currentNode.FromEndpointId != null
-                    ? currentNode.GraphNode.EndpointConnections[(int)currentNode.FromEndpointId]
-                    : null;
-
-            var filteredViaPoints = route
-                .Via.Where(via => availableEndpoints == null || availableEndpoints.Contains(via))
-                .Where(via => forcedEndpoint == null || via == forcedEndpoint)
-                .Where(via =>
-                {
-                    if (currentNode.FromEndpointId == null)
-                        return true;
-
-                    var sourceEndpoint = currentNode.GraphNode.Endpoints.FirstOrDefault(e =>
-                        e.Id == currentNode.FromEndpointId
-                    );
-
-                    if (sourceEndpoint == null)
-                        return false;
-
-                    var allowedVehicles = sourceEndpoint.ConnectionsExt.ContainsKey(via)
-                        ? sourceEndpoint.ConnectionsExt[via].AllowedVehicles
-                        : new List<VehicleCategory>();
-
-                    return allowedVehicles.Count == 0 || allowedVehicles.Contains(vehicleType);
-                })
-                .ToList();
-
-            foreach (var viaPoint in filteredViaPoints)
+            foreach (var viaPoint in route.Via)
             {
-                currentNode.NodeRouteKey = $"{currentNode.NodeId}_{neighborId}_{viaPoint}";
+                if (availableEndpoints != null && !availableEndpoints.Contains(viaPoint))
+                {
+                    continue;
+                }
 
-                currentNode.ToEndpointId = viaPoint;
+                if (forcedEndpoint != null && viaPoint != forcedEndpoint)
+                {
+                    continue;
+                }
 
-                float tentativeGCost = currentNode.GCost + CalculateCurrentCost(currentNode);
+                if (currentNode.FromEndpointId != null)
+                {
+                    var allowedVehicles = sourceEndpoint.ConnectionsExt.TryGetValue(
+                        viaPoint,
+                        out var connectionExt
+                    )
+                        ? connectionExt.AllowedVehicles
+                        : null;
+
+                    if (
+                        allowedVehicles != null
+                        && allowedVehicles.Count > 0
+                        && !allowedVehicles.Contains(vehicleType)
+                    )
+                    {
+                        continue;
+                    }
+                }
+
+                float tentativeGCost =
+                    currentNode.GCost
+                    + CalculateCurrentCost(currentNode.FromEndpointId, viaPoint, currentNode.Depth);
+
+                if (bestSolutionCost != null && tentativeGCost >= bestSolutionCost)
+                {
+                    continue;
+                }
 
                 var fromEndpoint = currentNode.GraphNode.OutgoingToIncomingEndpointsMapping[
                     viaPoint
@@ -233,11 +256,12 @@ public class AStarPathing
 
                 var explorationNode = new AStarNode(neighborId)
                 {
-                    Parent = currentNode.Clone(),
+                    Parent = currentNode,
                     GraphNode = neighborGraphNode,
                     GCost = tentativeGCost,
                     HCost = CalculateHeuristic(neighborGraphNode, endNode, fromEndpoint),
                     FromEndpointId = fromEndpoint,
+                    ToEndpointId = viaPoint,
                     Depth = currentNode.Depth + 1,
                 };
 
@@ -258,25 +282,28 @@ public class AStarPathing
             var step = new PathStep(
                 current.Parent.NodeId,
                 current.NodeId,
-                current.Parent.ToEndpointId ?? -1
+                current.ToEndpointId ?? -1
             );
-            path.Insert(0, step);
+            path.Add(step);
             current = current.Parent;
         }
+
+        path.Reverse();
 
         return path;
     }
 
-    private static HashSet<int> GetNodesInPath(AStarNode solution)
+    private static NetLaneEndpoint GetEndpointById(GraphNode node, int endpointId)
     {
-        var nodesInPath = new HashSet<int>();
-        var current = solution;
-        while (current != null)
+        foreach (var endpoint in node.Endpoints)
         {
-            nodesInPath.Add(current.NodeId);
-            current = current.Parent;
+            if (endpoint.Id == endpointId)
+            {
+                return endpoint;
+            }
         }
-        return nodesInPath;
+
+        return null;
     }
 
     private static float CalculateHeuristic(
@@ -297,21 +324,29 @@ public class AStarPathing
         }
     }
 
-    private static float CalculateCurrentCost(AStarNode node)
+    private static float CalculateCurrentCost(int? fromEndpointId, int? toEndpointId, int depth)
     {
         var cost = 1f;
 
-        if (node.FromEndpointId != null && node.ToEndpointId != null)
+        if (fromEndpointId != null && toEndpointId != null)
         {
-            var fromEndpoint = NetworkManager.GetLaneEndpoint((int)node.FromEndpointId);
-            var toEndpoint = NetworkManager.GetLaneEndpoint((int)node.ToEndpointId);
+            var fromEndpoint = GetEndpoint((int)fromEndpointId);
+            var toEndpoint = GetEndpoint((int)toEndpointId);
 
-            var segment = GetSegment(fromEndpoint.SegmentId);
-            var lane = segment.Lanes[fromEndpoint.LaneId];
+            if (fromEndpoint == null || toEndpoint == null)
+            {
+                return cost;
+            }
+
+            var lane = GetLaneForEndpoint(fromEndpoint);
+            if (lane == null)
+            {
+                return cost;
+            }
 
             var switchingCost = ApplyLaneSwitchingCost(fromEndpoint, toEndpoint);
-            var speedBonus = ApplySpeedLimitBonus(lane);
-            var usageCost = ApplyLaneUsageCost(lane, node.Depth);
+            var speedBonus = GetSpeedBonusForEndpoint((int)fromEndpointId, lane);
+            var usageCost = ApplyLaneUsageCost(lane, depth);
 
             cost += switchingCost;
             cost += speedBonus;
@@ -329,6 +364,48 @@ public class AStarPathing
             _segmentCache[segmentId] = targetSegment;
         }
         return targetSegment;
+    }
+
+    private static NetLaneEndpoint GetEndpoint(int endpointId)
+    {
+        if (!_endpointCache.TryGetValue(endpointId, out var endpoint))
+        {
+            endpoint = NetworkManager.GetLaneEndpoint(endpointId);
+            if (endpoint != null)
+            {
+                _endpointCache[endpointId] = endpoint;
+            }
+        }
+
+        return endpoint;
+    }
+
+    private static NetLane GetLaneForEndpoint(NetLaneEndpoint endpoint)
+    {
+        if (!_laneByEndpointCache.TryGetValue(endpoint.Id, out var lane))
+        {
+            var segment = GetSegment(endpoint.SegmentId);
+            if (segment == null || endpoint.LaneId < 0 || endpoint.LaneId >= segment.Lanes.Count)
+            {
+                return null;
+            }
+
+            lane = segment.Lanes[endpoint.LaneId];
+            _laneByEndpointCache[endpoint.Id] = lane;
+        }
+
+        return lane;
+    }
+
+    private static float GetSpeedBonusForEndpoint(int endpointId, NetLane lane)
+    {
+        if (!_speedBonusByEndpointCache.TryGetValue(endpointId, out var speedBonus))
+        {
+            speedBonus = ApplySpeedLimitBonus(lane);
+            _speedBonusByEndpointCache[endpointId] = speedBonus;
+        }
+
+        return speedBonus;
     }
 
     private static float ApplyLaneSwitchingCost(

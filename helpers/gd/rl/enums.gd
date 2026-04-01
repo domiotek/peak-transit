@@ -1,5 +1,10 @@
 class_name RLEnums
 
+enum AgentMode {
+	TRAIN,
+	INFERENCE,
+}
+
 enum BusType {
 	REGULAR,
 	ARTICULATED,
@@ -45,3 +50,12 @@ static func get_bus_state_request_name(state: BusStateRequest) -> String:
 			return "Reserve"
 
 	return "Unknown request"
+
+static func parse_agent_mode(mode_str: String) -> AgentMode:
+	match mode_str.to_lower():
+		"train":
+			return AgentMode.TRAIN
+		"inference":
+			return AgentMode.INFERENCE
+
+	return AgentMode.TRAIN

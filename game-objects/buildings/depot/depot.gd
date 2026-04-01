@@ -50,6 +50,7 @@ func setup_depot(new_id: int, depot_data: DepotDefinition) -> void:
 
 
 func get_definition() -> DepotDefinition:
+	_depot_data.id = depot_id
 	return _depot_data
 
 
@@ -125,8 +126,6 @@ func try_enter(vehicle: Vehicle) -> Path2D:
 
 	var path = _stop_tracks[track_id]["in"]
 
-	vehicle.driver.set_blinkers_state(Enums.BlinkersState.OFF)
-
 	return path
 
 
@@ -136,6 +135,16 @@ func insta_return_bus(vehicle_id: int) -> void:
 		return
 
 	_on_vehicle_entered(vehicle_id, true)
+
+func reset_state() -> void:
+	for track_id in _vehicles_on_tracks.keys():
+		_vehicles_on_tracks[track_id] = -1
+
+	_known_bus_ids["regular"].clear()
+	_known_bus_ids["articulated"].clear()
+	_next_bus_number = 1
+	_current_bus_count = _depot_data.regular_bus_capacity
+	_current_articulated_bus_count = _depot_data.articulated_bus_capacity
 
 
 static func get_collision_polygon() -> PackedVector2Array:
@@ -175,10 +184,10 @@ func _check_spawn_constraints(is_articulated: bool) -> bool:
 	return _current_bus_count > 0
 
 
-func _get_connection_endpoints() -> Dictionary:
+func _get_connection_endpoints() -> Dictionary[BuildingConnectionInfo.BuildingConnectionType, Vector2]:
 	return {
-		"in": to_global(Vector2(10, -25)),
-		"out": to_global(Vector2(-10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.IN: to_global(Vector2(10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.OUT: to_global(Vector2(-10, -25)),
 	}
 
 

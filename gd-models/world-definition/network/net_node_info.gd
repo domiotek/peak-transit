@@ -19,7 +19,7 @@ func serialize() -> Dictionary:
 
 static func deserialize(data: Dictionary) -> NetNodeInfo:
 	var net_node_info = NetNodeInfo.new()
-	net_node_info.id = data.get("id")
+	net_node_info.id = data.get("id", -1)
 	net_node_info.position = data.get("pos")
 	net_node_info.intersection_type = data.get("intersection") as Enums.IntersectionType
 	net_node_info.priority_segments = data.get("priSegments", [])

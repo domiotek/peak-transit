@@ -30,10 +30,13 @@ const PATH_DIRECTION_INDICATORS_OFFSET = 50.0 # offset in pixels for direction i
 const PATH_DIRECTION_INDICATORS_SIZE = 8.0 # size in pixels for direction indicator triangles
 
 # duration in seconds for long traffic light phases
-const TRAFFIC_LIGHTS_LONG_PHASE_DURATION = (90.0 / SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE)
+const TRAFFIC_LIGHTS_LONG_PHASE_DURATION = (290.0 / SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE)
 # duration in seconds for short traffic light phases
-const TRAFFIC_LIGHTS_SHORT_PHASE_DURATION = (60.0 / SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE)
+const TRAFFIC_LIGHTS_SHORT_PHASE_DURATION = (260.0 / SimulationConstants.SIMULATION_REAL_SECONDS_PER_IN_GAME_MINUTE)
 
-const TRAFFIC_LIGHTS_MIN_PHASE_DURATION_SCALER = 0.3 # scaler to determine minimum phase duration based on traffic flow
+const TRAFFIC_LIGHTS_MIN_PHASE_DURATION_SCALER = 0.1 # scaler to determine minimum phase duration based on traffic flow
 const TRAFFIC_LIGHTS_LOW_FLOW_THRESHOLD = 10 # vehicle count threshold to consider traffic flow as low
 const TRAFFIC_LIGHTS_FLOW_SCAN_DISTANCE = 250.0 # distance in pixels to scan for traffic flow
+
+# Safety buffer subtracted from free lane entry space to account for vehicle footprint and jitter.
+const LANE_ENTRY_CLEARANCE_MARGIN = 28.0

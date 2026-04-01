@@ -120,6 +120,8 @@ func get_segment_directions_from_segment(node: RoadNode, ref_segment: NetSegment
 	}
 
 	var assigned_segments = []
+	var best_left_score: float = -INF
+	var best_right_score: float = INF
 
 	var ref_curve = ref_segment.main_layer_curve
 	if not ref_curve:
@@ -182,13 +184,20 @@ func get_segment_directions_from_segment(node: RoadNode, ref_segment: NetSegment
 
 			var to_other_sample = other_sample_point - ref_center
 			var cross_product = ref_line_vector.cross(to_other_sample)
+			var normalized_cross = ref_line_vector.normalized().cross(to_other_sample.normalized())
 
 			if cross_product > 0:
-				directions["left"] = segment
-				assigned_segments.append(segment)
+				if normalized_cross > best_left_score:
+					directions["left"] = segment
+					best_left_score = normalized_cross
+					if segment not in assigned_segments:
+						assigned_segments.append(segment)
 			else:
-				directions["right"] = segment
-				assigned_segments.append(segment)
+				if normalized_cross < best_right_score:
+					directions["right"] = segment
+					best_right_score = normalized_cross
+					if segment not in assigned_segments:
+						assigned_segments.append(segment)
 
 	if directions['forward'] == null:
 		var unassigned_segment = other_segments.filter(func(s): return s not in assigned_segments)

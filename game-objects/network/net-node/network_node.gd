@@ -19,6 +19,8 @@ var outgoing_endpoints: Array = []
 
 var connection_paths: Dictionary = { }
 var connection_directions: Dictionary = { }
+var _connection_curve_crossings: Dictionary = { }
+var _source_endpoints_by_destination: Dictionary = { }
 
 var corner_points: PackedVector2Array = []
 var connected_segments: Array = []
@@ -27,7 +29,6 @@ var segment_priorities: Dictionary = { }
 var is_priority_based: bool = false
 
 var _visuals_initialized: bool = false
-
 var intersection_manager: IntersectionManager = IntersectionManager.new()
 
 @onready var debug_layer: Node2D = $DebugLayer
@@ -80,7 +81,7 @@ func update_visuals() -> void:
 		var node_width = max_lanes * NetworkConstants.LANE_WIDTH
 
 		if connected_segments.size() > 2:
-			corner_points = layer_helper.find_intersection_corners(connected_segments)
+			corner_points = layer_helper.find_intersection_corners(self, connected_segments)
 
 			main_layer.polygon = layer_helper.create_precise_intersection_layer(self, connected_segments, corner_points)
 			var coatings = line_helper.get_polygon_chunks(main_layer, NetworkConstants.LANE_WIDTH)
@@ -106,12 +107,13 @@ func update_visuals() -> void:
 				node_width,
 				NetworkConstants.LANE_WIDTH,
 			)
-
 	_update_debug_layer()
 
 
 func late_update_visuals() -> void:
 	_setup_connections()
+	_rebuild_source_endpoints_cache()
+	_rebuild_connection_curve_crossing_cache()
 
 	intersection_manager.setup_intersection(self)
 
@@ -146,6 +148,8 @@ func reset_visuals() -> void:
 	connections.clear()
 	connection_paths.clear()
 	connection_directions.clear()
+	_connection_curve_crossings.clear()
+	_source_endpoints_by_destination.clear()
 	corner_points = []
 	connected_segments = []
 	segment_directions.clear()
@@ -168,6 +172,10 @@ func get_definition() -> NetNodeInfo:
 func remove_segment(segment: NetSegment) -> void:
 	if not connected_segments.has(segment):
 		return
+
+	var removed_destination_node_id = segment.get_other_node_id(id)
+	definition.priority_segments.erase(removed_destination_node_id)
+	definition.stop_segments.erase(removed_destination_node_id)
 
 	connected_segments.erase(segment)
 
@@ -246,6 +254,14 @@ func get_connection_priority(in_id: int) -> Enums.IntersectionPriority:
 	return segment_priorities.get(from_segment_id, Enums.IntersectionPriority.YIELD)
 
 
+func are_connection_curves_crossing(first_in_id: int, first_out_id: int, second_in_id: int, second_out_id: int) -> bool:
+	var first_connection_key := _compose_connection_key(first_in_id, first_out_id)
+	var second_connection_key := _compose_connection_key(second_in_id, second_out_id)
+	var pair_key := _compose_connection_pair_key(first_connection_key, second_connection_key)
+
+	return _connection_curve_crossings.get(pair_key, false)
+
+
 func get_connection_details(in_id: int, out_id: int) -> Dictionary:
 	var source_endpoint = network_manager.get_lane_endpoint(in_id)
 	var dest_endpoint = network_manager.get_lane_endpoint(out_id)
@@ -290,10 +306,10 @@ func get_segment_directions(segment_id: int) -> Array:
 
 
 func get_source_endpoints(to_endpoint_id: int) -> Array:
-	var sources: Array = []
-	for source_id in connections.keys():
-		if connections[source_id].has(to_endpoint_id):
-			sources.append(source_id)
+	var sources: Array = _source_endpoints_by_destination.get(to_endpoint_id, null)
+	if sources == null:
+		return []
+
 	return sources
 
 
@@ -362,6 +378,34 @@ func revalidate_intersection_priorities() -> void:
 		intersection_manager.switch_intersection_type(Enums.IntersectionType.DEFAULT)
 
 
+func set_lod(lod: Enums.LODLevel) -> void:
+	if lod == Enums.LODLevel.HIGH:
+		markings_layer.visible = true
+		coating_layer.visible = true
+		line_markings_layer.visible = true
+		top_layer.visible = true
+		return
+
+	if lod == Enums.LODLevel.MEDIUM:
+		markings_layer.visible = true
+		coating_layer.visible = false
+		line_markings_layer.visible = true
+		top_layer.visible = true
+		return
+
+	if lod == Enums.LODLevel.LOW:
+		markings_layer.visible = true
+		coating_layer.visible = false
+		line_markings_layer.visible = false
+		top_layer.visible = false
+		return
+
+	markings_layer.visible = false
+	coating_layer.visible = false
+	line_markings_layer.visible = false
+	top_layer.visible = false
+
+
 func _setup_connections() -> void:
 	if connected_segments.size() == 0:
 		return
@@ -372,6 +416,58 @@ func _setup_connections() -> void:
 		connections_helper.setup_two_segment_connections(self)
 	else:
 		connections_helper.setup_mutli_segment_connections(self)
+
+
+func _rebuild_source_endpoints_cache() -> void:
+	_source_endpoints_by_destination.clear()
+
+	for source_id in connections.keys():
+		for destination_id in connections[source_id]:
+			if not _source_endpoints_by_destination.has(destination_id):
+				_source_endpoints_by_destination[destination_id] = []
+
+			(_source_endpoints_by_destination[destination_id] as Array).append(source_id)
+
+
+func _rebuild_connection_curve_crossing_cache() -> void:
+	_connection_curve_crossings.clear()
+
+	var connection_entries: Array = []
+	for in_id in connections.keys():
+		for out_id in connections[in_id]:
+			var path := get_connection_path(in_id, out_id)
+			if path == null or path.curve == null:
+				continue
+
+			connection_entries.append(
+				{
+					"in_id": in_id,
+					"out_id": out_id,
+					"curve": path.curve,
+				},
+			)
+
+	for i in range(connection_entries.size()):
+		var first_entry = connection_entries[i]
+		var first_connection_key := _compose_connection_key(first_entry["in_id"], first_entry["out_id"])
+
+		for j in range(i + 1, connection_entries.size()):
+			var second_entry = connection_entries[j]
+			var second_connection_key := _compose_connection_key(second_entry["in_id"], second_entry["out_id"])
+			var pair_key := _compose_connection_pair_key(first_connection_key, second_connection_key)
+
+			_connection_curve_crossings[pair_key] = line_helper.curves_intersect(first_entry["curve"], second_entry["curve"], 10)
+
+
+func _compose_connection_key(in_id: int, out_id: int) -> int:
+	return (in_id << 32) | (out_id & 0xFFFFFFFF)
+
+
+func _compose_connection_pair_key(first_connection_key: int, second_connection_key: int) -> String:
+	if first_connection_key < second_connection_key:
+		return "%d|%d" % [first_connection_key, second_connection_key]
+
+	return "%d|%d" % [second_connection_key, first_connection_key]
 
 
 func _draw_stop_lines() -> void:
@@ -400,7 +496,7 @@ func _draw_stop_lines() -> void:
 				Enums.IntersectionPriority.STOP:
 					line_helper.draw_solid_line(perpendicular_line, line_markings_layer, 3.0, Color.GRAY)
 				Enums.IntersectionPriority.YIELD:
-					line_helper.draw_dash_line(perpendicular_line, line_markings_layer, 12.0, 5.0, 3.0, Color.GRAY)
+					line_helper.draw_textured_dash_line(perpendicular_line, line_markings_layer, 3.0, Color.GRAY)
 
 
 func _fill_segment_priorities(print_warnings: bool = true) -> void:

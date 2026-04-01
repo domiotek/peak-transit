@@ -64,6 +64,7 @@ func is_simulation_running() -> bool:
 func step_simulation(delta: float) -> void:
 	if simulation_running:
 		game_manager.clock.advance_time(delta)
+		vehicle_manager.reset_vehicle_spawn_budget()
 		if _visual_day_night_cycle_enabled:
 			game_controller.get_map().update_day_progress(game_manager.clock.get_day_progress_percentage())
 

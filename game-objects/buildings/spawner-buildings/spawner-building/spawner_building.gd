@@ -43,6 +43,9 @@ func spawn_vehicle() -> void:
 	if vehicle_leaving:
 		return
 
+	if vehicle_manager.vehicles_count() >= config_manager.DummyCarSpawnMaxTotalVehicles:
+		return
+
 	var target_building_type = buildings_manager.get_random_building_type(self.type, _get_target_building_roll_weights())
 	var target_building = buildings_manager.get_random_building_with_constraints(target_building_type, self.id)
 
@@ -54,6 +57,9 @@ func spawn_vehicle() -> void:
 		return
 
 	var vehicle = vehicle_manager.create_vehicle(VehicleManager.VehicleType.CAR)
+
+	if not vehicle:
+		return
 
 	vehicle.trip_abandoned.connect(Callable(self, "_vehicle_routing_failed"))
 
@@ -73,6 +79,11 @@ func get_popup_data() -> Dictionary:
 		"spawn_roll_cooldown": int(_roll_cooldown),
 	}
 
+func reset() -> void:
+	vehicles_pool = _get_starting_vehicles_pool()
+	_roll_cooldown = 0.0
+	vehicle_leaving = null
+	vehicles_entering.clear()
 
 static func get_collision_polygon() -> PackedVector2Array:
 	return BuildingConstants.SPAWNER_BUILDING_COLLISION_POLYGON
@@ -126,10 +137,10 @@ func _get_shape_color() -> Color:
 	return Color.GRAY
 
 
-func _get_connection_endpoints() -> Dictionary:
+func _get_connection_endpoints() -> Dictionary[BuildingConnectionInfo.BuildingConnectionType, Vector2]:
 	return {
-		"in": to_global(Vector2(10, -25)),
-		"out": to_global(Vector2(-10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.IN: to_global(Vector2(10, -25)),
+		BuildingConnectionInfo.BuildingConnectionType.OUT: to_global(Vector2(-10, -25)),
 	}
 
 
@@ -153,9 +164,13 @@ func _get_target_building_roll_weights() -> Dictionary:
 	}
 
 
-# 5AM to 8:30AM
+# 4:30AM to 7AM
+func _is_early_morning(time_of_day: float) -> bool:
+	return time_of_day >= 0.1865 and time_of_day < 0.292
+
+# 7AM to 8:30AM
 func _is_morning_rush_hour(time_of_day: float) -> bool:
-	return time_of_day >= 0.2 and time_of_day < 0.35
+	return time_of_day >= 0.292 and time_of_day < 0.35
 
 
 # 8:30AM to 3PM
@@ -163,14 +178,17 @@ func _is_midday(time_of_day: float) -> bool:
 	return time_of_day >= 0.35 and time_of_day < 0.6
 
 
-# 3PM to 7PM
-func _is_evening_rush_hour(time_of_day: float) -> bool:
-	return time_of_day >= 0.6 and time_of_day < 0.8
+# 3PM to 6PM
+func _is_afternoon_rush_hour(time_of_day: float) -> bool:
+	return time_of_day >= 0.6 and time_of_day < 0.75
 
+# 6PM to 8:30PM
+func _is_evening(time_of_day: float) -> bool:
+	return time_of_day >= 0.75 and time_of_day < 0.85
 
-# 7PM to 10PM
+# 8:30PM to 10PM
 func _is_late_evening(time_of_day: float) -> bool:
-	return time_of_day >= 0.8 and time_of_day < 1.0
+	return time_of_day >= 0.85 and time_of_day < 0.9
 
 
 # 10PM to 5AM

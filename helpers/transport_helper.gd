@@ -8,38 +8,45 @@ static func load_transport_definition(
 	var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
 	var game_manager: GameManager = GDInjector.inject("GameManager") as GameManager
 
+	var batch_size = SimulationConstants.MAP_LOAD_PROGRESS_BATCH_SIZE
+
 	if transport_def.demand_presets.size() == 0:
 		var default_preset = DemandPresetDefinition.get_default_definition()
 		transport_def.demand_presets.append(default_preset)
 
 	for i in range(transport_def.demand_presets.size()):
 		game_manager.push_loading_progress("Loading demand presets...", i / float(transport_def.demand_presets.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var preset_def = transport_def.demand_presets[i]
 		transport_manager.register_demand_preset(preset_def)
 
 	for i in range(transport_def.depots.size()):
 		game_manager.push_loading_progress("Placing transport depots...", i / float(transport_def.depots.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var depot_def = transport_def.depots[i]
 		transport_manager.register_depot(depot_def)
 
 	for i in range(transport_def.terminals.size()):
 		game_manager.push_loading_progress("Placing transport terminals...", i / float(transport_def.terminals.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var terminal_def = transport_def.terminals[i]
 		transport_manager.register_terminal(terminal_def)
 
 	for i in range(transport_def.stops.size()):
 		game_manager.push_loading_progress("Placing transport stops...", i / float(transport_def.stops.size()))
-		await game_manager.wait_frame()
+		if (i + 1) % batch_size == 0:
+			await game_manager.wait_frame()
 		var stop_def = transport_def.stops[i]
 		transport_manager.register_stop(stop_def)
 
 	if register_lines:
 		for i in range(transport_def.lines.size()):
 			game_manager.push_loading_progress("Setting up transport lines...", i / float(transport_def.lines.size()))
-			await game_manager.wait_frame()
+			if (i + 1) % batch_size == 0:
+				await game_manager.wait_frame()
 			var line_def = transport_def.lines[i]
 			await transport_manager.register_line(line_def)
 
@@ -48,7 +55,8 @@ static func load_transport_definition(
 			for line_id in range(lines.size()):
 				var transport_line = lines[line_id] as TransportLine
 				game_manager.push_loading_progress("Generating schedules...", line_id / float(lines.size()))
-				await game_manager.wait_frame()
+				if (line_id + 1) % batch_size == 0:
+					await game_manager.wait_frame()
 				transport_manager.generate_line_schedule(transport_line)
 
 
@@ -145,23 +153,23 @@ static func validate_line_definition(transport_manager: TransportManager, networ
 				Enums.TransportRouteStepType.TERMINAL:
 					var terminal_exists = transport_manager.terminal_exists(target_id)
 					if not terminal_exists:
-						return "Terminal ID not found in line '%s': %d" % [line_def.name, target_id]
+						return "Terminal ID not found in line '%s': %d" % [line_def.display_number, target_id]
 				Enums.TransportRouteStepType.STOP:
 					var stop_exists = transport_manager.stop_exists(target_id)
 					if not stop_exists:
-						return "Stop ID not found in line '%s': %d" % [line_def.name, target_id]
+						return "Stop ID not found in line '%s': %d" % [line_def.display_number, target_id]
 				Enums.TransportRouteStepType.WAYPOINT:
 					var node = network_manager.get_node(target_id)
 					if not node:
-						return "Node ID not found in line '%s': %d" % [line_def.name, target_id]
+						return "Node ID not found in line '%s': %d" % [line_def.display_number, target_id]
 				_:
-					return "Unknown step type in line '%s'" % line_def.name
+					return "Unknown step type in line '%s'" % line_def.display_number
 
 		if route[0].step_type != Enums.TransportRouteStepType.TERMINAL:
-			return "First step of route must be a terminal in line '%s'" % line_def.name
+			return "First step of route must be a terminal in line '%s'" % line_def.display_number
 
 		if route[route.size() - 1].step_type != Enums.TransportRouteStepType.TERMINAL:
-			return "Last step of route must be a terminal in line '%s'" % line_def.name
+			return "Last step of route must be a terminal in line '%s'" % line_def.display_number
 
 	return ""
 

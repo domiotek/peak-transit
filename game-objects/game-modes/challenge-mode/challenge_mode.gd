@@ -3,13 +3,12 @@ extends BaseGameController
 class_name ChallengeGameController
 
 var transport_manager: TransportManager = GDInjector.inject("TransportManager") as TransportManager
-var vehicle_manager: VehicleManager = GDInjector.inject("VehicleManager") as VehicleManager
 var line_helper: LineHelper = GDInjector.inject("LineHelper") as LineHelper
 
 var _vehicle_with_path_drawn: Vehicle = null
 var _score_manager: ScoreManager
 
-@onready var ai_controller: ChallengeAiController = $RLAgent as ChallengeAiController
+var ai_controller: ChallengeAiController
 
 
 func _ready() -> void:
@@ -92,6 +91,20 @@ func score_manager() -> ScoreManager:
 	return _score_manager
 
 
+func init_rl_agents(agent_mode: RLEnums.AgentMode, onnx_path: String="") -> bool:
+	ai_controller = ChallengeAiController.new()
+	ai_controller.add_to_group("AGENT")
+	add_child(ai_controller)
+
+	if agent_mode == RLEnums.AgentMode.INFERENCE:
+		ai_controller.onnx_model_path = "user://models/%s" % onnx_path
+		ai_controller.control_mode = AIController2D.ControlModes.ONNX_INFERENCE
+
+	ai_controller.setup()
+
+	return true
+
+
 func _on_initialize_game(world: WorldDefinition) -> void:
 	vehicle_manager.set_vehicles_layer(map.get_drawing_layer("VehiclesLayer"))
 
@@ -100,7 +113,6 @@ func _on_initialize_game(world: WorldDefinition) -> void:
 
 
 func _after_initialize_game() -> void:
-	ai_controller.setup()
 
 	ui_manager.show_ui_view(GameSpeedView.VIEW_NAME)
 	ui_manager.show_ui_view(GameClockView.VIEW_NAME)

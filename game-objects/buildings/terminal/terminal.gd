@@ -120,6 +120,7 @@ func get_outgoing_node_id() -> int:
 
 func get_definition() -> TerminalDefinition:
 	var terminal_def = TerminalDefinition.new()
+	terminal_def.id = terminal_id
 	terminal_def.name = _terminal_data.name
 	terminal_def.position = _terminal_data.position
 	terminal_def.demand_preset = _terminal_data.demand_preset
@@ -178,6 +179,10 @@ func get_lines_at_peron(peron_index: int) -> Array:
 
 func get_current_bus_count() -> int:
 	return _vehicles_on_tracks.size()
+
+
+func has_vehicle(vehicle_id: int) -> bool:
+	return _vehicles_on_tracks.has(vehicle_id)
 
 
 func try_enter(vehicle_id: int) -> Path2D:
@@ -325,6 +330,14 @@ func get_departure_time_for_line(line_id: int) -> TimeOfDay:
 
 func supports_routed_leaving() -> bool:
 	return true
+
+func reset_state() -> void:
+	_vehicles_on_tracks.clear()
+	_tracks_in_use.clear()
+	_last_departure_times_per_line.clear()
+
+	for spawner in _peron_passenger_spawners:
+		spawner.reset()
 
 
 static func get_visual_polygon() -> PackedVector2Array:
@@ -499,10 +512,10 @@ func _update_debug_visuals() -> void:
 		line_helper.draw_solid_line(bypass_out_track.curve, debug_layer, 2.0, Color.ORANGE)
 
 
-func _get_connection_endpoints() -> Dictionary:
+func _get_connection_endpoints() -> Dictionary[BuildingConnectionInfo.BuildingConnectionType, Vector2]:
 	return {
-		"in": to_global(Vector2(10, -15)),
-		"out": to_global(Vector2(-10, -15)),
+		BuildingConnectionInfo.BuildingConnectionType.IN: to_global(Vector2(10, -15)),
+		BuildingConnectionInfo.BuildingConnectionType.OUT: to_global(Vector2(-10, -15)),
 	}
 
 

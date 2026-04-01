@@ -217,6 +217,10 @@ func get_route_path(route_idx: int) -> Array:
 	return _traced_paths[route_idx]
 
 
+func get_definition() -> LineDefinition:
+	return _line_def
+
+
 func assign_brigades(ids: Array) -> void:
 	_brigade_ids = ids
 
@@ -339,20 +343,18 @@ func _find_departure_times_with_step(
 	for brigade in brigades as Array[Brigade]:
 		var trips = brigade.get_schedule().trips
 
-		var trips_taken = 0
-
 		for trip_idx in range(trips.size()):
 			var trip = trips[trip_idx] as Trip
 			if trip.route_id != route_idx:
 				continue
 
-			var time = trip.stop_times[step_idx]
+			var time = trip.stop_times[step_idx] as TimeOfDay
+			var departure_time = time
+			var departure_minutes = time.to_minutes()
 
-			if after != null and time.to_minutes() < after.to_minutes():
-				continue
-
-			if limit != -1 and trips_taken >= limit:
-				break
+			if after != null:
+				departure_minutes = _align_to_next_occurrence_minutes(time.to_minutes(), after.to_minutes())
+				departure_time = TimeOfDay.new(time.hour, time.minute, departure_minutes)
 
 			target_dep_times.append(
 				StopDeparture.new(
@@ -363,10 +365,9 @@ func _find_departure_times_with_step(
 					get_route_destination_name(route_idx),
 					brigade.id,
 					brigade.get_identifier(),
-					time,
+					departure_time,
 				),
 			)
-			trips_taken += 1
 
 	if sort:
 		target_dep_times.sort_custom(
@@ -374,7 +375,21 @@ func _find_departure_times_with_step(
 				return a.departure_time.to_minutes() < b.departure_time.to_minutes()
 		)
 
+	if limit != -1 and target_dep_times.size() > limit:
+		target_dep_times = target_dep_times.slice(0, limit)
+
 	return target_dep_times
+
+
+func _align_to_next_occurrence_minutes(value: int, reference_minutes: int) -> int:
+	var normalized_value = posmod(value, 1440)
+	var normalized_reference = posmod(reference_minutes, 1440)
+	var delta = normalized_value - normalized_reference
+
+	if delta < 0:
+		delta += 1440
+
+	return reference_minutes + delta
 
 
 func _on_pathfinder_result(_request_id: int, path: Variant) -> void:

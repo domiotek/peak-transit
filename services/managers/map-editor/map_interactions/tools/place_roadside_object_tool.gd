@@ -61,8 +61,7 @@ func handle_map_mouse_move(world_position: Vector2) -> void:
 	var polygon_data: Dictionary = _get_collision_polygon()
 	_ghost_object.update_shape(polygon_data["collision"], polygon_data.get("visual", PackedVector2Array()))
 
-	var transform := Transform2D.IDENTITY
-	transform.origin = _ghost_object.global_position
+	var transform := _ghost_object.global_transform
 
 	var shape_2d: Shape2D = ConvexPolygonShape2D.new()
 	shape_2d.set_points(polygon_data["collision"])
@@ -74,12 +73,16 @@ func handle_map_mouse_move(world_position: Vector2) -> void:
 	)
 
 	if collision_objects.size() > 0:
+		var target_segment = road_lane.get_parent_segment()
+		var target_relation_id = road_lane.get_segment_relation_id()
+
 		var first_non_target_segment_index = collision_objects.find_custom(
 			func(obj):
 				if obj is NetSegment:
 					var segment: NetSegment = obj as NetSegment
-					return segment != road_lane.get_parent_segment()
-				return true
+					return segment != target_segment
+
+				return _is_blocking_roadside_collision(obj, target_segment, target_relation_id)
 		)
 
 		if first_non_target_segment_index >= 0:
@@ -109,6 +112,27 @@ func reset_state() -> void:
 	_target_lane = null
 	_is_error = false
 	_target_offset = 0.0
+
+
+func _is_blocking_roadside_collision(obj: Node2D, target_segment: NetSegment, target_relation_id: int) -> bool:
+	if obj is BaseBuilding:
+		var building = obj as BaseBuilding
+		if building.segment == target_segment and building.target_relation_idx != target_relation_id:
+			return false
+
+		return true
+
+	if obj is Stop:
+		var stop = obj as Stop
+		var stop_segment = stop.get_segment()
+		if stop_segment == target_segment:
+			var relation = stop_segment.get_relation_with_starting_node(stop.get_incoming_node_id())
+			if relation != null and relation.id != target_relation_id:
+				return false
+
+		return true
+
+	return true
 
 
 func _find_edge_lane(

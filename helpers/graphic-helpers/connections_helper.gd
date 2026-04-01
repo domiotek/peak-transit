@@ -185,6 +185,16 @@ func setup_mutli_segment_connections(node: RoadNode) -> void:
 			var public_transport_only_direction = _check_for_public_transport_only_direction(in_lane)
 
 			var direction = determine_lane_direction(ids_dict, new_connections[in_id])
+			var has_right_candidate = ids_dict["right"].filter(func(x): return new_connections[in_id].has(x)).size() > 0
+			if has_right_candidate and not is_in_combined_direction(direction, Enums.Direction.RIGHT):
+				push_warning(
+					"Node %d lane %d (segment %d) has right-turn candidates but was assigned direction %s" % [
+						node.id,
+						in_lane.id,
+						segment.id,
+						str(direction),
+					],
+				)
 
 			var target_lane = segment.get_lane(in_endpoint.LaneId)
 			target_lane.direction = direction

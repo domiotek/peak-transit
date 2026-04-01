@@ -81,8 +81,6 @@ func update(_data: Dictionary) -> void:
 			properties_container.add_child(item)
 			_data_items.append(item)
 
-	toggle_debug_button.flat = not _selected_depot.are_debug_visuals_enabled()
-
 	_max_bus_capacity = _selected_depot.get_max_bus_capacity()
 	_max_articulated_bus_capacity = _selected_depot.get_max_bus_capacity(true)
 

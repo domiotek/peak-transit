@@ -18,8 +18,14 @@ var game_manager: GameManager
 var simulation_manager: SimulationManager
 var circle_helper: DebugCircleHelper
 var world_manager: WorldManager
+var network_manager: NetworkManager
+var vehicle_manager: VehicleManager
 
 var _world_definition: WorldDefinition
+
+var _lod_level: Enums.LODLevel = Enums.LODLevel.MEDIUM
+
+signal lod_level_changed(new_lod: Enums.LODLevel)
 
 
 func _ready() -> void:
@@ -29,11 +35,14 @@ func _ready() -> void:
 	ui_manager = GDInjector.inject("UIManager") as UIManager
 	circle_helper = GDInjector.inject("DebugCircleHelper") as DebugCircleHelper
 	world_manager = GDInjector.inject("WorldManager") as WorldManager
+	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
+	vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 
 	game_manager.setup(self)
 
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 	game_manager.rl_mode_toggled.connect(_show_rl_tag)
+	camera.zoom_changed.connect(_on_camera_zoom_changed)
 
 
 func get_mode() -> Enums.GameMode:
@@ -54,6 +63,10 @@ func get_camera_bounds() -> Rect2:
 
 func get_camera_zoom_bounds() -> Array[Vector2]:
 	return camera.get_camera_zoom_bounds()
+
+
+func get_lod() -> Enums.LODLevel:
+	return _lod_level
 
 
 func get_max_game_speed() -> Enums.GameSpeed:
@@ -81,6 +94,8 @@ func initialize_game(world_file_path: String) -> bool:
 
 	ui_manager.hide_ui_view("WorldLoadingProgressView")
 	_after_initialize_game()
+	var zoom = camera.zoom.x
+	_on_camera_zoom_changed(zoom)
 	return true
 
 
@@ -95,6 +110,9 @@ func init_map(world: WorldDefinition) -> void:
 
 func get_game_menu_buttons() -> Array[GameMenuButton]:
 	return []
+
+func init_rl_agents(_agent_mode: RLEnums.AgentMode, _onnx_path: String="") -> bool:
+	return false
 
 
 func _draw() -> void:
@@ -183,3 +201,33 @@ func _load_world_from_file_path(file_path: String) -> WorldDefinition:
 
 func _show_rl_tag(state: bool) -> void:
 	rl_mode_tag.visible = state
+	rl_mode_tag.text = "Connected to RL Framework" if game_manager.get_rl_agent_mode() == RLEnums.AgentMode.TRAIN else "RL Inference Mode"
+
+
+func _on_camera_zoom_changed(zoom: float) -> void:
+	if zoom <= 0.1:
+		_lod_level = Enums.LODLevel.VERY_LOW
+	elif zoom <= 0.3:
+		_lod_level = Enums.LODLevel.LOW
+	elif zoom <= 0.7:
+		_lod_level = Enums.LODLevel.MEDIUM
+	else:
+		_lod_level = Enums.LODLevel.HIGH
+
+	lod_level_changed.emit(_lod_level)
+	_apply_lod(_lod_level)
+
+
+func _apply_lod(level_of_detail: Enums.LODLevel) -> void:
+	var nodes := network_manager.get_nodes()
+	var segments := network_manager.get_segments()
+	var vehicles := vehicle_manager.get_vehicles()
+
+	for node in nodes:
+		node.set_lod(level_of_detail)
+
+	for segment in segments:
+		segment.set_lod(level_of_detail)
+
+	for vehicle in vehicles:
+		vehicle.set_lod(level_of_detail)

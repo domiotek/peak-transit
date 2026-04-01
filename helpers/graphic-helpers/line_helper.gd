@@ -1,5 +1,8 @@
 class_name LineHelper
 
+var dash_texture: Texture = preload("res://assets/road_markers/dash_line.png")
+
+
 func calc_curve(start_pos: Vector2, target_pos: Vector2, strength: float, direction: NetSegmentInfo.CurveDirection) -> Curve2D:
 	var line_vector = target_pos - start_pos
 	var line_length = line_vector.length()
@@ -152,6 +155,23 @@ func draw_dash_line(
 		drawing_dash = !drawing_dash
 
 
+func draw_textured_dash_line(
+		curve: Curve2D,
+		target_layer: Node2D,
+		line_width: float = NetworkConstants.LINE_WIDTH,
+		line_color: Color = NetworkConstants.DASH_COLOR,
+) -> void:
+	var dash_line = Line2D.new()
+	dash_line.texture = dash_texture
+	dash_line.texture_mode = Line2D.LineTextureMode.LINE_TEXTURE_TILE
+	dash_line.texture_repeat = CanvasItem.TextureRepeat.TEXTURE_REPEAT_ENABLED
+	dash_line.modulate = line_color
+	dash_line.width = line_width
+	dash_line.antialiased = true
+	dash_line.points = curve.get_baked_points()
+	target_layer.add_child(dash_line)
+
+
 func draw_solid_line(
 		curve: Curve2D,
 		target_layer: Node2D,
@@ -169,7 +189,11 @@ func draw_solid_line(
 	target_layer.add_child(solid_line)
 
 
-func find_curve_curve_intersections(curve1_points: PackedVector2Array, curve2_points: PackedVector2Array) -> PackedVector2Array:
+func find_curve_curve_intersections(
+		curve1_points: PackedVector2Array,
+		curve2_points: PackedVector2Array,
+		remove_duplicates: bool = true,
+) -> PackedVector2Array:
 	var intersections: PackedVector2Array = []
 
 	for i in range(curve1_points.size() - 1):
@@ -190,7 +214,10 @@ func find_curve_curve_intersections(curve1_points: PackedVector2Array, curve2_po
 			if intersection != null:
 				intersections.append(intersection)
 
-	return remove_duplicate_points(intersections)
+	if remove_duplicates:
+		return remove_duplicate_points(intersections)
+
+	return intersections
 
 
 func find_curve_polygon_intersections(curve_points: PackedVector2Array, polygon: PackedVector2Array, offset_tolerance: float = 5.0) -> PackedVector2Array:
@@ -407,24 +434,22 @@ func convert_curve_local_to_global(curve: Curve2D, source_node: Node2D) -> Curve
 func curves_intersect(curve1: Curve2D, curve2: Curve2D, resolution := 10.0) -> bool:
 	curve1.bake_interval = resolution
 	curve2.bake_interval = resolution
-	var points1 = curve1.get_baked_points()
-	var points2 = curve2.get_baked_points()
-
-	var segments_intersect = func(p1: Vector2, p2: Vector2, q1: Vector2, q2: Vector2) -> bool:
-		var d1 = (p2.x - p1.x) * (q1.y - p1.y) - (p2.y - p1.y) * (q1.x - p1.x)
-		var d2 = (p2.x - p1.x) * (q2.y - p1.y) - (p2.y - p1.y) * (q2.x - p1.x)
-		var d3 = (q2.x - q1.x) * (p1.y - q1.y) - (q2.y - q1.y) * (p1.x - q1.x)
-		var d4 = (q2.x - q1.x) * (p2.y - q1.y) - (q2.y - q1.y) * (p2.x - q1.x)
-		return (d1 * d2 < 0) and (d3 * d4 < 0)
+	var points1 := curve1.get_baked_points()
+	var points2 := curve2.get_baked_points()
 
 	for i in range(points1.size() - 1):
-		var a1 = points1[i]
-		var a2 = points1[i + 1]
+		var a1 := points1[i]
+		var a2 := points1[i + 1]
 		for j in range(points2.size() - 1):
-			var b1 = points2[j]
-			var b2 = points2[j + 1]
-			if segments_intersect.call(a1, a2, b1, b2):
-				return true
+			var b1 := points2[j]
+			var b2 := points2[j + 1]
+
+			var d1 := (a2.x - a1.x) * (b1.y - a1.y) - (a2.y - a1.y) * (b1.x - a1.x)
+			var d2 := (a2.x - a1.x) * (b2.y - a1.y) - (a2.y - a1.y) * (b2.x - a1.x)
+			var d3 := (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x)
+			var d4 := (b2.x - b1.x) * (a2.y - b1.y) - (b2.y - b1.y) * (a2.x - b1.x)
+
+			return (d1 * d2 < 0) and (d3 * d4 < 0)
 	return false
 
 

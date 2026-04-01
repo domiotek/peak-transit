@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://bbrqejogyhtn4"]
+[gd_scene format=3 uid="uid://bbrqejogyhtn4"]
 
 [ext_resource type="PackedScene" uid="uid://baf4uogxpw50c" path="res://game-objects/buildings/base-building/base-building.tscn" id="1_wrcr3"]
 [ext_resource type="Script" uid="uid://b3kh2f1vqghp2" path="res://game-objects/buildings/terminal/terminal.gd" id="2_t1vnh"]
@@ -61,6 +61,12 @@ _data = {
 }
 point_count = 9
 
+[sub_resource type="Curve2D" id="Curve2D_i5knn"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 64, -84, 0, 0, 0, 0, 83, -84, 0, 0, 0, 0, 102, -83, 0, 0, 0, 0, 122, -84, 0, 0, 0, 0, 138, -91, 0, 0, 0, 0, 157, -104, 0, 0, 0, 0, 177, -117, 0, 0, 0, 0, 191, -132, 0, 0, 0, 0, 198, -142, 0, 0, 0, 0, 206, -157)
+}
+point_count = 10
+
 [sub_resource type="Curve2D" id="Curve2D_lqlte"]
 _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 168, -170, 0, 0, 0, 0, 181, -188, 0, 0, 0, 0, 188, -200, 0, 0, 0, 0, 197, -218, 0, 0, 0, 0, 204, -236, 0, 0, 0, 0, 207, -246, 0, 0, 0, 0, 209, -255, 0, 0, 0, 0, 208, -266, 0, 0, 0, 0, 204, -271, 0, 0, 0, 0, 194, -277, 0, 0, 0, 0, 184, -280, 0, 0, 0, 0, 151, -282, 0, 0, 0, 0, 127, -285, 0, 0, 0, 0, 84, -292, 0, 0, 0, 0, 54, -296, 0, 0, 0, 0, 2, -302)
@@ -78,6 +84,12 @@ _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 116, -214, 0, 0, 0, 0, 126, -226, 0, 0, 0, 0, 129, -235, 0, 0, 0, 0, 130, -248, 0, 0, 0, 0, 130, -259, 0, 0, 0, 0, 121, -275, 0, 0, 0, 0, 108, -288, 0, 0, 0, 0, 91, -291, 0, 0, 0, 0, 58, -296, 0, 0, 0, 0, 32, -299, 0, 0, 0, 0, 2, -302)
 }
 point_count = 11
+
+[sub_resource type="Curve2D" id="Curve2D_18y68"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 206, -157, 0, 0, 0, 0, 212, -171, 0, 0, 0, 0, 219, -186, 0, 0, 0, 0, 223, -198, 0, 0, 0, 0, 226, -216, 0, 0, 0, 0, 228, -233, 0, 0, 0, 0, 229, -244, 0, 0, 0, 0, 227, -262, 0, 0, 0, 0, 216, -272, 0, 0, 0, 0, 195, -278, 0, 0, 0, 0, 176, -281, 0, 0, 0, 0, 150, -282, 0, 0, 0, 0, 133, -284, 0, 0, 0, 0, 114, -287, 0, 0, 0, 0, 100, -289, 0, 0, 0, 0, 64, -295, 0, 0, 0, 0, 48, -297, 0, 0, 0, 0, 25, -300, 0, 0, 0, 0, 2, -302)
+}
+point_count = 19
 
 [sub_resource type="Curve2D" id="Curve2D_bjbyl"]
 _data = {
@@ -151,148 +163,154 @@ _data = {
 }
 point_count = 13
 
-[node name="BaseBuilding" instance=ExtResource("1_wrcr3")]
+[node name="BaseBuilding" unique_id=78514163 instance=ExtResource("1_wrcr3")]
 script = ExtResource("2_t1vnh")
 
-[node name="Terrain" type="Polygon2D" parent="." index="1"]
+[node name="Terrain" type="Polygon2D" parent="." index="1" unique_id=387920769]
 color = Color(0.223103, 0.223103, 0.223103, 1)
-polygon = PackedVector2Array(-146, -297.999, -129, -308, -112, -316, -86, -322.001, -59, -324.001, 192, -297.999, 207, -293, 217, -287, 225, -278.999, 230, -270, 234, -259.999, 233, -246, 230, -235, 225, -219, 218, -201, 205, -178, 139, -92, 126, -83, 115, -75, 105, -67, 96, -62, 85, -56, 57, -45, 49, -39, 41, -32, 22, 1, -19, 1, -34, -15, -45, -23, -91, -27, -140, -32, -168, -42, -184, -52, -203, -67, -207, -76, -209, -88, -209, -109, -205, -141, -197, -172, -191, -194, -181, -231, -174, -249, -167, -265.001, -157, -280.999)
+polygon = PackedVector2Array(-146, -297.999, -129, -308, -112, -316, -86, -322.001, -59, -324.001, 192, -297.999, 207, -293, 217, -287, 225, -282, 233, -275, 239, -267, 241, -253, 241, -240, 241, -224, 241, -201, 238, -182, 234, -163, 227, -140, 219, -127, 210, -117, 171, -87, 148, -73, 127, -66, 103, -57, 85, -53, 57, -45, 49, -39, 41, -32, 22, 1, -19, 1, -34, -15, -45, -23, -91, -27, -140, -32, -168, -42, -184, -52, -203, -67, -207, -76, -209, -88, -209, -109, -205, -141, -197, -172, -191, -194, -181, -231, -174, -249, -167, -265.001, -157, -280.999)
 
-[node name="Building" type="Polygon2D" parent="." index="2"]
+[node name="Building" type="Polygon2D" parent="." index="2" unique_id=2067028981]
 color = Color(0.326338, 0.295587, 0.362915, 1)
 polygon = PackedVector2Array(-39, -292, 40, -280, 52, -271, 56, -261, 55, -245, 52, -235, 47, -226, 41, -219, 34, -213, 27, -208, 19, -206, -52, -264)
 
-[node name="Peron0" type="Polygon2D" parent="." index="3"]
+[node name="Peron0" type="Polygon2D" parent="." index="3" unique_id=1813857140]
 position = Vector2(-144, -91)
 polygon = PackedVector2Array(-39.7799, -27.0572, -40.4741, -29.0453, -40.7392, -31.056, -40.4279, -32.7332, -39.723, -35.007, -37.7912, -37.0142, -35.762, -38.0562, -34.4742, -38.6254, -32.767, -39.073, -30.7853, -38.7452, -28.7799, -38.0572, 39.2201, 26.9428, 39.8978, 28.9475, 40.2201, 30.9428, 39.9344, 32.5749, 39.2201, 33.9428, 37.5534, 36.2981, 35.2201, 37.9428, 33.8585, 38.6184, 32.2201, 38.9428, 30.1913, 38.6486, 28.2201, 37.9428)
 
-[node name="ClickArea" type="Area2D" parent="Peron0" index="0"]
+[node name="ClickArea" type="Area2D" parent="Peron0" index="0" unique_id=1004818312]
 monitorable = false
 
-[node name="CollisionShape" type="CollisionShape2D" parent="Peron0/ClickArea" index="0"]
+[node name="CollisionShape" type="CollisionShape2D" parent="Peron0/ClickArea" index="0" unique_id=1563638191]
 rotation = -0.811578
 shape = SubResource("CapsuleShape2D_t1vnh")
 
-[node name="Peron1" type="Polygon2D" parent="." index="4"]
+[node name="Peron1" type="Polygon2D" parent="." index="4" unique_id=740054291]
 position = Vector2(-112, -125)
 polygon = PackedVector2Array(-39.7799, -27.0572, -40.4741, -29.0453, -40.7392, -31.056, -40.4279, -32.7332, -39.723, -35.007, -37.7912, -37.0142, -35.762, -38.0562, -34.4742, -38.6254, -32.767, -39.073, -30.7853, -38.7452, -28.7799, -38.0572, 39.2201, 26.9428, 39.8978, 28.9475, 40.2201, 30.9428, 39.9344, 32.5749, 39.2201, 33.9428, 37.5534, 36.2981, 35.2201, 37.9428, 33.8585, 38.6184, 32.2201, 38.9428, 30.1913, 38.6486, 28.2201, 37.9428)
 
-[node name="ClickArea" type="Area2D" parent="Peron1" index="0"]
+[node name="ClickArea" type="Area2D" parent="Peron1" index="0" unique_id=1949598323]
 monitorable = false
 
-[node name="CollisionShape" type="CollisionShape2D" parent="Peron1/ClickArea" index="0"]
+[node name="CollisionShape" type="CollisionShape2D" parent="Peron1/ClickArea" index="0" unique_id=2140185716]
 rotation = -0.811578
 shape = SubResource("CapsuleShape2D_t1vnh")
 
-[node name="Peron2" type="Polygon2D" parent="." index="5"]
+[node name="Peron2" type="Polygon2D" parent="." index="5" unique_id=373502541]
 position = Vector2(-81, -159)
 polygon = PackedVector2Array(-39.7799, -27.0572, -40.4741, -29.0453, -40.7392, -31.056, -40.4279, -32.7332, -39.723, -35.007, -37.7912, -37.0142, -35.762, -38.0562, -34.4742, -38.6254, -32.767, -39.073, -30.7853, -38.7452, -28.7799, -38.0572, 39.2201, 26.9428, 39.8978, 28.9475, 40.2201, 30.9428, 39.9344, 32.5749, 39.2201, 33.9428, 37.5534, 36.2981, 35.2201, 37.9428, 33.8585, 38.6184, 32.2201, 38.9428, 30.1913, 38.6486, 28.2201, 37.9428)
 
-[node name="ClickArea" type="Area2D" parent="Peron2" index="0"]
+[node name="ClickArea" type="Area2D" parent="Peron2" index="0" unique_id=1149628678]
 monitorable = false
 
-[node name="CollisionShape" type="CollisionShape2D" parent="Peron2/ClickArea" index="0"]
+[node name="CollisionShape" type="CollisionShape2D" parent="Peron2/ClickArea" index="0" unique_id=1467470700]
 rotation = -0.811578
 shape = SubResource("CapsuleShape2D_t1vnh")
 
-[node name="Peron3" type="Polygon2D" parent="." index="6"]
+[node name="Peron3" type="Polygon2D" parent="." index="6" unique_id=808045807]
 position = Vector2(-53, -194)
 polygon = PackedVector2Array(-39.7799, -27.0572, -40.4741, -29.0453, -40.7392, -31.056, -40.4279, -32.7332, -39.723, -35.007, -37.7912, -37.0142, -35.762, -38.0562, -34.4742, -38.6254, -32.767, -39.073, -30.7853, -38.7452, -28.7799, -38.0572, 39.2201, 26.9428, 39.8978, 28.9475, 40.2201, 30.9428, 39.9344, 32.5749, 39.2201, 33.9428, 37.5534, 36.2981, 35.2201, 37.9428, 33.8585, 38.6184, 32.2201, 38.9428, 30.1913, 38.6486, 28.2201, 37.9428)
 
-[node name="ClickArea" type="Area2D" parent="Peron3" index="0"]
+[node name="ClickArea" type="Area2D" parent="Peron3" index="0" unique_id=339384713]
 monitorable = false
 
-[node name="CollisionShape" type="CollisionShape2D" parent="Peron3/ClickArea" index="0"]
+[node name="CollisionShape" type="CollisionShape2D" parent="Peron3/ClickArea" index="0" unique_id=1089827038]
 rotation = -0.811578
 shape = SubResource("CapsuleShape2D_t1vnh")
 
-[node name="InTrack" type="Path2D" parent="." index="7"]
+[node name="InTrack" type="Path2D" parent="." index="7" unique_id=1362785314]
 curve = SubResource("Curve2D_8py5d")
 
-[node name="InWaitTrack" type="Path2D" parent="." index="8"]
+[node name="InWaitTrack" type="Path2D" parent="." index="8" unique_id=66049650]
 curve = SubResource("Curve2D_t1vnh")
 
-[node name="InLineTrack" type="Path2D" parent="." index="9"]
+[node name="InLineTrack" type="Path2D" parent="." index="9" unique_id=202365155]
 curve = SubResource("Curve2D_o2ii3")
 
-[node name="BypassTrack" type="Path2D" parent="." index="10"]
+[node name="BypassTrack" type="Path2D" parent="." index="10" unique_id=1534206023]
 curve = SubResource("Curve2D_oou6g")
 
-[node name="BypassAroundTrack" type="Path2D" parent="." index="11"]
+[node name="BypassAroundTrack" type="Path2D" parent="." index="11" unique_id=1888357824]
 curve = SubResource("Curve2D_nu6ll")
 
-[node name="BypassOutTrack" type="Path2D" parent="." index="12"]
+[node name="BypassOutTrack" type="Path2D" parent="." index="12" unique_id=789637242]
 curve = SubResource("Curve2D_woeil")
 
-[node name="WaitTracks" type="Node2D" parent="." index="13"]
+[node name="WaitTracks" type="Node2D" parent="." index="13" unique_id=1298779209]
 
-[node name="InTracks" type="Node2D" parent="WaitTracks" index="0"]
+[node name="InTracks" type="Node2D" parent="WaitTracks" index="0" unique_id=1524783216]
 
-[node name="Wait0Track" type="Path2D" parent="WaitTracks/InTracks" index="0"]
+[node name="Wait0Track" type="Path2D" parent="WaitTracks/InTracks" index="0" unique_id=741146558]
 curve = SubResource("Curve2D_6v6xw")
 
-[node name="Wait1Track" type="Path2D" parent="WaitTracks/InTracks" index="1"]
+[node name="Wait1Track" type="Path2D" parent="WaitTracks/InTracks" index="1" unique_id=1075266639]
 curve = SubResource("Curve2D_iro6f")
 
-[node name="Wait2Track" type="Path2D" parent="WaitTracks/InTracks" index="2"]
+[node name="Wait2Track" type="Path2D" parent="WaitTracks/InTracks" index="2" unique_id=1822689681]
 curve = SubResource("Curve2D_1fpwg")
 
-[node name="OutTracks" type="Node2D" parent="WaitTracks" index="1"]
+[node name="Wait3Track" type="Path2D" parent="WaitTracks/InTracks" index="3" unique_id=1017491074]
+curve = SubResource("Curve2D_i5knn")
 
-[node name="Wait0Track" type="Path2D" parent="WaitTracks/OutTracks" index="0"]
+[node name="OutTracks" type="Node2D" parent="WaitTracks" index="1" unique_id=1249158571]
+
+[node name="Wait0Track" type="Path2D" parent="WaitTracks/OutTracks" index="0" unique_id=952036156]
 curve = SubResource("Curve2D_lqlte")
 
-[node name="Wait1Track" type="Path2D" parent="WaitTracks/OutTracks" index="1"]
+[node name="Wait1Track" type="Path2D" parent="WaitTracks/OutTracks" index="1" unique_id=1609585081]
 curve = SubResource("Curve2D_23m65")
 
-[node name="Wait2Track" type="Path2D" parent="WaitTracks/OutTracks" index="2"]
+[node name="Wait2Track" type="Path2D" parent="WaitTracks/OutTracks" index="2" unique_id=649026309]
 curve = SubResource("Curve2D_c3mnv")
 
-[node name="PeronTracks" type="Node2D" parent="." index="14"]
+[node name="Wait3Track" type="Path2D" parent="WaitTracks/OutTracks" index="3" unique_id=1465149145]
+curve = SubResource("Curve2D_18y68")
 
-[node name="InTracks" type="Node2D" parent="PeronTracks" index="0"]
+[node name="PeronTracks" type="Node2D" parent="." index="14" unique_id=1144206206]
 
-[node name="Peron0Track" type="Path2D" parent="PeronTracks/InTracks" index="0"]
+[node name="InTracks" type="Node2D" parent="PeronTracks" index="0" unique_id=1096946374]
+
+[node name="Peron0Track" type="Path2D" parent="PeronTracks/InTracks" index="0" unique_id=661480719]
 curve = SubResource("Curve2D_bjbyl")
 
-[node name="Peron1Track" type="Path2D" parent="PeronTracks/InTracks" index="1"]
+[node name="Peron1Track" type="Path2D" parent="PeronTracks/InTracks" index="1" unique_id=258558880]
 curve = SubResource("Curve2D_2prte")
 
-[node name="Peron2Track" type="Path2D" parent="PeronTracks/InTracks" index="2"]
+[node name="Peron2Track" type="Path2D" parent="PeronTracks/InTracks" index="2" unique_id=1845435955]
 curve = SubResource("Curve2D_evpkw")
 
-[node name="Peron3Track" type="Path2D" parent="PeronTracks/InTracks" index="3"]
+[node name="Peron3Track" type="Path2D" parent="PeronTracks/InTracks" index="3" unique_id=390745276]
 curve = SubResource("Curve2D_p8rxe")
 
-[node name="OutTracks" type="Node2D" parent="PeronTracks" index="1"]
+[node name="OutTracks" type="Node2D" parent="PeronTracks" index="1" unique_id=2074013041]
 
-[node name="Peron0Track" type="Path2D" parent="PeronTracks/OutTracks" index="0"]
+[node name="Peron0Track" type="Path2D" parent="PeronTracks/OutTracks" index="0" unique_id=423581582]
 curve = SubResource("Curve2D_vhn4a")
 
-[node name="Peron1Track" type="Path2D" parent="PeronTracks/OutTracks" index="1"]
+[node name="Peron1Track" type="Path2D" parent="PeronTracks/OutTracks" index="1" unique_id=1088208184]
 curve = SubResource("Curve2D_3orw5")
 
-[node name="Peron2Track" type="Path2D" parent="PeronTracks/OutTracks" index="2"]
+[node name="Peron2Track" type="Path2D" parent="PeronTracks/OutTracks" index="2" unique_id=742900592]
 curve = SubResource("Curve2D_f11d8")
 
-[node name="Peron3Track" type="Path2D" parent="PeronTracks/OutTracks" index="3"]
+[node name="Peron3Track" type="Path2D" parent="PeronTracks/OutTracks" index="3" unique_id=751911689]
 curve = SubResource("Curve2D_duhtb")
 
-[node name="AroundTracks" type="Node2D" parent="PeronTracks" index="2"]
+[node name="AroundTracks" type="Node2D" parent="PeronTracks" index="2" unique_id=429672976]
 
-[node name="Peron0Track" type="Path2D" parent="PeronTracks/AroundTracks" index="0"]
+[node name="Peron0Track" type="Path2D" parent="PeronTracks/AroundTracks" index="0" unique_id=498416787]
 curve = SubResource("Curve2D_py234")
 
-[node name="Peron1Track" type="Path2D" parent="PeronTracks/AroundTracks" index="1"]
+[node name="Peron1Track" type="Path2D" parent="PeronTracks/AroundTracks" index="1" unique_id=317205862]
 curve = SubResource("Curve2D_rru7u")
 
-[node name="Peron2Track" type="Path2D" parent="PeronTracks/AroundTracks" index="2"]
+[node name="Peron2Track" type="Path2D" parent="PeronTracks/AroundTracks" index="2" unique_id=1738996588]
 curve = SubResource("Curve2D_ygwba")
 
-[node name="Peron3Track" type="Path2D" parent="PeronTracks/AroundTracks" index="3"]
+[node name="Peron3Track" type="Path2D" parent="PeronTracks/AroundTracks" index="3" unique_id=1543332773]
 curve = SubResource("Curve2D_sl0as")
 
-[node name="PickableArea" type="Area2D" parent="." index="15"]
+[node name="PickableArea" type="Area2D" parent="." index="15" unique_id=386378894]
 process_mode = 3
 collision_layer = 128
 collision_mask = 0

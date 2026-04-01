@@ -12,6 +12,7 @@ enum IntersectionHandlerType {
 
 var network_manager: NetworkManager
 var line_helper: LineHelper
+var vehicle_manager: VehicleManager
 
 var node: RoadNode
 
@@ -19,6 +20,9 @@ var handler: RefCounted
 var _handler_type: IntersectionHandlerType = IntersectionHandlerType.NULL
 
 var crossing_vehicles: Dictionary = { }
+var _crossing_vehicles_total: int = 0
+var _reserved_entry_space_by_endpoint: Dictionary[int, float] = { }
+var _entry_space_reservation_frame: int = -1
 
 
 func setup_intersection(assigned_node: RoadNode) -> void:
@@ -34,6 +38,7 @@ func setup_intersection(assigned_node: RoadNode) -> void:
 
 	network_manager = GDInjector.inject("NetworkManager") as NetworkManager
 	line_helper = GDInjector.inject("LineHelper") as LineHelper
+	vehicle_manager = GDInjector.inject("VehicleManager") as VehicleManager
 
 	var stoppers = []
 
@@ -67,6 +72,7 @@ func dispose_intersection() -> void:
 	handler = null
 	node = null
 	crossing_vehicles.clear()
+	_crossing_vehicles_total = 0
 
 
 func switch_intersection_type(new_type: Enums.IntersectionType) -> void:
@@ -89,42 +95,55 @@ func get_intersection_handler_type() -> IntersectionHandlerType:
 
 
 func process_tick(delta: float) -> void:
+	_ensure_entry_space_reservation_frame()
 	if handler:
 		handler.process_tick(delta)
 
 
 func register_crossing_vehicle(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
 
 	if not crossing_vehicles.has(key):
-		crossing_vehicles[key] = []
+		crossing_vehicles[key] = { }
 
-	if vehicle_id not in crossing_vehicles[key]:
-		crossing_vehicles[key].append(vehicle_id)
+	var crossing_set = crossing_vehicles[key] as Dictionary
+	if not crossing_set.has(vehicle_id):
+		crossing_set[vehicle_id] = true
+		_crossing_vehicles_total += 1
 
 
 func mark_vehicle_left(vehicle_id: int, from_endpoint_id: int, to_endpoint_id: int) -> void:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
 
 	if crossing_vehicles.has(key):
-		crossing_vehicles[key].erase(vehicle_id)
-		if crossing_vehicles[key].size() == 0:
+		var crossing_set = crossing_vehicles[key] as Dictionary
+		if crossing_set.erase(vehicle_id):
+			_crossing_vehicles_total = max(0, _crossing_vehicles_total - 1)
+
+		if crossing_set.size() == 0:
 			crossing_vehicles.erase(key)
 
 
 func get_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> Array:
-	var key = str(from_endpoint_id) + "-" + str(to_endpoint_id)
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
+	var crossing_set = _get_pruned_crossing_set(key)
+	if crossing_set.size() == 0:
+		return []
 
-	return crossing_vehicles.get(key, [])
+	return crossing_set.keys()
+
+
+func has_vehicles_crossing(from_endpoint_id: int, to_endpoint_id: int) -> bool:
+	var key = _compose_crossing_key(from_endpoint_id, to_endpoint_id)
+	var crossing_set = _get_pruned_crossing_set(key)
+	if crossing_set.size() == 0:
+		return false
+
+	return true
 
 
 func get_vehicles_crossing_count() -> int:
-	var total = 0
-
-	for key in crossing_vehicles.keys():
-		total += crossing_vehicles[key].size()
-
-	return total
+	return _crossing_vehicles_total
 
 
 func get_used_intersection_type() -> String:
@@ -144,6 +163,10 @@ func get_custom_data() -> Dictionary:
 		return handler.get_custom_data()
 	return { }
 
+func reset_state() -> void:
+	if handler and handler.has_method("reset_state"):
+		handler.reset_state()
+
 
 func _choose_intersection_handler(override: IntersectionHandlerType = IntersectionHandlerType.NULL) -> RefCounted:
 	if node.connected_segments.size() <= 2:
@@ -160,3 +183,59 @@ func _choose_intersection_handler(override: IntersectionHandlerType = Intersecti
 			_handler_type = IntersectionHandlerType.TRAFFIC_LIGHTS
 			return TrafficLightsIntersectionHandler.new()
 	return TrafficLightsIntersectionHandler.new()
+
+
+func _compose_crossing_key(from_endpoint_id: int, to_endpoint_id: int) -> int:
+	return (from_endpoint_id << 32) | (to_endpoint_id & 0xFFFFFFFF)
+
+
+func _get_pruned_crossing_set(key: int) -> Dictionary:
+	if not crossing_vehicles.has(key):
+		return { }
+
+	var crossing_set = crossing_vehicles[key] as Dictionary
+	var removed_count = 0
+
+	for vehicle_id in crossing_set.keys():
+		if vehicle_manager and not vehicle_manager.vehicle_exists(vehicle_id):
+			crossing_set.erase(vehicle_id)
+			removed_count += 1
+
+	if removed_count > 0:
+		_crossing_vehicles_total = max(0, _crossing_vehicles_total - removed_count)
+
+	if crossing_set.size() == 0:
+		crossing_vehicles.erase(key)
+		return { }
+
+	return crossing_set
+
+
+func try_reserve_target_lane_space(target_endpoint_id: int, required_space: float) -> bool:
+	_ensure_entry_space_reservation_frame()
+
+	var target_endpoint = network_manager.get_lane_endpoint(target_endpoint_id)
+	if not target_endpoint:
+		return false
+
+	var target_lane = network_manager.get_segment(target_endpoint.SegmentId).get_lane(target_endpoint.LaneId)
+	if not target_lane:
+		return false
+
+	var available_space: float = target_lane.get_remaining_space()
+	var reserved_space: float = _reserved_entry_space_by_endpoint.get(target_endpoint_id, 0.0)
+
+	if available_space - reserved_space < required_space:
+		return false
+
+	_reserved_entry_space_by_endpoint[target_endpoint_id] = reserved_space + required_space
+	return true
+
+
+func _ensure_entry_space_reservation_frame() -> void:
+	var frame = Engine.get_physics_frames()
+	if _entry_space_reservation_frame == frame:
+		return
+
+	_entry_space_reservation_frame = frame
+	_reserved_entry_space_by_endpoint.clear()

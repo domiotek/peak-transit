@@ -1,5 +1,6 @@
 class_name StopDefinition
 
+var id: int = -1
 var name: String = ""
 var position: SegmentPosDefinition = SegmentPosDefinition.new()
 var demand_preset: int = 0
@@ -9,6 +10,7 @@ var can_wait: bool = true
 
 func serialize() -> Dictionary:
 	return {
+		"id": id,
 		"name": name,
 		"pos": position.serialize(),
 		"demandPreset": demand_preset,
@@ -20,6 +22,7 @@ func serialize() -> Dictionary:
 static func deserialize(data: Dictionary) -> StopDefinition:
 	var stop_def = StopDefinition.new()
 
+	stop_def.id = data.get("id", -1) as int
 	stop_def.name = data["name"] as String
 	stop_def.position = SegmentPosDefinition.deserialize(data["pos"] as Dictionary)
 	stop_def.demand_preset = data["demandPreset"] as int

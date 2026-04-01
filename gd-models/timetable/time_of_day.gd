@@ -41,6 +41,7 @@ func serialize() -> Dictionary:
 	return {
 		"hour": hour,
 		"minute": minute,
+		"totalMinutes": total_minutes,
 	}
 
 
@@ -50,6 +51,21 @@ func format() -> String:
 
 func to_minutes() -> int:
 	return total_minutes
+
+
+func normalized_minutes() -> int:
+	return posmod(total_minutes, 1440)
+
+
+func minutes_until(other: TimeOfDay) -> int:
+	var current_minutes = normalized_minutes()
+	var target_minutes = posmod(other.to_minutes(), 1440)
+	var delta = target_minutes - current_minutes
+
+	if delta < 0:
+		delta += 1440
+
+	return delta
 
 
 func to_sin_cos() -> Array:

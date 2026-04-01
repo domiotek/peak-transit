@@ -29,7 +29,6 @@ func _ready() -> void:
 	ui_manager.register_ui_view("SpawnerBuildingPopupView", self)
 
 	close_button.pressed.connect(_on_close_button_pressed)
-	toggle_debug_button.pressed.connect(_on_toggle_debug_button_pressed)
 	spawn_car_button.pressed.connect(_on_spawn_car_button_pressed)
 	debugger_button.pressed.connect(_on_debugger_button_pressed)
 	pin_button.pressed.connect(_on_pin_button_toggled)
@@ -58,8 +57,6 @@ func update(_data: Dictionary) -> void:
 			properties_container.add_child(item)
 			data_items.append(item)
 
-	toggle_debug_button.flat = not selected_building.are_debug_visuals_enabled()
-
 	spawn_car_button.disabled = game_manager.is_rl_mode()
 
 
@@ -77,11 +74,6 @@ func _on_close_button_pressed() -> void:
 	ui_manager.hide_ui_view("SpawnerBuildingPopupView")
 	selected_building = null
 	_handle_pinned_button(false)
-
-
-func _on_toggle_debug_button_pressed() -> void:
-	selected_building.toggle_debug_visuals()
-	toggle_debug_button.flat = not selected_building.are_debug_visuals_enabled()
 
 
 func _on_spawn_car_button_pressed() -> void:

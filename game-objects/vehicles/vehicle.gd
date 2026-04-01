@@ -27,9 +27,14 @@ var config: VehicleConfig
 var main_path_follower: PathFollow2D
 
 var _trailer_states: Array[Dictionary] = []
+var _has_trailers: bool = false
 var _previous_front_rotation: float = 0.0
 var _previous_front_position: Vector2 = Vector2.ZERO
 var _smoothed_curvature: float = 0.0
+var _bodies_visuals: Array[Node2D] = []
+var _bodies_lights_visuals: Array[Node2D] = []
+
+var _initialized: bool = false
 
 
 func _ready():
@@ -37,27 +42,21 @@ func _ready():
 
 	driver.set_owner(self)
 
-	var vehicle_config = _get_vehicle_config() as VehicleConfig
+	var vehicle_config := _get_vehicle_config() as VehicleConfig
 
 	if not vehicle_config:
 		push_error("Vehicle ID %d has no config assigned!" % id)
 		return
 	config = vehicle_config
 
-	if config.body_color:
-		recolor(config.body_color)
-
-	config_manager.DebugToggles.connect("ToggleChanged", Callable(self, "_on_debug_toggle_changed"))
-	_toggle_debug_indicators(config_manager.DebugToggles.UseVehicleDebugIndicators)
-
 	main_path_follower = config.path_follower
 
-	config["ai"].bind(self)
+	config.ai.bind(self)
 	driver.set_navigator(navigator)
-	driver.set_lights(config.head_lights, config.brake_lights, config.left_blinker_nodes, config.right_blinker_nodes)
-	driver.set_casters(config["casters"])
+	driver.set_lights(config.head_lights, config.brake_lights)
+	driver.set_casters(config.casters)
 
-	driver.set_blockade_observer(config["blockade_observer"])
+	driver.set_blockade_observer(config.blockade_observer)
 
 	driver.connect("caster_state_changed", Callable(self, "_on_caster_state_changed"))
 	driver.connect("state_changed", Callable(self, "_on_driver_state_changed"))
@@ -66,13 +65,11 @@ func _ready():
 	navigator.connect("trip_ended", Callable(self, "_on_trip_ended"))
 	navigator.setup(self)
 
-	simulation_manager.desired_world_lights_state_changed.connect(Callable(self, "_on_lights_state_change"))
+	for body_segment in config.body_segments:
+		_bodies_visuals.append(body_segment.get_node("Visuals") as Node2D)
+		_bodies_lights_visuals.append(body_segment.get_node("Lights") as Node2D)
 
-	for body_area in config["body_areas"]:
-		body_area.connect("input_event", Callable(self, "_on_input_event"))
-
-	for collision_area in config["collision_areas"]:
-		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
+	_has_trailers = config.trailers.size() > 0
 
 	for trailer_def in config.trailers:
 		var trailer_body = trailer_def["body"]
@@ -88,6 +85,9 @@ func _ready():
 
 func _exit_tree() -> void:
 	destroyed.emit(id)
+	if main_path_follower:
+		main_path_follower.queue_free()
+		main_path_follower = null
 
 
 func init_trip(from_building: BaseBuilding, to_building: BaseBuilding) -> void:
@@ -126,7 +126,7 @@ func get_popup_data() -> Dictionary:
 	if navigator.has_trip():
 		from_node = navigator.trip_points[0]
 		to_node = navigator.trip_points[-1]
-		step_type = Navigator.StepType.keys()[navigator.get_current_step().get("type")]
+		step_type = Navigator.StepType.keys()[navigator.get_current_step().type]
 
 	var data = {
 		"speed": driver.get_current_speed(),
@@ -160,6 +160,36 @@ func recolor(new_color: Color) -> void:
 		body.color = new_color
 
 
+func set_lod(level_of_detail: Enums.LODLevel) -> void:
+	if level_of_detail == Enums.LODLevel.VERY_LOW:
+		visible = false
+		return
+
+	visible = true
+
+	if level_of_detail == Enums.LODLevel.HIGH:
+		for visuals in _bodies_visuals:
+			visuals.visible = true
+		for lights_visuals in _bodies_lights_visuals:
+			lights_visuals.visible = true
+
+		return
+
+	if level_of_detail == Enums.LODLevel.MEDIUM:
+		for visuals in _bodies_visuals:
+			visuals.visible = true
+		for lights_visuals in _bodies_lights_visuals:
+			lights_visuals.visible = false
+		return
+
+	if level_of_detail == Enums.LODLevel.LOW:
+		for visuals in _bodies_visuals:
+			visuals.visible = false
+		for lights_visuals in _bodies_lights_visuals:
+			lights_visuals.visible = false
+		return
+
+
 func _physics_process(_delta: float) -> void:
 	if driver.just_enabled_casters:
 		driver.just_enabled_casters = false
@@ -170,6 +200,8 @@ func _process(delta: float) -> void:
 	if game_manager.is_debug_pick_enabled() && game_manager.try_hit_debug_pick(self):
 		print("Debug pick triggered for vehicle ID %d" % id)
 		breakpoint
+
+	driver.invalidate_blocking_objects_cache()
 
 	ai.process(delta)
 
@@ -188,17 +220,23 @@ func _process(delta: float) -> void:
 
 	var current_speed = driver.tick_speed(delta, main_path_follower.progress)
 
-	_update_position(delta, current_speed)
+	if current_speed > 0 and delta > 0:
+		_update_position(delta, current_speed)
 
 	if main_path_follower.progress_ratio >= 1.0 or _check_for_building_entry():
 		navigator.complete_current_step()
 
 
 func _update_position(delta: float, current_speed: float) -> void:
-	var trail_length = navigator.get_current_step()["length"]
+	main_path_follower.progress += delta * current_speed
+	navigator.update_progress(main_path_follower.progress)
 
-	main_path_follower.progress_ratio += delta * current_speed / trail_length
-	self.global_transform = main_path_follower.global_transform
+	var new_xform: Transform2D = main_path_follower.global_transform
+	if !global_transform.is_equal_approx(new_xform):
+		global_transform = new_xform
+
+	if not _has_trailers:
+		return
 
 	var front_pos: Vector2 = self.global_position
 	var front_rot: float = self.global_rotation
@@ -244,16 +282,43 @@ func _update_position(delta: float, current_speed: float) -> void:
 	_previous_front_position = self.global_position
 
 
+func _finish_initialization() -> void:
+	if config.body_color:
+		recolor(config.body_color)
+
+	config_manager.DebugToggles.connect("ToggleChanged", Callable(self, "_on_debug_toggle_changed"))
+	_toggle_debug_indicators(config_manager.DebugToggles.UseVehicleDebugIndicators)
+
+	for body_area in config.body_areas:
+		body_area.set_meta("vehicle_ref", self)
+		body_area.connect("input_event", Callable(self, "_on_input_event"))
+
+	for collision_area in config.collision_areas:
+		collision_area.set_meta("vehicle_ref", self)
+		collision_area.connect("area_entered", Callable(self, "_on_body_area_body_entered"))
+
+	if config.visibility_notifier:
+		config.visibility_notifier.connect("screen_entered", _on_screen_entered)
+		config.visibility_notifier.connect("screen_exited", _on_screen_exited)
+
+
 func _on_trip_started() -> void:
-	var starts_at_building = navigator.current_step["type"] == Navigator.StepType.BUILDING
+	if not _initialized:
+		_finish_initialization()
+		_initialized = true
+
+
+	var current_step := navigator.get_current_step()
+	var starts_at_building := current_step.type == Navigator.StepType.BUILDING
 
 	if starts_at_building:
-		var building_pos = navigator.current_step["connection"]["from"]
+		var connection := (current_step as BuildingNavigationStep).connection
+		var building_pos := connection.from
 		self.position = building_pos
-		var lane = navigator.current_step["connection"]["lane"] as NetLane
+		var lane := connection.lane as NetLane
 		self.rotation = line_helper.rotate_perpendicular_to_curve(lane.get_curve(), building_pos)
 	else:
-		self.position = (navigator.get_current_step()["path"] as Curve2D).get_point_position(0)
+		self.global_transform = main_path_follower.global_transform
 	set_deferred("visible", true)
 	driver.set_headlights_enabled(simulation_manager.get_desired_world_lights_state(), true)
 
@@ -264,6 +329,8 @@ func _on_trip_started() -> void:
 
 	emit_signal("trip_started", id)
 	config["id_label"].text = str(id)
+	var current_lod = game_manager.get_game_controller().get_lod()
+	call_deferred("set_lod", current_lod)
 
 
 func _on_trip_ended(completed: bool, trip_data: Dictionary) -> void:
@@ -313,20 +380,17 @@ func _on_driver_state_changed(new_state: Driver.VehicleState) -> void:
 
 
 func _check_for_building_entry() -> bool:
-	if not navigator.current_step.has("building_to_enter"):
+	var current_step := navigator.get_current_step()
+	if not current_step is SegmentNavigationStep or current_step.building_to_enter == null:
 		return false
 
-	var trigger_distance = navigator.current_step["building_to_enter"]["trigger_distance"]
+	var trigger_distance: float = current_step.building_to_enter.trigger_distance
 
 	return main_path_follower.progress >= trigger_distance
 
 
 func _get_vehicle_config() -> Variant:
 	return null
-
-
-func _on_lights_state_change(should_be_on: bool) -> void:
-	driver.set_headlights_enabled(should_be_on, false)
 
 
 func _on_debug_toggle_changed(toggle_name: String, value: bool) -> void:
@@ -340,3 +404,13 @@ func _toggle_debug_indicators(enabled: bool) -> void:
 
 	config.blockade_indicator.visible = enabled
 	config.id_label.visible = enabled
+
+
+func _on_screen_entered() -> void:
+	for body in config.body_segments:
+		body.visible = true
+
+
+func _on_screen_exited() -> void:
+	for body in config.body_segments:
+		body.visible = false

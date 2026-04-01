@@ -2,8 +2,7 @@ extends Area2D
 
 class_name LaneStopper
 
-var YELLOW_LIGHT_DURATION = 1.0
-
+const YELLOW_LIGHT_DURATION = 1.0
 
 @onready var indicator = $DebugLayer
 @onready var shape = $Shape
@@ -15,6 +14,9 @@ var traffic_lights: Dictionary
 
 var active: bool = false
 
+var _lane: NetLane = null
+
+
 func _ready() -> void:
 	config_manager.DebugToggles.ToggleChanged.connect(_on_debug_toggles_changed)
 	_on_debug_toggles_changed("", false)
@@ -24,13 +26,14 @@ func set_active(_active: bool) -> void:
 	active = _active
 	self.monitorable = _active
 	shape.set_deferred("disabled", not _active)
-	_toggle_debug_visuals()
+	if indicator.visible:
+		_toggle_debug_visuals()
+
 
 func set_active_with_light(_active: bool, directions: Array) -> void:
 	var left_signaler = traffic_lights.get(Enums.Direction.LEFT, null)
 	var right_signaler = traffic_lights.get(Enums.Direction.RIGHT, null)
 	var default_signaler = traffic_lights.get(Enums.Direction.ALL_DIRECTIONS, null)
-
 
 	var light = default_signaler
 	var other_lights = [left_signaler, right_signaler]
@@ -56,14 +59,23 @@ func set_active_with_light(_active: bool, directions: Array) -> void:
 
 	set_active(_active)
 
+
 func is_active() -> bool:
 	return active
 
+
 func get_lane() -> NetLane:
-	return network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId)
+	if _lane:
+		return _lane
+
+	_lane = network_manager.get_segment(endpoint.SegmentId).get_lane(endpoint.LaneId)
+
+	return _lane
+
 
 func _toggle_debug_visuals() -> void:
 	indicator.color = Color(1, 0, 0, 0.5) if active else Color(0, 1, 0, 0.5)
+
 
 func _on_debug_toggles_changed(_id: String, _state: bool) -> void:
 	if config_manager.DebugToggles.DrawIntersectionStoppers:

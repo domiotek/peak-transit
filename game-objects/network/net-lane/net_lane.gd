@@ -5,6 +5,9 @@ class_name NetLane
 var speed_limit_sign_scene = preload("res://game-objects/network/speed-limit-sign/speed_limit_sign.tscn")
 
 const LANE_USAGE_EMA_ALPHA: float = 0.1
+const LANE_USAGE_WAITING_WEIGHT: float = 0.6
+const LANE_USAGE_OCCUPANCY_WEIGHT: float = 0.4
+const LANE_USAGE_OCCUPANCY_SPACING: float = 64.0
 
 @onready var main_layer: Node2D = $MainLayer
 @onready var trail: Path2D = $PathingTrail
@@ -25,12 +28,22 @@ var to_endpoint: int
 var direction: Enums.Direction = Enums.Direction.UNSPECIFIED
 var bus_lane_direction: Enums.BaseDirection = Enums.BaseDirection.UNSPECIFIED
 
-var assigned_vehicles: Array
+var assigned_vehicles: Array = []
+var _assigned_vehicle_ids: Dictionary[int, bool] = { }
+var _from_node_id: int = -1
+var _to_node_id: int = -1
+var _vehicle_order_cache_dirty: bool = true
+var _vehicle_order_cache_frame: int = -1
+var _cached_first_vehicle: Vehicle = null
+var _cached_last_vehicle: Vehicle = null
+var _cached_remaining_space: float = 0.0
 
 var lane_usage_ema: float = 0.0
+var _warning_suppress_until_frame: int = -1
 
 var _constructed: bool = false
 var _original_curve: Curve2D = null
+var _length_cache: float = 0.0
 
 @onready var map_pickable_area: Area2D = $PickableArea
 var collision_shape: CollisionPolygon2D = null
@@ -51,6 +64,7 @@ func _ready() -> void:
 	usage_indicator.visible = config_manager.DebugToggles.DrawLaneUsage
 
 	vehicle_manager.vehicle_destroyed.connect(Callable(self, "_on_vehicle_destroyed"))
+	game_manager.clock.clock_reset.connect(Callable(self, "_on_clock_reset"))
 
 	if game_manager.get_game_mode() == Enums.GameMode.MAP_EDITOR:
 		collision_shape = CollisionPolygon2D.new()
@@ -74,21 +88,23 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 	var new_curve = line_helper.get_curve_with_offset(curve, offset)
 	_original_curve = new_curve
+	var path_start_node_id: int = segment.nodes[0].id
+
+	var first_point = _get_endpoint_for_node(segment.nodes[0], new_curve)
+	var first_road_side = segment_helper.get_road_side_at_endpoint(segment, first_point)
+	if first_road_side != SegmentHelper.RoadSide.Left:
+		new_curve = line_helper.reverse_curve(new_curve)
+		_original_curve = new_curve
+		path_start_node_id = segment.nodes[1].id
 
 	var points = { }
 
 	for node in segment.nodes:
 		var point = _get_endpoint_for_node(node, new_curve)
-		var road_side = segment_helper.get_road_side_at_endpoint(segment, point)
 		var point_global = to_global(point)
 
-		var is_outgoing = road_side == SegmentHelper.RoadSide.Left
-		var is_at_path_start = segment.nodes[0] == node
-
-		if is_outgoing and not is_at_path_start:
-			new_curve = line_helper.reverse_curve(new_curve)
-			_original_curve = new_curve # Update if reversed
-			is_at_path_start = true
+		var is_at_path_start = node.id == path_start_node_id
+		var is_outgoing = is_at_path_start
 
 		lane_number = _calc_lane_number()
 
@@ -96,13 +112,16 @@ func update_trail_shape(curve: Curve2D) -> void:
 
 		if is_outgoing:
 			from_endpoint = endpoint_id
+			_from_node_id = node.id
 			points[0] = point_global
 		else:
 			to_endpoint = endpoint_id
+			_to_node_id = node.id
 			points[1] = point_global
 
 	new_curve = line_helper.trim_curve(new_curve, points[0], points[1])
 	trail.curve = new_curve
+	_length_cache = new_curve.get_baked_length()
 	usage_indicator.points = new_curve.tessellate()
 	_populate_main_layer()
 
@@ -137,96 +156,90 @@ func get_segment_relation() -> NetRelation:
 
 
 func assign_vehicle(vehicle: Vehicle) -> void:
-	if vehicle in assigned_vehicles:
-		push_warning("Trying to assign vehicle ID %d to lane ID %d, but it is already assigned to this lane." % [vehicle.id, id])
-		breakpoint
+	if _assigned_vehicle_ids.has(vehicle.id):
+		_warn("Trying to assign vehicle ID %d to lane ID %d, but it is already assigned to this lane." % [vehicle.id, id])
 		return
 
 	assigned_vehicles.append(vehicle)
+	_assigned_vehicle_ids[vehicle.id] = true
+	_mark_vehicle_order_cache_dirty()
 
 
 func remove_vehicle(vehicle: Vehicle) -> void:
 	if vehicle == null:
-		push_warning("Trying to remove a null vehicle from lane ID %d." % id)
+		_warn("Trying to remove a null vehicle from lane ID %d." % id)
 		return
 
-	if vehicle not in assigned_vehicles:
-		push_warning("Trying to remove vehicle ID %d from lane ID %d, but it is not assigned to this lane." % [vehicle.id, id])
+	if not _assigned_vehicle_ids.has(vehicle.id):
+		_warn("Trying to remove vehicle ID %d from lane ID %d, but it is not assigned to this lane." % [vehicle.id, id])
 		return
 
 	assigned_vehicles.erase(vehicle)
+	_assigned_vehicle_ids.erase(vehicle.id)
+	_mark_vehicle_order_cache_dirty()
 
 
 func get_remaining_space() -> float:
-	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1] if assigned_vehicles.size() > 0 else null
-
-	if last_vehicle and not is_instance_valid(last_vehicle):
-		assigned_vehicles.pop_back()
-		return get_remaining_space()
-
-	return last_vehicle.main_path_follower.progress if last_vehicle else trail.curve.get_baked_length()
+	_ensure_vehicle_order_cache()
+	return _cached_remaining_space
 
 
 func get_first_vehicle() -> Vehicle:
-	var first_vehicle = assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
-
-	if assigned_vehicles.size() > 0 and not is_instance_valid(first_vehicle):
-		assigned_vehicles.pop_front()
-		return get_first_vehicle()
-
-	return assigned_vehicles[0] if assigned_vehicles.size() > 0 else null
+	_ensure_vehicle_order_cache()
+	return _cached_first_vehicle
 
 
 func get_last_vehicle() -> Vehicle:
-	if assigned_vehicles.size() == 0:
-		return null
-
-	var last_vehicle = assigned_vehicles[assigned_vehicles.size() - 1]
-	if is_instance_valid(last_vehicle):
-		return last_vehicle
-
-	assigned_vehicles.pop_back()
-	return get_last_vehicle()
+	_ensure_vehicle_order_cache()
+	return _cached_last_vehicle
 
 
 func get_vehicle_count(only_waiting: bool = false) -> int:
 	if not only_waiting:
 		return assigned_vehicles.size()
 
-	return assigned_vehicles.filter(func(v): return v.driver.get_state() == Driver.VehicleState.BLOCKED).size()
+	var waiting_count: int = 0
+	for vehicle in assigned_vehicles:
+		if not is_instance_valid(vehicle):
+			continue
+
+		if vehicle.driver.get_state() == Driver.VehicleState.BLOCKED:
+			waiting_count += 1
+
+	return waiting_count
 
 
 func get_vehicles_stats() -> Dictionary:
-	var stats = {
-		"total": 0,
-		"waiting": 0,
-		"moving": 0,
-	}
+	var waiting: int = 0
+	var moving: int = 0
 
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle):
 			continue
 
 		if vehicle.driver.get_state() == Driver.VehicleState.BLOCKED:
-			stats["waiting"] += 1
+			waiting += 1
 		else:
-			stats["moving"] += 1
+			moving += 1
 
-	stats["total"] += stats["waiting"] + stats["moving"]
-
-	return stats
+	return {
+		"total": waiting + moving,
+		"waiting": waiting,
+		"moving": moving,
+	}
 
 
 func count_vehicles_within_distance(node_id: int, distance: float) -> int:
 	var count = 0
 
-	var is_node_at_start = get_endpoint_by_id(from_endpoint).NodeId == node_id
+	var is_node_at_start = _from_node_id == node_id
+	var lane_length = _length_cache
 
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle):
 			continue
 
-		var vehicle_distance = vehicle.main_path_follower.progress if is_node_at_start else trail.curve.get_baked_length() - vehicle.main_path_follower.progress
+		var vehicle_distance = vehicle.main_path_follower.progress if is_node_at_start else lane_length - vehicle.main_path_follower.progress
 		if vehicle_distance <= distance:
 			count += 1
 
@@ -242,10 +255,22 @@ func get_lane_usage() -> float:
 
 
 func get_length() -> float:
-	if trail.curve == null:
-		return 0.0
+	return _length_cache
 
-	return trail.curve.get_baked_length()
+
+func _on_clock_reset() -> void:
+	_warning_suppress_until_frame = Engine.get_process_frames() + SimulationConstants.RESET_WARNING_SUPPRESS_FRAMES
+
+
+func _is_warning_suppressed() -> bool:
+	return Engine.get_process_frames() <= _warning_suppress_until_frame
+
+
+func _warn(message: String) -> void:
+	if _is_warning_suppressed():
+		return
+
+	push_warning(message)
 
 
 func reposition_endpoint(of_node: RoadNode, type: String) -> void:
@@ -272,6 +297,7 @@ func reposition_endpoint(of_node: RoadNode, type: String) -> void:
 
 	var trimmed = line_helper.trim_curve(_original_curve, points[0], points[1])
 	trail.curve = trimmed
+	_length_cache = trimmed.get_baked_length()
 	usage_indicator.points = trimmed.tessellate()
 
 
@@ -286,10 +312,29 @@ func update_speed_limit(new_speed_limit: int) -> void:
 	_update_debug_layer()
 
 
+func set_lod(lod: Enums.LODLevel) -> void:
+	main_layer.visible = lod == Enums.LODLevel.HIGH
+
+
+func hide_reflective_surface() -> void:
+	main_layer.visible = false
+
+func reset_state() -> void:
+	assigned_vehicles.clear()
+	_assigned_vehicle_ids.clear()
+	_mark_vehicle_order_cache_dirty()
+
+
 func _update_lane_usage() -> void:
 	var stats = get_vehicles_stats()
 
-	var usage_ratio = stats["waiting"] / max(stats["total"], 1)
+	var waiting_ratio = stats["waiting"] / max(stats["total"], 1)
+	var expected_capacity = max(_length_cache / LANE_USAGE_OCCUPANCY_SPACING, 1.0)
+	var occupancy_ratio = clamp(float(stats["total"]) / expected_capacity, 0.0, 1.0)
+	var usage_ratio = (
+		waiting_ratio * LANE_USAGE_WAITING_WEIGHT
+		+ occupancy_ratio * LANE_USAGE_OCCUPANCY_WEIGHT
+	)
 
 	lane_usage_ema = (LANE_USAGE_EMA_ALPHA * usage_ratio) + ((1.0 - LANE_USAGE_EMA_ALPHA) * lane_usage_ema)
 
@@ -361,7 +406,56 @@ func _on_debug_toggles_changed(_name, _state) -> void:
 
 
 func _on_vehicle_destroyed(vehicle_id: int, _vehicle_type: VehicleManager.VehicleType) -> void:
+	if not _assigned_vehicle_ids.has(vehicle_id):
+		return
+
+	_assigned_vehicle_ids.erase(vehicle_id)
+
 	for vehicle in assigned_vehicles:
 		if not is_instance_valid(vehicle) or vehicle.id == vehicle_id:
 			assigned_vehicles.erase(vehicle)
+			_mark_vehicle_order_cache_dirty()
 			break
+
+
+func _mark_vehicle_order_cache_dirty() -> void:
+	_vehicle_order_cache_dirty = true
+
+
+func _ensure_vehicle_order_cache() -> void:
+	var frame = Engine.get_physics_frames()
+	if not _vehicle_order_cache_dirty and _vehicle_order_cache_frame == frame:
+		return
+
+	_cached_first_vehicle = null
+	_cached_last_vehicle = null
+	_cached_remaining_space = _length_cache if _length_cache > 0.0 else trail.curve.get_baked_length() if trail and trail.curve else 0.0
+
+	var best_front_progress := -INF
+	var best_back_progress := INF
+	var valid_vehicles: Array = []
+
+	for vehicle in assigned_vehicles:
+		if not is_instance_valid(vehicle):
+			continue
+
+		valid_vehicles.append(vehicle)
+
+		var progress = vehicle.main_path_follower.progress
+
+		if progress > best_front_progress:
+			best_front_progress = progress
+			_cached_first_vehicle = vehicle
+
+		if progress < best_back_progress:
+			best_back_progress = progress
+			_cached_last_vehicle = vehicle
+
+	if valid_vehicles.size() != assigned_vehicles.size():
+		assigned_vehicles = valid_vehicles
+
+	if _cached_last_vehicle != null:
+		_cached_remaining_space = max(0.0, best_back_progress - NetworkConstants.LANE_ENTRY_CLEARANCE_MARGIN)
+
+	_vehicle_order_cache_frame = frame
+	_vehicle_order_cache_dirty = false

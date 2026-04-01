@@ -5,7 +5,7 @@ namespace PT.Services.Managers.Config;
 [GlobalClass]
 public partial class ConfigManager : RefCounted
 {
-    public int PathingWorkerCount { get; } = 2;
+    public int PathingWorkerCount { get; } = 6;
 
     public bool AutoQuickLoad { get; } = false;
 
@@ -16,6 +16,8 @@ public partial class ConfigManager : RefCounted
     public string WorldDirectory { get; } = "user://worlds/";
 
     public bool AutoFillDepotStopsOnLoad { get; } = true;
+
+    public int DummyCarSpawnMaxTotalVehicles { get; } = 400;
 
     public bool UseRlLogger { get; } = true;
 

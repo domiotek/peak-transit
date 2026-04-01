@@ -37,6 +37,10 @@ func get_for_line(line_id: int) -> Array:
 
 	return result
 
+func reset_state() -> void:
+	for brigade in _brigades:
+		brigade.reset_state()
+
 
 func clear_state() -> void:
 	_brigades.clear()
