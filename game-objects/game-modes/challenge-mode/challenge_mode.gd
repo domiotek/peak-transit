@@ -91,10 +91,12 @@ func score_manager() -> ScoreManager:
 	return _score_manager
 
 
-func init_rl_agents(agent_mode: RLEnums.AgentMode, onnx_path: String="") -> bool:
+func init_rl_agents(agent_mode: RLEnums.AgentMode, onnx_path: String="", action_log: String="") -> bool:
 	ai_controller = ChallengeAiController.new()
 	ai_controller.add_to_group("AGENT")
 	add_child(ai_controller)
+
+	ai_controller.action_log_path = action_log
 
 	if agent_mode == RLEnums.AgentMode.INFERENCE:
 		ai_controller.onnx_model_path = "user://models/%s" % onnx_path
@@ -122,7 +124,9 @@ func _after_initialize_game() -> void:
 
 
 func _on_input_check() -> void:
-	if game_manager.is_rl_mode():
+	# In RL training the Python side drives the clock, so speed control stays locked.
+	# During ONNX inference we allow it, so the run can be paused/slowed for observation.
+	if game_manager.is_rl_mode() and (ai_controller == null or ai_controller.control_mode != AIController2D.ControlModes.ONNX_INFERENCE):
 		return
 
 	if Input.is_action_just_pressed("game_speed_0"):

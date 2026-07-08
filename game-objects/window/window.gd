@@ -75,8 +75,10 @@ func _setup_rl_session() -> void:
 	print("Starting RL session...")
 
 	var agent_mode := RLEnums.parse_agent_mode(_args.get("agent_mode", "train"))
-
-	var initialized = game_manager.get_game_controller().init_rl_agents(agent_mode, _args.get("model_path", ""))
+	var apply_mask : bool= _args.has("apply_mask") and _args.get("apply_mask", "") != "false"
+	var action_log : String = _args.get("action_log", "")
+ 
+	var initialized = game_manager.get_game_controller().init_rl_agents(agent_mode, _args.get("model_path", ""), action_log)
 
 	if not initialized:
 		push_error("This game mode doesn't have any agents. Cannot start RL session.")
@@ -104,7 +106,7 @@ func _setup_rl_session() -> void:
 
 	await game_manager.wait_frame()
 
-	var connected = rl_sync.setup(agent_mode)
+	var connected = rl_sync.setup(agent_mode, apply_mask)
 
 	await game_manager.wait_frame()
 

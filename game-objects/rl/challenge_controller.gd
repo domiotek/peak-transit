@@ -24,6 +24,10 @@ var _technical_reset_done: bool = false
 
 var _score_manager: ScoreManager
 
+var action_log_path: String = ""
+var _action_log_file: FileAccess = null
+var _action_log_step: int = 0
+
 
 func setup() -> void:
 	if config_manager.UseRlLogger:
@@ -160,8 +164,72 @@ func get_action_mask() -> Array:
 	return mask
 
 
+## Decodes a flattened action index (argmax over the ONNX output) back into the
+## composite action dictionary. Mirrors the enumeration in get_action_mask above and
+## MaskedLegalActionWrapper._build_legal_actions on the Python side, so index i here
+## denotes the same action it did during training.
+func decode_flat_action(index: int) -> Dictionary:
+	var n := _buses.size()
+	var t := _terminals.size()
+	var k := _brigades.size()
+
+	var action := {
+		"command": RLEnums.ActionType.NO_OP,
+		"bus_idx": 0,
+		"state": RLEnums.BusStateRequest.DEPOT,
+		"brigade_idx": 0,
+		"reserve_term_idx": 0,
+	}
+
+	if index <= 0:
+		return action # NO_OP
+
+	var state_block := n * (1 + t)
+	if index <= state_block:
+		var offset := index - 1
+		action["command"] = RLEnums.ActionType.SET_STATE
+		action["bus_idx"] = offset / (1 + t)
+		var slot := offset % (1 + t)
+		if slot == 0:
+			action["state"] = RLEnums.BusStateRequest.DEPOT
+		else:
+			action["state"] = RLEnums.BusStateRequest.RESERVE
+			action["reserve_term_idx"] = slot - 1
+	else:
+		var offset := index - 1 - state_block
+		action["command"] = RLEnums.ActionType.ASSIGN_TO_BRIGADE
+		action["bus_idx"] = offset / k
+		action["brigade_idx"] = offset % k
+
+	return action
+
+
+## Picks the greedy action from a flat ONNX output vector (Maskable PPO logits or DQN
+## Q-values). When apply_mask is true, illegal actions are skipped before the argmax,
+## reproducing the masking Maskable PPO relied on during training. DQN runs with
+## apply_mask false, matching how it was trained.
+func pick_flat_action(logits: Array, apply_mask: bool) -> Dictionary:
+	var mask: Array = get_action_mask() if apply_mask else []
+
+	var best_idx := -1
+	var best_val := 0.0
+	for i in range(logits.size()):
+		if apply_mask and i < mask.size() and not mask[i]:
+			continue
+		var value: float = logits[i]
+		if best_idx == -1 or value > best_val:
+			best_val = value
+			best_idx = i
+
+	if best_idx == -1:
+		best_idx = 0 # everything masked out; fall back to NO_OP
+
+	return decode_flat_action(best_idx)
+
+
 func set_action(action) -> void:
 	_score_manager.push_action(action)
+	_maybe_log_action(action)
 
 	match action["command"] as int:
 		RLEnums.ActionType.NO_OP:
@@ -513,6 +581,58 @@ func _get_bus_state(bus: Vehicle) -> RLEnums.BusState:
 			return RLEnums.BusState.IN_RESERVE if bus_ai.get_brigade() == null else RLEnums.BusState.WAITING_FOR_TRIP
 		_:
 			return RLEnums.BusState.AT_DEPOT
+
+
+func _maybe_log_action(action) -> void:
+	if action_log_path == "":
+		return
+
+	if _action_log_file == null:
+		_action_log_file = FileAccess.open(action_log_path, FileAccess.WRITE)
+		if _action_log_file == null:
+			push_error("Could not open action log at %s; disabling logging." % action_log_path)
+			action_log_path = ""
+			return
+		_action_log_file.store_line("step,time,command,bus_idx,state,brigade_idx,reserve_term_idx,active_buses,unserved_brigades")
+
+	var command_names := RLEnums.ActionType.keys()
+	var state_names := RLEnums.BusStateRequest.keys()
+	var command_idx: int = action["command"]
+	var state_idx: int = action["state"]
+
+	_action_log_file.store_line("%d,%s,%s,%d,%s,%d,%d,%d,%d" % [
+		_action_log_step,
+		game_manager.clock.get_time().to_time_of_day().format(),
+		command_names[command_idx] if command_idx < command_names.size() else str(command_idx),
+		action["bus_idx"],
+		state_names[state_idx] if state_idx < state_names.size() else str(state_idx),
+		action["brigade_idx"],
+		action["reserve_term_idx"],
+		_count_active_buses(),
+		_count_unserved_brigades(),
+	])
+	_action_log_file.flush()
+	_action_log_step += 1
+
+
+func _count_active_buses() -> int:
+	var count := 0
+	for bus in _buses:
+		if bus != null:
+			count += 1
+	return count
+
+
+func _count_unserved_brigades() -> int:
+	var count := 0
+	var now = game_manager.clock.get_time().to_time_of_day()
+	for brigade in _brigades:
+		var ongoing_trip_info = BrigadeHelper.get_ongoing_trip(brigade, now)
+		if ongoing_trip_info["ongoing_trip"] == null:
+			continue
+		if ongoing_trip_info["assigned_bus"] == null:
+			count += 1
+	return count
 
 
 func _is_bus_articulated(bus_idx: int) -> bool:

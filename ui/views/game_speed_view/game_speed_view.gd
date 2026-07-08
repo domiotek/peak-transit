@@ -39,7 +39,9 @@ func _on_game_speed_changed(_new_speed: Enums.GameSpeed) -> void:
 
 
 func _on_rl_mode_toggled(enabled: bool) -> void:
-	visible = not enabled
+	# Keep speed control on screen during ONNX inference (so the run can be paused/slowed
+	# for observation); hide it only while training, where Python drives the clock.
+	visible = not enabled or game_manager.get_rl_agent_mode() == RLEnums.AgentMode.INFERENCE
 
 
 func _on_pause_button_pressed() -> void:
