@@ -84,3 +84,49 @@ func _inference_process():
 		_set_agent_actions(actions, agents_inference)
 		_reset_agents_if_done(agents_inference)
 		get_tree().set_pause(false)
+
+
+func _call_method_on_agents(method):
+	if method == "get_action_mask":
+		var target_agents = agents_training if agents_training.size() > 0 else all_agents
+		var returns = []
+		for agent in target_agents:
+			returns.append(agent.call(method))
+		return returns
+
+	return super._call_method_on_agents(method)
+
+
+func handle_message() -> bool:
+	var message = _get_dict_json_message()
+	if message["type"] == "close":
+		print("received close message, closing game")
+		get_tree().quit()
+		get_tree().set_pause(false)
+		return true
+
+	if message["type"] == "reset":
+		print("resetting all agents")
+		_reset_agents()
+		just_reset = true
+		get_tree().set_pause(false)
+		return true
+
+	if message["type"] == "call":
+		var method = message["method"]
+		var returns = _call_method_on_agents(method)
+		var reply = { "type": "call", "returns": returns }
+		if method != "get_action_mask":
+			print("calling method from Python")
+		_send_dict_as_json_message(reply)
+		return handle_message()
+
+	if message["type"] == "action":
+		var action = message["action"]
+		_set_agent_actions(action, agents_training)
+		need_to_send_obs = true
+		get_tree().set_pause(false)
+		return true
+
+	print("message was not handled")
+	return false

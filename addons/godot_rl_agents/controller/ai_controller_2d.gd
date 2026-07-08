@@ -70,6 +70,12 @@ func set_action(action) -> void:
 #-----------------------------------------------------------------------------#
 
 
+## Optional method for maskable policies.
+## Override in extended controllers to return a per-step action mask.
+func get_action_mask() -> Array:
+	return []
+
+
 #-- Methods that sometimes need implementing using the "extend script" option in Godot --#
 # Only needed if you are recording expert demos with this AIController
 func get_action() -> Array:

@@ -144,6 +144,22 @@ func get_action_space() -> Dictionary:
 	}
 
 
+func get_action_mask() -> Array:
+	var mask: Array = []
+	mask.append(true) # NO_OP
+
+	for bus_idx in range(_buses.size()):
+		mask.append(_is_depot_action_valid(bus_idx))
+		for reserve_term_idx in range(_terminals.size()):
+			mask.append(_is_reserve_action_valid(bus_idx, reserve_term_idx))
+
+	for bus_idx in range(_buses.size()):
+		for brigade_idx in range(_brigades.size()):
+			mask.append(_is_assign_to_brigade_action_valid(bus_idx, brigade_idx))
+
+	return mask
+
+
 func set_action(action) -> void:
 	_score_manager.push_action(action)
 
@@ -515,6 +531,51 @@ func _onehot_encode(value: int, size: int) -> Array:
 	for i in range(size):
 		onehot.append(1.0 if i == value else 0.0)
 	return onehot
+
+
+func _is_depot_action_valid(bus_idx: int) -> bool:
+	var bus = _buses[bus_idx] as Vehicle
+	if bus == null:
+		return false
+
+	var bus_ai = bus.ai as BusAI
+	if bus_ai == null:
+		return false
+
+	if bus_ai.get_current_state() == BusAI.BusState.RETURNING_TO_DEPOT:
+		return false
+
+	return bus_ai.get_passenger_counts().current_passengers == 0
+
+
+func _is_reserve_action_valid(bus_idx: int, reserve_term_idx: int) -> bool:
+	if reserve_term_idx < 0 or reserve_term_idx >= _terminals.size():
+		return false
+
+	var bus = _buses[bus_idx] as Vehicle
+	if bus == null:
+		return _get_depot_with_available_buses(_is_bus_articulated(bus_idx)) != null
+
+	var bus_ai = bus.ai as BusAI
+	if bus_ai == null:
+		return false
+
+	return bus_ai.get_passenger_counts().current_passengers == 0
+
+
+func _is_assign_to_brigade_action_valid(bus_idx: int, brigade_idx: int) -> bool:
+	if brigade_idx < 0 or brigade_idx >= _brigades.size():
+		return false
+
+	var bus = _buses[bus_idx] as Vehicle
+	if bus == null:
+		return false
+
+	var bus_ai = bus.ai as BusAI
+	if bus_ai == null:
+		return false
+
+	return bus_ai.get_passenger_counts().current_passengers == 0
 
 
 func _set_state_action(bus_idx: int, state: RLEnums.BusStateRequest, reserve_term_idx: int) -> void:
