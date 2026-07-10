@@ -15,8 +15,8 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${env:GODOT_EXECUTABLE}",
-      "args": [],
+      "program": "/home/damian/Downloads/Godot_v4.6.1-stable_mono_linux_x86_64/Godot_v4.6.1-stable_mono_linux.x86_64",
+      "args": ["--mode=Challenge", "--world=Train", "--rl", "--port=3000", "--agent_mode=Inference", "--model_path=model_base.onnx"],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
       "envFile": "${workspaceFolder}/.env"

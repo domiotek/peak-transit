@@ -111,7 +111,7 @@ func init_map(world: WorldDefinition) -> void:
 func get_game_menu_buttons() -> Array[GameMenuButton]:
 	return []
 
-func init_rl_agents(_agent_mode: RLEnums.AgentMode, _onnx_path: String="") -> bool:
+func init_rl_agents(_agent_mode: RLEnums.AgentMode, _onnx_path: String="", _action_log: String="") -> bool:
 	return false
 
 

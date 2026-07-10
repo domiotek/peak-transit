@@ -24,6 +24,10 @@ var _technical_reset_done: bool = false
 
 var _score_manager: ScoreManager
 
+var action_log_path: String = ""
+var _action_log_file: FileAccess = null
+var _action_log_step: int = 0
+
 
 func setup() -> void:
 	if config_manager.UseRlLogger:
@@ -144,8 +148,120 @@ func get_action_space() -> Dictionary:
 	}
 
 
+func get_action_mask() -> Array:
+	var mask: Array = []
+	mask.append(true) # NO_OP
+
+	for bus_idx in range(_buses.size()):
+		mask.append(_is_depot_action_valid(bus_idx))
+		for reserve_term_idx in range(_terminals.size()):
+			mask.append(_is_reserve_action_valid(bus_idx, reserve_term_idx))
+
+	for bus_idx in range(_buses.size()):
+		for brigade_idx in range(_brigades.size()):
+			mask.append(_is_assign_to_brigade_action_valid(bus_idx, brigade_idx))
+
+	return mask
+
+
+## Decodes a flattened action index (argmax over the ONNX output) back into the
+## composite action dictionary. Mirrors the enumeration in get_action_mask above and
+## MaskedLegalActionWrapper._build_legal_actions on the Python side, so index i here
+## denotes the same action it did during training.
+func decode_flat_action(index: int) -> Dictionary:
+	var n := _buses.size()
+	var t := _terminals.size()
+	var k := _brigades.size()
+
+	var action := {
+		"command": RLEnums.ActionType.NO_OP,
+		"bus_idx": 0,
+		"state": RLEnums.BusStateRequest.DEPOT,
+		"brigade_idx": 0,
+		"reserve_term_idx": 0,
+	}
+
+	if index <= 0:
+		return action # NO_OP
+
+	var state_block := n * (1 + t)
+	if index <= state_block:
+		var offset := index - 1
+		action["command"] = RLEnums.ActionType.SET_STATE
+		action["bus_idx"] = offset / (1 + t)
+		var slot := offset % (1 + t)
+		if slot == 0:
+			action["state"] = RLEnums.BusStateRequest.DEPOT
+		else:
+			action["state"] = RLEnums.BusStateRequest.RESERVE
+			action["reserve_term_idx"] = slot - 1
+	else:
+		var offset := index - 1 - state_block
+		action["command"] = RLEnums.ActionType.ASSIGN_TO_BRIGADE
+		action["bus_idx"] = offset / k
+		action["brigade_idx"] = offset % k
+
+	return action
+
+
+## Picks an action from a flat ONNX output vector (Maskable PPO logits or DQN Q-values).
+## When apply_mask is true, illegal actions are excluded first, reproducing the masking
+## Maskable PPO relied on during training. DQN runs with apply_mask false, matching how
+## it was trained.
+## When sample is false (default), picks the argmax (greedy/deterministic). When sample
+## is true, treats the legal logits as unnormalized log-probabilities and draws from the
+## resulting categorical distribution (softmax + weighted random pick) — this mirrors
+## MaskableCategorical.sample() in sb3-contrib, i.e. the actual stochastic policy PPO was
+## trained and evaluated with, as opposed to a point estimate over it. Meaningless for
+## DQN (Q-values aren't log-probabilities), so leave sample false there.
+func pick_flat_action(logits: Array, apply_mask: bool, sample: bool = false) -> Dictionary:
+	var mask: Array = get_action_mask() if apply_mask else []
+
+	var legal_indices: Array = []
+	for i in range(logits.size()):
+		if apply_mask and i < mask.size() and not mask[i]:
+			continue
+		legal_indices.append(i)
+
+	if legal_indices.is_empty():
+		return decode_flat_action(0) # everything masked out; fall back to NO_OP
+
+	if not sample:
+		var best_idx: int = legal_indices[0]
+		var best_val: float = logits[best_idx]
+		for i in legal_indices:
+			var value: float = logits[i]
+			if value > best_val:
+				best_val = value
+				best_idx = i
+		return decode_flat_action(best_idx)
+
+	var max_logit: float = -INF
+	for i in legal_indices:
+		max_logit = max(max_logit, logits[i])
+
+	var exp_values: Array = []
+	var sum_exp: float = 0.0
+	for i in legal_indices:
+		var e: float = exp(logits[i] - max_logit)
+		exp_values.append(e)
+		sum_exp += e
+
+	var roll: float = randf() * sum_exp
+	var cumulative: float = 0.0
+	var chosen_idx: int = legal_indices[legal_indices.size() - 1] # guards float rounding
+	for j in range(legal_indices.size()):
+		cumulative += exp_values[j]
+		if roll <= cumulative:
+			chosen_idx = legal_indices[j]
+			break
+
+	return decode_flat_action(chosen_idx)
+
+
 func set_action(action) -> void:
 	_score_manager.push_action(action)
+	_maybe_log_action(action)
 
 	match action["command"] as int:
 		RLEnums.ActionType.NO_OP:
@@ -499,6 +615,58 @@ func _get_bus_state(bus: Vehicle) -> RLEnums.BusState:
 			return RLEnums.BusState.AT_DEPOT
 
 
+func _maybe_log_action(action) -> void:
+	if action_log_path == "":
+		return
+
+	if _action_log_file == null:
+		_action_log_file = FileAccess.open(action_log_path, FileAccess.WRITE)
+		if _action_log_file == null:
+			push_error("Could not open action log at %s; disabling logging." % action_log_path)
+			action_log_path = ""
+			return
+		_action_log_file.store_line("step,time,command,bus_idx,state,brigade_idx,reserve_term_idx,active_buses,unserved_brigades")
+
+	var command_names := RLEnums.ActionType.keys()
+	var state_names := RLEnums.BusStateRequest.keys()
+	var command_idx: int = action["command"]
+	var state_idx: int = action["state"]
+
+	_action_log_file.store_line("%d,%s,%s,%d,%s,%d,%d,%d,%d" % [
+		_action_log_step,
+		game_manager.clock.get_time().to_time_of_day().format(),
+		command_names[command_idx] if command_idx < command_names.size() else str(command_idx),
+		action["bus_idx"],
+		state_names[state_idx] if state_idx < state_names.size() else str(state_idx),
+		action["brigade_idx"],
+		action["reserve_term_idx"],
+		_count_active_buses(),
+		_count_unserved_brigades(),
+	])
+	_action_log_file.flush()
+	_action_log_step += 1
+
+
+func _count_active_buses() -> int:
+	var count := 0
+	for bus in _buses:
+		if bus != null:
+			count += 1
+	return count
+
+
+func _count_unserved_brigades() -> int:
+	var count := 0
+	var now = game_manager.clock.get_time().to_time_of_day()
+	for brigade in _brigades:
+		var ongoing_trip_info = BrigadeHelper.get_ongoing_trip(brigade, now)
+		if ongoing_trip_info["ongoing_trip"] == null:
+			continue
+		if ongoing_trip_info["assigned_bus"] == null:
+			count += 1
+	return count
+
+
 func _is_bus_articulated(bus_idx: int) -> bool:
 	return bus_idx >= _buses_available["regular"]
 
@@ -515,6 +683,51 @@ func _onehot_encode(value: int, size: int) -> Array:
 	for i in range(size):
 		onehot.append(1.0 if i == value else 0.0)
 	return onehot
+
+
+func _is_depot_action_valid(bus_idx: int) -> bool:
+	var bus = _buses[bus_idx] as Vehicle
+	if bus == null:
+		return false
+
+	var bus_ai = bus.ai as BusAI
+	if bus_ai == null:
+		return false
+
+	if bus_ai.get_current_state() == BusAI.BusState.RETURNING_TO_DEPOT:
+		return false
+
+	return bus_ai.get_passenger_counts().current_passengers == 0
+
+
+func _is_reserve_action_valid(bus_idx: int, reserve_term_idx: int) -> bool:
+	if reserve_term_idx < 0 or reserve_term_idx >= _terminals.size():
+		return false
+
+	var bus = _buses[bus_idx] as Vehicle
+	if bus == null:
+		return _get_depot_with_available_buses(_is_bus_articulated(bus_idx)) != null
+
+	var bus_ai = bus.ai as BusAI
+	if bus_ai == null:
+		return false
+
+	return bus_ai.get_passenger_counts().current_passengers == 0
+
+
+func _is_assign_to_brigade_action_valid(bus_idx: int, brigade_idx: int) -> bool:
+	if brigade_idx < 0 or brigade_idx >= _brigades.size():
+		return false
+
+	var bus = _buses[bus_idx] as Vehicle
+	if bus == null:
+		return false
+
+	var bus_ai = bus.ai as BusAI
+	if bus_ai == null:
+		return false
+
+	return bus_ai.get_passenger_counts().current_passengers == 0
 
 
 func _set_state_action(bus_idx: int, state: RLEnums.BusStateRequest, reserve_term_idx: int) -> void:
