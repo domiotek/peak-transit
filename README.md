@@ -4,26 +4,23 @@ A work-in-progress transit simulation system built with Godot
 
 ## 🚧 Development Status
 
-This project is actively under development as part of academic research. Current and planned focus areas:
+This project is developed as part of academic research and now provides a full simulation and RL training environment.
 
-**Current Implementation:**
+**Implemented:**
 
 - **Core Systems**: Network topology modeling and graph-based pathfinding
 - **Performance**: Multi-threaded A\* implementation for real-time simulation
 - **Architecture**: Hybrid C#/GDScript architecture with custom dependency injection
-
-**Upcoming Development:**
-
-- **Vehicle Design**: Bus modeling with realistic specifications and constraints
-- **Schedule Management**: Dynamic scheduling system for transit operations
-- **Fleet Management**: Resource allocation and vehicle deployment optimization
-- **AI Integration**: API interface for reinforcement learning agent.
+- **Vehicle Modeling**: Regular and articulated buses with realistic specifications and lane constraints
+- **Schedule Management**: Lines, trips (kurs) and brigade (brygada) timetables driving daily operations
+- **Fleet Management**: Passenger demand, terminals/depots and vehicle deployment
+- **AI Integration**: RL environment with TCP training bridge and in-game ONNX inference
 
 **Academic Project**: Part of a Master's Thesis at Cracow University of Technology focusing on usage of AI in the transportation systems in peak, rush hours.
 
 ## 🛠️ Technology Stack
 
-- **Engine**: Godot 4.4
+- **Engine**: Godot 4.6
 - **Language**: C# (.NET 8.0) with GDScript for UI components
 - **Architecture**: Dependency injection with custom DI container
 - **Pathfinding**: Custom A\* implementation with graph-based routing
@@ -32,7 +29,7 @@ This project is actively under development as part of academic research. Current
 
 ### Prerequisites
 
-- [Godot 4.4](https://godotengine.org/download/) or later
+- [Godot 4.6](https://godotengine.org/download/) or later
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download)
 
 ### Installation
@@ -116,22 +113,13 @@ Detailed vehicle information and control interface:
 
 ![Vehicle Popup](readme-images/vehicle_popup.png)
 
-## 🚧 Development Status
-
-This project is actively under development as part of academic research. Current focus areas:
-
-- **Core Systems**: Network topology modeling and graph-based pathfinding
-- **Performance**: Multi-threaded A\* implementation for real-time simulation
-- **Architecture**: Hybrid C#/GDScript architecture with dependency injection
-- **Research**: Algorithm optimization for large-scale transit networks
-
 ## 📚 Research Focus
 
-The project serves as a testbed for **Reinforcement Learning** research in transit optimization:
+The project serves as a training environment for **Reinforcement Learning** research in transit optimization. Agents (PPO, Maskable PPO, DQN) are trained against the simulation over a TCP bridge and exported to ONNX for in-game inference.
 
-**Primary Research Goals:**
+**Research Goals:**
 
-- **RL Environment**: Game serves as a training environment for AI agents
+- **RL Environment**: Game acts as a training environment for AI dispatcher agents
 - **Transit Optimization**: AI-driven fleet management and scheduling decisions
 - **Real-time Decision Making**: Agent responses to dynamic network conditions
 
@@ -140,5 +128,5 @@ The project serves as a testbed for **Reinforcement Learning** research in trans
 - Efficient pathfinding algorithms for dynamic transportation networks
 - Real-time simulation performance for RL training environments
 - Game engine integration with machine learning frameworks
-- State representation and action spaces for transit management
+- State representation and action spaces (with action masking) for transit management
 - Reward function design for optimal transit network performance
