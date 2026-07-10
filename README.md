@@ -93,25 +93,29 @@ Access debug tools by pressing the `F12` key during gameplay.
 
 ## 📷 Screenshots
 
-Some in-progress sneak-peaks.
+### City Overview
 
-### Debug Interface
+The full transit network with terminals, depots and buildings across the map:
 
-The comprehensive debugging system provides real-time insights into simulation state:
+![City Overview](readme-images/city_overview.png)
 
-![Debug Options](readme-images/debug_options.png)
+### Simulation & Traffic
 
-### Network Visualization
+Real-time traffic with buses, cars, lane markings and traffic signs at an intersection:
 
-Interactive intersection and network topology visualization:
+![Simulation](readme-images/simulation.png)
 
-![Intersection View](readme-images/intersection.png)
+### Vehicle & Trip Management
 
-### Vehicle Management
+Per-vehicle information with line, route and trip details, brigade assignment and passenger load:
 
-Detailed vehicle information and control interface:
+![Vehicle Management](readme-images/vehicle_management.png)
 
-![Vehicle Popup](readme-images/vehicle_popup.png)
+### Reinforcement Learning Environment
+
+RL training/inference mode showing the brigade fleet panel and the live reward breakdown:
+
+![RL Environment](readme-images/rl_environment.png)
 
 ## 📚 Research Focus
 
