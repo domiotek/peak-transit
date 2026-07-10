@@ -204,27 +204,59 @@ func decode_flat_action(index: int) -> Dictionary:
 	return action
 
 
-## Picks the greedy action from a flat ONNX output vector (Maskable PPO logits or DQN
-## Q-values). When apply_mask is true, illegal actions are skipped before the argmax,
-## reproducing the masking Maskable PPO relied on during training. DQN runs with
-## apply_mask false, matching how it was trained.
-func pick_flat_action(logits: Array, apply_mask: bool) -> Dictionary:
+## Picks an action from a flat ONNX output vector (Maskable PPO logits or DQN Q-values).
+## When apply_mask is true, illegal actions are excluded first, reproducing the masking
+## Maskable PPO relied on during training. DQN runs with apply_mask false, matching how
+## it was trained.
+## When sample is false (default), picks the argmax (greedy/deterministic). When sample
+## is true, treats the legal logits as unnormalized log-probabilities and draws from the
+## resulting categorical distribution (softmax + weighted random pick) — this mirrors
+## MaskableCategorical.sample() in sb3-contrib, i.e. the actual stochastic policy PPO was
+## trained and evaluated with, as opposed to a point estimate over it. Meaningless for
+## DQN (Q-values aren't log-probabilities), so leave sample false there.
+func pick_flat_action(logits: Array, apply_mask: bool, sample: bool = false) -> Dictionary:
 	var mask: Array = get_action_mask() if apply_mask else []
 
-	var best_idx := -1
-	var best_val := 0.0
+	var legal_indices: Array = []
 	for i in range(logits.size()):
 		if apply_mask and i < mask.size() and not mask[i]:
 			continue
-		var value: float = logits[i]
-		if best_idx == -1 or value > best_val:
-			best_val = value
-			best_idx = i
+		legal_indices.append(i)
 
-	if best_idx == -1:
-		best_idx = 0 # everything masked out; fall back to NO_OP
+	if legal_indices.is_empty():
+		return decode_flat_action(0) # everything masked out; fall back to NO_OP
 
-	return decode_flat_action(best_idx)
+	if not sample:
+		var best_idx: int = legal_indices[0]
+		var best_val: float = logits[best_idx]
+		for i in legal_indices:
+			var value: float = logits[i]
+			if value > best_val:
+				best_val = value
+				best_idx = i
+		return decode_flat_action(best_idx)
+
+	var max_logit: float = -INF
+	for i in legal_indices:
+		max_logit = max(max_logit, logits[i])
+
+	var exp_values: Array = []
+	var sum_exp: float = 0.0
+	for i in legal_indices:
+		var e: float = exp(logits[i] - max_logit)
+		exp_values.append(e)
+		sum_exp += e
+
+	var roll: float = randf() * sum_exp
+	var cumulative: float = 0.0
+	var chosen_idx: int = legal_indices[legal_indices.size() - 1] # guards float rounding
+	for j in range(legal_indices.size()):
+		cumulative += exp_values[j]
+		if roll <= cumulative:
+			chosen_idx = legal_indices[j]
+			break
+
+	return decode_flat_action(chosen_idx)
 
 
 func set_action(action) -> void:

@@ -284,21 +284,24 @@ func _heuristic_process():
 		_reset_agents_if_done(agents_heuristic)
 
 
-func _extract_action_dict(action_array: Array, action_space: Dictionary, action_means_only: bool):
+func _extract_action_dict(action_array: Array, action_space: Dictionary, action_means_only: bool, sample: bool = false):
 	var index = 0
 	var result = { }
 	for key in action_space.keys():
 		var size = action_space[key]["size"]
 		var action_type = action_space[key]["action_type"]
 		if action_type == "discrete":
-			var largest_logit: float # Value of the largest logit for this action in the actions array
-			var largest_logit_idx: int # Index of the largest logit for this action in the actions array
-			for logit_idx in range(0, size):
-				var logit_value = action_array[index + logit_idx]
-				if logit_value > largest_logit:
-					largest_logit = logit_value
-					largest_logit_idx = logit_idx
-			result[key] = largest_logit_idx # Index of the largest logit is the discrete action value
+			if sample:
+				result[key] = _sample_discrete_action(action_array, index, size)
+			else:
+				var largest_logit: float # Value of the largest logit for this action in the actions array
+				var largest_logit_idx: int # Index of the largest logit for this action in the actions array
+				for logit_idx in range(0, size):
+					var logit_value = action_array[index + logit_idx]
+					if logit_value > largest_logit:
+						largest_logit = logit_value
+						largest_logit_idx = logit_idx
+				result[key] = largest_logit_idx # Index of the largest logit is the discrete action value
 			index += size
 		elif action_type == "continuous":
 			# For continous actions, we only take the action mean values
@@ -312,6 +315,31 @@ func _extract_action_dict(action_array: Array, action_space: Dictionary, action_
 			assert(false, 'Only "discrete" and "continuous" action types supported. Found: %s action type set.' % action_type)
 
 	return result
+
+
+## Draws from the categorical distribution implied by one discrete action head's raw
+## logits (softmax + weighted random pick), instead of taking the argmax. Mirrors how
+## SB3's per-head Categorical distributions are actually sampled during training/rollout
+## collection, as opposed to the deterministic point estimate over them.
+func _sample_discrete_action(action_array: Array, offset: int, size: int) -> int:
+	var max_logit: float = -INF
+	for i in range(size):
+		max_logit = max(max_logit, action_array[offset + i])
+
+	var exp_values: Array = []
+	var sum_exp: float = 0.0
+	for i in range(size):
+		var e: float = exp(action_array[offset + i] - max_logit)
+		exp_values.append(e)
+		sum_exp += e
+
+	var roll: float = randf() * sum_exp
+	var cumulative: float = 0.0
+	for i in range(size):
+		cumulative += exp_values[i]
+		if roll <= cumulative:
+			return i
+	return size - 1 # guards float rounding
 
 
 ## For AIControllers that inherit mode from sync, sets the correct mode.

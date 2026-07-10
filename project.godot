@@ -31,7 +31,7 @@ project/assembly_name="peak-transit"
 
 [editor]
 
-run/main_run_args="--mode=Challenge --world=Train --rl --agent_mode=Inference --model_path=maskable.onnx --apply_mask --action_log=/home/damian/maskable_trace.csv"
+run/main_run_args="--mode=Challenge --world=Train --rl --agent_mode=Inference --model_path=dqn.onnx --action_log=/home/damian/dqn_trace.csv"
 
 [editor_plugins]
 

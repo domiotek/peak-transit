@@ -76,6 +76,7 @@ func _setup_rl_session() -> void:
 
 	var agent_mode := RLEnums.parse_agent_mode(_args.get("agent_mode", "train"))
 	var apply_mask : bool= _args.has("apply_mask") and _args.get("apply_mask", "") != "false"
+	var sample_actions : bool = _args.has("sample_actions") and _args.get("sample_actions", "") != "false"
 	var action_log : String = _args.get("action_log", "")
  
 	var initialized = game_manager.get_game_controller().init_rl_agents(agent_mode, _args.get("model_path", ""), action_log)
@@ -106,7 +107,7 @@ func _setup_rl_session() -> void:
 
 	await game_manager.wait_frame()
 
-	var connected = rl_sync.setup(agent_mode, apply_mask)
+	var connected = rl_sync.setup(agent_mode, apply_mask, sample_actions)
 
 	await game_manager.wait_frame()
 

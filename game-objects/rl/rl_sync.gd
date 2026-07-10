@@ -4,14 +4,16 @@ class_name RLSync
 
 var _agent_mode: RLEnums.AgentMode
 var _apply_mask: bool = false
+var _sample_actions: bool = false
 
 func _ready() -> void:
 	pass
 
 
-func setup(agent_mode: RLEnums.AgentMode, apply_mask: bool = false) -> bool:
+func setup(agent_mode: RLEnums.AgentMode, apply_mask: bool = false, sample_actions: bool = false) -> bool:
 	_agent_mode = agent_mode
 	_apply_mask = apply_mask
+	_sample_actions = sample_actions
 	return _initialize()
 
 
@@ -80,12 +82,13 @@ func _inference_process():
 
 			var action_dict
 			if _is_flat_action_output(output, _action_space_inference[agent_id]):
-				action_dict = agent.pick_flat_action(output, _apply_mask)
+				action_dict = agent.pick_flat_action(output, _apply_mask, _sample_actions)
 			else:
 				action_dict = _extract_action_dict(
 					output,
 					_action_space_inference[agent_id],
 					model.action_means_only,
+					_sample_actions,
 				)
 
 			actions.append(action_dict)
